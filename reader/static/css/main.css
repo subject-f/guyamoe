@@ -1,0 +1,326 @@
+
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, sub, sup, tt, var, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+button {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	background: none;
+	border:none;
+	unset: all;
+}
+
+button::-moz-focus-inner {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	background: none;
+	border:none;
+}
+
+button:focus {
+	outline: none;
+}
+
+/* ---------------------- */
+
+body {
+	background: #3e3532;
+	font-size: 1.2rem;
+	font-family: Open Sans, sans-serif;
+	line-height: 1.3;
+	color: #ddd;
+}
+
+main {
+	display: flex;
+	height: 100vh;
+	width: calc(100vw+24px);
+	overflow: hidden;
+	max-height: 100vh;
+}
+
+aside {
+	height: 100vh;
+	width: 30vw;
+	max-width: 30ch;
+	min-width: 24ch;
+	display: flex;
+	flex-direction: column;
+	background: #2d2624;
+	overflow-x: hidden;
+}
+
+aside > header {
+	display: flex;
+	align-items: flex-top;
+	align-content: stretch;
+
+}
+
+.is-ico-button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.3em; 
+	width: 3rem;
+	height: 3rem;
+	flex-shrink: 0;
+}
+
+header > h1 {
+	display: flex;
+	justify-content: center;
+	text-align: center;
+	padding: 1rem 0.5rem;
+	font-size: 1rem;
+}
+
+header > .close:before {
+	content: "×";
+}
+header > .search:before {
+	content: "⌕";
+}
+
+.rdr-aside-content {
+	display: flex;
+	width: 100%;
+	flex-grow: 1;
+	flex-direction: column;
+}
+
+.rdr-selector {
+	display: flex;
+	flex-direction: column;
+}
+
+.rdr-selector > div {
+	display: flex;
+	align-items: stretch;
+	align-content: stretch;
+}
+.rdr-selector select {
+	flex-grow: 1;
+	border: 0;
+	background: transparent;
+	color: #eee;
+}
+.rdr-selector option {
+	color: #eee;
+	background: #1f1b19;
+	padding: 0.2em;
+}
+
+
+.rdr-selector-top, .rdr-selector-bot {
+	padding-left: 2.3rem;
+	height: 2rem;
+}
+
+.rdr-selector-mid {
+	height: 2.5rem;
+	background: #1f1b19;
+
+}
+
+.rdr-selector-mid .is-ico-button {
+	height: 2.5rem;
+	width: 2.5rem;
+}
+
+.rdr-selector-vol {
+	height: 2rem;
+}
+
+.rdr-selector-chap.prev:before {
+	content: '‹';
+}
+.rdr-selector-chap.next:before {
+	content: '›';
+}
+.rdr-selector-vol.prev:before {
+	content: '‹';
+	transform: rotate(90deg);
+}
+.rdr-selector-vol.next:before {
+	content: '›';
+	transform: rotate(90deg);
+}
+
+.rdr-vol-wrap {
+	position: relative;
+	flex-grow: 1;
+	min-width: 3ch;
+	overflow: hidden;
+}
+
+.rdr-chap-wrap {
+	position: relative;
+	flex-grow: 7;
+	overflow: hidden;
+}
+
+.rdr-chap-wrap:after {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	top: 0;
+	width: 2rem;
+	background: linear-gradient(90deg, #001f1b19 0%, #1f1b19 100%);
+	pointer-events: none;
+}
+
+#rdr-vol {
+	display: block;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	top: 0;
+	text-align: center;
+	width: calc(100% + 2.3ch);
+	cursor: pointer;
+}
+#rdr-chap {
+	display: block;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	top: 0;
+	width: calc(100% + 2.3ch);
+	cursor: pointer;
+}
+
+.rdr-previews {
+	display: flex;
+	flex-direction: column;
+	margin-top: 1rem;
+}
+
+.rdr-previews details {
+}
+
+summary {
+	display: flex;
+	flex-wrap: nowrap;
+	list-style: none;
+	cursor: pointer;
+	background: #26201f;
+}
+
+ details summary span {
+ 	display: flex;
+ 	align-items: center;
+ 	padding: 0 0 0 1rem;
+	flex-grow: 1;
+}
+
+details .expander:before {
+	content: '›';
+}
+
+details[open] .expander:before {
+	transform: rotate(90deg);
+}
+
+.rdr-previews-gallery {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	padding-top: 0.25rem;
+}
+
+.rdr-previews-gallery img {
+	flex-basis: 30%;
+	margin-bottom: 0.50rem;
+	box-shadow: 0px 1px 3px rgba(0,0,0,0.3);
+	min-height: 100px;
+}
+
+.rdr-area {
+	overflow: auto;
+	position: relative;
+	min-height: 100%;
+	flex-grow: 1;
+}
+
+.rdr-image-wrap {
+	white-space: nowrap;
+	overflow-x: hidden;
+	text-indent: 0%;
+	transition: text-indent 0.3s ease;
+	font-size: 0;
+}
+
+.rdr-area.fit-width img {
+	max-width: 100%;
+	min-width: 100%;
+	display: inline-block;
+	vertical-align: top;
+}
+
+
+.rdr-float-prev, .rdr-float-next {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.rdr-float-prev {
+	width: 30%;
+}
+.rdr-float-next {
+	right: 0;
+	width: 70%;
+}

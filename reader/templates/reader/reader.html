@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>title</title>
+		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}"></script>
+		<script type="text/javascript" src="{% static 'js/UI2.js' %}"></script>
+		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+	</head>
+<body>
+	<main id="rdr-main">
+		<aside>
+			<header>
+				<button data-bind='close' class="is-ico-button close"></button>
+				<h1 data-bind='title'>Kaguya-sama wants to be confessed to: the geniuses love of war and brains!</h1>
+				<button data-bind='search' class="is-ico-button search"></button>
+			</header>
+			<div class="rdr-aside-content">
+				<section class="rdr-selector">
+					<div class="rdr-selector-top">
+						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button prev"></button>
+					</div>
+					<div class="rdr-selector-mid">
+						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>
+						<div class="rdr-vol-wrap">
+							<select data-bind='selector_vol'id="rdr-vol">
+								<option class="option">14</option>
+								<option class="option">2</option>
+								<option class="option">3</option>
+								<option class="option">4</option>
+								<option class="option">5</option>
+							</select>
+						</div>
+						<div class="rdr-chap-wrap">
+							<select data-bind='selector_chap' id="rdr-chap">
+								<option class="option">151 - The First Kiss Never Ends</option>
+								<option class="option">2</option>
+								<option class="option">3</option>
+								<option class="option">4</option>
+								<option class="option">5</option>
+							</select>
+						</div>
+						<button data-bind='chap_next' class="rdr-selector-chap is-ico-button next"></button>
+					</div>
+					<div class="rdr-selector-bot">
+						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button next"></button>
+					</div>
+				</section>
+				<section class="rdr-previews">
+					<details>
+						<summary>
+							<span>Previews</span>
+							<div class="is-ico-button expander"></div>
+						</summary>
+						<div data-bind='previews' class="rdr-previews-gallery">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+						</div>
+					</details>
+				</section>
+			</div>
+		</aside>
+		<content data-bind='image_viewer' class="rdr-area fit-width">
+			<div class="rdr-image-wrap" data-bind='image_container'>
+				<img class="rdr-image" src="https://cdn.discordapp.com/attachments/545095338474602506/545097903128182794/018.png" />
+				<img class="rdr-image" src="https://cdn.discordapp.com/attachments/545095338474602506/545097904369565697/019.png" />
+				<img class="rdr-image" src="https://cdn.discordapp.com/attachments/545095338474602506/545097904369565697/019.png" />
+			</div>
+			<div class="rdr-float-prev" data-bind="page_prev"></div>
+			<div class="rdr-float-next" data-bind="page_next"></div>
+		</content>
+	</main>
+</body>
+<script type="text/javascript" src="{% static 'js/init.js' %}"></script>
+</html>
