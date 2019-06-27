@@ -10,10 +10,4 @@ def reader(request, series_slug, chapter, page):
     slug_chapter_numb = chapter.replace("-", ".")
     ch_obj = get_object_or_404(Chapter, series__slug=series_slug, chapter_number=slug_chapter_numb)
     print(ch_obj.chapter_number)
-    return render(request, 'reader/reader.html', {
-        'media_url': settings.MEDIA_URL,
-        'manga': 'Kaguya-Wants-To-Be-Confessed-To',
-        'chapter': slug_chapter_numb,
-        'page_count': ch_obj.page_count,
-        'pages': sorted(os.listdir(f"{settings.MEDIA_ROOT}\\manga\\{'Kaguya-Wants-To-Be-Confessed-To'}\\{chapter}"))
-    })
+    return render(request, 'reader/reader.html', {})

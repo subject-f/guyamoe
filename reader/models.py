@@ -16,6 +16,7 @@ class Chapter(models.Model):
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, blank=True)
     chapter_number = models.FloatField(unique=True, blank=False, null=False)
+    folder = models.CharField(max_length=255, blank=True, null=True)
     page_count = models.PositiveSmallIntegerField()
     volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     published_at = models.DateTimeField(default=None, blank=True, null=True)
