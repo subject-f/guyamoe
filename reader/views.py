@@ -15,5 +15,5 @@ def reader(request, series_slug, chapter, page):
         'manga': 'Kaguya-Wants-To-Be-Confessed-To',
         'chapter': slug_chapter_numb,
         'page_count': ch_obj.page_count,
-        'pages': sorted(os.listdir(f"{settings.MEDIA_ROOT}\\manga\\{'Kaguya-Wants-To-Be-Confessed-To'}\\{'1'}"))
+        'pages': sorted(os.listdir(f"{settings.MEDIA_ROOT}\\manga\\{'Kaguya-Wants-To-Be-Confessed-To'}\\{chapter}"))
     })

@@ -23,6 +23,9 @@ class Chapter(models.Model):
     def clean_chapter_number(self):
         return str(int(self.chapter_number)) if self.chapter_number % 1 == 0 else str(self.chapter_number)
 
+    def slug_chapter_number(self):
+        return self.clean_chapter_number().replace(".", "-")
+
     def __str__(self):
         return self.title
 
