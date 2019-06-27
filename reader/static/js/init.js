@@ -43,8 +43,8 @@ function APIHandler(o) {
 		for(var num in data.chapters) {
 		var chapter = data.chapters[num];
 			chapter.images = [];
-			for (var i = 0; i < chapter.pagecount; i++) {
-				chapter.images.push(this.mediaURL + data.slug + '/' + num + '/' + (chapter.pages[i]))
+			for (var i = 0; i < chapter.pages.length; i++) {
+				chapter.images.push(this.mediaURL + data.slug + '/' + chapter.folder + '/' + (chapter.pages[i]))
 			}
 		}
 		return data;
