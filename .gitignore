@@ -21,5 +21,8 @@ venv.bak/
 #db
 db.sqlite3
 
+#django migrations
+migrations/
+
 #media root
 media/manga/*
