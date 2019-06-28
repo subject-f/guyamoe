@@ -17,7 +17,7 @@ def series_data(request, series_slug):
             "volume": str(chapter.volume),
             "title": chapter.title,
             "folder": chapter.folder,
-            "pages": sorted(os.listdir(chapter_media_path)) if os.path.exists(chapter_media_path) else []
+            "pages": sorted(os.listdir(chapter_media_path))
         }
     data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
     return HttpResponse(json.dumps(data), content_type="application/json")
