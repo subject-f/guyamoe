@@ -12,7 +12,7 @@ def series_data(request, series_slug):
     chapters = Chapter.objects.filter(series=series)
     chapters_dict = {}
     for chapter in chapters:
-        chapter_media_path = f"{settings.MEDIA_ROOT}\\manga\\{'Kaguya-Wants-To-Be-Confessed-To'}\\{chapter.folder}"
+        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, chapter.folder)
         chapters_dict[Chapter.clean_chapter_number(chapter)] = {
             "volume": str(chapter.volume),
             "title": chapter.title,

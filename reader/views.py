@@ -9,5 +9,4 @@ import os
 def reader(request, series_slug, chapter, page):
     slug_chapter_numb = chapter.replace("-", ".")
     ch_obj = get_object_or_404(Chapter, series__slug=series_slug, chapter_number=slug_chapter_numb)
-    print(ch_obj.chapter_number)
     return render(request, 'reader/reader.html', {})
