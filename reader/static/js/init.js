@@ -356,7 +356,7 @@ function UI_Reader(o) {
 				+ this.state.currentChapter
 				+ ', Page '
 				+ (this.state.currentPage + 1),
-			"https://kagu.algoinde.ru/reader/series/"
+			"/reader/series/"
 				+ this.seriesData.slug
 				+ '/'
 				+ this.state.currentChapter.replace('.', '-')
