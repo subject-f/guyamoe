@@ -1,7 +1,7 @@
 //Depends on:
 //	alg_lib.0.3
 
-var DEBUG = true;
+var DEBUG = false;
 const OFF = 0;
 const ON = 1;
 const TOGGLE = 2;
@@ -306,10 +306,21 @@ function Linkable(o) {
 
 		for (var i = 0; i < streamIDs.length; i++) {
 			if(!targetStructure.S.inStreams[streamIDs[i]])
-				if(DEBUG) console.info('Target structure does not have input stream '+streamIDs[i]+' at the moment.')
+				if(DEBUG) console.info(this ,': Target structure does not have input stream '+streamIDs[i]+' at the moment.')
 			this.S.outStreams[streamIDs[i]].push(targetStructure);
 			this.S.outMappings[streamIDs[i]].push({});
 		}
+		return this;
+	}
+
+	this.S.linkAnonymous = (streamID, callback) => {
+		if(!streamID)
+			throw('AlgEx: must specify a stream for anonymous mapping.')
+	var inObj = {}
+		inObj[streamID] = callback;
+	var targetStructure = new Linkable().S.mapIn(inObj);
+		this.S.outStreams[streamID].push(targetStructure);
+		this.S.outMappings[streamID].push({});
 		return this;
 	}
 
@@ -345,7 +356,7 @@ function Linkable(o) {
 	var targetStructures = this.S.outStreams[streamID];
 	var targetMappings = this.S.outMappings[streamID];
 		if(!targetStructures || targetStructures.length < 1) {
-			if(DEBUG) console.warn('I have no outputs registered!', 'Tried to send', data, 'through', streamID)
+			if(DEBUG) console.warn('I,', this ,', have no outputs registered!', 'Tried to send', data, 'through', streamID)
 			return this.S;
 		}
 		if(DEBUG) console.log('Sending',data, 'using stream '+streamID, '...');

@@ -32,12 +32,125 @@ var J = {
         }
     }
 
+function LoadHandler(o) {
+	o=be(o);
+	Linkable.call(this);
+
+	this.parseSCP = function(url) {
+		url = url.split('/');
+		return {
+			page: parseInt(url[url.length - 1] - 1),
+			chapter: url[url.length - 2].replace('-','.'),
+			series: url[url.length - 3],
+		}
+	}
+
+	this.onload = () => {
+	var SCP = this.parseSCP(document.location.pathname);
+		this.S.out('action', {action: 'displaySCP', data: SCP});
+	}
+
+	document.body.onload = this.onload;
+
+	this.S.mapOut(['action']);
+}
+
+
+function ActionHandler(o) {
+	Linkable.call(this);
+
+	this.displaySeries = function(slug) {
+		this.S.out('action', {
+			action: 'displaySeries',
+			id: slug
+		})
+		return this;
+	}
+	this.displayChapter = function(id) {
+		this.S.out('action', {
+			action: 'displayChapter',
+			id: id
+		})
+		return this;
+	}
+	this.displayPage = function(id) {
+		this.S.out('action', {
+			action: 'displayPage',
+			id: id
+		})
+		return this;
+	}
+	this.displayVolume = function(id) {
+		this.S.out('action', {
+			action: 'displayVolume',
+			id: id
+		})
+		return this;
+	}
+	this.displaySCP = function(SCP) {
+		this.S.out('action', {
+			action: 'displaySeries',
+			id: SCP.series
+		})
+		this.S.out('action', {
+			action: 'displayChapter',
+			id: SCP.chapter
+		})
+		this.S.out('action', {
+			action: 'displayPage',
+			id: SCP.page
+		})
+		return this;
+	}
+	this.nextPage = function() {
+		this.S.out('action', {
+			action: 'nextPage'
+		})
+		return this;
+	}
+	this.prevPage = function() {
+		this.S.out('action', {
+			action: 'prevPage'
+		})
+		return this;
+	}
+	this.nextChapter = function() {
+		this.S.out('action', {
+			action: 'nextChapter'
+		})
+		return this;
+	}
+	this.prevChapter = function() {
+		this.S.out('action', {
+			action: 'prevChapter'
+		})
+		return this;
+	}
+	this.nextVolume = function() {
+		this.S.out('action', {
+			action: 'nextVolume'
+		})
+		return this;
+	}
+	this.prevVolume = function() {
+		this.S.out('action', {
+			action: 'prevVolume'
+		})
+		return this;
+	}
+
+	this.actionHandler = function(o) {
+		this[o.action](o.data);
+	}
+	this.S.mapIn({action: this.actionHandler})
+	this.S.mapOut(['action'])
+}
 
 function APIHandler(o) {
 	o=be(o);
 	Linkable.call(this);
 	this.url = o.url;
-	this.mediaURL = '/media/manga/';
+	this.mediaURL = o.mediaURL;
 
 	this.infuseImageURLs = function(data) {
 		for(var num in data.chapters) {
@@ -50,54 +163,59 @@ function APIHandler(o) {
 		return data;
 	}
 
-	this.request = function(requestObject) {
-	var url;
-		switch(requestObject.cmd) {
-			case 'series':
-	  		url = this.url + 'series/' + requestObject.id;
+	this.actionHandler = function(o) {
+		switch (o.action) {
+			case 'displaySeries':
+			this.seriesRequest = fetch(this.url + 'series/' + o.id)
+					.then(response => response.json())
+					.then(data => {
+						this.S.out('data__series',
+							this.infuseImageURLs(data)
+						);
+					}).then(() => {
+						this.S.out('action', o);
+					})
+				break;
+			case 'displayChapter':
+			case 'displayPage':
+				this.seriesRequest.then(() => {
+					this.S.out('action', o);
+				})
 				break;
 			default:
-				console.error('Unhandled API request:', requestObject.cmd)
+				this.S.out('action', o);
 				break;
 		}
-
-		fetch(url)
-			.then(response => {
-				return response.json();
-			})
-			.then(data => {
-				this.S.out('data__'+requestObject.cmd,
-					this.infuseImageURLs(data)
-				);
-			})
-
 		return this;
 	}
 
-	this.S.mapIn({request: this.request})
-	this.S.mapOut(['data__pages', 'data__series'])
+	this.S.mapIn({
+		action: this.actionHandler,
+	})
+	this.S.mapOut(['action', 'data__series'])
 }
 
 function StorageHandler(o) {
 	o=be(o);
 	Linkable.call(this);
-	this.data = {};
 
-	this.handle = function(type, data) {
-		this.data[type] = data;
-		this.S.out('data__'+type, this.data[type])
+	this.series = {};
+
+	this.actionHandler = function(o) {
+		this.S.out('action', o); //action passthrough
 	}
 
-	this.get = function(what) {
-		return this.data[what];
+	this.updateSeries = function(seriesObject) {
+		this.series[seriesObject.slug] = seriesObject;
 	}
 
 	this.S.mapIn({
-		data__series: data => this.handle('series', data),
-		data__pages: data => this.handle('pages', data) 
+		action: this.actionHandler,
+		data__series: d => this.updateSeries(d),
 	});
-	this.S.mapOut(['data__series', 'data__pages']);
-} 
+	this.S.mapOut(['action', 'data__series']);
+}
+
 
 function UI_Reader(o) {
 	o=be(o);
@@ -108,26 +226,66 @@ function UI_Reader(o) {
 	});
 	Linkable.call(this);
 
+	this.storage = o.storage;
+	this.state = {
+		currentSeries: null,
+		currentPage: null,
+		currentChapter: null,
+		currentScroll: null
+	};
+
+
 	this.selector_chap = new UI_SimpleList({
 		node: this._.selector_chap
-	}).S.linkMapped(this, {'id': 'chapter'});
+	}).S.linkAnonymous('id', id => Action.displayChapter(id));
 	this.selector_vol = new UI_SimpleList({
 		node: this._.selector_vol
-	}).S.linkMapped(this, {'id': 'volume'});
+	}).S.linkAnonymous('id', id => Action.displayVolume(id));
 
 	this.imageView = new UI_ReaderImageView({
 		node: this._.image_viewer
 	})
 
-	this.drawReader = function() {
-		this._.title.innerHTML = Storage.get('series').title;
+	this.actionHandler = function(o) {
+		switch (o.action) {
+			case 'displaySeries':
+				this.drawReader(o.id);
+				break;
+			case 'displayChapter':
+				this.drawChapter(o.id)
+				break;
+			case 'displayPage':
+				this.displayPage(o.id)
+				break;
+			case 'nextPage':
+				this.nextPage();
+				break;
+			case 'prevPage':
+				this.prevPage();
+				break;
+			case 'nextChapter':
+				this.nextChapter();
+				break;
+			case 'prevChapter':
+				this.prevChapter();
+				break;
+			default:
+				break;
+		}
+	}
+
+	this.drawReader = function(slug) {
+		this.state.currentSeries = slug;
+		this.seriesData = this.storage.series[this.state.currentSeries];
+
+		this._.title.innerHTML = this.seriesData.title;
 
 	var chapterElements = [];
 	var volElements = {};
-	var chapters = Object.keys(Storage.get('series').chapters).sort((a,b) => parseFloat(b) - parseFloat(a));
+	var chapters = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(b) - parseFloat(a));
 		for(var i=0; i < chapters.length; i++) {
 			var key = chapters[i];
-			var chap = Storage.get('series').chapters[key];
+			var chap = this.seriesData.chapters[key];
 			chapterElements.push(new UI_SimpleListItem({
 				text: key + ' - ' + chap.title,
 				value: key
@@ -142,32 +300,64 @@ function UI_Reader(o) {
 
 		this.selector_chap.clear().add(chapterElements);
 		this.selector_vol.clear().add(volElements);
-
-
 	}
 
-	this.initSeries = function(seriesID) {
-		this.seriesID = seriesID;
-		this.getSeries(seriesID);
+	this.drawChapter = function(chapter) {
+		this.state.currentChapter = chapter;
+		this.imageView.drawImages(this.seriesData.chapters[chapter].images);
+		this.selector_chap.$.value = chapter;
+		this.selector_vol.$.value = this.seriesData.chapters[chapter].volume;
+		this.displayPage(0);
 		return this;
 	}
 
-	this.renderChapter = function(chapter) {
-		this.imageView.renderChapter(chapter);
-		return this;
+	this.nextChapter = function(){
+	var chapArr = Object.keys(this.seriesData.chapters).sort()
+		this.drawChapter(
+				chapArr[chapArr.indexOf(this.state.currentChapter)+1]
+			)
+	}
+	this.prevChapter = function(){
+	var chapArr = Object.keys(this.seriesData.chapters).sort()
+		this.drawChapter(
+				chapArr[chapArr.indexOf(this.state.currentChapter)-1]
+			)
+	}
+	this.nextPage = function(){
+		this.displayPage(this.state.currentPage + 1)
+	}
+	this.prevPage = function(){
+		this.displayPage(this.state.currentPage - 1)
 	}
 
-	this.getSeries = function(seriesID) {
-		this.S.out('request', {'cmd': 'series', 'id': seriesID});
-		return this;
+	this.displayPage = function(page) {
+		this.imageView.selectPage(page);
+		this.state.currentPage = page;
+		window.history.replaceState(
+			{},
+			this.seriesData.title
+				+ ' Chapter '
+				+ this.state.currentChapter
+				+ ', Page '
+				+ (this.state.currentPage + 1),
+			"https://kagu.algoinde.ru/reader/series/"
+				+ this.seriesData.slug
+				+ '/'
+				+ this.state.currentChapter.replace('.', '-')
+				+ '/'
+				+ (this.state.currentPage + 1)
+			);
 	}
+
+	this._.chap_prev.onmousedown = e => Action.prevChapter(e);
+	this._.chap_next.onmousedown = e => Action.nextChapter(e);
+	this._.vol_prev.onmousedown = e => Action.prevVolume(e);
+	this._.vol_next.onmousedown = e => Action.nextVolume(e);
 
 	this.S.mapIn({
+		'action': this.actionHandler,
 		'data__series': this.drawReader,
-		'series': this.initSeries,
-		'chapter': this.renderChapter
 	})
-	this.S.mapOut(['request'])
 }
 
 function UI_ReaderImageView(o) {
@@ -182,12 +372,18 @@ function UI_ReaderImageView(o) {
 
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
-	this.renderChapter = function(chapter) {
-		this.imageContainer.clear();
-	var images = Storage.get('series').chapters[chapter].images;
+	this.drawImages = function(images) {
+		this.imageContainer.clear();;
 		images.forEach(url => {
 			this.imageContainer.add(new UI_Image({src: url}))
 		})
+	}
+
+	this.$.onscroll = e => {
+		if(this.imageContainer.selectedItems[0].$.nextSibling)
+			this.imageContainer.selectedItems[0].$.nextSibling.style.top = this.$.scrollTop + 'px';
+		if(this.imageContainer.selectedItems[0].$.prevSibling)
+			this.imageContainer.selectedItems[0].$.prevSibling.style.top = this.$.scrollTop + 'px';
 	}
 
 	this.selectPage = function(index) {
@@ -195,12 +391,15 @@ function UI_ReaderImageView(o) {
 			return;
 		this.imageContainer.select(index);
 		this.currentPage = index;
-		this.imageContainer.$.style.textIndent = -1 * 100 * this.currentPage + '%';
-		this.$.scrollTo({
-			left: this.imageContainer.selectedItems[0].$.offsetLeft,
-			top: 0,
-			behavior: 'smooth'
-		})
+		this.imageContainer.$.style.textIndent = -1 * 100 * this.currentPage - 0.001 + '%';
+		//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
+		setTimeout(() => {
+			this.imageContainer.selectedItems[0].$.style.top = 0;
+			this.$.scrollTo({
+				left: 0,
+				top: 0
+			})
+		}, 150)
 	}
 
 	this.prev = function() {
@@ -211,13 +410,17 @@ function UI_ReaderImageView(o) {
 		this.selectPage(this.currentPage + 1);
 	}
 
+	this.mouseHandler = function(e) {
+	var box = this.$.getBoundingClientRect();
+	var cutoff = box.width * 0.35 + box.left;
+		if(e.pageX > cutoff) {
+			Action.nextPage(e);
+		}else if(e.pageX > box.left){
+			Action.prevPage(e);
+		}
+	}
 
-	this._.page_next.onmousedown = e => this.next(e);
-	this._.page_prev.onmousedown = e => this.prev(e);
-
-	this.S.mapIn({
-		url: this.renderChapter
-	})
+	this.$.onmousedown = e => this.mouseHandler(e);
 }
 
 function UI_SimpleList(o) {
@@ -272,14 +475,21 @@ function UI_Image(o) {
 
 alg.createBin();
 
-API = new APIHandler({url: '/api/'});
+API = new APIHandler({
+	url: '/api/',
+	mediaURL: '/media/manga/'
+});
 Storage = new StorageHandler();
 Reader = new UI_Reader({
-	node: document.getElementById('rdr-main')
+	node: document.getElementById('rdr-main'),
+	storage: Storage
 });
+Action = new ActionHandler();
+Loader = new LoadHandler();
+
 
 Reader.S.link(API);
 API.S.link(Storage);
 Storage.S.link(Reader)
-
-Reader.initSeries('Kaguya-Wants-To-Be-Confessed-To');
+Action.S.link(API);
+Loader.S.link(Action);

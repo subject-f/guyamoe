@@ -114,6 +114,7 @@ aside > header {
 	width: 3rem;
 	height: 3rem;
 	flex-shrink: 0;
+	color: #eee;
 }
 
 header > h1 {
@@ -295,9 +296,9 @@ details[open] .expander:before {
 
 .rdr-image-wrap {
 	white-space: nowrap;
-	overflow-x: hidden;
+	overflow: hidden;
 	text-indent: 0%;
-	transition: text-indent 0.3s ease;
+	transition: text-indent 0.15s ease;
 	font-size: 0;
 }
 
@@ -306,8 +307,19 @@ details[open] .expander:before {
 	min-width: 100%;
 	display: inline-block;
 	vertical-align: top;
+	opacity: 0;
+	transition: opacity 0.3s linear;
+	top: 0;
+	position: relative;
 }
 
+.rdr-image-wrap img.is-active {
+	opacity: 1;
+}
+
+.rdr-image-wrap img.is-active + img {
+	
+}
 
 .rdr-float-prev, .rdr-float-next {
 	position: absolute;
