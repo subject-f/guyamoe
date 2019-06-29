@@ -234,6 +234,12 @@ function UI_Reader(o) {
 		currentScroll: null
 	};
 
+	this.keyListener =
+		new KeyListener()
+			.attach('prev', ['ArrowLeft'], e => Action.prevPage())
+			.attach('next', ['ArrowRight'], e => Action.nextPage())
+			.attach('prevCh', ['BracketLeft'], e => Action.prevChapter())
+			.attach('nextCh', ['BracketRight'], e => Action.nextChapter())
 
 	this.selector_chap = new UI_SimpleList({
 		node: this._.selector_chap
@@ -312,25 +318,35 @@ function UI_Reader(o) {
 	}
 
 	this.nextChapter = function(){
-	var chapArr = Object.keys(this.seriesData.chapters).sort()
+	var chapArr = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
 		this.drawChapter(
 				chapArr[chapArr.indexOf(this.state.currentChapter)+1]
 			)
 	}
 	this.prevChapter = function(){
-	var chapArr = Object.keys(this.seriesData.chapters).sort()
+	var chapArr = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
 		this.drawChapter(
-				chapArr[chapArr.indexOf(this.state.currentChapter)-1]
-			)
+			chapArr[chapArr.indexOf(this.state.currentChapter) - 1]
+		)
 	}
 	this.nextPage = function(){
-		this.displayPage(this.state.currentPage + 1)
+		if(this.state.currentPage < this.seriesData.chapters[this.state.currentChapter].pages.length - 1) 
+			this.displayPage(this.state.currentPage + 1)
+		else
+			Action.nextChapter();
 	}
 	this.prevPage = function(){
-		this.displayPage(this.state.currentPage - 1)
+		if(this.state.currentPage > 0) 
+			this.displayPage(this.state.currentPage - 1)
+		else {
+			Action.prevChapter();
+			Action.displayPage('last');
+		}
 	}
 
 	this.displayPage = function(page) {
+		if(page == 'last')
+			page = this.seriesData.chapters[this.state.currentChapter].images.length - 1;
 		this.imageView.selectPage(page);
 		this.state.currentPage = page;
 		window.history.replaceState(

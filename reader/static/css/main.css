@@ -158,7 +158,9 @@ header > .search:before {
 .rdr-selector option {
 	color: #eee;
 	background: #1f1b19;
-	padding: 0.2em;
+	padding: 0.4em 0.2em;
+	display: block;
+	line-height: 1.2em;
 }
 
 
@@ -308,7 +310,7 @@ details[open] .expander:before {
 	display: inline-block;
 	vertical-align: top;
 	opacity: 0;
-	transition: opacity 0.3s linear;
+	transition: opacity 0.15s ease;
 	top: 0;
 	position: relative;
 }
