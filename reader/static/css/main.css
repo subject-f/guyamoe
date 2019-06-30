@@ -184,6 +184,10 @@ header > .search:before {
 	height: 2rem;
 }
 
+.flex-spacer {
+	flex-grow: 1000;
+}
+
 .rdr-selector-chap.prev:before {
 	content: '‹';
 }
@@ -198,6 +202,35 @@ header > .search:before {
 	content: '›';
 	transform: rotate(90deg);
 }
+.is-ico-button.fitter {
+	float: right;
+}
+.is-ico-button.fitter:before {
+	font-size: 0.8em;
+}
+.is-ico-button.fitter.fit-height:before {
+	content: '‹›';
+	transform: rotate(90deg);
+}
+.is-ico-button.fitter.fit-width:before {
+	content: '‹›';
+}
+.is-ico-button.fitter.fit-none:before {
+	content: '›‹';
+}
+.is-ico-button.layout:before {
+	font-size: 0.8em;
+}
+.ltr .is-ico-button.layout:before {
+	content: "⇢";
+}
+.rtl .is-ico-button.layout:before {
+	content: "⇠";
+}
+.ttb .is-ico-button.layout:before {
+	content: "⇣";
+}
+
 
 .rdr-vol-wrap {
 	position: relative;
@@ -300,29 +333,72 @@ details[open] .expander:before {
 	white-space: nowrap;
 	overflow: hidden;
 	text-indent: 0%;
-	transition: text-indent 0.15s ease;
+/*	transition: text-indent 0.15s ease; */
 	font-size: 0;
 }
 
-.rdr-area.fit-width img {
+.rdr-area .WrappedImage {
 	max-width: 100%;
 	min-width: 100%;
 	display: inline-block;
 	vertical-align: top;
-	opacity: 0;
-	transition: opacity 0.15s ease;
+	transition: opacity 0.3s ease;
 	top: 0;
 	position: relative;
-}
-
-.rdr-image-wrap img.is-active {
+	text-indent: 0;
 	opacity: 1;
 }
 
-.rdr-image-wrap img.is-active + img {
-	
+.WrappedImage img {
+	width: 100%;
 }
 
+.rdr-area .UI.WrappedImage.is-active {
+	opacity: 1;
+}
+
+.rdr-area.fit-width {
+
+}
+
+.rdr-area.fit-height .WrappedImage {
+	height: 100vh;
+	width: 100%;
+	text-align: center;
+}
+
+.rdr-area.fit-height .WrappedImage img {
+	height: 100%;
+	width: auto;
+}
+
+.rdr-area.fit-none .WrappedImage {
+	overflow-x: auto;
+	user-select: none;
+}
+
+.rdr-area.fit-none .WrappedImage img {
+	max-width: auto;
+	max-height: auto;
+	width: auto;
+	height: auto;
+	pointer-events: none;
+}
+
+
+.ttb .rdr-area .WrappedImage {
+	opacity: 1; 
+	margin-bottom: 15px;
+	box-shadow: 0px 0px 4px black;
+}
+
+.ttb .rdr-image-wrap {
+	white-space: pre-wrap;
+	text-indent: 0 !important; 
+}
+
+
+/*
 .rdr-float-prev, .rdr-float-next {
 	position: absolute;
 	top: 0;
@@ -337,4 +413,19 @@ details[open] .expander:before {
 .rdr-float-next {
 	right: 0;
 	width: 70%;
+}
+*/
+
+@media (max-width: 700px) {
+	main {
+		flex-direction: column;
+		height: auto;
+		max-height: unset;
+	}
+
+	aside {
+		min-width: 100vw;
+		height: auto;
+		position: relative;
+	}	
 }

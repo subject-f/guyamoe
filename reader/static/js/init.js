@@ -240,6 +240,7 @@ function UI_Reader(o) {
 			.attach('next', ['ArrowRight'], e => Action.nextPage())
 			.attach('prevCh', ['BracketLeft'], e => Action.prevChapter())
 			.attach('nextCh', ['BracketRight'], e => Action.nextChapter())
+			.attach('cycleFit', ['KeyF'], e => this.cycleFit())
 
 	this.selector_chap = new UI_SimpleList({
 		node: this._.selector_chap
@@ -365,10 +366,42 @@ function UI_Reader(o) {
 			);
 	}
 
+	this.cycleFit = function() {
+	var fits = [
+			'fit-width',
+			'fit-height',
+			'fit-none'
+		];
+		this.imageView.$.classList.cycle(fits);
+		this._.fit_button.classList.cycle(fits);
+	}
+
+	this.cycleLayout = function() {
+		switch(this.imageView.displayLayout) {
+			case 'ltr':
+			var newLayout = displayLayout = 'ttb';
+				break;
+			case 'ttb':
+				newLayout = displayLayout ='rtl';
+				break;
+			case 'rtl':
+				newLayout = displayLayout ='ltr';
+				break;
+		}
+		this.$.classList.remove(this.imageView.displayLayout);
+		this.$.classList.add(newLayout);
+		this.imageView.displayLayout = newLayout;
+
+		this.imageView.drawImages(this.seriesData.chapters[this.state.currentChapter].images);
+		this.imageView.selectPage(this.imageView.currentPage);
+	}
+
 	this._.chap_prev.onmousedown = e => Action.prevChapter(e);
 	this._.chap_next.onmousedown = e => Action.nextChapter(e);
 	this._.vol_prev.onmousedown = e => Action.prevVolume(e);
 	this._.vol_next.onmousedown = e => Action.nextVolume(e);
+	this._.fit_button.onmousedown = e => this.cycleFit(e);
+	this._.layout_button.onmousedown = e => this.cycleLayout(e);
 
 	this.S.mapIn({
 		'action': this.actionHandler,
@@ -385,37 +418,41 @@ function UI_ReaderImageView(o) {
 	Linkable.call(this);
 
 	this.currentPage = 0;
+	this.displayLayout = 'ltr';
 
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
 	this.drawImages = function(images) {
-		this.imageContainer.clear();;
-		images.forEach(url => {
-			this.imageContainer.add(new UI_Image({src: url}))
+		this.imageContainer.clear();
+		images.forEach((url, index) => {
+			this.imageContainer.add(new UI_WrappedImage({src: url, index: index}))
 		})
-	}
-
-	this.$.onscroll = e => {
-		if(this.imageContainer.selectedItems[0].$.nextSibling)
-			this.imageContainer.selectedItems[0].$.nextSibling.style.top = this.$.scrollTop + 'px';
-		if(this.imageContainer.selectedItems[0].$.prevSibling)
-			this.imageContainer.selectedItems[0].$.prevSibling.style.top = this.$.scrollTop + 'px';
+		if(this.displayLayout == 'rtl') this.imageContainer.reverse();
 	}
 
 	this.selectPage = function(index) {
 		if(index < 0 || index >= this.imageContainer.$.children.length)
 			return;
-		this.imageContainer.select(index);
+	var pageElement = this.$.querySelector('*[data-index="'+index+'"]')
+	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
+		this.imageContainer.select(realIndex);
 		this.currentPage = index;
-		this.imageContainer.$.style.textIndent = -1 * 100 * this.currentPage - 0.001 + '%';
-		//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
-		setTimeout(() => {
-			this.imageContainer.selectedItems[0].$.style.top = 0;
-			this.$.scrollTo({
+		if(this.displayLayout == 'ttb'){
+			/*this.$.scrollTo({
 				left: 0,
-				top: 0
-			})
-		}, 150)
+				top: pageElement.offsetTop
+			})*/
+		}else{
+			this.imageContainer.$.style.textIndent = -1 * 100 * realIndex - 0.001 + '%';
+			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
+			// setTimeout(() => {
+				this.imageContainer.selectedItems[0].$.style.top = 0;
+				this.$.scrollTo({
+					left: 0,
+					top: 0
+				})
+			// }, 150)
+		}
 	}
 
 	this.prev = function() {
@@ -426,13 +463,31 @@ function UI_ReaderImageView(o) {
 		this.selectPage(this.currentPage + 1);
 	}
 
+
+	this.$.onscroll = e => {
+		if(this.displayLayout == 'ttb') {
+		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
+			offsets.push(this.$.scrollTop);
+			offsets = offsets.sort((a, b) => a - b);
+			Action.displayPage(offsets.indexOf(this.$.scrollTop) - 1);
+			return;
+		}
+		if(this.imageContainer.selectedItems[0].$.nextSibling)
+			this.imageContainer.selectedItems[0].$.nextSibling.style.top = this.$.scrollTop + 'px';
+		if(this.imageContainer.selectedItems[0].$.prevSibling)
+			this.imageContainer.selectedItems[0].$.prevSibling.style.top = this.$.scrollTop + 'px';
+	}
 	this.mouseHandler = function(e) {
 	var box = this.$.getBoundingClientRect();
 	var cutoff = box.width * 0.35 + box.left;
 		if(e.pageX > cutoff) {
-			Action.nextPage(e);
+			(this.displayLayout == 'rtl')?
+				Action.prevPage(e):
+				Action.nextPage(e);
 		}else if(e.pageX > box.left){
-			Action.prevPage(e);
+			(this.displayLayout == 'rtl')?
+				Action.nextPage(e):
+				Action.prevPage(e);
 		}
 	}
 
@@ -478,15 +533,16 @@ function UI_SimpleListItem(o) {
 		this.$.innerHTML = o.text || o.value || '<List Element>';
 }
 
-function UI_Image(o) {
+function UI_WrappedImage(o) {
 	o=be(o);
 	UI.call(this, {
 		node: o.node,
-		kind: ['Image'].concat(o.kind || []),
-		html: o.html || '<img src="" />'
+		kind: ['WrappedImage'].concat(o.kind || []),
+		html: o.html || '<div><img data-bind="image" src="" /></div>'
 	});
 
-	this.$.src = o.src;
+	this._.image.src = o.src;
+	this.$.setAttribute('data-index', o.index)
 }
 
 alg.createBin();

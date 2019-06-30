@@ -462,6 +462,11 @@ function UI_List(o) {
 		this.add(this.$.children.map(item => item._struct));
 		return this;
 	}
+
+	this.reverse = function() {
+		this.$.reverseChildren();
+		return this;
+	}
 }
 
 

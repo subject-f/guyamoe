@@ -28,6 +28,25 @@ var index;
 		return null;
 }
 
+DOMTokenList.prototype.cycle = function(array) {
+var classesArray = Array.prototype.slice.call(this);
+	for(var i=0; i<array.length; i++) {
+	var index = classesArray.indexOf(array[i]);
+	var classIndex = i;  
+		if(index > -1) {
+			break;
+		}
+	}
+	if(index > -1) {
+		this.remove(classesArray[index]);
+	var classToAdd = (i >= array.length - 1)?array[0]:array[i+1];
+		this.add(classToAdd);
+		return classToAdd;
+	}
+};
+
+
+
 
 
 /* ------------------------------------------------- */
@@ -208,6 +227,13 @@ function utfAtob(str) {
 	function(p) {
 	NodeList.prototype[p] = HTMLCollection.prototype[p] = Array.prototype[p];
 });
+
+HTMLElement.prototype.reverseChildren = function reverseChildren() {
+var elements = this.children.slice();
+	for(var i = elements.length-1; i >= 0; i--) {
+		this.appendChild(elements[i]);
+	}
+}
 
 NodeList.prototype.getStructs = HTMLCollection.prototype.getStructs = function getStructs(){
 	return this.reduce((keep, item) => item._struct?keep.concat(item._struct):keep, []);

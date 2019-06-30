@@ -5,12 +5,13 @@
 		<meta charset="UTF-8">
 		<title>title</title>
 		<!--<script src="https://debugger.algoinde.ru/target/target-script-min.js#anonymous"></script>-->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}"></script>
 		<script type="text/javascript" src="{% static 'js/UI2.js' %}"></script>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
 	</head>
 <body>
-	<main id="rdr-main">
+	<main id="rdr-main" class="ltr">
 		<aside>
 			<header>
 				<button data-bind='close' class="is-ico-button close"></button>
@@ -36,6 +37,9 @@
 					</div>
 					<div class="rdr-selector-bot">
 						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button next"></button>
+						<div class="flex-spacer"></div>
+						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
+						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter fit-width"></button>
 					</div>
 				</section>
 				<section class="rdr-previews">
