@@ -1,28 +1,24 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+    <title>KaguyaLib</title>
 
-<head>
-    <title>Kagudex</title>
+    <link href="{% static  'css/main.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
 
-    <link href="assets/css/main.css" rel="stylesheet" type="text/css">
-</head>
-
-<body>
+{% block body %}
     <section class="header">
         <a href="home.html"><img style="height:80px;
-			margin:10px 20px;" src="assets/img/logo_menu.png"></a>
-        <button class="header-link">verify</button>
-        <button class="header-link">read</button>
-        <button class="header-link active">home</button>
+			margin:10px 20px;" src="{% static  'img/logo_menu.png' %}"></a>
     </section>
 
     <section style="position: relative; 
-					background-image: url(assets/img/bg_box.png); 
+					background-image: url({% static  'img/bg_box.png' %}); 
 					height:90vh">
         <div class="center" style="width:320px;
 								   overflow:auto;padding:5vh;
 								   background-color: transparent">
-			<img src="assets/img/9784088912318.jpg" style="width:320px">
+			<img src="{% static  'img/9784088912318.jpg' %}" style="width:320px">
 			<button title="pls" class="sp-button"
 				onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8', '_blank')">throw
 				money at
@@ -32,7 +28,7 @@
     </section>
 
     <section style="position: relative; 
-					background-image: url(assets/img/bg_pink.gif);
+					background-image: url({% static  'img/bg_pink.gif'%});
 					height:100vh">
 
 		<div class="center">
@@ -56,6 +52,4 @@
 		</div>
 	
 	</section>
-</body>
-
-</html>
+{% endblock %}
