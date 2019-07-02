@@ -1,7 +1,7 @@
 * {
 	margin: 0;
 	padding: 0;
-	border: 1px solid red;
+	border: 0px solid red;
 	background-color: black;
 	color: white;
 	font-size: 24px;
@@ -11,8 +11,9 @@
 .center {
 	display: table;
 	margin: auto;
-	width: 100vw;
+	width: 100%;
 	text-align: center;
+	background-color: transparent;
 }
 
 .header {
@@ -36,6 +37,10 @@
 }
 
 .header-link:hover {
+	background-color: #e72e8c;
+}
+
+.active {
 	background-color: #e72e8c;
 }
 
