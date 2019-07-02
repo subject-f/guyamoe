@@ -25,7 +25,7 @@ SECRET_KEY = 'j1891u231823u9182ur198ru218u81urqiourq893ur8oruo3ruqowruwoqrhwq38r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['kagu.algoinde.ru']
+ALLOWED_HOSTS = ['kagu.algoinde.ru', 'localhost']
 
 
 # Application definition
