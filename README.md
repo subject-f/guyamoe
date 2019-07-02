@@ -22,14 +22,14 @@ Before starting the server, create a `media` folder in the base directory. Add m
 media
 └───manga
     └───<series-slug-name>
-        └───1
+        └───001
             ├───001.jpg
             ├───002.jpg
             └───...
 ```
 E.g. `Kaguya-Wants-To-Be-Confessed-To` for `<series-slug-name>`. 
 
-Note: No zero padding for chapter numbers. It doesn't matter for pages though nor does it have to be .jpg. Only thing required for pages is that the ordering can be known from a simple numerical/alphabetical sort on the directory.
+Note: Zero pad chapter folder numbers like so: `001` for the Kaguya series (this is how the fixtures data for the series has it). It doesn't matter for pages though nor does it have to be .jpg. Only thing required for pages is that the ordering can be known from a simple numerical/alphabetical sort on the directory.
 
 ## Start the server
 
@@ -44,6 +44,7 @@ Relevant urls (as of now):
 - `/` - home page
 - `/about` - about page
 - `/admin` - admin view (login with created user above)
+- `/reader/series/<series_slug_name>` - series info and all chapter links
 - `/reader/series/<series_slug_name>/<chapter_number>/<page_number>` - url scheme for reader opened on specfied page of chapter of series.
 - `/api/series/<series_slug_name>` - all series data requested by reader frontend
 - `/media/manga/<series_slug_name>/<chapter_number>/<page_file_name>` - url scheme to used by reader to actual page as an image.
