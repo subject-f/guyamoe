@@ -1,55 +1,63 @@
 {% extends "layout.html" %}
 {% load static %}
-{% block head %}
-    <title>KaguyaLib</title>
 
-    <link href="{% static  'css/main.css' %}" rel="stylesheet" type="text/css">
-{% endblock %}
+<head>
+	<title>KaguyaLib</title>
+
+	<link href="{% static  'css/main.css' %}" rel="stylesheet" type="text/css">
+</head>
 
 {% block body %}
-    <section class="header">
-        <a href="home.html"><img style="height:80px;
+<section class="header">
+	<a href="home.html"><img style="height:80px;
 			margin:10px 20px;" src="{% static  'img/logo_menu.png' %}"></a>
-    </section>
+</section>
 
-    <section style="position: relative; 
+<section style="position: relative; 
 					background-image: url({% static  'img/bg_box.png' %}); 
 					height:90vh">
-        <div class="center" style="width:320px;
+	<div class="center" style="width:320px;
 								   overflow:auto;padding:5vh;
 								   background-color: transparent">
-			<img src="{% static  'img/9784088912318.jpg' %}" style="width:320px">
-			<button title="pls" class="sp-button"
-				onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8', '_blank')">throw
-				money at
-				aka</button>
-        </div>
+		<img src="{% static  'img/9784088912318.jpg' %}" style="width:320px">
+		<button title="pls" class="sp-button"
+			onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8', '_blank')">throw
+			money at
+			aka</button>
+	</div>
 
-    </section>
+</section>
 
-    <section style="position: relative; 
+<section style="position: relative; 
+	background-image: url({% static  'img/yjbg.jpg'%});
+	height:100vh">
+
+
+</section>
+
+<section style="position: relative; 
 					background-image: url({% static  'img/bg_pink.gif'%});
 					height:100vh">
 
-		<div class="center">
-			<p style="background-color: transparent;
+	<div class="center">
+		<p style="background-color: transparent;
 					  margin-top: 30vh;
 					  font-size: 60px">"Onodera is a better version of Hayasaka"<br>~appu, 2019</p>
-			
-		</div>
 
-    </section>
-	<section style="position:relative;
+	</div>
+
+</section>
+<section style="position:relative;
 					background-color: #2a2a2a;
 					height:50vh;">
-		<div class="center" style="font-size: 14px;
+	<div class="center" style="font-size: 14px;
 					position: absolute;
 					bottom:0;
 					margin-bottom: 10vh">
-			Kaguya-sama, the 4koma, the doujin, and the fancomics belong to their respective authors. <br>
-			We don't really claim ownership on them using this website.<br>
-			That would be, like, unethical, wouldn't it?
-		</div>
-	
-	</section>
+		Kaguya-sama, the 4koma, the doujin, and the fancomics belong to their respective authors. <br>
+		We don't really claim ownership on them using this website.<br>
+		That would be, like, unethical, wouldn't it?
+	</div>
+
+</section>
 {% endblock %}
