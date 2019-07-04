@@ -10,47 +10,105 @@
 		border: 0px solid red;
 	}
 
+	a:hover {
+		text-decoration: none;
+	}
+
+
 	.img {
 		height: auto;
 		/* width: 20vw; */
+	}
+
+	.sp-button {
+		width: 320px;
+		height: 50px;
+		background-color: #4b4b4b;
+		color: white;
+	}
+
+	.sp-button:hover {
+		background-color: #e72e8c;
+		transition: 0.3s
+	}
+
+	.sp-row-add {
+		margin: 0;
 	}
 </style>
 
 {% endblock %}
 
 {% block body %}
-<div class="container" style="background-image:url({% static 'img/bg_box.png' %})">
-	<div class="row" style="padding:2vh">
-		<div class="col-md-3">
+<div class="container-fluid" style="width:100%; margin:0;padding:0">
+	<div class="row justify-content-center sp-row-add"
+		style="padding:5vh;background-image: url({% static 'img/bg_box.png' %});background-color:black;">
+		<div class="col-md-2">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
 					<img class="img-fluid" src="{% static  'img/kaguyacover.jpg' %}">
-					<div class="caption img">
+					<div class="caption img text-center">
 						<p>Kaguya Wants to be Confessed to</p>
 					</div>
 				</a>
 			</div>
 		</div>
-		<div class="col-md-3">
+		<div class="col-md-2">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
 					<img class="img-fluid" src="{% static  'img/4komacover.jpg' %}">
-					<div class="caption img">
+					<div class="caption img text-center">
 						<p>We Want to Talk about Kaguya</p>
 					</div>
 				</a>
 			</div>
 		</div>
-		<div class="col-md-3">
+		<div class="col-md-2">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
 					<img class="img-fluid" src="{% static  'img/doujincover.jpg' %}">
-					<div class="caption img">
+					<div class="caption img text-center">
 						<p>Kaguya Wants to be Confessed to Official Doujin</p>
 					</div>
 				</a>
 			</div>
-			<div class="thumbnail"></div>
+		</div>
+		<div class="col-md-2">
+			<div class="thumbnail img">
+				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+					<img class="img-fluid" src="{% static  'img/kaguyacover.jpg' %}">
+					<div class="caption img text-center">
+						<p>Fancomics</p>
+					</div>
+				</a>
+			</div>
+		</div>
+	</div>
+	<div class="row justify-content-center sp-row-add"
+		style="padding:5vh;background-image: url({% static 'img/bg_pink.gif' %});">
+		<div class="col">
+			<img class="mx-auto d-block" src="{% static 'img/appuquote.png' %}">
+		</div>
+	</div>
+	<div class="row justify-content-center sp-row-add" style="background-color:#2a2a2a;">
+		<div class="row" style="margin: 5vh 10vw 0 10vw">
+			<button class="sp-button"
+				onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
+				alt="pls">throw money
+				at aka
+			</button>
+		</div>
+		<div class="row text-center" style="padding:5vh; margin: 0 10vw 0 10vw">
+			<div class="col">
+				<p>Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
+					authors.<br>This website is not for profit.</p>
+			</div>
+
+		</div>
+		<div class="row" style="margin: 0 10vw 0 10vw">
+			<div class="col">
+				<img class="mx-auto d-block" style="width:7vw" src="{% static 'img/img_comics-bottom.png' %}">
+			</div>
 		</div>
 	</div>
 </div>
