@@ -14,10 +14,16 @@
 		text-decoration: none;
 	}
 
-
 	.img {
 		height: auto;
 		/* width: 20vw; */
+		margin-bottom: 5vh
+	}
+
+	.img:hover {
+		transform: scale(1.1, 1.1);
+		transition: 0.2s ease;
+		box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
 	}
 
 	.sp-button {
@@ -29,11 +35,22 @@
 
 	.sp-button:hover {
 		background-color: #e72e8c;
-		transition: 0.3s
+		transform: scale(1.1, 1.1);
+		transition: 0.2s ease;
+		box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
 	}
 
 	.sp-row-add {
 		margin: 0;
+	}
+
+	.caption {
+		margin-top: 2vh;
+		word-wrap: wrap break-word;
+	}
+
+	img>p {
+		width: inherit
 	}
 </style>
 
@@ -41,53 +58,73 @@
 
 {% block body %}
 <div class="container-fluid" style="width:100%; margin:0;padding:0">
+
 	<div class="row justify-content-center sp-row-add"
 		style="padding:10vh;background-image: url({% static 'img/bg_box.png' %});background-color:black;">
-		<div class="col-md-2">
-			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{% static  'img/kaguyacover.jpg' %}">
-					<div class="caption img text-center">
-						<p>Kaguya Wants to be Confessed to</p>
-					</div>
-				</a>
+
+		<div class="row">
+			<div class="col-md-6">
+				<div class="thumbnail img">
+					<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+						<img class="img-fluid mx-auto d-block" src="{% static 'img/kaguyacover.jpg' %}">
+						<div class="caption img text-center">
+							<p>Kaguya Wants to be Confessed to</p>
+						</div>
+					</a>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="thumbnail img">
+					<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+						<img class="img-fluid mx-auto d-block" src="{% static 'img/4komacover.jpg' %}">
+						<div class="caption img text-center">
+							<p>We Want to Talk about Kaguya</p>
+						</div>
+					</a>
+				</div>
+			</div>
+
+		</div>
+		<div class="row">
+			<div class="col-md-4">
+				<div class="thumbnail img">
+					<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+						<img class="img-fluid mx-auto d-block" src="{% static 'img/doujincover.jpg' %}">
+						<div class="caption img text-center">
+							<p>Kaguya Wants to be Confessed to Official Doujin</p>
+						</div>
+					</a>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="thumbnail img">
+					<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+						<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}">
+						<div class="caption img text-center">
+							<p>Novel</p>
+						</div>
+					</a>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="thumbnail img">
+					<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+						<img class="img-fluid mx-auto d-block"
+							src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}">
+						<div class="caption img text-center">
+							<p>Fancomics</p>
+						</div>
+					</a>
+				</div>
 			</div>
 		</div>
-		<div class="col-md-2">
-			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{% static  'img/4komacover.jpg' %}">
-					<div class="caption img text-center">
-						<p>We Want to Talk about Kaguya</p>
-					</div>
-				</a>
-			</div>
-		</div>
-		<div class="col-md-2">
-			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{% static  'img/doujincover.jpg' %}">
-					<div class="caption img text-center">
-						<p>Kaguya Wants to be Confessed to Official Doujin</p>
-					</div>
-				</a>
-			</div>
-		</div>
-		<div class="col-md-2">
-			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{% static  'img/kaguyacover.jpg' %}">
-					<div class="caption img text-center">
-						<p>Fancomics</p>
-					</div>
-				</a>
-			</div>
-		</div>
+
+
 	</div>
 	<div class="row justify-content-center sp-row-add"
 		style="padding:5vh;background-image: url({% static 'img/bg_pink.gif' %});">
 		<div class="col">
-			<img class="mx-auto d-block" src="{% static 'img/appuquote.png' %}">
+			<img class="img-fluid mx-auto d-block" src="{% static 'img/appuquote.png' %}">
 		</div>
 	</div>
 	<div class="row justify-content-center sp-row-add" style="background-color:#2a2a2a;">
@@ -100,16 +137,19 @@
 		</div>
 		<div class="row text-center" style="padding:5vh; margin: 0 10vw 0 10vw">
 			<div class="col">
-				<p>Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
-					authors.<br>This website is not for profit.</p>
+				<h6 class="text-secondary">
+					Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
+					authors.<br>This website is not for profit.
+				</h6>
 			</div>
 
 		</div>
-		<div class="row" style="margin: 0 10vw 0 10vw">
+		<!-- <div class="row" style="margin: 0 10vw 0 10vw">
 			<div class="col">
-				<img class="mx-auto d-block" style="width:7vw" src="{% static 'img/img_comics-bottom.png' %}">
+				<img class="img-fluid mx-auto d-block" style="width:10vw"
+					src="{% static 'img/img_comics-bottom.png' %}">
 			</div>
-		</div>
+		</div> -->
 	</div>
 </div>
 {% endblock %}
