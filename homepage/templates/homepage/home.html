@@ -7,124 +7,51 @@
 
 <style>
 	* {
-		margin: 0;
-		padding: 0;
 		border: 0px solid red;
-		background-color: black;
-		color: white;
-		font-size: 24px;
-		font-family: "游ゴシック", YuGothic, "Helvetica", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, "Helvetica Neue", Arial, sans-serif;
 	}
 
-	.center {
-		display: table;
-		margin: auto;
-		width: 100%;
-		text-align: center;
-		background-color: transparent;
-	}
-
-	.header {
-		height: 100px;
-		width: 100%;
-		position: relative;
-		top: 0;
-	}
-
-	.header>* {
-		display: inline-block;
-		vertical-align: middle;
-	}
-
-	.header-link {
-		float: right;
-		margin: 20px;
-		width: 10vw;
-		height: 60px;
-		padding: .5vh 0
-	}
-
-	.header-link:hover {
-		background-color: #e72e8c;
-	}
-
-	.active {
-		background-color: #e72e8c;
-	}
-
-	img {
+	.img {
 		height: auto;
-	}
-
-	button {
-		cursor: pointer;
-	}
-
-	.sp-button {
-		background-color: #4b4b4b;
-		width: 320px;
-		padding: 10px;
-		outline-color: #4b4b4b;
-		outline-style: double;
-	}
-
-	.sp-button:hover {
-		background-color: #e72e8c;
+		/* width: 20vw; */
 	}
 </style>
+
 {% endblock %}
 
 {% block body %}
-<section class="header">
-	<a href="home.html"><img style="height:80px;
-			margin:10px 20px;" src="{% static  'img/logo_menu.png' %}"></a>
-</section>
-
-<section style="position: relative; 
-					background-image: url({% static  'img/bg_box.png' %}); 
-					height:90vh">
-	<div class="center" style="width:320px;
-								   overflow:auto;padding:5vh;
-								   background-color: transparent">
-		<img src="{% static  'img/9784088912318.jpg' %}" style="width:320px">
-		<button title="pls" class="sp-button"
-			onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8', '_blank')">throw
-			money at
-			aka</button>
+<div class="container" style="background-image:url({% static 'img/bg_box.png' %})">
+	<div class="row" style="padding:2vh">
+		<div class="col-md-3">
+			<div class="thumbnail img">
+				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+					<img class="img-fluid" src="{% static  'img/kaguyacover.jpg' %}">
+					<div class="caption img">
+						<p>Kaguya Wants to be Confessed to</p>
+					</div>
+				</a>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="thumbnail img">
+				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+					<img class="img-fluid" src="{% static  'img/4komacover.jpg' %}">
+					<div class="caption img">
+						<p>We Want to Talk about Kaguya</p>
+					</div>
+				</a>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="thumbnail img">
+				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+					<img class="img-fluid" src="{% static  'img/doujincover.jpg' %}">
+					<div class="caption img">
+						<p>Kaguya Wants to be Confessed to Official Doujin</p>
+					</div>
+				</a>
+			</div>
+			<div class="thumbnail"></div>
+		</div>
 	</div>
-
-</section>
-
-<section style="position: relative; 
-	background-image: url({% static  'img/yjbg.jpg'%});
-	height:100vh">
-
-
-</section>
-
-<section style="position: relative; 
-					background-image: url({% static  'img/bg_pink.gif'%});
-					height:100vh">
-
-	<div class="center">
-		<p style="background-color: transparent;
-					  margin-top: 30vh;
-					  font-size: 60px">"Onodera is a better version of Hayasaka"<br>~appu, 2019</p>
-
-	</div>
-
-</section>
-<section style="position:relative;
-					background-color: #2a2a2a;
-					height:50vh;">
-	<div class="center" style="font-size: 14px;
-					position: absolute;
-					bottom:0;
-					margin-bottom: 10vh">
-		Kaguya-sama, the 4koma, the doujin, and the fancomics belong to their respective authors. <br>
-		We don't really claim ownership on them using this website.<br>
-		That would be, like, unethical, wouldn't it?
-	</div>
-
-</section>
+</div>
 {% endblock %}
