@@ -3,7 +3,7 @@
 {% block head %}
 <title>KaguyaLib</title>
 
-<link href="{% static  'css/main.css' %}" rel="stylesheet" type="text/css">
+
 
 <style>
 	* {
@@ -56,15 +56,24 @@
 	.manga [class*="col-xs"] {
 		margin-bottom: 15px;
 	}
+	body {
+		background-image: url({% static 'img/bg_box.png' %});background-color:black;
+	}
 </style>
 
 {% endblock %}
 
 {% block body %}
-<div class="manga container-fluid justify-content-center sp-row-add"
-	style="padding-top:3%; padding-bottom: 2%; background-image: url({% static 'img/bg_box.png' %});background-color:black;">
-	<div class="row d-flex justify-content-center" style="margin:0 10% 0 10%">
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+<main role="main" class="flex-shrink-0">
+<div class="manga container-fluid justify-content-center sp-row-add "
+	style="padding-top:1%; padding-bottom: 2%; ">
+	<div class="row ">
+		<div class="col d-flex justify-content-center">
+			<img src="{% static '/img/logo_menu.png' %}">
+		</div>
+	</div>
+	<div class="row d-flex justify-content-center pt-3" >
+		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
 					<img class="img-fluid mx-auto d-block" src="{% static 'img/kaguyacover.jpg' %}">
@@ -74,19 +83,19 @@
 				</a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+				<a href="/reader/series/We-Want-To-Talk-About-Kaguya">
 					<img class="img-fluid mx-auto d-block" src="{% static 'img/4komacover.jpg' %}">
 					<div class="caption text-center">
-						<p>We Want to Talk about Kaguya</p>
+						<p>We Want to Talk About Kaguya</p>
 					</div>
 				</a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">
 					<img class="img-fluid mx-auto d-block" src="{% static 'img/doujincover.jpg' %}">
 					<div class="caption text-center">
 						<p>Kaguya Wants to be Confessed to Official Doujin</p>
@@ -94,19 +103,19 @@
 				</a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+				<a href="/reader/novel/The-Seven-Mysteries-of-Shuchin-Academy">
 					<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}">
 					<div class="caption text-center">
-						<p>Novel</p>
+						<p>The Seven Mysteries of Shuchin Academy (Novel)</p>
 					</div>
 				</a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
+				<a href="/reader/fancomics">
 					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}">
 					<div class="caption text-center">
 						<p>Fancomics</p>
@@ -114,46 +123,34 @@
 				</a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-			<div class="thumbnail img">
-				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block"
-						src="https://cdn1.iconfinder.com/data/icons/modern-flat-app-gui-1/50/Search-512.png"
-						style="overflow:hidden;background-position:center;background-image: url({% static 'img/kaguyacover.jpg' %}); opacity: 0.8; width: 220px; height: 312px;">
-					<div class="caption text-center">
-						<p>Manga Indexer</p>
-					</div>
-				</a>
-			</div>
-		</div>
 	</div>
 </div>
-<footer class="container-fluid footer navbar-fixed-bottom">
+</main>
+<footer class="container-fluid footer mt-auto">
 	<div class="row">
 		<div class="justify-content-center col-12"
-			style="padding:1%;background-image: url({% static 'img/bg_pink.gif' %});">
-			<img class="img-fluid mx-auto d-block" src="{% static 'img/appuquote.png' %}">
+			style="background-image: url({% static 'img/bg_pink.gif' %});">
+			<img class="img-fluid mx-auto d-block" src="{% static 'img/appuquote.png' %}" style="max-height: 70px">
 		</div>
 	</div>
-	<div class="row justify-content-between pt-4 small" style="background-color:#2a2a2a;">
+	<div class="row justify-content-between pt-2 small" style="background-color:#2a2a2a;">
 		<div class="col-4 d-flex align-content-bottom justify-content-left">
-			<div class="row pl-3">
-
+			<div class="row pl-3 pt-2">
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
 					<button class="sp-button" style="padding:7%"
 						onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
 						alt="pls">Throw money at Aka
 					</button>
 				</div>
-				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
+				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10 ">
 					<button class="sp-button" style="padding:7%"
-						onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
+						onclick="window.open('https://www.amazon.com/gp/bookseries/B0778N11ZV')"
 						alt="pls">Buy Official Volumes
 					</button>
 				</div>
 			</div>
 		</div>
-		<div class="col-4 text-center">
+		<div class="col-4 text-center  pt-2">
 			<div class="col">
 				<h6 class="text-secondary">
 					Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
