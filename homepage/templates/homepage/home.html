@@ -23,6 +23,7 @@
 	.img:hover {
 		transform: scale(1.1, 1.1);
 		transition: 0.2s ease;
+		opacity: 0.8;
 		/* box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19); */
 	}
 
@@ -51,16 +52,18 @@
 	img>p {
 		width: inherit
 	}
+
 	.manga [class*="col-xs"] {
-      margin-bottom: 15px;
-  	}
+		margin-bottom: 15px;
+	}
 </style>
 
 {% endblock %}
 
 {% block body %}
-<div class="manga container-fluid justify-content-center sp-row-add" style="padding-top:3%; padding-bottom: 2%; background-image: url({% static 'img/bg_box.png' %});background-color:black;">
-	<div class="row d-flex justify-content-center">
+<div class="manga container-fluid justify-content-center sp-row-add"
+	style="padding-top:3%; padding-bottom: 2%; background-image: url({% static 'img/bg_box.png' %});background-color:black;">
+	<div class="row d-flex justify-content-center" style="margin:0 10% 0 10%">
 		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
@@ -114,7 +117,9 @@
 		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="https://cdn1.iconfinder.com/data/icons/modern-flat-app-gui-1/50/Search-512.png" style="background-image: url({% static 'img/kaguyacover.jpg' %}); opacity: 0.8; width: 220px; height: 312px;">
+					<img class="img-fluid mx-auto d-block"
+						src="https://cdn1.iconfinder.com/data/icons/modern-flat-app-gui-1/50/Search-512.png"
+						style="overflow:hidden;background-position:center;background-image: url({% static 'img/kaguyacover.jpg' %}); opacity: 0.8; width: 220px; height: 312px;">
 					<div class="caption text-center">
 						<p>Manga Indexer</p>
 					</div>
@@ -125,29 +130,30 @@
 </div>
 <footer class="container-fluid footer navbar-fixed-bottom">
 	<div class="row">
-		<div class="justify-content-center col-12" style="padding:1%;background-image: url({% static 'img/bg_pink.gif' %});">
+		<div class="justify-content-center col-12"
+			style="padding:1%;background-image: url({% static 'img/bg_pink.gif' %});">
 			<img class="img-fluid mx-auto d-block" src="{% static 'img/appuquote.png' %}">
 		</div>
 	</div>
 	<div class="row justify-content-between pt-4 small" style="background-color:#2a2a2a;">
-		<div class="col-3 d-flex align-content-bottom justify-content-left">
+		<div class="col-4 d-flex align-content-bottom justify-content-left">
 			<div class="row pl-3">
-				
+
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
-					<button class="sp-button"
+					<button class="sp-button" style="padding:7%"
 						onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
 						alt="pls">Throw money at Aka
 					</button>
 				</div>
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
-					<button class="sp-button"
+					<button class="sp-button" style="padding:7%"
 						onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
 						alt="pls">Buy Official Volumes
 					</button>
 				</div>
 			</div>
 		</div>
-		<div class="col-6 text-center">
+		<div class="col-4 text-center">
 			<div class="col">
 				<h6 class="text-secondary">
 					Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
@@ -155,9 +161,10 @@
 				</h6>
 			</div>
 		</div>
-		<div class="col-3">
+		<div class="col-4">
 			<div class="col">
-				<img class="img-fluid mx-auto d-block" style="height: 75px; width: 56px; float:right" src="{% static 'img/img_comics-bottom.png' %}">
+				<img class="img-fluid mx-auto d-block" style="height: 75px; width: 56px; float:right"
+					src="{% static 'img/img_comics-bottom.png' %}">
 			</div>
 		</div>
 	</div>
