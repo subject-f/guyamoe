@@ -15,7 +15,8 @@ def series_info(request, series_slug):
             "synopsis": series.synopsis, 
             "author": series.author.name,
             "artist": series.artist.name,
-            "chapter_list": chapter_list
+            "chapter_list": chapter_list,
+            "is_mod": request.user.is_staff
         })
 
 

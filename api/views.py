@@ -21,3 +21,15 @@ def series_data(request, series_slug):
         }
     data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
     return HttpResponse(json.dumps(data), content_type="application/json")
+
+
+def get_groups(request, series_slug):
+    groups = list(Chapter.objects.order_by().filter(series__slug=series_slug).values_list('group__name', flat=True).distinct())
+    return HttpResponse(json.dumps({"groups": groups}), content_type="application/json")
+
+
+def upload_new_chapter(request, series_slug):
+    if request.POST and request.user.is_staff:
+        print(request.FILES)
+        print(request.POST)
+        return HttpResponse(json.dumps({"success": "test"}), content_type="application/json")
