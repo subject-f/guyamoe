@@ -1,37 +1,3 @@
-var J = {
-    	"id": "1",
-        "title": "Kaguya-sama: Love is War",
-        "chapters": {
-            "139": {
-                "volume": "14",
-                "title": "Miyuki Shirogane wants to discuss",
-                "pages": [
-                    {
-                        "type": "page",
-                        "index": [
-                            {
-                                "x":104,
-                                "y": 200,
-                                "text": "THE CULTURE FESTIVAL IS OVER"
-                            },
-                        ],
-                        "img_full": "//....../.../.../.jpg",
-                        "img_100": "//....../.../.../.jpg",
-                        "img_200": "//....../.../.../.jpg",
-                        "img_blur": "//....../.../.../.jpg",
-                    },
-                    {
-                        "type": "credits",
-                        "img_full": "",
-                        "img_100": "",
-                        "img_200": "",
-                        "img_blur": "",
-                    }
-                ]
-            }
-        }
-    }
-
 function LoadHandler(o) {
 	o=be(o);
 	Linkable.call(this);
@@ -47,106 +13,14 @@ function LoadHandler(o) {
 
 	this.onload = () => {
 	var SCP = this.parseSCP(document.location.pathname);
-		this.S.out('action', {action: 'displaySCP', data: SCP});
+		Action.displaySCP(SCP);
 	}
 
 	document.body.onload = this.onload;
-
-	this.S.mapOut(['action']);
 }
 
 
 function ActionHandler(o) {
-	Linkable.call(this);
-
-	this.displaySeries = function(slug) {
-		this.S.out('action', {
-			action: 'displaySeries',
-			id: slug
-		})
-		return this;
-	}
-	this.displayChapter = function(id) {
-		this.S.out('action', {
-			action: 'displayChapter',
-			id: id
-		})
-		return this;
-	}
-	this.displayPage = function(id) {
-		this.S.out('action', {
-			action: 'displayPage',
-			id: id
-		})
-		return this;
-	}
-	this.displayVolume = function(id) {
-		this.S.out('action', {
-			action: 'displayVolume',
-			id: id
-		})
-		return this;
-	}
-	this.displaySCP = function(SCP) {
-		this.S.out('action', {
-			action: 'displaySeries',
-			id: SCP.series
-		})
-		this.S.out('action', {
-			action: 'displayChapter',
-			id: SCP.chapter
-		})
-		this.S.out('action', {
-			action: 'displayPage',
-			id: SCP.page
-		})
-		return this;
-	}
-	this.nextPage = function() {
-		this.S.out('action', {
-			action: 'nextPage'
-		})
-		return this;
-	}
-	this.prevPage = function() {
-		this.S.out('action', {
-			action: 'prevPage'
-		})
-		return this;
-	}
-	this.nextChapter = function() {
-		this.S.out('action', {
-			action: 'nextChapter'
-		})
-		return this;
-	}
-	this.prevChapter = function() {
-		this.S.out('action', {
-			action: 'prevChapter'
-		})
-		return this;
-	}
-	this.nextVolume = function() {
-		this.S.out('action', {
-			action: 'nextVolume'
-		})
-		return this;
-	}
-	this.prevVolume = function() {
-		this.S.out('action', {
-			action: 'prevVolume'
-		})
-		return this;
-	}
-
-	this.actionHandler = function(o) {
-		this[o.action](o.data);
-	}
-	this.S.mapIn({action: this.actionHandler})
-	this.S.mapOut(['action'])
-}
-
-function APIHandler(o) {
 	o=be(o);
 	Linkable.call(this);
 	this.url = o.url;
@@ -163,57 +37,82 @@ function APIHandler(o) {
 		return data;
 	}
 
-	this.actionHandler = function(o) {
-		switch (o.action) {
-			case 'displaySeries':
-			this.seriesRequest = fetch(this.url + 'series/' + o.id)
-					.then(response => response.json())
-					.then(data => {
-						this.S.out('data__series',
-							this.infuseImageURLs(data)
-						);
-					}).then(() => {
-						this.S.out('action', o);
-					})
-				break;
-			case 'displayChapter':
-			case 'displayPage':
-				this.seriesRequest.then(() => {
-					this.S.out('action', o);
-				})
-				break;
-			default:
-				this.S.out('action', o);
-				break;
-		}
+	this.displaySeries = function(slug) {
+		this.seriesRequest = fetch(this.url + 'series/' + slug)
+			.then(response => response.json())
+			.then(seriesData => {
+					seriesData = this.infuseImageURLs(seriesData);
+					seriesData.chaptersIndex =
+						Object.keys(
+							seriesData.chapters
+						).sort((a,b) => parseFloat(b) - parseFloat(a));
+					this.S.out('series_data', o);
+					this.S.out('state_series', slug)
+			})
 		return this;
 	}
 
-	this.S.mapIn({
-		action: this.actionHandler,
-	})
-	this.S.mapOut(['action', 'data__series'])
+	this.displayChapter = function(id) {
+		this.S.out('state_chapter', id);
+		return this;
+	}
+
+	this.displayPage = function(id) {
+		this.S.out('state_page', id);
+		return this;
+	}
+
+	this.displaySCP = function(SCP) {
+		if(SCP.series) this.displaySeries(SCP.series);
+		if(SCP.chapter) this.displayChapter(SCP.chapter);
+		if(SCP.page) this.displayPage(SCP.page);
+		return this;
+	}
+
+	this.S.mapOut([
+		'series_data',
+		'state_series',
+		'state_chapter',
+		'state_page'
+	]);
 }
 
-function StorageHandler(o) {
+function Reader_StorageHandler(o) {
 	o=be(o);
 	Linkable.call(this);
 
 	this.series = {};
+	this.chapter = null;
+	this.page = null;
 
-	this.actionHandler = function(o) {
-		this.S.out('action', o); //action passthrough
+	this.storeSeries = function(data) {
+		this.series = data.slug;
+		this.seriesObject = data;
+		this.S.out('data', this.series)
 	}
 
-	this.updateSeries = function(seriesObject) {
-		this.series[seriesObject.slug] = seriesObject;
+	this.updateChapter = function(chapterNumber) {
+		this.chapter = chapterNumber;
+		this.chapterObject = this.series[this.chapter];
+		this.S.out('state_chapter', this.chapter)
 	}
 
+	this.updatePage = function(chapterNumber) {
+		this.page = pageNumber;
+		this.pageObject = this.series[this.chapter].pages[this.page];
+		this.S.out('state_page', this.page)
+	}
+	
 	this.S.mapIn({
-		action: this.actionHandler,
-		data__series: d => this.updateSeries(d),
-	});
-	this.S.mapOut(['action', 'data__series']);
+		'series_data': this.storeSeries,
+		'state_chapter': this.updateChapter,
+		'state_page': this.updatePage
+	})
+	this.S.mapOut([
+		'data',
+		'state_chapter',
+		'state_page'
+	]);
 }
 
 
@@ -226,14 +125,9 @@ function UI_Reader(o) {
 	});
 	Linkable.call(this);
 
-	this.storage = o.storage;
-	this.state = {
-		currentSeries: null,
-		currentPage: null,
-		currentChapter: null,
-		currentScroll: null
-	};
-
+	this.store = o.store;
+	this.SCP = {};
+	
 	this.keyListener =
 		new KeyListener()
 			.attach('prev', ['ArrowLeft'], e => Action.prevPage())
@@ -253,51 +147,18 @@ function UI_Reader(o) {
 		node: this._.image_viewer
 	})
 
-	this.actionHandler = function(o) {
-		switch (o.action) {
-			case 'displaySeries':
-				this.drawReader(o.id);
-				break;
-			case 'displayChapter':
-				this.drawChapter(o.id)
-				break;
-			case 'displayPage':
-				this.displayPage(o.id)
-				break;
-			case 'nextPage':
-				this.nextPage();
-				break;
-			case 'prevPage':
-				this.prevPage();
-				break;
-			case 'nextChapter':
-				this.nextChapter();
-				break;
-			case 'prevChapter':
-				this.prevChapter();
-				break;
-			default:
-				break;
-		}
-	}
-
-	this.drawReader = function(slug) {
-		this.state.currentSeries = slug;
-		this.seriesData = this.storage.series[this.state.currentSeries];
-
-		this._.title.innerHTML = this.seriesData.title;
-
+	this.drawReader = function() {
+		this._.title.innerHTML = this.store.series.title;
 	var chapterElements = [];
 	var volElements = {};
-	var chapters = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(b) - parseFloat(a));
-		for(var i=0; i < chapters.length; i++) {
-			var key = chapters[i];
-			var chap = this.seriesData.chapters[key];
+		for(var i=0; i < this.store.series.chaptersIndex.length; i++) {
+		var chapterNumber = this.store.series.chaptersIndex[i];
+		var chapter = this.store.series.chapters[chapterNumber];
 			chapterElements.push(new UI_SimpleListItem({
-				text: key + ' - ' + chap.title,
-				value: key
+				text: chapterNumber + ' - ' + chapter.title,
+				value: chapterNumber
 			}));
-			volElements[chap.volume] = true;
+			volElements[chapter.volume] = true;
 		}
 		volElements = Object.keys(volElements).sort((a,b) => parseFloat(b) - parseFloat(a)).map(item => {
 			return new UI_SimpleListItem({
@@ -309,29 +170,37 @@ function UI_Reader(o) {
 		this.selector_vol.clear().add(volElements);
 	}
 
-	this.drawChapter = function(chapter) {
-		this.state.currentChapter = chapter;
-		this.imageView.drawImages(this.seriesData.chapters[chapter].images);
-		this.selector_chap.$.value = chapter;
-		this.selector_vol.$.value = this.seriesData.chapters[chapter].volume;
+	this.drawChapter = function() {
+		this.imageView.drawImages(this.store.series.chapters[this.SCP.chapter].images);
+		this.selector_chap.$.value = this.SCP.chapter;
+		this.selector_vol.$.value = this.store.series.chapters[this.SCP.chapter].volume;
 		this.displayPage(0);
 		return this;
 	}
 
+	this.displayPage = function(page) {
+		if(page == 'last')
+			page = this.SCP.chapterObject.images.length - 1;
+		this.imageView.selectPage(page);
+	}
+
+
 	this.nextChapter = function(){
-	var chapArr = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
-		this.drawChapter(
+	var chapArr = Object.keys(this.store.series.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
+		if(this.state.currentChapter < chapArr.length - 2)
+			this.drawChapter(
 				chapArr[chapArr.indexOf(this.state.currentChapter)+1]
 			)
 	}
-	this.prevChapter = function(){
-	var chapArr = Object.keys(this.seriesData.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
-		this.drawChapter(
-			chapArr[chapArr.indexOf(this.state.currentChapter) - 1]
-		)
+	this.prevChapter = function() {
+	var chapArr = Object.keys(this.store.series.chapters).sort((a,b) => parseFloat(a) - parseFloat(b))
+		if(this.state.currentChapter > 1)
+			this.drawChapter(
+				chapArr[chapArr.indexOf(this.state.currentChapter) - 1]
+			)
 	}
 	this.nextPage = function(){
-		if(this.state.currentPage < this.seriesData.chapters[this.state.currentChapter].pages.length - 1) 
+		if(this.state.currentPage < this.store.series.chapters[this.state.currentChapter].pages.length - 1) 
 			this.displayPage(this.state.currentPage + 1)
 		else
 			Action.nextChapter();
@@ -343,27 +212,6 @@ function UI_Reader(o) {
 			Action.prevChapter();
 			Action.displayPage('last');
 		}
-	}
-
-	this.displayPage = function(page) {
-		if(page == 'last')
-			page = this.seriesData.chapters[this.state.currentChapter].images.length - 1;
-		this.imageView.selectPage(page);
-		this.state.currentPage = page;
-		window.history.replaceState(
-			{},
-			this.seriesData.title
-				+ ' Chapter '
-				+ this.state.currentChapter
-				+ ', Page '
-				+ (this.state.currentPage + 1),
-			"/reader/series/"
-				+ this.seriesData.slug
-				+ '/'
-				+ this.state.currentChapter.replace('.', '-')
-				+ '/'
-				+ (this.state.currentPage + 1)
-			);
 	}
 
 	this.cycleFit = function() {
@@ -392,7 +240,7 @@ function UI_Reader(o) {
 		this.$.classList.add(newLayout);
 		this.imageView.displayLayout = newLayout;
 
-		this.imageView.drawImages(this.seriesData.chapters[this.state.currentChapter].images);
+		this.imageView.drawImages(this.store.series.chapters[this.state.currentChapter].images);
 		this.imageView.selectPage(this.imageView.currentPage);
 	}
 
@@ -404,8 +252,10 @@ function UI_Reader(o) {
 	this._.layout_button.onmousedown = e => this.cycleLayout(e);
 
 	this.S.mapIn({
-		'action': this.actionHandler,
-		'data__series': this.drawReader,
+		'series_data': this.updateData,
+		'state_series': this.drawReader,
+		'state_chapter': this.drawChapter,
+		'state_page': this.displayPage,
 	})
 }
 
@@ -494,6 +344,32 @@ function UI_ReaderImageView(o) {
 	this.$.onmousedown = e => this.mouseHandler(e);
 }
 
+function URLChanger(o) {
+	o=be(o);
+	Linkable.call(this);
+
+	this.updateURL = function(SCP) {
+		window.history.replaceState(
+			{},
+			SCP.seriesObject.title
+				+ ' Chapter '
+				+ SCP.chapter
+				+ ', Page '
+				+ (SCP.page + 1),
+			"/reader/series/"
+				+ SCP.seriesObject.slug
+				+ '/'
+				+ SCP.chapter.replace('.', '-')
+				+ '/'
+				+ (SCP.page + 1)
+		);
+	}
+
+	this.S.mapIn({
+		SCP: this.updateURL
+	})
+}
+
 function UI_SimpleList(o) {
 	o=be(o);
 	UI_List.call(this, {
@@ -547,21 +423,17 @@ function UI_WrappedImage(o) {
 
 alg.createBin();
 
-API = new APIHandler({
+Action = new ActionHandler({
 	url: '/api/',
 	mediaURL: '/media/manga/'
 });
-Storage = new StorageHandler();
+ReaderStorage = new Reader_StorageHandler();
 Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
-	storage: Storage
+	store: ReaderStorage
 });
-Action = new ActionHandler();
 Loader = new LoadHandler();
 
 
-Reader.S.link(API);
-API.S.link(Storage);
-Storage.S.link(Reader)
-Action.S.link(API);
-Loader.S.link(Action);
+Action.S.link(ReaderStorage);
+ReaderStorage.S.link(Reader)
