@@ -27,11 +27,11 @@ class Series(models.Model):
 class Chapter(models.Model):
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, blank=True)
-    chapter_number = models.FloatField(unique=True, blank=False, null=False)
+    chapter_number = models.FloatField(blank=False, null=False)
     folder = models.CharField(max_length=255, blank=True, null=True)
     page_count = models.PositiveSmallIntegerField()
     volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
-    group = models.ForeignKey(Group, blank=True, null=True, on_delete=models.SET_NULL)
+    group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
     uploaded_on = models.DateTimeField(default=None, blank=True, null=True)
 
     def clean_chapter_number(self):
@@ -41,7 +41,8 @@ class Chapter(models.Model):
         return self.clean_chapter_number().replace(".", "-")
 
     def __str__(self):
-        return self.title
+        return f"{self.chapter_number} - {self.title} | {self.group}"
 
     class Meta:
         ordering = ('chapter_number',)
+        unique_together = ('chapter_number', 'group',)

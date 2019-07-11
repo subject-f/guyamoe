@@ -15,20 +15,34 @@
          });
          $('#submitForm').click(function () {
             $("#modalSubmit").prepend(`<div id="uploadingChapter" class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>`)
-            var formdata = $("#newChapterForm").serialize();
-            console.log($("#csrf_token").val())
-            // var zip_file = $('#chapterPages').get(0).files[0];
+            // var formData = new FormData();
+            var formElem = document.getElementById("newChapterForm");
+            var formData = new FormData(formElem);
+            formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
             $.ajax({
                type: "POST",
                url: "/api/upload_new_chapter/{{ slug }}/",
                processData: false,
                contentType: false,
-               data: {
-                  csrfmiddlewaretoken: '{{ csrf_token }}',
-                  "formdata": formdata
+               csrfmiddlewaretoken: '{{ csrf_token }}',
+               data: formData,
+               success: function (data) {
+                  if (data["response"] == "success") {
+                     $("#uploadingChapter").remove();
+                     $("#modalSubmit").prepend(`<div id="finishedUpload" class="btn btn-success"><i class="fa fa-check"></i></div>`);
+                     setTimeout(function() {$("#finishedUpload").remove()}, 2000);
+                  }
+                  else {
+                     $("#uploadingChapter").remove();
+                     $("#modalSubmit").prepend(`<p id="errorUpload">Error uploading chapter.</p>`);
+                     setTimeout(function() {$("#errorUpload").remove()}, 3000);
+                  }
                },
+               error: function (data) {
+
+               }
             });
-            $("#uploadingChapter").destroy();
+            
             return false;
          });
       });
@@ -63,7 +77,7 @@
       function loadGroups(slug) {
          if (document.getElementById("scanGroup").options.length === 0){
             $.getJSON(`/api/get_groups/${slug}`, (data) => {
-               data["groups"].forEach((group) => $("#scanGroup").append(`<option value=${group}>${group}</option>`))
+               data["groups"].forEach((group) => $("#scanGroup").append(`<option value="${group}">${group}</option>`))
             });
          }
       }
@@ -82,33 +96,39 @@
          
          <!-- Modal Header -->
          <div class="modal-header">
-            <h4 id="formVal1" class="modal-title">Upload new Chapter</h4>
+            <h4 id="formVal1" class="modal-title">Upload New Chapter</h4>
             <button type="button" class="close" data-dismiss="modal">&times;</button>
          </div>
          <form id="newChapterForm">
             <div class="modal-body">
                <div class="row">
-                  <div class="col-5 ml-5">
-                     <label for="exampleInputEmail1" >Chapter Number</label>
-                     <input required type="number" step="0.1" class="form-control-sm col-5" name="chapterNumber" id="chapterNumber" value="{{ chapter_list.0.0|add:"1" }}">
+                  <div class="col-5">
+                     <label for="chapterNumber" >Chapter Number</label>
+                     <input required type="number" step="0.1" class="form-control-sm col-6" name="chapterNumber" id="chapterNumber" value="{{ chapter_list.0.0|add:"1" }}">
                   </div>
-                  <div class="col ml-4">
-                     <label for="category" >Group</label>
-                     <div class="input-group col-xs-8">
+                  <div class="col-3">
+                     <label for="volumeNumber" >Volume</label>
+                     <input required type="number" step="1.0" class="form-control-sm col-8" name="volumeNumber" id="volumeNumber" value="{{ chapter_list.0.5 }}">
+                  </div>
+               </div>
+               <div class="row mt-4">
+                  <div class="col-7">
+                     <label for="scanGroup" >Group</label>
+                     <div class="input-group">
                         <select required class="form-control-sm" name="scanGroup" id="scanGroup">
                         </select>
                      </div>
                   </div>
                </div>
                <div class="row mt-4">
-                  <div class="col-8 ml-5">
-                     <label for="chapterNumber" class="d-block" >Chapter Title</label>
+                  <div class="col-12">
+                     <label for="chapterTitle" class="d-block" >Chapter Title</label>
                      <input required type="text" class="form-control-sm col-12" name="chapterTitle" id="chapterNumber">
                   </div>
                </div>
                <div class="row mt-4">
-                  <div class="col ml-5">
-                     <label for="exampleFormControlFile1">Chapter Pages (as .zip)</label>
+                  <div class="col">
+                     <label for="chapterPages">Chapter Pages (as .zip)</label>
                      <input required type="file" accept=".zip" name="chapterPages" class="form-control-file" id="chapterPages">
                   </div>
                </div>
@@ -176,7 +196,7 @@
                
                <div id="compactView" class="d-none" >
                   <div class="row">
-                     {% for chapter, title, ch_slug, group, upload_date in chapter_list %}
+                     {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}
                         <div class="col-lg-2 col-md-2 col-sm-3 col-xs-4 pt-4">
                            <a href="/reader/series/{{ slug }}/{{ ch_slug }}/1"><button class="btn btn-link w-100 font-weight-light text-center" style="border: 1px solid #666; box-shadow: 1px 2px 2px 2px black;" >{{ chapter }}</button></a>
                         </div>
@@ -196,7 +216,7 @@
                            </tr>
                         </thead>
                         <tbody id="chapterTable">
-                           {% for chapter, title, ch_slug, group, upload_date in chapter_list %}                        
+                           {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
                               <tr class="table-default">                           
                                     <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row">{{ group }}</td>
