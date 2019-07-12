@@ -1,4 +1,4 @@
-# Kaguyadex
+# Guya.moe
 Kaguya-sama Manga Website
 
 ## Prerequisites 
@@ -9,7 +9,7 @@ Kaguya-sama Manga Website
 
 `pip install -r requirements.txt`
 
-In the `settings.py` file in the `kagudex` folder, edit the `SECRET_KEY` with a randomly generated string to be used for hashing. e.g. `SECRET_KEY = 's2&_ky$%ib6x5h4kqtj&izm%t+a2)iq(755c-f&uot3$1mde7-'`
+In the `settings.py` file in the `guyamoe` folder, edit the `SECRET_KEY` with a randomly generated string to be used for hashing. e.g. `SECRET_KEY = 's2&_ky$%ib6x5h4kqtj&izm%t+a2)iq(755c-f&uot3$1mde7-'`
 
 In command line/terminal, run:
 -  `./manage.py makemigrations`

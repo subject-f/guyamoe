@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.db import IntegrityError
 from datetime import datetime, timezone
-from reader.models import Series, Chapter, Group
+from reader.models import Series, Volume, Chapter, Group
 import random
 import os
 import json
@@ -16,7 +16,7 @@ def series_data(request, series_slug):
     chapters = Chapter.objects.filter(series=series)
     chapters_dict = {}
     for chapter in chapters:
-        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, chapter.folder)
+        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
         ch_clean = Chapter.clean_chapter_number(chapter)
         if ch_clean in chapters_dict:
             chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(chapter_media_path))
@@ -58,7 +58,7 @@ def upload_new_chapter(request, series_slug):
             else:
                 uid = existing_chapter.folder
         ch_obj = Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, page_count=0, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
-        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, uid, str(group.id))
+        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid, str(group.id))
         if os.path.exists(chapter_folder):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
         os.makedirs(chapter_folder)
@@ -72,3 +72,10 @@ def upload_new_chapter(request, series_slug):
         ch_obj.page_count = len(all_pages)
         ch_obj.save()
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
+
+
+def get_volume_covers(request, series_slug):
+    if request.POST:
+        series = Series.objects.get(slug=series_slug)
+        volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
+        return HttpResponse(json.dumps({"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}), content_type="application/json")

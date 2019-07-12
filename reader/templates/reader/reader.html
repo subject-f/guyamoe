@@ -8,7 +8,29 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}"></script>
 		<script type="text/javascript" src="{% static 'js/UI2.js' %}"></script>
+		<script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"> </script>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+		<script>
+			$(document).ready(function(){
+				var formData = new FormData();
+				formData.append("series", "{{ series_id }}")
+				formData.append("chapter", "{{ chapter_id }}")
+				formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
+				$.ajax({
+					type: "POST",
+					url: "/reader/update_view_count/",
+					processData: false,
+					contentType: false,
+					// headers: { "X-CSRFToken": '{{csrf_token}}' },
+					data: formData,
+					success: function (data) {},
+					error: function(data){
+					console.log('POST failed');
+					console.log(data);
+					}
+				});
+			});
+		</script>
 	</head>
 <body>
 	<main id="rdr-main" class="ltr">
