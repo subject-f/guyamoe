@@ -63,12 +63,12 @@ def upload_new_chapter(request, series_slug):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
         os.makedirs(chapter_folder)
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
-            zip_file.extractall(path=chapter_folder)
-        all_pages = os.listdir(chapter_folder)
-        padding = len(str(len(all_pages)))
-        for idx, page in enumerate(all_pages):
-            extension = page.rsplit(".")[1]
-            os.rename(os.path.join(chapter_folder, page), os.path.join(chapter_folder, f"{str(idx).zfill(padding)}.{extension}"))
+            all_pages = zip_file.namelist()
+            padding = len(str(len(all_pages)))
+            for idx, page in enumerate(all_pages):
+                extension = page.rsplit(".", 1)[1]
+                with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), "wb") as f:
+                    f.write(zip_file.read(page))
         ch_obj.page_count = len(all_pages)
         ch_obj.save()
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")

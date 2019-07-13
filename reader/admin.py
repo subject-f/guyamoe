@@ -32,6 +32,6 @@ admin.site.register(Volume, VolumeAdmin)
 
 class ChapterAdmin(admin.ModelAdmin):
     ordering = ('chapter_number',)
-    list_display = ('chapter_number', 'title', 'series', 'volume', 'page_count',)
+    list_display = ('chapter_number', 'title', 'series', 'page_count',)
 
 admin.site.register(Chapter, ChapterAdmin)

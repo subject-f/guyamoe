@@ -44,9 +44,12 @@ def path_file_name(instance, filename):
     return os.path.join("manga", instance.series.slug, "volume_covers", str(instance.volume_number), filename)
 
 class Volume(models.Model):
-    volume_number = models.PositiveIntegerField(primary_key=True, blank=False, null=False)
+    volume_number = models.PositiveIntegerField(blank=False, null=False)
     series = models.ForeignKey(Series, blank=False, null=False, on_delete=models.CASCADE)
     volume_cover = models.ImageField(blank=True, upload_to=path_file_name)
+
+    class Meta:
+        unique_together = ('volume_number', 'series',)
 
 
 class Chapter(models.Model):
@@ -92,4 +95,4 @@ class Chapter(models.Model):
 
     class Meta:
         ordering = ('chapter_number',)
-        unique_together = ('chapter_number', 'group',)
+        unique_together = ('chapter_number', 'series', 'group',)

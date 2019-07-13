@@ -152,16 +152,23 @@
 		<div class="col-4 text-center  pt-2">
 			<div class="col">
 				<h6 class="text-secondary">
-					Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
+					Kaguya-sama, the 4koma, the doujin, the novel, and the fancomics featured here all belong to their respective
 					authors.<br>This website is not for profit.
 				</h6>
 			</div>
 		</div>
 		<div class="col-4">
-			<div class="col">
+			
+			<div class="col-lg-3 col-md-5 col-sm-6 col-xs-6 float-right">
+				
 				<img class="img-fluid mx-auto d-block" style="height: 75px; width: 56px; float:right"
 					src="{% static 'img/img_comics-bottom.png' %}">
 			</div>
+			{% if request.user.is_staff %}
+			<div class="col-3 float-right">
+				<p class="mt-3 pt-2 mb-0 pl-3 float-right">{{ request.online_now }} online</p>
+			</div>
+			{% endif %}
 		</div>
 	</div>
 </footer>
