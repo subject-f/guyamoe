@@ -34,7 +34,7 @@ def series_data(request, series_slug):
 
 
 def get_groups(request, series_slug):
-    groups = list(Chapter.objects.order_by().filter(series__slug=series_slug).values_list('group__name', flat=True).distinct())
+    groups = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
     return HttpResponse(JsonResponse({"groups": groups}))
 
 
