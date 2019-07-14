@@ -26,7 +26,7 @@ def series_data(request, series_slug):
                 "title": chapter.title,
                 "folder": chapter.folder,
                 "groups": {
-                    str(chapter.group.id): sorted(os.listdir(chapter_media_path))
+                    str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
                 }
             }
     data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
