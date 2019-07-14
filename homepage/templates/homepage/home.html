@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% load static %}
 {% block head %}
-<title>KaguyaLib</title>
+<title>Ka.guya.moe</title>
 
 <style>
 	* {
@@ -64,20 +64,19 @@
 
 {% block body %}
 <main role="main" class="flex-shrink-0">
-<div class="manga container-fluid justify-content-center sp-row-add "
-	style="padding-top:1%; padding-bottom: 2%; ">
+<div class="manga container-fluid justify-content-center sp-row-add mt-3">
 	<div class="row ">
-		<div class="col d-flex justify-content-center">
+		<div class="col d-flex justify-content-center mb-3">
 			<img src="{% static '/img/logo_menu.png' %}">
 		</div>
 	</div>
-	<div class="row d-flex justify-content-center pt-3" >
+	<div class="row d-flex justify-content-center mt-3" >
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/kaguyacover.jpg' %}">
+					<img class="img-fluid mx-auto d-block" src="{{ main_cover }}" style="width: 80%">
 					<div class="caption text-center">
-						<p>Kaguya Wants to be Confessed to</p>
+						<h4>Kaguya Wants to be Confessed to</h4>
 					</div>
 				</a>
 			</div>
@@ -85,9 +84,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/We-Want-To-Talk-About-Kaguya">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/4komacover.jpg' %}">
+					<img class="img-fluid mx-auto d-block" src="{{ 4koma_cover }}" style="width: 80%">
 					<div class="caption text-center">
-						<p>We Want to Talk About Kaguya</p>
+						<h4>We Want to Talk About Kaguya</h4>
 					</div>
 				</a>
 			</div>
@@ -95,9 +94,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/doujincover.jpg' %}">
+					<img class="img-fluid mx-auto d-block" src="{{ doujin_cover }}" style="width: 80%">
 					<div class="caption text-center">
-						<p>Kaguya Wants to be Confessed to Official Doujin</p>
+						<h4>Kaguya Wants to be Confessed to Official Doujin</h4>
 					</div>
 				</a>
 			</div>
@@ -105,9 +104,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/novel/The-Seven-Mysteries-of-Shuchin-Academy">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}">
+					<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}" style="width: 80%">
 					<div class="caption text-center">
-						<p>The Seven Mysteries of Shuchin Academy (Novel)</p>
+						<h4>The Seven Mysteries of Shuchin Academy (Novel)</h4>
 					</div>
 				</a>
 			</div>
@@ -115,9 +114,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/fancomics">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}">
+					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}" style="width: 80%">
 					<div class="caption text-center">
-						<p>Fancomics</p>
+						<h4>Fancomics</h4>
 					</div>
 				</a>
 			</div>
@@ -136,32 +135,39 @@
 		<div class="col-4 d-flex align-content-bottom justify-content-left">
 			<div class="row pl-3 pt-2">
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
-					<button class="sp-button" style="padding:7%"
+					<button class="sp-button p-2"
 						onclick="window.open('https://books.shueisha.co.jp/items/contents.html?isbn=978-4-08-891231-8')"
-						alt="pls">Throw money at Aka
+						>Throw money at Aka
 					</button>
 				</div>
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10 ">
-					<button class="sp-button" style="padding:7%"
+					<button class="sp-button p-2"
 						onclick="window.open('https://www.amazon.com/gp/bookseries/B0778N11ZV')"
-						alt="pls">Buy Official Volumes
+						>Buy Official Volumes
 					</button>
 				</div>
 			</div>
 		</div>
-		<div class="col-4 text-center  pt-2">
+		<div class="col-4 text-center  mt-2">
 			<div class="col">
 				<h6 class="text-secondary">
-					Kaguya-sama, the 4koma, the doujin, and the fancomics featured here all belong to their respective
+					Kaguya-sama, the 4koma, the doujin, the novel, and the fancomics featured here all belong to their respective
 					authors.<br>This website is not for profit.
 				</h6>
 			</div>
 		</div>
 		<div class="col-4">
-			<div class="col">
+			
+			<div class="col-lg-3 col-md-5 col-sm-6 col-xs-6 float-right">
+				
 				<img class="img-fluid mx-auto d-block" style="height: 75px; width: 56px; float:right"
 					src="{% static 'img/img_comics-bottom.png' %}">
 			</div>
+			{% if request.user.is_staff %}
+			<div class="col-3 float-right">
+				<p class="mt-3 pt-2 mb-0 ml-3 float-right">{{ request.online_now }} online</p>
+			</div>
+			{% endif %}
 		</div>
 	</div>
 </footer>
