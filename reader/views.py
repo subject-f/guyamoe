@@ -21,7 +21,7 @@ def hit_count(request):
         user_ip = curr_user_and_online(request)
         page_id = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}{user_ip}"
         page_hits_cache = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}"
-        cache.set(page_id, page_id, 600)
+        cache.set(page_id, page_id, 300)
 
         page_cached_users = cache.get(page_hits_cache)
         print("page_cached_users", page_cached_users)
@@ -94,9 +94,9 @@ def series_info(request, series_slug):
 
 @cache_page(1)
 def reader(request, series_slug, chapter, page):
-    slug_chapter_numb = chapter.replace("-", ".")
-    chapter = get_object_or_404(Chapter, series__slug=series_slug, chapter_number=slug_chapter_numb)
-    return render(request, 'reader/reader.html', {
-        "series_id": chapter.series.id,
-        "chapter_id": chapter.id
-    })
+    return render(request, 'reader/reader.html', {})
+
+
+@cache_page(1)
+def fancomics(request):
+    return render(request, 'reader/fancomics.html', {})
