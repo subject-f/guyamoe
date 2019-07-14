@@ -1,7 +1,7 @@
 //Depends on:
 //	alg_lib.0.3
 
-var DEBUG = false;
+var DEBUG = true;
 const OFF = 0;
 const ON = 1;
 const TOGGLE = 2;
@@ -200,7 +200,7 @@ function UI(o) {
 			node: o.node,
 			html: o.html
 		}
-		if(DEBUG) console.log('Instancing UI_', this.me.kind, ': ', this);
+		if(DEBUG) console.debug('Instancing UI_', this.me.kind, ': ', this);
 
 		this.$ = this.me.node?this.me.node:this.conjure();
 		this.$._struct = this;
@@ -221,7 +221,7 @@ function UI(o) {
 			throw 'CANNOT CONJURE: node and HTML is missing.'
 			return false;
 		}
-		if(DEBUG) console.log('Node was not found. Creating an instance using embedded HTML tempate.')
+		if(DEBUG) console.debug('Node was not found. Creating an instance using embedded HTML tempate.')
 	var holder = crelm();
 		holder.innerHTML = this.me.html;
 		return holder.firstElementChild;
@@ -345,10 +345,10 @@ function Linkable(o) {
 
 	this.S.in = (streamID, data, sourceStructure) => {
 		if(!this.S.inStreams[streamID]) {
-			if(DEBUG) console.log(streamID,'does not exist in',this);
+			if(DEBUG) console.debug(streamID,'does not exist in',this);
 			return;
 		}
-		if(DEBUG) console.log(this,': Received',data,'from',sourceStructure,'on',streamID);
+		if(DEBUG) console.debug(this,': Received',data,'from',sourceStructure,'on',streamID);
 		this.S.inStreams[streamID](data);
 	}
 
@@ -359,7 +359,7 @@ function Linkable(o) {
 			if(DEBUG) console.warn('I,', this ,', have no outputs registered!', 'Tried to send', data, 'through', streamID)
 			return this.S;
 		}
-		if(DEBUG) console.log('Sending',data, 'using stream '+streamID, '...');
+		if(DEBUG) console.debug('Sending',data, 'using stream '+streamID, '...');
 		for (var i = 0; i < targetStructures.length; i++) {
 			if (targetMappings && targetMappings.length > 0 && Object.keys(targetMappings[i]).length > 0) {
 				targetStructures[i].S.in(targetMappings[i][streamID], data, this);
@@ -419,7 +419,7 @@ function UI_List(o) {
 			if(is(this.$.children[index]))
 				return this.$.children[index]._struct
 			else
-				throw 'AlgEx: Item index does not reference an item';
+				throw new Error('AlgEx: Item index does not reference an item');
 		else
 			return this.$.children.reduce((keep, item) => keep.concat(item._struct), []);
 	}
