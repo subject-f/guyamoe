@@ -7,16 +7,15 @@ class OnlineNowMiddleware(object):
 
     def __call__(self, request):
         ### Install and test with memcache first
-        # user_ip = curr_user_and_online(request)
-        # online = cache.get('online_now')
-        # if online:
-        #     online = [ip for ip in online if cache.get(ip)]
-        # else:
-        #     online = []
-        # cache.set(user_ip, user_ip, 600)
-        # if user_ip not in online:
-        #     online.append(user_ip)
-        # cache.set('online_now', online)
-        # request.online_now = len(online)
+        user_ip = curr_user_and_online(request)
+        online = cache.get('online_now')
+        if online:
+            online = set([ip for ip in online if cache.get(ip)])
+        else:
+            online = set([])
+        cache.set(user_ip, user_ip, 600)
+        online.add(user_ip)
+        cache.set('online_now', online)
+        request.online_now = len(online)
         response = self.get_response(request)
         return response

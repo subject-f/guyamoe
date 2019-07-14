@@ -1,3 +1,5 @@
 Django==2.2.3
 django-extensions==2.1.9
-python-memcached-1.59
+python-memcached==1.59
+psycopg2==2.8.3
+Pillow==6.1.0
