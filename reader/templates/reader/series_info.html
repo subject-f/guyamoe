@@ -117,7 +117,11 @@
       function loadGroups(slug) {
          if (document.getElementById("scanGroup").options.length === 0){
             $.getJSON(`/api/get_groups/${slug}`, (data) => {
-               data["groups"].forEach((group) => $("#scanGroup").append(`<option value="${group}">${group}</option>`))
+               for (var group in data["groups"]) {
+                  if (data['groups'].hasOwnProperty(group)) {
+                     $("#scanGroup").append(`<option value="${data['groups'][group]}">${data['groups'][group]}</option>`);
+                  }
+               }
             });
          }
       }
