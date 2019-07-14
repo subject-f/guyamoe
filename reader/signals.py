@@ -9,7 +9,9 @@ import os
 def delete_chapter_folder(sender, instance, **kwargs):
     if instance.folder and instance.series:
         folder_path = os.path.join(settings.MEDIA_ROOT, "manga", instance.series.slug, "chapters", instance.folder)
-        if os.path.exists(folder_path):
+        if os.path.exists(os.path.join(folder_path, str(instance.group.id))):
+            shutil.rmtree(os.path.join(folder_path, str(instance.group.id)))
+        if not os.listdir(folder_path):
             shutil.rmtree(folder_path)
 
 @receiver(post_delete, sender=Volume)

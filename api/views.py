@@ -1,4 +1,3 @@
-from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings
 from django.http import JsonResponse
@@ -19,7 +18,7 @@ def series_data(request, series_slug):
         chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
         ch_clean = Chapter.clean_chapter_number(chapter)
         if ch_clean in chapters_dict:
-            chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(chapter_media_path))
+            chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
         else:
             chapters_dict[ch_clean] = {
                 "volume": str(chapter.volume),
