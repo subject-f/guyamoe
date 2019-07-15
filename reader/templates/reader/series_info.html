@@ -12,8 +12,7 @@
       });
       $(document).ready(function(){
          var formData = new FormData();
-         formData.append("series", "{{ series_id }}")
-         // formData.append("chapter", "{{ chapter_id }}")
+         formData.append("series", "{{ slug }}")
          formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
          $.ajax({
             type: "POST",
