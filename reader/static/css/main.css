@@ -5,6 +5,12 @@
    License: none (public domain)
 */
 
+* {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-tap-highlight-color: transparent;
+}
+
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -102,7 +108,78 @@ aside {
 	flex-direction: column;
 	background: #3a3f44;
 	overflow-x: hidden;
+	position: relative;
 }
+
+
+.hide-side {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	cursor: pointer;
+}
+
+.hide-side::after {
+	content: "\e905";
+	transform: scaleX(-1);
+	position: relative;
+	top: 0.5rem;
+	left: 0.6rem;
+}
+
+.hide-side::before {
+	content: "";
+	position: absolute;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 0 0 3rem 3rem;
+	border-color: transparent transparent #2b2f33 transparent;
+}
+
+
+/* Inline #2 | https://kagu.algoinde.ru/reader/series/Kaguya-Wants-To-Be-Confessed-To/61/9 */
+
+.sidebar-hidden aside {
+	margin-left: -16em;
+}
+
+.sidebar-hidden .rdr-page-selector {
+	height: calc(100vh - 3rem);
+}
+
+.sidebar-hidden .hide-side {
+	right: -3rem;
+	z-index: 20;
+	transform: scaleX(-1);
+}
+
+.sidebar-hidden .hide-side::after {
+	
+}
+
+.sidebar-hidden .hide-side {
+}
+
+.sidebar-hidden .hide-side::before {
+	border-color: transparent transparent #3a3f44 transparent;
+}
+
+/* main.css | https://kagu.algoinde.ru/static/css/main.css */
+
+aside {
+	overflow-x: unset;
+	transition: all 0.3s ease;
+}
+
+.hide-side::before {
+	transition: all 0.3s ease;
+}
+
+.is-ico-button {
+	transition: all 0.3s ease;
+}
+
 
 aside > header {
 	display: flex;
@@ -684,5 +761,9 @@ details[open] .expander:before {
 	.fit-width .rdr-image-wrap .WrappedImage {
 		min-height: 100vh;
 		align-items: center;
+	}
+
+	.hide-side {
+		display: none !important;
 	}
 }
