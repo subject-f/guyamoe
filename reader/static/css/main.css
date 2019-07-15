@@ -265,6 +265,7 @@ header > .search:before {
 	left: 0;
 	top: 0;
 	text-align: center;
+	text-align-last: center;
 	width: calc(100% + 2.3ch);
 	cursor: pointer;
 }
