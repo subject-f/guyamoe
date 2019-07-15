@@ -183,12 +183,25 @@ function UI_Reader(o) {
 		page: 0,
 	};
 	
+
 	new KeyListener()
-		.attach('prev', ['ArrowLeft'], e => this.prevPage())
-		.attach('next', ['ArrowRight'], e => this.nextPage())
+		.pre(() => this._.image_container.focus())
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
-		.attach('cycleFit', ['KeyF'], e => this.cycleFit())
+		.attach('cycleFit', ['KeyF'], e => Settings.all.fit.cycle())
+		.attach('cycleLayout', ['KeyL'], e => Settings.all.layout.cycle())
+
+	new KeyListener()
+		.condition(() => Settings.all.layout.get() == 'ltr')
+		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
+		.attach('prev', ['ArrowLeft'], e => this.prevPage())
+		.attach('next', ['ArrowRight'], e => this.nextPage());
+
+	new KeyListener()
+		.condition(() => Settings.all.layout.get() == 'rtl')
+		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
+		.attach('prev', ['ArrowRight'], e => this.prevPage())
+		.attach('next', ['ArrowLeft'], e => this.nextPage());
 
 	this.selector_chap = new UI_SimpleList({
 		node: this._.selector_chap
@@ -302,6 +315,7 @@ function UI_Reader(o) {
 	this.plusOne = function() {
 	var formData = new FormData();
 		formData.append("series", this.current.slug)
+		formData.append("group", this.SCP.group)
 		formData.append("chapter", this.SCP.chapter)
 		formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
 		fetch('/reader/update_view_count/', {
@@ -440,8 +454,8 @@ function UI_ReaderImageView(o) {
 			this.imageContainer.$.style.left = -1 * 100 * realIndex - 0.001 + '%';
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
 			// setTimeout(() => {
-				this.imageContainer.selectedItems[0].$.style.top = 0;
-				this.$.scrollTo({
+				// this.imageContainer.selectedItems[0].$.style.top = 0;
+				pageElement.scrollTo({
 					left: 0,
 					top: 0
 				})
@@ -584,6 +598,7 @@ function UI_SimpleList(o) {
 
 	this.handler = e => {
 		this.S.out('value', this.$.value)
+		this.$.blur();
 	}
 
 	this.add = function(uiInstances) {

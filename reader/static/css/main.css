@@ -5,10 +5,6 @@
    License: none (public domain)
 */
 
-html {
-	overflow: hidden;
-}
-
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -312,6 +308,10 @@ header > .search:before {
 	flex-direction: column;
 }
 
+details {
+	list-style: none;
+}
+
 summary {
 	display: flex;
 	flex-wrap: nowrap;
@@ -319,6 +319,7 @@ summary {
 	cursor: pointer;
 	background: #34393d;
 	flex-grow: 0;
+	font-size: 0;
 }
 
 details summary span {
@@ -331,6 +332,7 @@ details summary span {
 
 details .expander {
 	height: 2.6rem;
+	font-size: 1.5rem;
 }
 
 details .expander:before {
@@ -523,11 +525,22 @@ details[open] .expander:before {
 		flex-direction: column;
 		height: auto;
 		max-height: unset;
+		max-height: auto;
+		overflow: auto;
 	}
 
 	aside {
 		min-width: 100vw;
 		height: auto;
 		position: relative;
+		flex-shrink: 0;
 	}	
+
+	.rdr-page-selector {
+		display: none;
+	}
+
+	.rdr-image-wrap {
+		height: auto;
+	}
 }
