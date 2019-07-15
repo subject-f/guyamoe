@@ -46,6 +46,11 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+@supports (-webkit-overflow-scrolling: touch) {
+	html, body {
+		height: 100.1vh;
+	}
+}
 
 button {
 	border: 0;
@@ -66,8 +71,8 @@ button::-moz-focus-inner {
 	border:none;
 }
 
-button:focus {
-	outline: none;
+button:focus, option, details, summary {
+	outline: none !important;
 }
 
 /* ---------------------- */
@@ -91,8 +96,8 @@ main {
 
 aside {
 	height: 100vh;
-	min-width: 27ch;
-	max-width: 27ch;
+    min-width: 16em;
+	max-width: 16em;
 	display: flex;
 	flex-direction: column;
 	background: #3a3f44;
@@ -292,29 +297,7 @@ header > .search:before {
 	content: "\e90c";
 }
 
-.Reader[data-preload="1"] .rdr-page-selector .is-active + .Dummy {
-	border-left-color: #6699b9;
-}
-.Reader[data-preload="2"] .rdr-page-selector .is-active + .Dummy,
-.Reader[data-preload="2"] .rdr-page-selector .is-active + .Dummy + .Dummy {
-	border-left-color: #6699b9;
-}
-.Reader[data-preload="3"] .rdr-page-selector .is-active + .Dummy,
-.Reader[data-preload="3"] .rdr-page-selector .is-active + .Dummy + .Dummy,
-.Reader[data-preload="3"] .rdr-page-selector .is-active + .Dummy + .Dummy  + .Dummy {
-	border-left-color: #6699b9;
-}
-.Reader[data-preload="4"] .rdr-page-selector .is-active + .Dummy,
-.Reader[data-preload="4"] .rdr-page-selector .is-active + .Dummy + .Dummy,
-.Reader[data-preload="4"] .rdr-page-selector .is-active + .Dummy + .Dummy + .Dummy,
-.Reader[data-preload="4"] .rdr-page-selector .is-active + .Dummy + .Dummy + .Dummy + .Dummy {
-	border-left-color: #6699b9;
-}
-.Reader[data-preload="5"] .rdr-page-selector .is-active + .Dummy,
-.Reader[data-preload="5"] .rdr-page-selector .is-active + .Dummy + .Dummy,
-.Reader[data-preload="5"] .rdr-page-selector .is-active + .Dummy + .Dummy + .Dummy,
-.Reader[data-preload="5"] .rdr-page-selector .is-active + .Dummy + .Dummy + .Dummy + .Dummy,
-.Reader[data-preload="5"] .rdr-page-selector .is-active + .Dummy + .Dummy + .Dummy + .Dummy + .Dummy {
+.rdr-page-selector .preloaded {
 	border-left-color: #6699b9;
 }
 
@@ -686,8 +669,20 @@ details[open] .expander:before {
 		height: auto;
 	}
 
-
-	.fit-height .WrappedImage {
+	.fit-none .rdr-image-wrap .WrappedImage {
+		flex-direction: row-reverse;
 		justify-content: flex-start;
+	}
+
+	.fit-height .rdr-image-wrap .WrappedImage {
+		flex-direction: row-reverse;
+		justify-content: flex-start;
+		min-height: 100vh;
+		max-width: 100vw;
+	}
+	
+	.fit-width .rdr-image-wrap .WrappedImage {
+		min-height: 100vh;
+		align-items: center;
 	}
 }

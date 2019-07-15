@@ -418,8 +418,10 @@ function UI_List(o) {
 		if (is(index))//errhandle
 			if(is(this.$.children[index]))
 				return this.$.children[index]._struct
-			else
-				throw new Error('AlgEx: Item index does not reference an item');
+			else {
+				console.warn('Index did not reference an item.')
+				return null;
+			}
 		else
 			return this.$.children.reduce((keep, item) => keep.concat(item._struct), []);
 	}

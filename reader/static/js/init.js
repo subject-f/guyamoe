@@ -119,7 +119,7 @@ function SettingsHandler(){
 		'preload',
 		'Preload amount',
 		[1,2,3,4,5],
-		'1'
+		1
 	)
 
 	for (var key in this.all) {
@@ -284,7 +284,11 @@ function UI_Reader(o) {
 		this.setSelectorPin(Settings.all.selectorPinned.get());
 		this.setPreload(Settings.all.preload.get());
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
-		this._.close.href = '/reader/series/' + this.SCP.series;	
+		this._.close.href = '/reader/series/' + this.SCP.series;
+		window.scrollTo({
+			top: 20,
+			left: 0
+		})
 	}
 
 	this.drawGroup = function(group) {
@@ -320,6 +324,7 @@ function UI_Reader(o) {
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
 		this.plusOne();
+		this.selector_page.clearPreload();
 		return this;
 	}
 
@@ -477,18 +482,26 @@ function UI_ReaderImageView(o) {
 
 	this.drawImages = function(images) {
 		this.imageContainer.clear();
+	var imageInstances = [];
 		images.forEach((url, index) => {
-			this.imageContainer.add(new UI_WrappedImage({src: url, index: index, fore: images[index+1]}))
+			imageInstances.push(new UI_WrappedImage({src: url, index: index, fore: images[index+1]}));
 		})
+		imageInstances.forEach(image => {
+			image.S.link(Reader.selector_page);
+		})
+		this.imageContainer.add(imageInstances);
 		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
-
 	this.selectPage = function(index, dry) {
 		if(index < 0 || index >= this.imageContainer.$.children.length)
 			return;
 	var pageElement = this.$.querySelector('*[data-index="'+index+'"]')
 	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
 		this.imageContainer.select(realIndex);
+		for(var i = 0; i < Settings.all.preload.get(); i++){
+		var image = this.imageContainer.get(i+realIndex);
+			if(image) image.load(); else break;
+		}
 		if(Settings.all.layout.get() == 'ttb'){
 			if(!dry)
 				this._.image_container.scrollTo({
@@ -500,10 +513,10 @@ function UI_ReaderImageView(o) {
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
 			// setTimeout(() => {
 				// this.imageContainer.selectedItems[0].$.style.top = 0;
-				pageElement.scrollTo({
-					left: 0,
-					top: 0
-				})
+			pageElement.scrollTo({
+				left: 0,
+				top: 0
+			})
 			// }, 150)
 		}
 	}
@@ -555,6 +568,38 @@ function UI_ReaderImageView(o) {
 	this.S.mapOut(['event']);
 }
 
+
+function UI_WrappedImage(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['WrappedImage'].concat(o.kind || []),
+		html: o.html || '<div><img data-bind="image" src="" /></div>'
+	});
+	Linkable.call(this);
+
+	this.src = o.src;
+	this.loaded = false;
+	this.index = o.index;
+	this.fore = o.fore;
+
+	this.onloadHandler = function(e) {
+		this.S.out('loaded', this.index)
+	}
+
+	this.load = function() {
+		if(this.loaded) return;
+		this._.image.src = this.src;
+		this._.image.onload = e => this.onloadHandler(e);
+		this.loaded = true;
+		this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
+	}
+
+	this.$.setAttribute('data-index', this.index);
+
+	this.S.mapOut(['loaded'])
+}
+
 function UI_PageSelector(o) {
 	o=be(o);
 	UI.call(this, {
@@ -584,6 +629,13 @@ function UI_PageSelector(o) {
 	this.proxy = function(i) {
 		this.S.out('page', i);
 	}
+
+	this.displayPreload = function(index) {
+		this.keys.$.children[+index].classList.add('preloaded');
+	}
+	this.clearPreload = function() {
+		this.keys.$.children.forEach(key => key.classList.remove('preloaded'));
+	}
 	// this.hoverChange = function(e){
 	// 	this._.page_keys_count.innerHTML = this.keys.$.children.indexOf(e.target) + 1;
 	// }
@@ -594,7 +646,8 @@ function UI_PageSelector(o) {
 
 	this.S.mapIn({
 		'number': this.proxy,
-		'SCP': this.render
+		'SCP': this.render,
+		'loaded': this.displayPreload
 	})
 	this.S.mapOut(['page'])
 
@@ -709,19 +762,6 @@ function UI_SimpleListItem(o) {
 	this.$.value = o.value;
 	if(this.$.innerHTML.length < 1)
 		this.$.innerHTML = o.text || o.value || 'List Element';
-}
-
-function UI_WrappedImage(o) {
-	o=be(o);
-	UI.call(this, {
-		node: o.node,
-		kind: ['WrappedImage'].concat(o.kind || []),
-		html: o.html || '<div><img data-bind="image" src="" /></div>'
-	});
-
-	this._.image.src = o.src;
-	this.$.setAttribute('data-index', o.index);
-	this._.image.style.background = 'url('+o.fore+') no-repeat scroll 0% 0% / 0%';
 }
 
 alg.createBin();
