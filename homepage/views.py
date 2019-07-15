@@ -21,7 +21,7 @@ def home(request):
             "4koma_cover": home_screen_series["We-Want-To-Talk-About-Kaguya"],
             "doujin_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"]
         }
-        cache.set("home_page", cached_request)
+        cache.set("home_page", cached_request, 3600 * 12)
     return render(request, 'homepage/home.html', cached_request)
 
 
