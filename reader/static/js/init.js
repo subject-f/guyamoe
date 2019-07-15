@@ -109,6 +109,18 @@ function SettingsHandler(){
 	this.all.groupPreference = new Setting(
 		'groupPreference',
 	)
+	this.all.selectorPinned = new Setting(
+		'selectorPinned',
+		'Page selector',
+		['persist', 'fade'],
+		'fade'
+	)
+	this.all.preload = new Setting(
+		'preload',
+		'Preload amount',
+		[1,2,3,4,5],
+		'1'
+	)
 
 	for (var key in this.all) {
 		this.all[key].super = this;
@@ -269,6 +281,8 @@ function UI_Reader(o) {
 
 		this.setFit(Settings.all.fit.get());
 		this.setLayout(Settings.all.layout.get(), true);
+		this.setSelectorPin(Settings.all.selectorPinned.get());
+		this.setPreload(Settings.all.preload.get());
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;	
 	}
@@ -402,6 +416,18 @@ function UI_Reader(o) {
 		}
 	}
 
+	this.setSelectorPin = function(state) {
+		if(state == 'persist') {
+			this.$.classList.add('selector-pinned');
+		}else{
+			this.$.classList.remove('selector-pinned');
+		}
+	}
+
+	this.setPreload = function(number){
+		this.$.setAttribute('data-preload', number);
+	}
+
 	this.eventRouter = function(event){
 		({
 			'nextPage': () => this.nextPage(),
@@ -413,7 +439,9 @@ function UI_Reader(o) {
 		({
 			'fit': o => this.setFit(o),
 			'layout': o => this.setLayout(o),
-			'groupPreference': o => {}
+			'groupPreference': o => {},
+			'selectorPinned': o => this.setSelectorPin(o),
+			'preload': o => this.setPreload(o),
 		})[o.setting](o.value)
 	}
 
@@ -421,8 +449,10 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter(e);
 	this._.vol_prev.onmousedown = e => this.prevVolume(e);
 	this._.vol_next.onmousedown = e => this.nextVolume(e);
-	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
+	this._.preload_button.onmousedown = e => Settings.all.preload.cycle();
 	this._.layout_button.onmousedown = e => Settings.all.layout.cycle();
+	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
+	this._.sel_pin_button.onmousedown = e => Settings.all.selectorPinned.cycle();
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
@@ -651,6 +681,8 @@ function UI_SimpleList(o) {
 		this.S.out('value', this.$.value)
 		this.$.blur();
 	}
+
+
 
 	this.add = function(uiInstances) {
 		this.lastAdded = [];

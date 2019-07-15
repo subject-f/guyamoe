@@ -8,7 +8,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}"></script>
 		<script type="text/javascript" src="{% static 'js/UI2.js' %}"></script>
-		<script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"> </script>
+		<link rel="stylesheet" type="text/css" href="{% static 'css/icons.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
 		<script>
 			CSRF_TOKEN = "{{ csrf_token }}"
@@ -43,8 +43,10 @@
 					<div class="rdr-selector-bot">
 						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next"></button>
 						<div class="flex-spacer"></div>
+						<button data-bind='preload_button' class="rdr-selector-vol is-ico-button preload"></button>
 						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
 						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter fit-width"></button>
+						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin fit-width"></button>
 					</div>
 				</section>
 				<section class="rdr-groups" data-bind='groups'>
