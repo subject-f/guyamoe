@@ -96,11 +96,13 @@ function SettingsHandler(){
 
 	this.all.fit = new Setting(
 		'fit',
+		'Page fit',
 		['fit-width', 'fit-height', 'fit-none'],
 		'fit-none'
 	)
 	this.all.layout = new Setting(
 		'layout',
+		'Reader layout',
 		['ltr', 'ttb', 'rtl'],
 		'ltr'
 	)
@@ -134,15 +136,17 @@ function SettingsHandler(){
 		if(window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
 		this.S.out('setting', {setting: setting.name, value: setting.get()})
+		this.S.out('message', setting.prettyName + ' changed to ' + setting.get());
 	}
 
 	this.deserialize();
 
-	this.S.mapOut(['setting']);
+	this.S.mapOut(['setting', 'message']);
 }
 
-function Setting(name, options, dflt) {
+function Setting(name, prettyName, options, dflt) {
 	this.name = name;
+	this.prettyName = prettyName;
 	this.setting = dflt;
 	this.options = options;
 	this.cycle = function() {
@@ -221,6 +225,9 @@ function UI_Reader(o) {
 	this.selector_page = new UI_PageSelector({
 		node: this._.page_selector
 	}).S.linkAnonymous('page', id => this.displayPage(id));
+	this.messageBox = new UI_MessageBox({
+		node: this._.message
+	})
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -338,6 +345,7 @@ function UI_Reader(o) {
 				this.current.chaptersIndex[index + 1]
 			)
 		}
+		this.messageBox.displayMessage('Next chapter.', 'fade');
 	}
 	this.prevChapter = function() {
 		if(this.SCP.chapter > 1)
@@ -347,12 +355,12 @@ function UI_Reader(o) {
 			this.drawChapter(
 				this.current.chaptersIndex[index - 1]
 			)
+			this.messageBox.displayMessage('Previous chapter.', 'fade');
 	}
 	this.nextPage = function(){
 		if(this.SCP.page < this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1) 
 			this.displayPage(this.SCP.page + 1)
 		else {
-			this.SCP.page = 0;
 			this.nextChapter();
 		}
 	}
@@ -365,10 +373,12 @@ function UI_Reader(o) {
 		}
 	}
 	this.nextVolume = function(){
-		this.selectVolume(+this.SCP.volume+1)
+		this.selectVolume(+this.SCP.volume+1);
+		this.messageBox.displayMessage('Next volume.', 'fade');
 	}
 	this.prevVolume = function(){
 		this.selectVolume(+this.SCP.volume-1)
+		this.messageBox.displayMessage('Previous volume.', 'fade');
 	}
 
 	this.setFit = function(fit) {
@@ -415,9 +425,10 @@ function UI_Reader(o) {
 	this._.layout_button.onmousedown = e => Settings.all.layout.cycle();
 
 	this.S.mapIn({
-		'seriesUpdated': this.updateData,
-		'event': this.eventRouter,
-		'setting': this.settingsRouter
+		seriesUpdated: this.updateData,
+		event: this.eventRouter,
+		setting: this.settingsRouter,
+		message: message => this.messageBox.displayMessage(message),
 	})
 	this.S.mapOut(['SCP']);
 
@@ -589,6 +600,43 @@ function URLChanger(o) {
 	this.S.mapIn({
 		SCP: this.updateURL
 	})
+}
+
+function UI_MessageBox(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['MessageBox'].concat(o.kind || []),
+	});
+	Linkable.call(this);
+
+	this.allowedStyles = ['flash', 'fade', 'slide']
+	this.fadeTime = 500;
+
+	this.timers = [];
+
+	this.displayMessage = function(text, style, time) {
+		time = time || 2000;
+		style = style || 'flash';
+		this.timers.forEach(timer => window.clearTimeout(timer));
+		if(this.allowedStyles.indexOf(style) > -1) {
+			this.allowedStyles.forEach(style => this.$.classList.remove(style));
+			setTimeout(() => {
+				this.$.classList.add(style);
+				this.$.classList.remove('fadeOut');
+			}, 1)
+		}
+		this.$.innerHTML = text;
+		this.timers.push(setTimeout(() => this.$.classList.add('fadeOut'), time));
+		this.timers.push(setTimeout(() => {
+			this.$.innerHTML = '';
+			this.allowedStyles.forEach(style => this.$.classList.remove(style));
+		}, time + this.fadeTime));
+	}
+
+	this.S.mapIn({
+		text: this.displayMessage
+	});
 }
 
 function UI_SimpleList(o) {

@@ -177,6 +177,45 @@ header > .search:before {
 
 }
 
+#message-box {
+	flex-grow: 1;
+	text-align: right;
+	font-size: 0.7rem;
+	padding: 0 1rem;
+	line-height: 2.2rem;
+	color: #aaa;
+	opacity: 1;
+	transition: opacity 0.3s ease;
+}
+
+#message-box.flash {
+	animation: flash 0.5s;
+}
+#message-box.fade {
+	animation: fade 0.5s;
+}
+#message-box.fadeOut {
+	opacity: 0;
+}
+
+@keyframes flash {
+	0% {
+		color: white;
+	}
+	100% {
+		color: #aaa;
+		text-shadow: none;
+	}
+}
+@keyframes fade {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
 .rdr-selector-mid .is-ico-button {
 	height: 2.5rem;
 	width: 2.5rem;
@@ -475,7 +514,7 @@ details[open] .expander:before {
 	position: relative;
 	text-align: left;
 	color: transparent;
-	font-size: 0.8em;
+	font-size: 2vh;
 	line-height: 1.8em;
 }
 
