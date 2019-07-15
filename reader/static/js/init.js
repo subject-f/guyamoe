@@ -121,6 +121,12 @@ function SettingsHandler(){
 		[1,2,3,4,5],
 		1
 	)
+	this.all.sidebar = new Setting(
+		'sidebar',
+		'Sidebar',
+		['hide', 'show'],
+		'show'
+	)
 
 	for (var key in this.all) {
 		this.all[key].super = this;
@@ -283,6 +289,7 @@ function UI_Reader(o) {
 		this.setLayout(Settings.all.layout.get(), true);
 		this.setSelectorPin(Settings.all.selectorPinned.get());
 		this.setPreload(Settings.all.preload.get());
+		this.setSidebar(Settings.all.sidebar.get());
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
 		window.scrollTo({
@@ -433,6 +440,14 @@ function UI_Reader(o) {
 		this.$.setAttribute('data-preload', number);
 	}
 
+	this.setSidebar = function(state) {
+		if(state == 'hide') {
+			this.$.classList.add('sidebar-hidden');
+		}else{
+			this.$.classList.remove('sidebar-hidden');
+		}
+	}
+
 	this.eventRouter = function(event){
 		({
 			'nextPage': () => this.nextPage(),
@@ -447,6 +462,7 @@ function UI_Reader(o) {
 			'groupPreference': o => {},
 			'selectorPinned': o => this.setSelectorPin(o),
 			'preload': o => this.setPreload(o),
+			'sidebar': o => this.setSidebar(o),
 		})[o.setting](o.value)
 	}
 
@@ -458,6 +474,7 @@ function UI_Reader(o) {
 	this._.layout_button.onmousedown = e => Settings.all.layout.cycle();
 	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
 	this._.sel_pin_button.onmousedown = e => Settings.all.selectorPinned.cycle();
+	this._.sidebar_button.onmousedown = e => Settings.all.sidebar.cycle();
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
@@ -492,6 +509,7 @@ function UI_ReaderImageView(o) {
 		this.imageContainer.add(imageInstances);
 		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
+
 	this.selectPage = function(index, dry) {
 		if(index < 0 || index >= this.imageContainer.$.children.length)
 			return;
