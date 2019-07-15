@@ -262,7 +262,7 @@ function UI_Reader(o) {
 
 		this.setFit(Settings.all.fit.get());
 		this.setLayout(Settings.all.layout.get(), true);
-		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
+		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;	
 	}
 
@@ -296,6 +296,8 @@ function UI_Reader(o) {
 		this.selector_chap.$.value = this.SCP.chapter;
 		this.selector_vol.$.value = chapterObj.volume;
 		this.displayPage();
+		this._.page_selector.classList.add('vis')
+		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
 		this.plusOne();
 		return this;
 	}
