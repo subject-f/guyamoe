@@ -57,7 +57,6 @@ class Chapter(models.Model):
     title = models.CharField(max_length=200, blank=True)
     chapter_number = models.FloatField(blank=False, null=False)
     folder = models.CharField(max_length=255, blank=True, null=True)
-    page_count = models.PositiveSmallIntegerField()
     volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
     uploaded_on = models.DateTimeField(default=None, blank=True, null=True)
