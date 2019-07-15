@@ -67,10 +67,10 @@ class Command(BaseCommand):
         chapter_folder_numb = f"{int(chapter_number):04}"
         chapter_folder_numb += f"-{str(chapter_number).rsplit('.')[1]}_" if not str(chapter_number).endswith("0") else "_"
         uid = chapter_folder_numb + random_chars()
-        ch_obj = Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, page_count=0, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
+        Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid, str(group.id))
         os.makedirs(chapter_folder)
-        return ch_obj, chapter_folder
+        return chapter_folder
 
     async def new_chapter_checker(self, downloaded_chapters, series, latest_volume, url):
         chapters = {}
@@ -106,7 +106,7 @@ class Command(BaseCommand):
             # Get all pages from newly detected chapters
             for chapter in chapters:
                 chapter_data = await self.get_pages(chapters[chapter])
-                ch_obj, chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 padding = len(str(len(chapter_data["pages"])))
                 print(f"Downloading chapter {chapter}...")
                 async with aiohttp.ClientSession() as session:
@@ -117,8 +117,6 @@ class Command(BaseCommand):
                                 page_content = await resp.read()
                                 with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), 'wb') as f:
                                     f.write(page_content)
-                ch_obj.page_count = len(chapter_data["pages"])
-                ch_obj.save()
                 print(f"Successfully downloaded chapter and added to db.")
         except:
             traceback.print_exc()
@@ -146,7 +144,7 @@ class Command(BaseCommand):
                 else:
                     print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
             for chapter in chapters:
-                ch_obj, chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 print(f"Downloading chapter {chapter}...")
                 async with session.get(chapters[chapter]["url"]) as resp:
                     if resp.status == 200:
@@ -158,8 +156,6 @@ class Command(BaseCommand):
                                 extension = page.rsplit(".", 1)[1]
                                 with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), "wb") as f:
                                     f.write(zip_file.read(page))
-                        ch_obj.page_count = len(all_pages)
-                        ch_obj.save()
                         print(f"Successfully downloaded chapter and added to db.")
 
     def handle(self, *args, **options):

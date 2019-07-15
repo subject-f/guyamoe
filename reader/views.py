@@ -55,7 +55,7 @@ def hit_count(request):
         return HttpResponse(json.dumps({}), content_type='application/json')
 
 
-@cache_page(120)
+@cache_page(1)
 def series_info(request, series_slug):
     series = get_object_or_404(Series, slug=series_slug)
     chapters = Chapter.objects.filter(series=series)
@@ -94,6 +94,6 @@ def series_info(request, series_slug):
         })
 
 
-@cache_page(120)
+@cache_page(1)
 def reader(request, series_slug, chapter, page):
     return render(request, 'reader/reader.html', {})

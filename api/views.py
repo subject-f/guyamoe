@@ -56,7 +56,7 @@ def upload_new_chapter(request, series_slug):
                 return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists! Click on edit next to the existing chapter for overwriting."}))
             else:
                 uid = existing_chapter.folder
-        ch_obj = Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, page_count=0, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
+        Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid, str(group.id))
         if os.path.exists(chapter_folder):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
@@ -68,8 +68,6 @@ def upload_new_chapter(request, series_slug):
                 extension = page.rsplit(".", 1)[1]
                 with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), "wb") as f:
                     f.write(zip_file.read(page))
-        ch_obj.page_count = len(all_pages)
-        ch_obj.save()
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
 
 
