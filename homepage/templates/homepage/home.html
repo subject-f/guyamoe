@@ -38,6 +38,10 @@
 		box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
 	}
 
+	.sp-button:focus {
+		outline:0;
+	}
+
 	.sp-row-add {
 		margin: 0;
 	}
@@ -132,7 +136,7 @@
 		</div>
 	</div>
 	<div class="row justify-content-between pt-2 small" style="background-color:#2a2a2a;">
-		<div class="col-4 d-flex align-content-bottom justify-content-left">
+		<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 d-flex align-content-bottom justify-content-left">
 			<div class="row pl-3 pt-2">
 				<div class="col-lg-5 col-md-5 col-sm-5 col-xs-10">
 					<button class="sp-button p-2"
@@ -148,17 +152,17 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-4 text-center  mt-2">
+		<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 text-center mt-2">
 			<div class="col">
-				<h6 class="text-secondary">
+				<p class="text-secondary" style="font-size: .8rem">
 					Kaguya-sama, the 4koma, the doujin, the novel, and the fancomics featured here all belong to their respective
 					authors.<br>This website is not for profit.
-				</h6>
+				</p>
 			</div>
 		</div>
-		<div class="col-4">
+		<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
 			
-			<div class="col-lg-3 col-md-5 col-sm-6 col-xs-6 float-right">
+			<div class="col-lg-3 col-md-5 col-sm-12 col-xs-12 float-right">
 				
 				<img class="img-fluid mx-auto d-block" style="height: 75px; width: 56px; float:right"
 					src="{% static 'img/img_comics-bottom.png' %}">
