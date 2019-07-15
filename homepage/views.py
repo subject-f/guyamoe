@@ -4,7 +4,7 @@ from django.views.decorators.cache import cache_page
 from reader.models import Series, Volume, Chapter
 
 
-@cache_page(1)
+@cache_page(3600)
 def home(request):
     home_screen_series = {"Kaguya-Wants-To-Be-Confessed-To": "", "We-Want-To-Talk-About-Kaguya": "", "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": ""}
     for series in home_screen_series:
@@ -21,5 +21,6 @@ def home(request):
     })
 
 
+@cache_page(3600)
 def about(request):
     return render(request, 'homepage/about.html', {})

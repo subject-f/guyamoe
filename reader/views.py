@@ -21,7 +21,7 @@ def hit_count(request):
         user_ip = curr_user_and_online(request)
         page_id = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}{user_ip}"
         page_hits_cache = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}"
-        cache.set(page_id, page_id, 300)
+        cache.set(page_id, page_id, 60)
 
         page_cached_users = cache.get(page_hits_cache)
         print("page_cached_users", page_cached_users)
@@ -31,29 +31,31 @@ def hit_count(request):
             page_cached_users = []
         if user_ip not in page_cached_users:
             page_cached_users.append(user_ip)
-            series_id = request.POST["series"]
+            series_slug = request.POST["series"]
+            series_id = Series.objects.get(slug=series_slug).id
             series = ContentType.objects.get(app_label='reader', model='series')
             hit, _ = HitCount.objects.get_or_create(content_type=series, object_id=series_id)
             hit.hits = F('hits') + 1
             hit.save()
             if "chapter" in request.POST:
-                chapter_id = request.POST["chapter"]
+                chapter_number = request.POST["chapter"]
+                group_id = request.POST["group"]
                 chapter = ContentType.objects.get(app_label='reader', model='chapter')
-                hit, _ = HitCount.objects.get_or_create(content_type=chapter, object_id=chapter_id)
+                hit, _ = HitCount.objects.get_or_create(content_type=chapter, object_id=Chapter.objects.get(chapter_number=float(chapter_number), group__id=group_id, series__id=series_id).id)
                 hit.hits = F('hits') + 1
                 hit.save()
         
         print("page_cached_users new", page_cached_users)
         cache.set(page_hits_cache, page_cached_users)
         print(page_hits_cache)
-        page_cached_users = cache.get(page_hits_cache)
-        print("page_hits_cache new 2", page_cached_users)
+        # page_cached_users = cache.get(page_hits_cache)
+        # print("page_hits_cache new 2", page_cached_users)
 
         
         return HttpResponse(json.dumps({}), content_type='application/json')
 
 
-@cache_page(1)
+@cache_page(120)
 def series_info(request, series_slug):
     series = get_object_or_404(Series, slug=series_slug)
     chapters = Chapter.objects.filter(series=series)
@@ -92,11 +94,6 @@ def series_info(request, series_slug):
         })
 
 
-@cache_page(1)
+@cache_page(120)
 def reader(request, series_slug, chapter, page):
     return render(request, 'reader/reader.html', {})
-
-
-@cache_page(1)
-def fancomics(request):
-    return render(request, 'reader/fancomics.html', {})
