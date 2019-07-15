@@ -139,7 +139,7 @@ class Command(BaseCommand):
                             continue
                         else:
                             print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
-                            chapter_dl_url = soup.select(".icon_wrapper a")[0]["href"]
+                            chapter_dl_url = chapter.select(".icon_wrapper a")[0]["href"]
                             chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_dl_url}
                 else:
                     print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
@@ -150,7 +150,7 @@ class Command(BaseCommand):
                     if resp.status == 200:
                         data = await resp.read()
                         with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
-                            all_pages = zip_file.namelist()
+                            all_pages = sorted(zip_file.namelist())
                             padding = len(str(len(all_pages)))
                             for idx, page in enumerate(all_pages):
                                 extension = page.rsplit(".", 1)[1]
