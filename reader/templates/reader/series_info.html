@@ -11,6 +11,49 @@
          listMode(window.localStorage.getItem("viewMode"));
       });
       $(document).ready(function(){
+         let chapter_list = {{ chapter_list|safe }};
+         var now = new Date();
+         chapter_table = $("#chapterTable tr");
+         var idx = 0;
+         chapter_list.forEach((chapter) => {
+            let chapter_date = new Date(Date.UTC(chapter[4][0], chapter[4][1], chapter[4][2], chapter[4][3], chapter[4][4], chapter[4][5], 0));
+            let delta = Math.abs((now - chapter_date)) / 1000;
+            let days = Math.floor(delta / 86400);
+            delta -= days * 86400;
+            let hours = Math.floor(delta / 3600) % 24;
+            delta -= hours * 3600;
+            let minutes = Math.floor(delta / 60) % 60;
+            delta -= minutes * 60;
+            let seconds = parseInt(delta % 60);
+            if (days >= 7) {
+               $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
+               $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
+            }
+            else if (days > 7 && days < 0) {
+               $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
+               $(".compact-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
+               $(".compact-chapter-upload-date").addClass('text-muted');
+            }
+            else if (hours > 0) {
+               $(".detailed-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+               $(".detailed-chapter-upload-date").css({'color': 'green'});
+               $(".compact-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+               $(".compact-chapter-upload-date").css({'color': 'green'});
+            }
+            else if (minutes > 0) {
+               $(".detailed-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+               $(".detailed-chapter-upload-date").css({'color': 'green'});
+               $(".compact-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+               $(".compact-chapter-upload-date").css({'color': 'green'});
+            }
+            else if (seconds > 0) {
+               $(".detailed-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+               $(".detailed-chapter-upload-date").css({'color': 'green'});
+               $(".compact-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+               $(".compact-chapter-upload-date").css({'color': 'green'});
+            }
+            idx += 1;
+         });
          var formData = new FormData();
          formData.append("series", "{{ slug }}")
          formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
@@ -35,7 +78,6 @@
          });
          $('#submitForm').click(function () {
             $("#modalSubmit").prepend(`<div id="uploadingChapter" class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>`)
-            // var formData = new FormData();
             var formElem = document.getElementById("newChapterForm");
             var formData = new FormData(formElem);
             formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
@@ -44,7 +86,6 @@
                url: "/api/upload_new_chapter/{{ slug }}/",
                processData: false,
                contentType: false,
-               // csrfmiddlewaretoken: '{{ csrf_token }}',
                data: formData,
                success: function (data) {
                   if (data["response"] == "success") {
@@ -66,16 +107,6 @@
             return false;
          });
       });
-
-      $('testest').submit( function () {
-			var formdata = $(this).serialize();
-			$.ajax({
-			    type: "POST",
-			    url: "submit.php",
-			    data: formdata,
-			 });
-			return true;
-		});
       
       function listMode(mode) {
          modes = ["detailed", "compact", "volumeCovers"];
@@ -89,28 +120,32 @@
                $(`#${modes[i]}View`).addClass("d-none");
             }
          }
-         window.localStorage.setItem("viewMode", mode)
+         if (mode != 3) window.localStorage.setItem("viewMode", mode);
          if (modes[mode-1] == "volumeCovers") {
             var formData = new FormData();
             formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
-            $.ajax({
-               type: "POST",
-               url: "/api/get_volume_covers/{{ slug }}/",
-               processData: false,
-               contentType: false,
-               data: formData,
-               success: function (data) {
-                  console.log(data)
-                  data["covers"].forEach((cover) => {
-                     $("#volumeCoversView").append(`<a data-toggle="modal" data-target="#zoomImage${cover[0]}"><img class="mb-1 " src="${cover[1]}" style="width: 300px"></a>
-                                                   <div id="zoomImage${cover[0]}" class="modal fade float-left" tabindex="-1" role="dialog">
-                                                      <div class="modal-dialog">
-                                                         <img src="${cover[1]}" class="img-responsive">
-                                                      </div>
-                                                   </div>`);
+            console.log($("#volumeCoversView").children().length)
+            if ($("#volumeCoversView").children().length == 0) {
+               $.ajax({
+                  type: "POST",
+                  url: "/api/get_volume_covers/{{ slug }}/",
+                  processData: false,
+                  contentType: false,
+                  data: formData,
+                  success: function (data) {
+                     console.log(data)
+                     data["covers"].forEach((cover) => {
+                        $("#volumeCoversView").append(`<a data-toggle="modal" data-target="#zoomImage${cover[0]}"><img class="mb-1 " src="${cover[1]}" style="width: 300px"></a>
+                                                      <div id="zoomImage${cover[0]}" class="modal fade float-left" tabindex="-1" role="dialog">
+                                                         <div class="modal-dialog">
+                                                            <img src="${cover[1]}" class="img-responsive">
+                                                         </div>
+                                                      </div>`);
                   });
                }
             });
+            }
+            
          }
       }
       function loadGroups(slug) {
@@ -198,10 +233,10 @@
                      </div>
                   </div>
                   <div class="media media-3x4 justify-content-center py-2">
-                     <img src="{{ cover_vol_url }}" class="img-fluid" style="width: 80%" >
+                     <img src="{{ cover_vol_url }}" class="img-fluid" style="width: 98%" >
                   </div>
                </div>
-               <div class="card">
+               <div class="card" style="border-radius: 0px;">
                   <div class="card-body">
                      <table class="table table-borderless table-sm small">
                         <tbody>
@@ -237,21 +272,21 @@
                   <a href="#" onclick="loadGroups('{{ slug }}')" data-toggle="modal" data-target="#uploadModal"><i class="float-right fa fa-upload fa-lg" ></i></a>
                {% endif %}
                <div class="btn-group"  role="group" >
-                  <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" onclick="listMode(1)">Detailed</button>
-                  <button type="button" id="compactMode" class="tag-display-mode-toggle btn btn-sm" onclick="listMode(2)">Compact</button>
-                  <button type="button" id="volumeCoversMode" class="ml-5 tag-display-mode-toggle btn btn-sm" onclick="listMode(3)">Volume Covers</button>
+                  <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px; border-bottom: 0px;" onclick="listMode(1)">Detailed</button>
+                  <button type="button" id="compactMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(2)">Compact</button>
+                  <button type="button" id="volumeCoversMode" class="ml-5 tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(3)">Volume Covers</button>
                </div>
                
                
                <div id="compactView" class="d-none" style="font-size: .8rem">
                   
                      {% for volume, data in volume_list %}
-                        <div class="card col-12 mb-3">
+                        <div class="card col-12 mb-3" style="border-radius: 0px;">
                         <h6 class="card-title mt-2 mb-0">Volume {{ volume }}</h6>
                         <div class="row mb-0 pt-0">
                            {% for chapter in data %}
                            <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 pt-2">
-                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center text-muted small mb-1">{{ chapter.3 }}</p></div></a>
+                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center text-muted small mb-1 compact-chapter-upload-date"></p></div></a>
                            </div>
                            {% endfor %}
                            </div>
@@ -278,7 +313,7 @@
                                     <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row">{{ volume }}</td>
                                     <td scope="row">{{ group }}</td>
-                                    <td scope="row">{{ upload_date }}</td>         
+                                    <td scope="row" class="detailed-chapter-upload-date"></td>         
                                     {% if is_mod %}
                                     <th scope="row"><i class="fa fa-cog"></i></th>
                                     {% endif %}                        

@@ -67,27 +67,7 @@ class Chapter(models.Model):
     def slug_chapter_number(self):
         return self.clean_chapter_number().replace(".", "-")
 
-    def get_chapter_time(self):
-        upload_date = self.uploaded_on
-        upload_time = (datetime.utcnow().replace(tzinfo=timezone.utc) - upload_date).total_seconds()
-        days = int(upload_time // (24 * 3600))
-        upload_time = upload_time % (24 * 3600)
-        hours = int(upload_time // 3600)
-        upload_time %= 3600
-        minutes = int(upload_time // 60)
-        upload_time %= 60
-        seconds = int(upload_time)
-        if days == 0 and hours == 0 and minutes == 0:
-            upload_date = f"{seconds} second{'s' if seconds != 1 else ''} ago"
-        elif days == 0 and hours == 0:
-            upload_date = f"{minutes} min{'s' if minutes != 1 else ''} ago"
-        elif days == 0:
-            upload_date = f"{hours} hour{'s' if hours != 1 else ''} ago"
-        elif days < 7:
-            upload_date = f"{days} day{'s' if days != 1 else ''} ago"
-        else:
-            upload_date = upload_date.strftime("%Y-%m-%d")
-        return upload_date
+
 
     def __str__(self):
         return f"{self.chapter_number} - {self.title} | {self.group}"
