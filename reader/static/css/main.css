@@ -5,6 +5,10 @@
    License: none (public domain)
 */
 
+html {
+	overflow: hidden;
+}
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -86,13 +90,13 @@ main {
 	width: calc(100vw+24px);
 	overflow: hidden;
 	max-height: 100vh;
+	position: relative;
 }
 
 aside {
 	height: 100vh;
-	width: 30vw;
-	max-width: 35ch;
 	min-width: 27ch;
+	max-width: 27ch;
 	display: flex;
 	flex-direction: column;
 	background: #3a3f44;
@@ -142,6 +146,7 @@ header > .search:before {
 .rdr-selector {
 	display: flex;
 	flex-direction: column;
+	flex-grow: 0;
 }
 
 .rdr-selector > div {
@@ -276,13 +281,35 @@ header > .search:before {
 	cursor: pointer;
 }
 
+.rdr-groups {
+	margin-top: 1rem;
+	flex-grow: 0;
+}
+
+.rdr-groups div {
+	font-size: 0.7em;
+	padding: 0.7rem;
+	text-emphasis: ;
+	text-align: center;
+	cursor: pointer;
+}
+
+.rdr-groups div.is-active {
+    background: rgba(0,0,0,0.3);
+ }
+
 .rdr-previews {
 	display: flex;
 	flex-direction: column;
 	margin-top: 1rem;
+	overflow: hidden;
+	flex-basis: 0;
+	flex-grow: 1;
 }
 
 .rdr-previews details {
+	height: 100%;
+	flex-direction: column;
 }
 
 summary {
@@ -290,22 +317,28 @@ summary {
 	flex-wrap: nowrap;
 	list-style: none;
 	cursor: pointer;
-	background: #2b2f33;
+	background: #34393d;
+	flex-grow: 0;
 }
 
- details summary span {
+details summary span {
  	display: flex;
  	align-items: center;
  	padding: 0 0 0 1rem;
 	flex-grow: 1;
+	font-size: 0.8rem;
+}
+
+details .expander {
+	height: 2.6rem;
 }
 
 details .expander:before {
-	content: '›';
+	content: '○';
 }
 
 details[open] .expander:before {
-	transform: rotate(90deg);
+	content: '●';
 }
 
 .rdr-previews-gallery {
@@ -313,6 +346,8 @@ details[open] .expander:before {
 	flex-wrap: wrap;
 	justify-content: space-around;
 	padding-top: 0.25rem;
+	overflow: auto;
+	height: calc(100% - 3rem);
 }
 
 .rdr-previews-gallery img {
@@ -327,6 +362,7 @@ details[open] .expander:before {
 	position: relative;
 	min-height: 100%;
 	flex-grow: 1;
+	cursor: pointer;
 }
 
 .rdr-image-wrap {
@@ -387,6 +423,100 @@ details[open] .expander:before {
 	width: 70%;
 }
 */
+
+.rdr-page-selector {
+	height: 100vh;
+	width: 1px;
+	opacity: 0;
+	position: relative;
+	z-index: 3;
+	transition: all .3s ease;
+	min-width: 5rem;
+	margin-right: -5rem;
+	cursor: pointer;
+}
+
+.rdr-page-selector:hover {
+	opacity: 1;
+}
+
+.rdr-page-selector:hover .rdr-page-selector-keys {
+	left: 3px;
+}
+
+.rdr-page-selector-keys {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	left: 0em;
+		transition: all .3s ease;
+}
+
+.rdr-page-selector-keys div {
+	flex-grow: 1;
+	position: relative;
+	z-index: 2;
+	margin-bottom: 2px;
+	border-left: 1px solid #555;
+	transition: all 0.2s ease;
+	position: relative;
+	text-align: left;
+	color: transparent;
+	font-size: 0.8em;
+	line-height: 1.8em;
+}
+
+.rdr-page-selector-keys div:before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 1.4ch;
+	height: 100%;
+	width: 3px;
+	position: relative;
+	left: -4px;
+	background: #272b30;
+}
+.rdr-page-selector-keys div:after {
+	content: "";
+	display: block;
+	height: 102%;
+	width: 100%;
+	position: absolute;
+}
+
+.rdr-page-selector-keys div:hover {
+	border-left: 1px solid lightgray;
+	box-shadow: 100px 0px 20px -100px rgba(255,255,255,0.5) inset, 100px 0px 20px -100px black inset;
+	left: 2px;
+	color: rgba(255,255,255,0.7);
+	text-shadow: 1px 1px 1px rgba(0,0,0,0.7), -1px -1px 1px rgba(0,0,0,0.7), 1px -1px 1px rgba(0,0,0,0.7), -1px 1px 1px rgba(0,0,0,0.7);
+}
+
+.rdr-page-selector-keys div.is-active {
+	border-left: 1px solid white;
+	box-shadow: 100px 0px 20px -100px white inset;
+	color: rgba(255,255,255,1);
+	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;
+}
+
+
+.rdr-page-selector-counter {
+	position: absolute;
+	width: 6em;
+	height: 10%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: white;
+	top: 45%;
+	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 6px black;
+}
+
+
+
+
 
 @media (max-width: 700px) {
 	main {

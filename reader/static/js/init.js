@@ -15,6 +15,7 @@ function LoadHandler(o) {
 	var SCP = this.parseSCP(document.location.pathname);
 		API.requestSeries(SCP.series)
 			.then(data => {
+				Reader.setSCP(SCP);
 				Reader.displaySCP(SCP);
 			})
 	}
@@ -35,9 +36,21 @@ function ReaderAPI(o) {
 	this.infuseImageURLs = function(data) {
 		for(var num in data.chapters) {
 		var chapter = data.chapters[num];
-			chapter.images = [];
-			for (var i = 0; i < chapter.pages.length; i++) {
-				chapter.images.push(this.mediaURL + data.slug + '/' + chapter.folder + '/' + (chapter.pages[i]))
+			chapter.images = {};
+			for(var group in chapter.groups) {
+				chapter.images[group] = [];
+				for (var i = 0; i < chapter.groups[group].length; i++) {
+					chapter.images[group].push(
+						this.mediaURL
+							+ data.slug 
+							+ '/chapters/' 
+							+ chapter.folder 
+							+ '/' 
+							+ group 
+							+ '/' 
+							+ chapter.groups[group][i]
+					)
+				}
 			}
 		}
 		return data;
@@ -47,13 +60,25 @@ function ReaderAPI(o) {
 		this.seriesRequest = fetch(this.seriesUrl + slug)
 			.then(response => response.json())
 			.then(seriesData => {
-					seriesData = this.infuseImageURLs(seriesData);
-					seriesData.chaptersIndex =
-						Object.keys(
-							seriesData.chapters
-						).sort((a,b) => parseFloat(a) - parseFloat(b));
-					this.data[slug] = seriesData;
-					this.S.out('seriesUpdated', this.data[slug]);
+				seriesData = this.infuseImageURLs(seriesData);
+				seriesData.chaptersIndex =
+					Object.keys(
+						seriesData.chapters
+					).sort((a,b) => parseFloat(a) - parseFloat(b));
+				seriesData.volMap = {};
+				for (var i = 0; i < seriesData.chaptersIndex.length; i++) {
+					if(!seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume])
+						seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume] = seriesData.chaptersIndex[i];
+				}
+				this.data[slug] = seriesData;
+			})
+			.then(o => {
+				return fetch(this.url + 'get_groups/' + slug)
+			})
+			.then(response => response.json())
+			.then(o => {
+				this.data[slug].groups = o.groups;
+				this.S.out('seriesUpdated', this.data[slug]);
 			})
 		return this.seriesRequest;
 	}
@@ -72,17 +97,46 @@ function SettingsHandler(){
 	this.all.fit = new Setting(
 		'fit',
 		['fit-width', 'fit-height', 'fit-none'],
-		'fit-width'
+		'fit-none'
 	)
 	this.all.layout = new Setting(
 		'layout',
 		['ltr', 'ttb', 'rtl'],
 		'ltr'
 	)
+	this.all.groupPreference = new Setting(
+		'groupPreference',
+	)
 
 	for (var key in this.all) {
 		this.all[key].super = this;
 	}
+
+	this.serialize = function() {
+	var settings = {};
+		for(var setting in this.all) {
+			settings[setting] = this.all[setting].get();
+		}
+		return JSON.stringify(settings);
+	}
+
+	this.deserialize = function() {
+		if(!window.localStorage) return;
+	var settings = window.localStorage.getItem('settings');
+		if(!settings) return;
+		settings = JSON.parse(settings);
+		for(var setting in settings) {
+			this.all[setting].set(settings[setting], true);
+		}
+	}
+
+	this.settingUpdated = function(setting) {
+		if(window.localStorage)
+			window.localStorage.setItem('settings', this.serialize())
+		this.S.out('setting', {setting: setting.name, value: setting.get()})
+	}
+
+	this.deserialize();
 
 	this.S.mapOut(['setting']);
 }
@@ -103,11 +157,14 @@ function Setting(name, options, dflt) {
 	this.get = function() {
 		return this.setting;
 	}
-	this.set = function(value) {
-		if(!this.options || this.options.indexOf(value) < 0)
-			throw new Error('A setting must be one of: ' + this.options.join(', '))
+	this.set = function(value, silent) {
+		if(this.options) {
+			if(this.options.indexOf(value) < 0)
+				throw new Error('A setting must be one of: ' + this.options.join(', '))
+		}
 		this.setting = value;
-		this.super.S.out('setting', {setting: this.name, value: this.setting})
+		if(!silent)
+			this.super.settingUpdated(this);
 	}
 }
 
@@ -123,7 +180,7 @@ function UI_Reader(o) {
 
 	this.SCP = {
 		chapter: 1,
-		page: 0
+		page: 0,
 	};
 	
 	new KeyListener()
@@ -135,13 +192,22 @@ function UI_Reader(o) {
 
 	this.selector_chap = new UI_SimpleList({
 		node: this._.selector_chap
-	}).S.linkAnonymous('value', value => this.drawChapter(value));
+	}).S.linkAnonymous('value', value => {
+		this.SCP.page = 0;
+		this.drawChapter(value);
+	});
 	this.selector_vol = new UI_SimpleList({
 		node: this._.selector_vol
 	}).S.linkAnonymous('value', value => this.displayVolume(value));
 	this.imageView = new UI_ReaderImageView({
 		node: this._.image_viewer
 	}).S.link(this);
+	this.groupList = new UI_Tabs({
+		node: this._.groups
+	}).S.linkAnonymous('id', id => this.drawGroup(id));
+	this.selector_page = new UI_PageSelector({
+		node: this._.page_selector
+	}).S.linkAnonymous('page', id => this.displayPage(id));
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -170,10 +236,9 @@ function UI_Reader(o) {
 				text: chapterNumber + ' - ' + chapter.title,
 				value: chapterNumber
 			}));
-			if(!volElements[chapter.volume])
-				volElements[chapter.volume] = chapterNumber;
+
 		}
-		volElements = Object.keys(volElements).sort((a,b) => parseFloat(b) - parseFloat(a)).map(item => {
+		volElements = Object.keys(this.current.volMap).sort((a,b) => parseFloat(b) - parseFloat(a)).map(item => {
 			return new UI_SimpleListItem({
 				value: item,
 			})
@@ -181,23 +246,68 @@ function UI_Reader(o) {
 
 		this.selector_chap.clear().add(chapterElements);
 		this.selector_vol.clear().add(volElements);
+
+		this.setFit(Settings.all.fit.get());
+		this.setLayout(Settings.all.layout.get(), true);
+	}
+
+	this.drawGroup = function(group) {
+		Settings.all.groupPreference.set(group);
+		this.drawChapter()
 	}
 
 	this.drawChapter = function(chapter) {
 		if(chapter) this.SCP.chapter = chapter;
-		this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images);
+	var chapterObj = this.current.chapters[this.SCP.chapter];
+		this.SCP.volume = chapterObj.volume;
+	var group = Settings.all.groupPreference.get();
+		if(group === undefined || chapterObj.groups[group] == undefined) {
+			group = Object.keys(chapterObj.groups)[0];
+		}
+		this.SCP.group = group;
+		this.SCP.pageCount = chapterObj.groups[group].length;
+
+		this.groupList.clear();
+	var groupElements = {};
+		for(var grp in chapterObj.groups) {
+			groupElements[grp] = new UI_SimpleListItem({
+				html: '<div' + ((grp==group)?' class="is-active"':'') + '></div>',
+				text: this.current.groups[grp]
+			})
+		}
+		this.groupList.addMapped(groupElements);
+
+		this.imageView.drawImages(chapterObj.images[group]);
 		this.selector_chap.$.value = this.SCP.chapter;
-		this.selector_vol.$.value = this.current.chapters[this.SCP.chapter].volume;
-		this.displayPage(0);
+		this.selector_vol.$.value = chapterObj.volume;
+		this.displayPage();
+		this.plusOne();
 		return this;
 	}
 
 	this.displayPage = function(page) {
-		if(page !== undefined) this.SCP.page = page;
 		if(page == 'last')
-			this.SCP.page = this.current.chapters[this.SCP.chapter].images.length - 1;
+			this.SCP.page = this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1;
+		else
+			if(page !== undefined) this.SCP.page = page;
 		this.imageView.selectPage(this.SCP.page);
 		this.S.out('SCP', this.SCP);
+	}
+
+	this.selectVolume = function(vol) {
+		if(this.current.volMap[vol])
+			this.drawChapter(this.current.volMap[vol]);
+	}
+
+	this.plusOne = function() {
+	var formData = new FormData();
+		formData.append("series", this.current.slug)
+		formData.append("chapter", this.SCP.chapter)
+		formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
+		fetch('/reader/update_view_count/', {
+			method: 'POST',
+			body: formData, // body data type must match "Content-Type" header
+		})
 	}
 
 
@@ -208,6 +318,7 @@ function UI_Reader(o) {
 			this.drawChapter(
 				this.current.chaptersIndex[index + 1]
 			)
+			this.displayPage(0);
 		}
 	}
 	this.prevChapter = function() {
@@ -217,12 +328,15 @@ function UI_Reader(o) {
 			this.drawChapter(
 				this.current.chaptersIndex[index - 1]
 			)
+			this.displayPage(0);
 	}
 	this.nextPage = function(){
-		if(this.SCP.page < this.current.chapters[this.SCP.chapter].pages.length - 1) 
+		if(this.SCP.page < this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1) 
 			this.displayPage(this.SCP.page + 1)
-		else
+		else {
 			this.nextChapter();
+			this.displayPage(0);
+		}
 	}
 	this.prevPage = function(){
 		if(this.SCP.page > 0) 
@@ -231,6 +345,12 @@ function UI_Reader(o) {
 			this.prevChapter();
 			this.displayPage('last');
 		}
+	}
+	this.nextVolume = function(){
+		this.selectVolume(+this.SCP.volume+1)
+	}
+	this.prevVolume = function(){
+		this.selectVolume(+this.SCP.volume-1)
 	}
 
 	this.setFit = function(fit) {
@@ -242,14 +362,16 @@ function UI_Reader(o) {
 		this._.fit_button.classList.add(fit);
 	}
 
-	this.setLayout = function(layout) {
+	this.setLayout = function(layout, silent) {
 		Settings.all.layout.options.forEach(item => {
 			this.$.classList.remove(item);
 		});
 		this.$.classList.add(layout);
 
-		this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images);
-		this.imageView.selectPage(this.SCP.page);
+		if(!silent) {
+			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group]);
+			this.imageView.selectPage(this.SCP.page);
+		}
 	}
 
 	this.eventRouter = function(event){
@@ -262,7 +384,8 @@ function UI_Reader(o) {
 	this.settingsRouter = function(o) {
 		({
 			'fit': o => this.setFit(o),
-			'layout': o => this.setLayout(o)
+			'layout': o => this.setLayout(o),
+			'groupPreference': o => {}
 		})[o.setting](o.value)
 	}
 
@@ -279,6 +402,8 @@ function UI_Reader(o) {
 		'setting': this.settingsRouter
 	})
 	this.S.mapOut(['SCP']);
+
+	this.S.link(this.selector_page);
 }
 
 function UI_ReaderImageView(o) {
@@ -288,13 +413,13 @@ function UI_ReaderImageView(o) {
 		kind: ['ReaderImageView'].concat(o.kind || []),
 	});
 	Linkable.call(this);
-
+	this.firstDraw = true;
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
 	this.drawImages = function(images) {
 		this.imageContainer.clear();
 		images.forEach((url, index) => {
-			this.imageContainer.add(new UI_WrappedImage({src: url, index: index}))
+			this.imageContainer.add(new UI_WrappedImage({src: url, index: index, fore: images[index+1]}))
 		})
 		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
@@ -306,10 +431,11 @@ function UI_ReaderImageView(o) {
 	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
 		this.imageContainer.select(realIndex);
 		if(Settings.all.layout.get() == 'ttb'){
-			/*this.$.scrollTo({
-				left: 0,
-				top: pageElement.offsetTop
-			})*/
+			if(this.firstDraw)
+				this._.image_container.scrollTo({
+					left: 0,
+					top: pageElement.offsetTop
+				})
 		}else{
 			this.imageContainer.$.style.left = -1 * 100 * realIndex - 0.001 + '%';
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
@@ -321,6 +447,7 @@ function UI_ReaderImageView(o) {
 				})
 			// }, 150)
 		}
+		this.firstDraw = false;
 	}
 
 	this.prev = function() {
@@ -332,12 +459,13 @@ function UI_ReaderImageView(o) {
 	}
 
 
-	this.$.onscroll = e => {
+	this._.image_container.onscroll = e => {
 		if(Settings.all.layout.get() == 'ttb') {
+		var st = this._.image_container.scrollTop || 1;
 		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
-			offsets.push(this.$.scrollTop);
+			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
-			this.displayPage(offsets.indexOf(this.$.scrollTop) - 1);
+			Reader.displayPage(offsets.indexOf(st) - 1);
 			return;
 		}else{
 			if(this.imageContainer.selectedItems[0].$.nextSibling)
@@ -347,22 +475,72 @@ function UI_ReaderImageView(o) {
 		}
 	}
 	this.mouseHandler = function(e) {
+		if(Settings.all.layout.get() == 'ttb') return;
+		if(e.button != 0) return;
 	var box = this.$.getBoundingClientRect();
 	var cutoff = box.width * 0.35 + box.left;
+	var scroll = box.width + box.left - 30;
 		if(e.pageX > cutoff) {
-			(Settings.all.layout.get() == 'rtl')?
+			if(e.pageX < scroll)
+				(Settings.all.layout.get() == 'ltr')?
+					this.next(e):
+					this.prev(e);
+		}else if(e.pageX > box.left){
+			(Settings.all.layout.get() == 'ltr')?
 				this.prev(e):
 				this.next(e);
-		}else if(e.pageX > box.left){
-			(Settings.all.layout.get() == 'rtl')?
-				this.next(e):
-				this.prev(e);
 		}
 	}
 
 	this.$.onmousedown = e => this.mouseHandler(e);
 
 	this.S.mapOut(['event']);
+}
+
+function UI_PageSelector(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['PageSelector'].concat(o.kind || []),
+	});
+	Linkable.call(this);
+
+	this.keys = new UI_Tabs({
+		node: this._.page_keys
+	});
+
+	this.render = function(SCP) {
+		if(SCP.pageCount != this.keys.$.children.length) {
+		var keys = [];
+			for (var i = 0; i < SCP.pageCount; i++) {
+			var key = new UI_Dummy();
+				// key.$.onmouseover = e => this.hoverChange(e);
+				key.$.innerHTML = i+1;
+				keys.push(key);
+			}
+			this.keys.clear().add(keys)
+		}
+		this.keys.select(SCP.page)
+		// this._.page_keys_count.innerHTML = SCP.page + 1;
+	}
+	this.proxy = function(i) {
+		this.S.out('page', i);
+	}
+	// this.hoverChange = function(e){
+	// 	this._.page_keys_count.innerHTML = this.keys.$.children.indexOf(e.target) + 1;
+	// }
+
+	// this.$.onmouseleave = e => {
+	// 	this._.page_keys_count.innerHTML = SCP.page + 1;
+	// };
+
+	this.S.mapIn({
+		'number': this.proxy,
+		'SCP': this.render
+	})
+	this.S.mapOut(['page'])
+
+	this.keys.S.link(this);
 }
 
 function URLChanger(o) {
@@ -432,7 +610,7 @@ function UI_SimpleListItem(o) {
 	this.value = o.value;
 	this.$.value = o.value;
 	if(this.$.innerHTML.length < 1)
-		this.$.innerHTML = o.text || o.value || '<List Element>';
+		this.$.innerHTML = o.text || o.value || 'List Element';
 }
 
 function UI_WrappedImage(o) {
@@ -444,17 +622,18 @@ function UI_WrappedImage(o) {
 	});
 
 	this._.image.src = o.src;
-	this.$.setAttribute('data-index', o.index)
+	this.$.setAttribute('data-index', o.index);
+	this._.image.style.background = 'url('+o.fore+') no-repeat scroll 0% 0% / 0%';
 }
 
 alg.createBin();
 
 API = new ReaderAPI();
+Settings = new SettingsHandler();
 Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
 });
 Loader = new LoadHandler();
-Settings = new SettingsHandler();
 URL = new URLChanger();
 
 API.S.link(Reader);

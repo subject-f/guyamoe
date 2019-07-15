@@ -11,25 +11,7 @@
 		<script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"> </script>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
 		<script>
-			$(document).ready(function(){
-				var formData = new FormData();
-				formData.append("series", "{{ series_id }}")
-				formData.append("chapter", "{{ chapter_id }}")
-				formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
-				$.ajax({
-					type: "POST",
-					url: "/reader/update_view_count/",
-					processData: false,
-					contentType: false,
-					// headers: { "X-CSRFToken": '{{csrf_token}}' },
-					data: formData,
-					success: function (data) {},
-					error: function(data){
-					console.log('POST failed');
-					console.log(data);
-					}
-				});
-			});
+			CSRF_TOKEN = "{{ csrf_token }}"
 		</script>
 	</head>
 <body>
@@ -43,7 +25,7 @@
 			<div class="rdr-aside-content">
 				<section class="rdr-selector">
 					<div class="rdr-selector-top">
-						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button prev"></button>
+						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev"></button>
 					</div>
 					<div class="rdr-selector-mid">
 						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>
@@ -58,11 +40,13 @@
 						<button data-bind='chap_next' class="rdr-selector-chap is-ico-button next"></button>
 					</div>
 					<div class="rdr-selector-bot">
-						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button next"></button>
+						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next"></button>
 						<div class="flex-spacer"></div>
 						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
 						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter fit-width"></button>
 					</div>
+				</section>
+				<section class="rdr-groups" data-bind='groups'>
 				</section>
 				<section class="rdr-previews">
 					<details>
@@ -94,6 +78,13 @@
 				</section>
 			</div>
 		</aside>
+		<div class="rdr-page-selector" data-bind="page_selector">
+			<div class="rdr-page-selector-counter" data-bind="page_keys_count">
+				
+			</div>
+			<div class="rdr-page-selector-keys" data-bind="page_keys">
+			</div>
+		</div>
 		<content data-bind='image_viewer' class="rdr-area fit-width">
 			<div class="rdr-image-wrap" data-bind='image_container'>
 			</div>

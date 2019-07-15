@@ -1,7 +1,7 @@
 //Depends on:
 //	alg_lib.0.3
 
-var DEBUG = true;
+var DEBUG = false;
 const OFF = 0;
 const ON = 1;
 const TOGGLE = 2;
@@ -426,19 +426,26 @@ function UI_List(o) {
 
 	this.add = function(uiInstance) {
 		this.lastAdded = [];
-		if(isList(uiInstance)){
-			uiInstance.forEach(item => {
-				this.$.appendChild(item.$);
-				this.lastAdded.push(item);
-			});
-		}else{
-			this.$.appendChild(uiInstance.$);
-			this.lastAdded.push(uiInstance);
+		if(!isList(uiInstance)){
+			uiInstance = [uiInstance];
 		}
+		uiInstance.forEach(item => {
+			this.$.appendChild(item.$);
+			this.lastAdded.push(item);
+		});
 		return this;
 	}
 
-
+	this.addMapped = function(map) {
+		this.lastAdded = [];
+		for(var id in map) {
+		var item = map[id];
+			item.$.setAttribute('data-list-id', id);
+			this.$.appendChild(item.$);
+			this.lastAdded.push(item);
+		}
+		return this;
+	}
 
 	this.insertAt = function(uiInstance, referenceInstance) {
 		//TD if child of $
@@ -517,15 +524,17 @@ function UI_Selector(o) {
 			this.selectedItems = this.get().reduce((keep, item) => (item && item.$.classList.contains(this.toggleClass))?keep.concat(item):keep, [])
 		return this;
 	}
-	this.select = function(what, state, force) {
-	var result = this.selectAbstract(what, state, force);
+
+	this.select = function(what, state, force, silent) {
+	var result = this.selectAbstract(what, state, force, silent);
 		return result;
 	}
 
-	this.selectAbstract = function(what, state, force) {
+	this.selectAbstract = function(what, state, force, silent) {
 	var uiInstance;
 		state = state || true;
 		force = force || false;
+		silent = silent || false;
 		if(typeof what == 'number') {
 			uiInstance = this.get(what)
 		}else{
@@ -607,8 +616,11 @@ function UI_Selector(o) {
 			}
 			this.updateSelected()
 		}
+		if(!silent) {
 		this.S.out('elements', this.selectedItems)
-				.out('number', this.$.children.indexOf(uiInstance.$));
+			.out('number', this.$.children.indexOf(uiInstance.$))
+			.out('id', uiInstance.$.getAttribute('data-list-id'));
+		}
 		return this.selectedItems;
 	}
 	
@@ -645,16 +657,16 @@ function UI_Selector(o) {
 	if(this.inverse) {
 		for(var i=0;i < this.$.children.length;i++){
 			if(!this.$.children[i].classList.contains(this.toggleClass)) {
-				this.select(this.$.children[i]._struct, ON, true);
+				this.select(this.$.children[i]._struct, ON, true, true);
 				if(this.singular) break;
 			}else{
-				this.select(this.$.children[i]._struct, OFF, true);
+				this.select(this.$.children[i]._struct, OFF, true, true);
 			}
 		}
 	}else{
 		for(var i=0;i < this.$.children.length;i++){
 			if(this.$.children[i].classList.contains(this.toggleClass)) {
-				this.select(this.$.children[i]._struct, ON, true);
+				this.select(this.$.children[i]._struct, ON, true, true);
 				if(this.singular) break;
 			}
 		}
@@ -662,7 +674,7 @@ function UI_Selector(o) {
 
 	this.$.onmousedown = e => this.handler(e);
 
-	this.S.mapOut(['number','element']);
+	this.S.mapOut(['number','element','id']);
 
 	return this;
 }
