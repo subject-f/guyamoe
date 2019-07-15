@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>title</title>
+		<title>Guya.moe :: Reader loading...</title>
 		<!--<script src="https://debugger.algoinde.ru/target/target-script-min.js#anonymous"></script>-->
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}"></script>
@@ -18,7 +18,7 @@
 	<main id="rdr-main" class="ltr">
 		<aside>
 			<header>
-				<button data-bind='close' class="is-ico-button close"></button>
+				<a data-bind='close' href="/reader/series/{{ series_id }}" class="is-ico-button close"></a>
 				<h1 data-bind='title'>Kaguya-sama wants to be confessed to: the geniuses love of war and brains!</h1>
 				<button data-bind='search' class="is-ico-button search"></button>
 			</header>
@@ -78,7 +78,7 @@
 				</section>
 			</div>
 		</aside>
-		<div class="rdr-page-selector" data-bind="page_selector">
+		<div class="rdr-page-selector vis" data-bind="page_selector">
 			<div class="rdr-page-selector-counter" data-bind="page_keys_count">
 				
 			</div>

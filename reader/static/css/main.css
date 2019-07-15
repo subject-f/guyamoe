@@ -115,6 +115,7 @@ aside > header {
 	height: 3rem;
 	flex-shrink: 0;
 	color: #eee;
+	text-decoration: none;
 }
 
 header > h1 {
@@ -387,10 +388,13 @@ details[open] .expander:before {
 }
 .fit-width .WrappedImage img {
 	min-width: 100%;
+	max-width: 100%;
 }
 
+
 .fit-height .WrappedImage img {
-	max-height: 100vh;
+	min-height: 100%;
+	max-height: 100%;
 }
 
 .ttb .rdr-image-wrap {
@@ -438,11 +442,16 @@ details[open] .expander:before {
 	cursor: pointer;
 }
 
+.vis {
+	opacity: 1 !important;
+}
+
 .rdr-page-selector:hover {
 	opacity: 1;
 }
 
-.rdr-page-selector:hover .rdr-page-selector-keys {
+.rdr-page-selector:hover .rdr-page-selector-keys,
+.rdr-page-selector.vis .rdr-page-selector-keys {
 	left: 3px;
 }
 
@@ -542,5 +551,10 @@ details[open] .expander:before {
 
 	.rdr-image-wrap {
 		height: auto;
+	}
+
+
+	.fit-height .WrappedImage {
+		justify-content: flex-start;
 	}
 }

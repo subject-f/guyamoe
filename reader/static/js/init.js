@@ -262,6 +262,8 @@ function UI_Reader(o) {
 
 		this.setFit(Settings.all.fit.get());
 		this.setLayout(Settings.all.layout.get(), true);
+		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
+		this._.close.href = '/reader/series/' + this.SCP.series;
 	}
 
 	this.drawGroup = function(group) {
