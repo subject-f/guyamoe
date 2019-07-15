@@ -139,7 +139,7 @@ class Command(BaseCommand):
                             continue
                         else:
                             print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
-                            chapter_dl_url = soup.select(".icon_wrapper a")[0]["href"]
+                            chapter_dl_url = chapter.select(".icon_wrapper a")[0]["href"]
                             chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_dl_url}
                 else:
                     print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
