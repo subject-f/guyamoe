@@ -211,7 +211,7 @@ function UI_Reader(o) {
 	});
 	this.selector_vol = new UI_SimpleList({
 		node: this._.selector_vol
-	}).S.linkAnonymous('value', value => this.displayVolume(value));
+	}).S.linkAnonymous('value', value => this.selectVolume(value));
 	this.imageView = new UI_ReaderImageView({
 		node: this._.image_viewer
 	}).S.link(this);
@@ -263,7 +263,7 @@ function UI_Reader(o) {
 		this.setFit(Settings.all.fit.get());
 		this.setLayout(Settings.all.layout.get(), true);
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
-		this._.close.href = '/reader/series/' + this.SCP.series;
+		this._.close.href = '/reader/series/' + this.SCP.series;	
 	}
 
 	this.drawGroup = function(group) {
@@ -300,12 +300,12 @@ function UI_Reader(o) {
 		return this;
 	}
 
-	this.displayPage = function(page) {
+	this.displayPage = function(page, dry) {
 		if(page == 'last')
 			this.SCP.page = this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1;
 		else
 			if(page !== undefined) this.SCP.page = page;
-		this.imageView.selectPage(this.SCP.page);
+		this.imageView.selectPage(this.SCP.page, dry);
 		this.S.out('SCP', this.SCP);
 	}
 
@@ -331,27 +331,27 @@ function UI_Reader(o) {
 		if(this.SCP.chapter < this.current.chaptersIndex.length - 2) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
+			this.SCP.page = 0;
 			this.drawChapter(
 				this.current.chaptersIndex[index + 1]
 			)
-			this.displayPage(0);
 		}
 	}
 	this.prevChapter = function() {
 		if(this.SCP.chapter > 1)
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
+			this.SCP.page = 0;
 			this.drawChapter(
 				this.current.chaptersIndex[index - 1]
 			)
-			this.displayPage(0);
 	}
 	this.nextPage = function(){
 		if(this.SCP.page < this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1) 
 			this.displayPage(this.SCP.page + 1)
 		else {
+			this.SCP.page = 0;
 			this.nextChapter();
-			this.displayPage(0);
 		}
 	}
 	this.prevPage = function(){
@@ -440,14 +440,14 @@ function UI_ReaderImageView(o) {
 		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
 
-	this.selectPage = function(index) {
+	this.selectPage = function(index, dry) {
 		if(index < 0 || index >= this.imageContainer.$.children.length)
 			return;
 	var pageElement = this.$.querySelector('*[data-index="'+index+'"]')
 	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
 		this.imageContainer.select(realIndex);
 		if(Settings.all.layout.get() == 'ttb'){
-			if(this.firstDraw)
+			if(!dry)
 				this._.image_container.scrollTo({
 					left: 0,
 					top: pageElement.offsetTop
@@ -463,7 +463,6 @@ function UI_ReaderImageView(o) {
 				})
 			// }, 150)
 		}
-		this.firstDraw = false;
 	}
 
 	this.prev = function() {
@@ -477,11 +476,11 @@ function UI_ReaderImageView(o) {
 
 	this._.image_container.onscroll = e => {
 		if(Settings.all.layout.get() == 'ttb') {
-		var st = this._.image_container.scrollTop || 1;
+		var st = this._.image_container.scrollTop + 1;
 		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
-			Reader.displayPage(offsets.indexOf(st) - 1);
+			Reader.displayPage(offsets.indexOf(st) - 1, true);
 			return;
 		}else{
 			if(this.imageContainer.selectedItems[0].$.nextSibling)
@@ -536,7 +535,7 @@ function UI_PageSelector(o) {
 			}
 			this.keys.clear().add(keys)
 		}
-		this.keys.select(SCP.page)
+		this.keys.select(SCP.page, undefined, undefined, true)
 		// this._.page_keys_count.innerHTML = SCP.page + 1;
 	}
 	this.proxy = function(i) {
