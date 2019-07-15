@@ -150,7 +150,7 @@ class Command(BaseCommand):
                     if resp.status == 200:
                         data = await resp.read()
                         with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
-                            all_pages = zip_file.namelist()
+                            all_pages = sorted(zip_file.namelist())
                             padding = len(str(len(all_pages)))
                             for idx, page in enumerate(all_pages):
                                 extension = page.rsplit(".", 1)[1]
