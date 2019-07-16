@@ -730,7 +730,6 @@ header > .search:before {
 	position: absolute;
 	bottom: 0;
 	right: 0;
-	cursor: pointer;
 	top: unset !important;
 }
 
@@ -903,6 +902,6 @@ header > .search:before {
 	}
 
 	.zoom-level {
-		display: none;
+		display: none !important;
 	}
 }
