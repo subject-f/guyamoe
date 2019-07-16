@@ -84,7 +84,7 @@ class Command(BaseCommand):
         try:
             await self.page.goto(url)
             try:
-                elements = await self.page.waitForSelector(".page-link", timeout=2000)
+                elements = await self.page.waitForSelector(".page-link", timeout=8000)
                 total_pages = int(elements[-1].attrs["href"].rsplit("/", 2)[1])
             except pp.errors.TimeoutError:
                 total_pages = 1
@@ -102,7 +102,7 @@ class Command(BaseCommand):
                         chap_numb = chapter_regex.group(1)
                         if str(float(chap_numb)) in downloaded_chapters:
                             continue
-                        print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
+                        print(f"Found new chapter ({chap_numb}) on MangaDex for {series}.")
                         chapter_url = await element.querySelectorEval(".col-lg-5 a", "(chapter) => chapter.href")
                         chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_url}
 
