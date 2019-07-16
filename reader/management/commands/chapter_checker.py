@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reader.models import Group, Series, Volume, Chapter
-from api.views import random_chars
+from api.views import random_chars, clear_series_cache
 
 from datetime import datetime, timezone
 import pyppeteer as pp
@@ -70,6 +70,7 @@ class Command(BaseCommand):
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid, str(group.id))
         os.makedirs(chapter_folder)
+        clear_series_cache(series.slug)
         return chapter_folder
 
     async def new_chapter_checker(self, downloaded_chapters, series, latest_volume, url):

@@ -62,7 +62,6 @@
             url: "/reader/update_view_count/",
             processData: false,
             contentType: false,
-            // headers: { "X-CSRFToken": '{{csrf_token}}' },
             data: formData,
             success: function (data) {},
             error: function(data){
@@ -75,6 +74,36 @@
             $("#chapterTable tr").filter(function() {
                $(this).toggle($(this).find("td").text().toLowerCase().indexOf(value) > -1)
             });
+         });
+         $('#submitForm').click(function () {
+            $("#modalSubmit").prepend(`<div id="uploadingChapter" class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>`)
+            var formElem = document.getElementById("newChapterForm");
+            var formData = new FormData(formElem);
+            formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
+            $.ajax({
+               type: "POST",
+               url: "/api/upload_new_chapter/{{ slug }}/",
+               processData: false,
+               contentType: false,
+               data: formData,
+               success: function (data) {
+                  if (data["response"] == "success") {
+                     $("#uploadingChapter").remove();
+                     $("#modalSubmit").prepend(`<div id="finishedUpload" class="btn btn-success"><i class="fa fa-check"></i></div>`);
+                     setTimeout(function() {$("#finishedUpload").remove()}, 2000);
+                  }
+                  else {
+                     $("#uploadingChapter").remove();
+                     $("#modalSubmit").prepend(`<p id="errorUpload">Error uploading chapter.</p>`);
+                     setTimeout(function() {$("#errorUpload").remove()}, 3000);
+                  }
+               },
+               error: function (data) {
+
+               }
+            });
+            
+            return false;
          });
       });
       
@@ -118,6 +147,17 @@
             
          }
       }
+      function loadGroups(slug) {
+         if (document.getElementById("scanGroup").options.length === 0){
+            $.getJSON(`/api/get_groups/${slug}`, (data) => {
+               for (var group in data["groups"]) {
+                  if (data['groups'].hasOwnProperty(group)) {
+                     $("#scanGroup").append(`<option value="${data['groups'][group]}">${data['groups'][group]}</option>`);
+                  }
+               }
+            });
+         }
+      }
    </script>
 {% endblock %}
 {% block body %}
@@ -127,6 +167,58 @@
       color: white;
    }
 </style>
+   <div class="modal" id="uploadModal">
+      <div class="modal-dialog">
+         <div class="modal-content">
+         
+         <!-- Modal Header -->
+         <div class="modal-header">
+            <h4 id="formVal1" class="modal-title">Upload New Chapter</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+         </div>
+         <form id="newChapterForm">
+            <div class="modal-body">
+               <div class="row">
+                  <div class="col-5">
+                     <label for="chapterNumber" >Chapter Number</label>
+                     <input required type="number" step="0.1" class="form-control-sm col-6" name="chapterNumber" id="chapterNumber" value="{{ chapter_list.0.0|add:"1" }}">
+                  </div>
+                  <div class="col-3">
+                     <label for="volumeNumber" >Volume</label>
+                     <input required type="number" step="1.0" class="form-control-sm col-8" name="volumeNumber" id="volumeNumber" value="{{ chapter_list.0.5 }}">
+                  </div>
+               </div>
+               <div class="row mt-4">
+                  <div class="col-7">
+                     <label for="scanGroup" >Group</label>
+                     <div class="input-group">
+                        <select required class="form-control-sm" name="scanGroup" id="scanGroup">
+                        </select>
+                     </div>
+                  </div>
+               </div>
+               <div class="row mt-4">
+                  <div class="col-12">
+                     <label for="chapterTitle" class="d-block" >Chapter Title</label>
+                     <input required type="text" class="form-control-sm col-12" name="chapterTitle" id="chapterNumber">
+                  </div>
+               </div>
+               <div class="row mt-4">
+                  <div class="col">
+                     <label for="chapterPages">Chapter Pages (as .zip)</label>
+                     <input required type="file" accept=".zip" name="chapterPages" class="form-control-file" id="chapterPages">
+                  </div>
+               </div>
+               <input type="hidden" name="slug" value="{{ slug }}">
+            </div>
+            <div id="modalSubmit" class="modal-footer">
+               <button type="button" id="submitForm" class="btn btn-primary">Upload Chapter</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+         </form>
+         </div>
+      </div>
+   </div>
    <div class="container-fluid">
       <div class="bs-docs-section clearfix mt-3">
          <div class="row justify-content-center">
@@ -175,6 +267,7 @@
                   </h6>
                   <p>{{ synopsis|linebreaks }}</p>
                </div>
+                <a href="#" onclick="loadGroups('{{ slug }}')" data-toggle="modal" data-target="#uploadModal"><i class="float-right fa fa-upload fa-lg" ></i></a>
                <div class="btn-group"  role="group" >
                   <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px; border-bottom: 0px;" onclick="listMode(1)">Detailed</button>
                   <button type="button" id="compactMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(2)">Compact</button>
@@ -206,6 +299,9 @@
                               <th scope="col">Volume</th>
                               <th scope="col">Group</th>
                               <th scope="col">Uploaded</th>
+                              {% if is_mod %}
+                              <th scope="col">Edit</th>
+                              {% endif %}
                            </tr>
                         </thead>
                         <tbody id="chapterTable">
@@ -215,9 +311,7 @@
                                     <td scope="row">{{ volume }}</td>
                                     <td scope="row">{{ group }}</td>
                                     <td scope="row" class="detailed-chapter-upload-date"></td>         
-                                    {% if is_mod %}
-                                    <th scope="row"><i class="fa fa-cog"></i></th>
-                                    {% endif %}                        
+                                    <th scope="row"><i class="fa fa-cog"></i></th>                      
                               </tr>
                            {% endfor %}
                         </tbody>

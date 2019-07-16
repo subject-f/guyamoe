@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+<script>
+ function clearCache(clear_type) {
+    var formData = new FormData();
+    formData.append("clear_type", clear_type)
+    formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
+    $.ajax({
+        type: "POST",
+        url: "/api/clear_cache/",
+        processData: false,
+        contentType: false,
+        data: formData,
+        success: function (response) {
+            alert(response["response"])
+        },
+        error: function(response){
+            alert("Could not clear cache")
+        }
+    });
+ }
+</script>
+{% endblock %}
+{% block body %}
+<div class="container-fluid">
+    <div class="col-3 ">
+        <p class="mt-3 pt-2 ml-3">{{ request.online_now }} online</p>
+    </div>
+    <button class="btn btn-primary mt-3 mt-2 ml-3 " onclick="clearCache('all')">Clear all cache</button>
+    <button class="btn btn-primary mt-3 mt-2 ml-3 " onclick="clearCache('chapter')">Clear series cache</button>
+</div>
+{% endblock %}

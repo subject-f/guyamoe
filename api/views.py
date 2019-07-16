@@ -2,6 +2,8 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.db import IntegrityError
+from ratelimit.decorators import ratelimit
+from django.core.cache import cache
 from datetime import datetime, timezone
 from reader.models import Series, Volume, Chapter, Group
 import random
@@ -10,31 +12,39 @@ import json
 import zipfile
 
 
+@ratelimit(key='ip', rate='10/20s', block=True)
 def series_data(request, series_slug):
-    series = Series.objects.get(slug=series_slug)
-    chapters = Chapter.objects.filter(series=series)
-    chapters_dict = {}
-    for chapter in chapters:
-        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
-        ch_clean = Chapter.clean_chapter_number(chapter)
-        if ch_clean in chapters_dict:
-            chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
-        else:
-            chapters_dict[ch_clean] = {
-                "volume": str(chapter.volume),
-                "title": chapter.title,
-                "folder": chapter.folder,
-                "groups": {
-                    str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
+    series_api_data = cache.get(f"series_api_data_{series_slug}")
+    if not series_api_data:
+        series = Series.objects.get(slug=series_slug)
+        chapters = Chapter.objects.filter(series=series)
+        chapters_dict = {}
+        for chapter in chapters:
+            chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
+            ch_clean = Chapter.clean_chapter_number(chapter)
+            if ch_clean in chapters_dict:
+                chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
+            else:
+                chapters_dict[ch_clean] = {
+                    "volume": str(chapter.volume),
+                    "title": chapter.title,
+                    "folder": chapter.folder,
+                    "groups": {
+                        str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
+                    }
                 }
-            }
-    data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
-    return HttpResponse(JsonResponse(data))
+        series_api_data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
+        cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
+    return HttpResponse(JsonResponse(series_api_data))
 
 
+@ratelimit(key='ip', rate='5/10s')
 def get_groups(request, series_slug):
-    groups = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
-    return HttpResponse(JsonResponse({"groups": groups}))
+    groups_data = cache.get(f"groups_data_{series_slug}")
+    if not groups_data:
+        groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
+        cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
+    return HttpResponse(JsonResponse({"groups": groups_data}))
 
 
 def random_chars():
@@ -71,8 +81,35 @@ def upload_new_chapter(request, series_slug):
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
 
 
+@ratelimit(key='ip', rate='5/10s')
 def get_volume_covers(request, series_slug):
     if request.POST:
-        series = Series.objects.get(slug=series_slug)
-        volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
-        return HttpResponse(json.dumps({"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}), content_type="application/json")
+        covers = cache.get(f"vol_covers_{series_slug}")
+        if not covers:
+            series = Series.objects.get(slug=series_slug)
+            volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
+            covers = {"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}
+            cache.set(f"vol_covers_{series_slug}", covers)
+        return HttpResponse(json.dumps(covers), content_type="application/json")
+
+
+def clear_series_cache(series_slug):
+    cache.delete(f"series_api_data_{series_slug}")
+    cache.delete(f"groups_data_{series_slug}")
+    cache.delete(f"vol_covers_{series_slug}")
+
+
+def clear_cache(request):
+    if request.POST and request.user and request.user.is_staff:
+        print(request.POST["clear_type"])
+        if request.POST["clear_type"] == "all":
+            cache.clear()
+            response = "Cleared all cache"
+        elif request.POST["clear_type"] == "chapter":
+            for series_slug in Series.objects.all().values_list('slug'):
+                clear_series_cache(series_slug)
+            response = "Cleared series cache"
+        else:
+            response = "Not a valid option"
+
+        return HttpResponse(json.dumps({"response": response}), content_type="application/json")
