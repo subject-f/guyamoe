@@ -107,79 +107,13 @@ aside {
 	display: flex;
 	flex-direction: column;
 	background: #3a3f44;
-	overflow-x: hidden;
 	position: relative;
-}
-
-
-.hide-side {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	cursor: pointer;
-}
-
-.hide-side::after {
-	content: "\e905";
-	transform: scaleX(-1);
-	position: relative;
-	top: 0.5rem;
-	left: 0.6rem;
-}
-
-.hide-side::before {
-	content: "";
-	position: absolute;
-	width: 0;
-	height: 0;
-	border-style: solid;
-	border-width: 0 0 3rem 3rem;
-	border-color: transparent transparent #2b2f33 transparent;
-}
-
-
-/* Inline #2 | https://kagu.algoinde.ru/reader/series/Kaguya-Wants-To-Be-Confessed-To/61/9 */
-
-.sidebar-hidden aside {
-	margin-left: -16em;
-}
-
-.sidebar-hidden .rdr-page-selector {
-	height: calc(100vh - 3rem);
-}
-
-.sidebar-hidden .hide-side {
-	right: -3rem;
-	z-index: 20;
-	transform: scaleX(-1);
-}
-
-.sidebar-hidden .hide-side::after {
-	
-}
-
-.sidebar-hidden .hide-side {
-}
-
-.sidebar-hidden .hide-side::before {
-	border-color: transparent transparent #3a3f44 transparent;
-}
-
-/* main.css | https://kagu.algoinde.ru/static/css/main.css */
-
-aside {
-	overflow-x: unset;
 	transition: all 0.3s ease;
 }
 
 .hide-side::before {
 	transition: all 0.3s ease;
 }
-
-.is-ico-button {
-	transition: all 0.3s ease;
-}
-
 
 aside > header {
 	display: flex;
@@ -198,7 +132,24 @@ aside > header {
 	flex-shrink: 0;
 	color: #eee;
 	text-decoration: none;
+	cursor: default;
+	position: relative;
 }
+.is-ico-button:hover {
+	color: #b2dffb;
+	text-shadow: 0px 0px 2px rgba(0,0,0,1);
+	top: -1px;
+}
+
+.is-ico-button {
+	transition: all 0.1s ease, top 0s linear;
+}
+
+.is-ico-button:active {
+	top: 0px;
+}
+
+
 
 header > h1 {
 	display: flex;
@@ -208,6 +159,9 @@ header > h1 {
 	font-size: 1rem;
 }
 
+header > .close {
+	cursor: pointer;
+}
 header > .close:before {
 	content: "\e902";
 }
@@ -244,7 +198,8 @@ header > .search:before {
 	background: #2b2f33;
 	padding: 0.4em 0.2em;
 	display: block;
-	line-height: 1.2em;
+	line-height: 1.3em;
+	cursor: pointer;
 }
 
 
@@ -269,14 +224,16 @@ header > .search:before {
 	opacity: 1;
 	transition: opacity 0.3s ease;
 }
-
-#message-box.flash {
+.initFlash {
+	animation: initFlash 2s;
+}
+.flash {
 	animation: flash 0.5s;
 }
-#message-box.fade {
+.fade {
 	animation: fade 0.5s;
 }
-#message-box.fadeOut {
+.fadeOut {
 	opacity: 0;
 }
 
@@ -287,6 +244,14 @@ header > .search:before {
 	100% {
 		color: #aaa;
 		text-shadow: none;
+	}
+}
+@keyframes initFlash {
+	0% {
+		background: rgba(255,255,255,0.3);
+	}
+	100% {
+		background: none;
 	}
 }
 @keyframes fade {
@@ -359,19 +324,28 @@ header > .search:before {
 	transform: rotate(90deg);
 }
 .is-ico-button.preload:before {
-	content: "\e908";
-}
-.Reader[data-preload="2"] .is-ico-button.preload:before {
-	content: "\e909";
-}
-.Reader[data-preload="3"] .is-ico-button.preload:before {
 	content: "\e90a";
 }
-.Reader[data-preload="4"] .is-ico-button.preload:before {
+.Reader[data-preload="2"] .is-ico-button.preload:before {
 	content: "\e90b";
 }
-.Reader[data-preload="5"] .is-ico-button.preload:before {
+.Reader[data-preload="3"] .is-ico-button.preload:before {
 	content: "\e90c";
+}
+.Reader[data-preload="4"] .is-ico-button.preload:before {
+	content: "\e914";
+}
+.Reader[data-preload="5"] .is-ico-button.preload:before {
+	content: "\e915";
+}
+.Reader[data-preload="6"] .is-ico-button.preload:before {
+	content: "\e916";
+}
+.Reader[data-preload="7"] .is-ico-button.preload:before {
+	content: "\e917";
+}
+.Reader[data-preload="8"] .is-ico-button.preload:before {
+	content: "\e918";
 }
 
 .rdr-page-selector .preloaded {
@@ -412,7 +386,6 @@ header > .search:before {
 	text-align: center;
 	text-align-last: center;
 	width: calc(100% + 2.3ch);
-	cursor: pointer;
 }
 #rdr-chap {
 	display: block;
@@ -421,7 +394,10 @@ header > .search:before {
 	left: 0;
 	top: 0;
 	width: calc(100% + 2.3ch);
-	cursor: pointer;
+}
+
+#rdr-vol:hover, #rdr-chap:hover {
+	color: #b2dffb;
 }
 
 .rdr-groups {
@@ -434,11 +410,17 @@ header > .search:before {
 	padding: 0.7rem;
 	text-emphasis: ;
 	text-align: center;
-	cursor: pointer;
+	cursor: default;
+}
+
+.rdr-groups div:hover {
+	background: rgba(255,255,255,0.03);
+	color: #b2dffb;
 }
 
 .rdr-groups div.is-active {
     background: rgba(0,0,0,0.3);
+    color: #eee;
  }
 
 .rdr-previews {
@@ -454,10 +436,16 @@ header > .search:before {
 	display: flex;
 	flex-wrap: nowrap;
 	list-style: none;
-	cursor: pointer;
 	background: #34393d;
 	flex-grow: 0;
 	font-size: 0;
+}
+
+.rdr-previews .header:hover {
+	color: #b2dffb;
+}
+.rdr-previews .header:hover .expander {
+	color: #b2dffb;
 }
 
 .rdr-previews .header span {
@@ -489,7 +477,7 @@ header > .search:before {
 	padding-top: 0.25rem;
 	overflow: auto;
 	display: none;
-	height: calc(100% - 3rem);
+	max-height: calc(100% - 3rem);
 }
 
 .previews-open .rdr-previews-gallery {
@@ -535,21 +523,21 @@ header > .search:before {
 .rdr-image-wrap .WrappedImage img {
 	user-select: none;
 }
-.fit-width .WrappedImage img {
+.fit-width .rdr-image-wrap .WrappedImage img {
 	min-width: 100%;
 	max-width: 100%;
 }
 
-.fit-height .WrappedImage img {
+.fit-height .rdr-image-wrap .WrappedImage img {
 	min-height: 100%;
 	max-height: 100vh;
 }
 
-.fit-none .WrappedImage {
+.fit-none .rdr-image-wrap .WrappedImage {
 	min-height: 100vh;
 }
 
-.fit-none .WrappedImage img {
+.fit-none .rdr-image-wrap .WrappedImage img {
 	flex-shrink: 0;
 }
 
@@ -569,6 +557,7 @@ header > .search:before {
 .ttb .WrappedImage {
 	flex-shrink: 0;
 	margin-bottom: 1em;
+	min-height: 20%;
 }
 
 .ttb .WrappedImage img {
@@ -737,7 +726,56 @@ header > .search:before {
 */
 
 
-/* main.css | https://kagu.algoinde.ru/static/css/main.css */
+.hide-side {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	cursor: pointer;
+	top: unset !important;
+}
+
+.hide-side::after {
+	content: "\e905";
+	transform: scaleX(-1);
+	position: relative;
+	top: 0.5rem;
+	left: 0.6rem;
+}
+
+.hide-side::before {
+	content: "";
+	position: absolute;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 0 0 3rem 3rem;
+	border-color: transparent transparent #2b2f33 transparent;
+}
+
+.sidebar-hidden aside {
+	margin-left: -16em;
+}
+
+.sidebar-hidden .rdr-page-selector {
+	height: calc(100vh - 3rem);
+}
+
+.sidebar-hidden .hide-side {
+	right: -3rem;
+	z-index: 20;
+	transform: scaleX(-1);
+}
+
+.sidebar-hidden .hide-side::after {
+	
+}
+
+.sidebar-hidden .hide-side {
+}
+
+.sidebar-hidden .hide-side::before {
+	border-color: transparent transparent #3a3f44 transparent;
+}
 
 .zoom-level {
 	top: 0;
@@ -745,9 +783,33 @@ header > .search:before {
 	overflow: hidden;
 	right: 0;
 	padding: 2rem 3.5rem;
-	opacity: 0.05;
+	opacity: 0.01;
 	transition: opacity 0.3s ease;
 	position: absolute;
+	user-select: none;
+	display: none;
+}
+
+.fit-width .zoom-level {
+	display: block;
+	animation: zoomFlash 3s;
+}
+
+@keyframes zoomFlash {
+	0% {
+		opacity: 0;
+		padding: 2rem 0rem;
+	}
+	10% {
+		opacity: 1;
+		padding: 2rem 3.5rem;
+	}
+	70%{
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
 }
 
 .zoom-level:hover {
@@ -755,37 +817,36 @@ header > .search:before {
 }
 
 .zoom-level .is-ico-button {
-	background: rgba(0,0,0,0.3);
+	background: rgba(0,0,0,0.7);
 	width: 3rem;
 	height: 3rem;
-	cursor: pointer;
 	border-top-left-radius: 4px;
 	border-top-right-radius: 4px;
 }
 
 .zoom-level .is-ico-button:last-child {
-	background: rgba(0,0,0,0.3);
 	width: 3rem;
 	height: 3rem;
 	border-radius: 0;
 	border-bottom-left-radius: 4px;
 	border-bottom-right-radius: 4px;
+	margin-top: -1px;
 }
 
 .zoom-level .is-ico-button:hover {
-	background: rgba(255,255,255,0.2);
+	background: rgba(0,0,0,0.9);
 }
 
-.zl01 .fit-width .WrappedImage img {min-width: 10%; max-width: 10%}
-.zl02 .fit-width .WrappedImage img {min-width: 20%; max-width: 20%}
-.zl03 .fit-width .WrappedImage img {min-width: 30%; max-width: 30%}
-.zl04 .fit-width .WrappedImage img {min-width: 40%; max-width: 40%}
-.zl05 .fit-width .WrappedImage img {min-width: 50%; max-width: 50%}
-.zl06 .fit-width .WrappedImage img {min-width: 60%; max-width: 60%}
-.zl07 .fit-width .WrappedImage img {min-width: 70%; max-width: 70%}
-.zl08 .fit-width .WrappedImage img {min-width: 80%; max-width: 80%}
-.zl09 .fit-width .WrappedImage img {min-width: 90%; max-width: 90%}
-.zl1  .fit-width .WrappedImage img{}
+.fit-width.zl10 .WrappedImage img {min-width: 10%; max-width: 10%}
+.fit-width.zl20 .WrappedImage img {min-width: 20%; max-width: 20%}
+.fit-width.zl30 .WrappedImage img {min-width: 30%; max-width: 30%}
+.fit-width.zl40 .WrappedImage img {min-width: 40%; max-width: 40%}
+.fit-width.zl50 .WrappedImage img {min-width: 50%; max-width: 50%}
+.fit-width.zl60 .WrappedImage img {min-width: 60%; max-width: 60%}
+.fit-width.zl70 .WrappedImage img {min-width: 70%; max-width: 70%}
+.fit-width.zl80 .WrappedImage img {min-width: 80%; max-width: 80%}
+.fit-width.zl90 .WrappedImage img {min-width: 90%; max-width: 90%}
+.fit-width.zl100 .WrappedImage img{}
 /*.zl11 .fit-width .WrappedImage img {min-width: 110%; max-width: 110%}
 .zl12 .fit-width .WrappedImage img {min-width: 120%; max-width: 120%}
 .zl13 .fit-width .WrappedImage img {min-width: 130%; max-width: 130%}
@@ -839,5 +900,9 @@ header > .search:before {
 
 	.hide-side {
 		display: none !important;
+	}
+
+	.zoom-level {
+		display: none;
 	}
 }

@@ -10,6 +10,7 @@
 		<script type="text/javascript" src="{% static 'js/UI2.js' %}"></script>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/icons.css' %}">
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 		<script>
 			CSRF_TOKEN = "{{ csrf_token }}"
 		</script>
@@ -46,8 +47,8 @@
 						<div class="flex-spacer"></div>
 						<button data-bind='preload_button' class="rdr-selector-vol is-ico-button preload"></button>
 						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
-						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter fit-width"></button>
-						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin fit-width"></button>
+						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter"></button>
+						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin"></button>
 					</div>
 				</section>
 				<section class="rdr-groups" data-bind='groups'>
@@ -87,11 +88,11 @@
 			<div class="rdr-page-selector-keys" data-bind="page_keys">
 			</div>
 		</div>
-		<content data-bind='image_viewer' class="rdr-area fit-width">
+		<content data-bind='image_viewer' class="rdr-area">
 			<div class="rdr-image-wrap" data-bind='image_container'>
 			</div>
 		</content>
-		<div class="zoom-level" data-bind="zoom_level">
+		<div class="zoom-level vis" data-bind="zoom_level">
 			<div class="is-ico-button" data-bind="zoom_level_plus"></div>
 			<div class="is-ico-button" data-bind="zoom_level_minus"></div>
 		</div>

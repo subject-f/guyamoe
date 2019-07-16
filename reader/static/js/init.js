@@ -123,13 +123,23 @@ function SettingsHandler(){
 		'fit',
 		'Page fit',
 		['fit-width', 'fit-height', 'fit-none'],
-		'fit-none'
+		'fit-none',
+		{
+			'fit-width': 'Images fit to width.',
+			'fit-height': 'Images fit to height.',
+			'fit-none': 'Images are displayed in original size.'
+		} 
 	)
 	this.all.layout = new Setting(
 		'layout',
 		'Reader layout',
 		['ltr', 'ttb', 'rtl'],
-		'ltr'
+		'ltr',
+		{
+			ltr: 'Layout set to left-to-right.',
+			ttb: 'Layout set to top-to-bottom.',
+			rtl: 'Layout set to right-to-left.'
+		}
 	)
 	this.all.groupPreference = new Setting(
 		'groupPreference',
@@ -138,31 +148,45 @@ function SettingsHandler(){
 		'selectorPinned',
 		'Page selector',
 		['persist', 'fade'],
-		'fade'
+		'fade',
+		{
+			'persist': 'Page selector is always visible.',
+			'fade': 'Page selector is shown on hover.'
+		}
 	)
 	this.all.preload = new Setting(
 		'preload',
 		'Preload amount',
-		[1,2,3,4,5],
-		1
+		[1,2,3,4,5,6,7,8],
+		1,
+		i => 'Reader will preload %i pages.'.replace('%i', i).replace('1 pages', '1 page')
 	)
 	this.all.sidebar = new Setting(
 		'sidebar',
 		'Sidebar',
 		['hide', 'show'],
-		'show'
+		'show',
+		{
+			'hide': 'Sidebar hidden.',
+			'show': 'Sidebar shown.',
+		}
 	)
 	this.all.previews = new Setting(
 		'previews',
 		'Previews',
 		['hide', 'show'],
-		'hide'
+		'hide',
+		{
+			'hide': '',
+			'show': '',
+		}
 	)
 	this.all.zoom = new Setting(
 		'zoom',
 		'Zoom level',
-		['01', '02', '03', '04', '05', '06', '07', '08', '09', '1'],
-		'1'
+		['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
+		'100',
+		i => 'Zoom level set to %i%.'.replace('%i', i)
 	)
 
 	for (var key in this.all) {
@@ -196,7 +220,7 @@ function SettingsHandler(){
 		if(window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
 		this.S.out('setting', {setting: setting.name, value: setting.get()})
-		this.S.out('message', setting.prettyName + ': ' + setting.get());
+		this.S.out('message', setting.getFormatted());
 	}
 
 	this.deserialize();
@@ -204,11 +228,12 @@ function SettingsHandler(){
 	this.S.mapOut(['setting', 'message']);
 }
 
-function Setting(name, prettyName, options, dflt) {
+function Setting(name, prettyName, options, dflt, strings) {
 	this.name = name;
 	this.prettyName = prettyName;
 	this.setting = dflt;
 	this.options = options;
+	this.strings = strings;
 	this.cycle = function() {
 		if(this.options) {
 		var index = this.options.indexOf(this.setting);
@@ -231,7 +256,14 @@ function Setting(name, prettyName, options, dflt) {
 	this.get = function() {
 		return this.setting;
 	}
+	this.getFormatted = function() {
+		if(this.strings instanceof Function) {
+			return this.strings(this.setting);
+		}
+		return this.strings[this.setting];
+	}
 	this.set = function(value, silent) {
+		if(value == this.setting) return;
 		if(this.options) {
 			if(this.options.indexOf(value) < 0)
 				throw new Error('A setting must be one of: ' + this.options.join(', '))
@@ -262,9 +294,20 @@ function UI_Reader(o) {
 		.pre(() => this._.image_container.focus())
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
-		.attach('cycleFit', ['KeyF'], e => Settings.all.fit.cycle())
-		.attach('cycleLayout', ['KeyL'], e => Settings.all.layout.cycle())
-		.attach('cycleLayout', ['KeyS'], s => Settings.all.sidebar.cycle())
+		.attach('fit', ['KeyF'], e => Settings.all.fit.cycle())
+		.attach('layout', ['KeyD'], e => Settings.all.layout.cycle())
+		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
+		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
+		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
+		.attach('minus', ['Minus'], s => {
+			Settings.all.fit.set('fit-width')
+			Settings.all.zoom.next()
+		})
+		.attach('plus', ['Equal'], s => {
+			Settings.all.fit.set('fit-width')
+			Settings.all.zoom.prev()
+		})
+		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
 
 	new KeyListener()
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -347,7 +390,10 @@ function UI_Reader(o) {
 		this.setPreload(Settings.all.preload.get());
 		this.setSidebar(Settings.all.sidebar.get());
 		this.setZoom(Settings.all.zoom.get());
-		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
+		setTimeout(() => {
+			this._.page_selector.classList.remove('vis')
+			this._.zoom_level.classList.remove('vis')
+		}, 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
 	}
 
@@ -384,8 +430,8 @@ function UI_Reader(o) {
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
 		this.plusOne();
 		this.selector_page.clearPreload();
-		this.showPreviews(Settings.all.previews.get());
 		this.displayPage();
+		this.showPreviews(Settings.all.previews.get());
 		return this;
 	}
 
@@ -485,10 +531,10 @@ function UI_Reader(o) {
 
 	this.setFit = function(fit) {
 		Settings.all.fit.options.forEach(item => {
-			this.imageView.$.classList.remove(item);
+			this.$.classList.remove(item);
 			this._.fit_button.classList.remove(item);
 		});
-		this.imageView.$.classList.add(fit);
+		this.$.classList.add(fit);
 		this._.fit_button.classList.add(fit);
 	}
 
