@@ -450,16 +450,7 @@ header > .search:before {
 	flex-grow: 1;
 }
 
-.rdr-previews details {
-	height: 100%;
-	flex-direction: column;
-}
-
-details {
-	list-style: none;
-}
-
-summary {
+.rdr-previews .header {
 	display: flex;
 	flex-wrap: nowrap;
 	list-style: none;
@@ -469,7 +460,7 @@ summary {
 	font-size: 0;
 }
 
-details summary span {
+.rdr-previews .header span {
  	display: flex;
  	align-items: center;
  	padding: 0 0 0 1rem;
@@ -477,33 +468,45 @@ details summary span {
 	font-size: 0.8rem;
 }
 
-details .expander {
+.rdr-previews .header .expander {
 	height: 2.6rem;
 	font-size: 1.5rem;
 }
 
-details .expander:before {
-	content: '○';
+.rdr-previews .header .expander:before {
+	content: "\e905";
 }
 
-details[open] .expander:before {
-	content: '●';
+.previews-open .rdr-previews .header .expander:before {
+	content: "\e903";
 }
 
 .rdr-previews-gallery {
-	display: flex;
+
 	flex-wrap: wrap;
 	justify-content: space-around;
+	align-items: center;
 	padding-top: 0.25rem;
 	overflow: auto;
+	display: none;
 	height: calc(100% - 3rem);
+}
+
+.previews-open .rdr-previews-gallery {
+	display: flex;
 }
 
 .rdr-previews-gallery img {
 	flex-basis: 30%;
+	width: 30%;
 	margin-bottom: 0.50rem;
 	box-shadow: 0px 1px 3px rgba(0,0,0,0.3);
-	min-height: 100px;
+	cursor: pointer;
+}
+
+.rdr-previews-gallery .is-active {
+	opacity: 0.7;
+	outline: 2px solid #6699b9;
 }
 
 .rdr-area {
@@ -537,11 +540,25 @@ details[open] .expander:before {
 	max-width: 100%;
 }
 
-
 .fit-height .WrappedImage img {
 	min-height: 100%;
 	max-height: 100vh;
 }
+
+.fit-none .WrappedImage {
+	min-height: 100vh;
+}
+
+.fit-none .WrappedImage img {
+	flex-shrink: 0;
+}
+
+
+.rdr-image-wrap .too-wide {
+	justify-content: flex-start !important;
+	direction: rtl;
+}
+
 
 .ttb .rdr-image-wrap {
 	left: 0 !important;
@@ -720,6 +737,65 @@ details[open] .expander:before {
 */
 
 
+/* main.css | https://kagu.algoinde.ru/static/css/main.css */
+
+.zoom-level {
+	top: 0;
+	flex-direction: column;
+	overflow: hidden;
+	right: 0;
+	padding: 2rem 3.5rem;
+	opacity: 0.05;
+	transition: opacity 0.3s ease;
+	position: absolute;
+}
+
+.zoom-level:hover {
+	opacity: 1;
+}
+
+.zoom-level .is-ico-button {
+	background: rgba(0,0,0,0.3);
+	width: 3rem;
+	height: 3rem;
+	cursor: pointer;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+
+.zoom-level .is-ico-button:last-child {
+	background: rgba(0,0,0,0.3);
+	width: 3rem;
+	height: 3rem;
+	border-radius: 0;
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+}
+
+.zoom-level .is-ico-button:hover {
+	background: rgba(255,255,255,0.2);
+}
+
+.zl01 .fit-width .WrappedImage img {min-width: 10%; max-width: 10%}
+.zl02 .fit-width .WrappedImage img {min-width: 20%; max-width: 20%}
+.zl03 .fit-width .WrappedImage img {min-width: 30%; max-width: 30%}
+.zl04 .fit-width .WrappedImage img {min-width: 40%; max-width: 40%}
+.zl05 .fit-width .WrappedImage img {min-width: 50%; max-width: 50%}
+.zl06 .fit-width .WrappedImage img {min-width: 60%; max-width: 60%}
+.zl07 .fit-width .WrappedImage img {min-width: 70%; max-width: 70%}
+.zl08 .fit-width .WrappedImage img {min-width: 80%; max-width: 80%}
+.zl09 .fit-width .WrappedImage img {min-width: 90%; max-width: 90%}
+.zl1  .fit-width .WrappedImage img{}
+/*.zl11 .fit-width .WrappedImage img {min-width: 110%; max-width: 110%}
+.zl12 .fit-width .WrappedImage img {min-width: 120%; max-width: 120%}
+.zl13 .fit-width .WrappedImage img {min-width: 130%; max-width: 130%}
+.zl14 .fit-width .WrappedImage img {min-width: 140%; max-width: 140%}
+.zl15 .fit-width .WrappedImage img {min-width: 150%; max-width: 150%}
+.zl16 .fit-width .WrappedImage img {min-width: 160%; max-width: 160%}
+.zl17 .fit-width .WrappedImage img {min-width: 170%; max-width: 170%}
+.zl18 .fit-width .WrappedImage img {min-width: 180%; max-width: 180%}
+.zl19 .fit-width .WrappedImage img {min-width: 190%; max-width: 190%}
+.zl20 .fit-width .WrappedImage img {min-width: 200%; max-width: 200%}*/
 
 
 @media (max-width: 700px) {
@@ -747,17 +823,15 @@ details[open] .expander:before {
 	}
 
 	.fit-none .rdr-image-wrap .WrappedImage {
-		flex-direction: row-reverse;
-		justify-content: flex-start;
+		justify-content: center;
 	}
 
 	.fit-height .rdr-image-wrap .WrappedImage {
-		flex-direction: row-reverse;
-		justify-content: flex-start;
+		justify-content: center;
 		min-height: 100vh;
 		max-width: 100vw;
 	}
-	
+
 	.fit-width .rdr-image-wrap .WrappedImage {
 		min-height: 100vh;
 		align-items: center;

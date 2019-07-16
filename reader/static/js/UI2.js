@@ -419,7 +419,7 @@ function UI_List(o) {
 			if(is(this.$.children[index]))
 				return this.$.children[index]._struct
 			else {
-				console.warn('Index did not reference an item.')
+				if(DEBUG) console.warn('Index did not reference an item.')
 				return null;
 			}
 		else

@@ -53,32 +53,30 @@
 				<section class="rdr-groups" data-bind='groups'>
 				</section>
 				<section class="rdr-previews">
-					<details>
-						<summary>
-							<span>Previews</span>
-							<div class="is-ico-button expander"></div>
-						</summary>
-						<div data-bind='previews' class="rdr-previews-gallery">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-							<img src="" alt="">
-						</div>
-					</details>
+					<div class="header" data-bind="previews_button">
+						<span>Previews</span>
+						<div class="is-ico-button expander"></div>
+					</div>
+					<div data-bind='previews' class="rdr-previews-gallery">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+					</div>
 				</section>
 			</div>
 		</aside>
@@ -93,6 +91,10 @@
 			<div class="rdr-image-wrap" data-bind='image_container'>
 			</div>
 		</content>
+		<div class="zoom-level" data-bind="zoom_level">
+			<div class="is-ico-button" data-bind="zoom_level_plus"></div>
+			<div class="is-ico-button" data-bind="zoom_level_minus"></div>
+		</div>
 	</main>
 </body>
 <script type="text/javascript" src="{% static 'js/init.js' %}"></script>

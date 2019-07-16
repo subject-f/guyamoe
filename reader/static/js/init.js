@@ -1,3 +1,4 @@
+
 function LoadHandler(o) {
 	o=be(o);
 	Linkable.call(this);
@@ -37,8 +38,12 @@ function ReaderAPI(o) {
 		for(var num in data.chapters) {
 		var chapter = data.chapters[num];
 			chapter.images = {};
+			chapter.blurs = {};
+			chapter.previews = {};
 			for(var group in chapter.groups) {
 				chapter.images[group] = [];
+				chapter.blurs[group] = [];
+				chapter.previews[group] = [];
 				for (var i = 0; i < chapter.groups[group].length; i++) {
 					chapter.images[group].push(
 						this.mediaURL
@@ -47,6 +52,26 @@ function ReaderAPI(o) {
 							+ chapter.folder 
 							+ '/' 
 							+ group 
+							+ '/' 
+							+ chapter.groups[group][i]
+					)
+					chapter.blurs[group].push(
+						this.mediaURL
+							+ data.slug 
+							+ '/chapters/' 
+							+ chapter.folder 
+							+ '/' 
+							+ "shrunk_blur_"+group 
+							+ '/' 
+							+ chapter.groups[group][i]
+					)
+					chapter.previews[group].push(
+						this.mediaURL
+							+ data.slug 
+							+ '/chapters/' 
+							+ chapter.folder 
+							+ '/' 
+							+ "shrunk_"+group 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
@@ -127,6 +152,18 @@ function SettingsHandler(){
 		['hide', 'show'],
 		'show'
 	)
+	this.all.previews = new Setting(
+		'previews',
+		'Previews',
+		['hide', 'show'],
+		'hide'
+	)
+	this.all.zoom = new Setting(
+		'zoom',
+		'Zoom level',
+		['01', '02', '03', '04', '05', '06', '07', '08', '09', '1'],
+		'1'
+	)
 
 	for (var key in this.all) {
 		this.all[key].super = this;
@@ -144,9 +181,14 @@ function SettingsHandler(){
 		if(!window.localStorage) return;
 	var settings = window.localStorage.getItem('settings');
 		if(!settings) return;
-		settings = JSON.parse(settings);
-		for(var setting in settings) {
-			this.all[setting].set(settings[setting], true);
+		try{
+			settings = JSON.parse(settings);
+			for(var setting in settings) {
+				this.all[setting].set(settings[setting], true);
+			}
+		}catch (e){
+			localStorage.setItem('settings','');
+			console.warn('Settings were found to be corrupted and so were reset.')
 		}
 	}
 
@@ -154,7 +196,7 @@ function SettingsHandler(){
 		if(window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
 		this.S.out('setting', {setting: setting.name, value: setting.get()})
-		this.S.out('message', setting.prettyName + ' changed to ' + setting.get());
+		this.S.out('message', setting.prettyName + ': ' + setting.get());
 	}
 
 	this.deserialize();
@@ -175,6 +217,16 @@ function Setting(name, prettyName, options, dflt) {
 			);
 		}
 		return this;
+	}
+	this.next = function() {
+		if(this.options.indexOf(this.setting) < this.options.length - 1) {
+			this.set(this.options[this.options.indexOf(this.setting) + 1])
+		}
+	}
+	this.prev = function() {
+		if(this.options.indexOf(this.setting) > 0) {
+			this.set(this.options[this.options.indexOf(this.setting) - 1])
+		}
 	}
 	this.get = function() {
 		return this.setting;
@@ -212,6 +264,7 @@ function UI_Reader(o) {
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
 		.attach('cycleFit', ['KeyF'], e => Settings.all.fit.cycle())
 		.attach('cycleLayout', ['KeyL'], e => Settings.all.layout.cycle())
+		.attach('cycleLayout', ['KeyS'], s => Settings.all.sidebar.cycle())
 
 	new KeyListener()
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -246,6 +299,9 @@ function UI_Reader(o) {
 	this.messageBox = new UI_MessageBox({
 		node: this._.message
 	})
+	this.previews = new UI_Tabs({
+		node: this._.previews
+	}).S.linkAnonymous('number', id => this.displayPage(id));
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -258,8 +314,8 @@ function UI_Reader(o) {
 	}
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
+		this.SCP.page = SCP.page;
 		this.drawChapter(SCP.chapter);
-		this.displayPage(SCP.page);
 	}
 
 	this.drawReader = function(slug) {
@@ -290,12 +346,9 @@ function UI_Reader(o) {
 		this.setSelectorPin(Settings.all.selectorPinned.get());
 		this.setPreload(Settings.all.preload.get());
 		this.setSidebar(Settings.all.sidebar.get());
+		this.setZoom(Settings.all.zoom.get());
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
-		window.scrollTo({
-			top: 20,
-			left: 0
-		})
 	}
 
 	this.drawGroup = function(group) {
@@ -327,11 +380,12 @@ function UI_Reader(o) {
 		this.imageView.drawImages(chapterObj.images[group]);
 		this.selector_chap.$.value = this.SCP.chapter;
 		this.selector_vol.$.value = chapterObj.volume;
-		this.displayPage();
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
 		this.plusOne();
 		this.selector_page.clearPreload();
+		this.showPreviews(Settings.all.previews.get());
+		this.displayPage();
 		return this;
 	}
 
@@ -342,6 +396,28 @@ function UI_Reader(o) {
 			if(page !== undefined) this.SCP.page = page;
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.S.out('SCP', this.SCP);
+	}
+
+	this.showPreviews = function(state) {
+		if(state == 'show') {
+			this.$.classList.add('previews-open');
+			this.drawPreviews();
+		}else{
+			this.$.classList.remove('previews-open')
+		}
+
+	}
+
+	this.drawPreviews = function() {
+		this.previews.clear();
+		this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
+			preview => {
+				this.previews.add(new UI_Dummy({
+					html: "<img src='"+preview+"' />"
+				}))
+			}
+		)
+		this.previews.select(this.SCP.page, undefined, undefined, true);
 	}
 
 	this.selectVolume = function(vol) {
@@ -363,7 +439,7 @@ function UI_Reader(o) {
 
 
 	this.nextChapter = function(){
-		if(this.SCP.chapter < this.current.chaptersIndex.length - 2) {
+		if(this.SCP.chapter < this.current.chaptersIndex.length - 1) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
 			this.SCP.page = 0;
@@ -440,6 +516,13 @@ function UI_Reader(o) {
 		this.$.setAttribute('data-preload', number);
 	}
 
+	this.setZoom = function(zoom) {
+		Settings.all.zoom.options.forEach(item => {
+			this.$.classList.remove('zl'+item);
+		});
+		this.$.classList.add('zl'+zoom);
+	}
+
 	this.setSidebar = function(state) {
 		if(state == 'hide') {
 			this.$.classList.add('sidebar-hidden');
@@ -463,6 +546,8 @@ function UI_Reader(o) {
 			'selectorPinned': o => this.setSelectorPin(o),
 			'preload': o => this.setPreload(o),
 			'sidebar': o => this.setSidebar(o),
+			'previews': o => this.showPreviews(o),
+			'zoom': o => this.setZoom(o),
 		})[o.setting](o.value)
 	}
 
@@ -475,6 +560,9 @@ function UI_Reader(o) {
 	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
 	this._.sel_pin_button.onmousedown = e => Settings.all.selectorPinned.cycle();
 	this._.sidebar_button.onmousedown = e => Settings.all.sidebar.cycle();
+	this._.previews_button.onmousedown = e => Settings.all.previews.cycle();
+	this._.zoom_level_plus.onmousedown = e => Settings.all.zoom.next();
+	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
@@ -485,6 +573,7 @@ function UI_Reader(o) {
 	this.S.mapOut(['SCP']);
 
 	this.S.link(this.selector_page);
+	this.S.linkAnonymous('SCP', SCP => this.previews.select(SCP.page, undefined, undefined, true));
 }
 
 function UI_ReaderImageView(o) {
@@ -516,16 +605,27 @@ function UI_ReaderImageView(o) {
 	var pageElement = this.$.querySelector('*[data-index="'+index+'"]')
 	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
 		this.imageContainer.select(realIndex);
-		for(var i = 0; i < Settings.all.preload.get(); i++){
-		var image = this.imageContainer.get(i+realIndex);
-			if(image) image.load(); else break;
+	var direction = (Settings.all.layout.get() == 'rtl')?-1:1;
+		for(var i = -1; i < Settings.all.preload.get() + 1; i++){
+		var image = this.imageContainer.get(i*direction + realIndex);
+			if(image) image.load(); else continue;
 		}
 		if(Settings.all.layout.get() == 'ttb'){
-			if(!dry)
+			if(!dry) {
 				this._.image_container.scrollTo({
 					left: 0,
 					top: pageElement.offsetTop
 				})
+				if(pageElement.offsetTop > 0)
+					document.documentElement.scrollTo({
+						left: 0,
+						top:
+							Math.round(
+								pageElement.offsetTop
+								+ (this._.image_container.getBoundingClientRect()).top
+							)
+					})
+			}
 		}else{
 			this.imageContainer.$.style.left = -1 * 100 * realIndex - 0.001 + '%';
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
@@ -548,13 +648,21 @@ function UI_ReaderImageView(o) {
 	}
 
 
-	this._.image_container.onscroll = e => {
+	document.onscroll = this._.image_container.onscroll = e => {
 		if(Settings.all.layout.get() == 'ttb') {
-		var st = this._.image_container.scrollTop + 1;
+
+		var st = (
+				(e.target.scrollingElement)?
+					e.target.scrollingElement.scrollTop:
+					undefined
+				|| e.target.scrollTop
+			) + 1;
 		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
-			Reader.displayPage(offsets.indexOf(st) - 1, true);
+		var index = offsets.indexOf(st) - 1;
+			if(Reader.SCP.page == index) return;
+			Reader.displayPage(index, true);
 			return;
 		}else{
 			if(this.imageContainer.selectedItems[0].$.nextSibling)
@@ -602,7 +710,10 @@ function UI_WrappedImage(o) {
 	this.fore = o.fore;
 
 	this.onloadHandler = function(e) {
-		this.S.out('loaded', this.index)
+		this.S.out('loaded', this.index);
+		if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
+			this.$.classList.add('too-wide');
+		}
 	}
 
 	this.load = function() {
