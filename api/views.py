@@ -121,8 +121,8 @@ def clear_pages_cache():
     cache.clear()
     for ip in ip_list:
         cache.set(ip, ip, 450)
-    cache.set("online_now", set(ip_list))
-    cache.set("peak_traffic", peak_traffic)
+    cache.set("online_now", set(ip_list), 600)
+    cache.set("peak_traffic", peak_traffic, 3600 * 6)
 
 def clear_cache(request):
     if request.POST and request.user and request.user.is_staff:
