@@ -70,8 +70,8 @@ class Command(BaseCommand):
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid)
         os.makedirs(os.path.join(chapter_folder, str(group.id)))
-        os.makedirs(os.path.join(chapter_folder, f"shrunk_{str(group.id)}"))
-        os.makedirs(os.path.join(chapter_folder, f"shrunk_blur_{str(group.id)}"))
+        os.makedirs(os.path.join(chapter_folder, f"{str(group.id)}_shrunk"))
+        os.makedirs(os.path.join(chapter_folder, f"{str(group.id)}_shrunk_blur"))
         clear_pages_cache()
         return chapter_folder, str(group.id)
 

@@ -36,10 +36,9 @@ class Command(BaseCommand):
                 chapter_folder =os.path.join(settings.MEDIA_ROOT,  "manga", manga, "chapters", chapter)
                 print(chapter_folder)
                 for group_folder in os.listdir(chapter_folder):
-                    if group_folder.endswith("shrunk"):
+                    if "shrunk" in group_folder:
                         shutil.rmtree(f"media/manga/{manga}/chapters/{chapter}/{group_folder}")
-                    elif group_folder.endswith("shrunk_blur"):
-                        shutil.rmtree(f"media/manga/{manga}/chapters/{chapter}/{group_folder}")
+                        continue
                     shrunk_folder = os.path.join(chapter_folder, f"{group_folder}_shrunk")
                     blur_folder = os.path.join(chapter_folder, f"{group_folder}_shrunk_blur")
                     if not os.path.exists(shrunk_folder):
