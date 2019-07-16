@@ -28,6 +28,7 @@
             if (days >= 7) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
                $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
+               $(".compact-chapter-upload-date").addClass('text-muted');
             }
             else if (days > 7 && days < 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
@@ -62,7 +63,6 @@
             url: "/reader/update_view_count/",
             processData: false,
             contentType: false,
-            // headers: { "X-CSRFToken": '{{csrf_token}}' },
             data: formData,
             success: function (data) {},
             error: function(data){
@@ -94,7 +94,6 @@
          if (modes[mode-1] == "volumeCovers") {
             var formData = new FormData();
             formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
-            console.log($("#volumeCoversView").children().length)
             if ($("#volumeCoversView").children().length == 0) {
                $.ajax({
                   type: "POST",
@@ -103,20 +102,18 @@
                   contentType: false,
                   data: formData,
                   success: function (data) {
-                     console.log(data)
                      data["covers"].forEach((cover) => {
-                        $("#volumeCoversView").append(`<a data-toggle="modal" data-target="#zoomImage${cover[0]}"><img class="mb-1 " src="${cover[1]}" style="width: 300px"></a>
-                                                      <div id="zoomImage${cover[0]}" class="modal fade float-left" tabindex="-1" role="dialog">
-                                                         <div class="modal-dialog">
-                                                            <img src="${cover[1]}" class="img-responsive">
-                                                         </div>
-                                                      </div>`);
+                        $("#volumeCoversView").append(`<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[1]}" style="width: 300px"></a>`);
                   });
                }
             });
             }
             
          }
+      }
+      function setImage(cover) {
+         $("#imagepreview").attr("src", cover);
+         $("#openOriginal").attr("onclick", `window.open('${cover}', '_blank')`);
       }
    </script>
 {% endblock %}
@@ -127,6 +124,19 @@
       color: white;
    }
 </style>
+   <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-body">
+               <img src="" id="imagepreview" style="width: 100%; height: 100%;" >
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal" id="openOriginal">Open original</button>
+               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
    <div class="container-fluid">
       <div class="bs-docs-section clearfix mt-3">
          <div class="row justify-content-center">
@@ -190,7 +200,7 @@
                         <div class="row mb-0 pt-0">
                            {% for chapter in data %}
                            <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3 pt-2">
-                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center text-muted small mb-1 compact-chapter-upload-date"></p></div></a>
+                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p></div></a>
                            </div>
                            {% endfor %}
                            </div>

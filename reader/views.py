@@ -10,7 +10,7 @@ from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
-from .users_cache_lib import curr_user_and_online
+from .users_cache_lib import get_user_ip
 from collections import defaultdict
 import os
 import json
@@ -19,12 +19,11 @@ import json
 def hit_count(request):
     if request.POST:
         ### Install and test with memcache first
-        user_ip = curr_user_and_online(request)
+        user_ip = get_user_ip(request)
         page_id = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}{user_ip}"
         page_hits_cache = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}"
         cache.set(page_id, page_id, 60)
         page_cached_users = cache.get(page_hits_cache)
-        # print("page_cached_users", page_cached_users)
         if page_cached_users:
             page_cached_users = [ip for ip in page_cached_users if cache.get(ip)]
         else:
@@ -45,11 +44,7 @@ def hit_count(request):
                 hit.hits = F('hits') + 1
                 hit.save()
         
-        # print("page_cached_users new", page_cached_users)
         cache.set(page_hits_cache, page_cached_users)
-        # print(page_hits_cache)
-        # page_cached_users = cache.get(page_hits_cache)
-        # print("page_hits_cache new 2", page_cached_users)
         return HttpResponse(json.dumps({}), content_type='application/json')
 
 

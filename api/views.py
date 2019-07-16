@@ -51,12 +51,15 @@ def random_chars():
     return ''.join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
 
 def create_preview_pages(chapter_folder, group_folder, page_file):
-    image = Image.open(os.path.join(chapter_folder, group_folder, page_file))
-    image = image.convert("L")
-    image.thumbnail((image.width, 250), Image.ANTIALIAS)
-    image.save(os.path.join(chapter_folder, f"shrunk_{group_folder}", page_file))
-    image = image.filter(ImageFilter.BLUR)
-    image.save(os.path.join(chapter_folder, f"shrunk_blur_{group_folder}", page_file))
+    shrunk = Image.open(os.path.join(chapter_folder, group_folder, page_file))
+    blur = Image.open(os.path.join(chapter_folder, group_folder, page_file))
+    shrunk = shrunk.convert("RGB")
+    blur = blur.convert("RGB")
+    shrunk.thumbnail((shrunk.width, 250), Image.ANTIALIAS)
+    blur.thumbnail((blur.width/8, blur.height/8), Image.ANTIALIAS)
+    shrunk.save(os.path.join(chapter_folder, f"{group_folder}_shrunk", page_file), "JPEG", quality=100, optimize=True, progressive=True)
+    blur = blur.filter(ImageFilter.GaussianBlur(radius=2))
+    blur.save(os.path.join(chapter_folder, f"{group_folder}_shrunk_blur", page_file), "JPEG", quality=100, optimize=True, progressive=True)
 
 def upload_new_chapter(request, series_slug):
     if request.POST and request.user and request.user.is_staff:

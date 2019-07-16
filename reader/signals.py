@@ -13,10 +13,10 @@ def delete_chapter_folder(sender, instance, **kwargs):
         folder_path = os.path.join(settings.MEDIA_ROOT, "manga", instance.series.slug, "chapters", instance.folder)
         if os.path.exists(os.path.join(folder_path, str(instance.group.id))):
             shutil.rmtree(os.path.join(folder_path, str(instance.group.id)))
-        if os.path.exists(os.path.join(folder_path, f"shrunk_{str(instance.group.id)}")):
-            shutil.rmtree(os.path.join(folder_path, f"shrunk_{str(instance.group.id)}"))
-        if os.path.exists(os.path.join(folder_path, f"shrunk_blur_{str(instance.group.id)}")):
-            shutil.rmtree(os.path.join(folder_path, f"shrunk_blur_{str(instance.group.id)}"))
+        if os.path.exists(os.path.join(folder_path, f"{str(instance.group.id)}_shrunk")):
+            shutil.rmtree(os.path.join(folder_path, f"{str(instance.group.id)}_shrunk"))
+        if os.path.exists(os.path.join(folder_path, f"{str(instance.group.id)}_shrunk_blur")):
+            shutil.rmtree(os.path.join(folder_path, f"{str(instance.group.id)}_shrunk_blur"))
         if os.path.exists(folder_path) and not os.listdir(folder_path):
             shutil.rmtree(folder_path)
 
