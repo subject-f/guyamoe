@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reader.models import Group, Series, Volume, Chapter
-from api.views import random_chars, clear_series_cache
+from api.views import random_chars, clear_pages_cache, create_preview_pages
 
 from datetime import datetime, timezone
 import pyppeteer as pp
@@ -11,6 +11,7 @@ import aiohttp
 import re
 import os
 import io
+from PIL import ImageFilter, Image
 import zipfile
 import traceback
 
@@ -68,10 +69,12 @@ class Command(BaseCommand):
         chapter_folder_numb += f"-{str(chapter_number).rsplit('.')[1]}_" if not str(chapter_number).endswith("0") else "_"
         uid = chapter_folder_numb + random_chars()
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
-        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid, str(group.id))
-        os.makedirs(chapter_folder)
-        clear_series_cache(series.slug)
-        return chapter_folder
+        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid)
+        os.makedirs(os.path.join(chapter_folder, str(group.id)))
+        os.makedirs(os.path.join(chapter_folder, f"shrunk_{str(group.id)}"))
+        os.makedirs(os.path.join(chapter_folder, f"shrunk_blur_{str(group.id)}"))
+        clear_pages_cache()
+        return chapter_folder, str(group.id)
 
     async def new_chapter_checker(self, downloaded_chapters, series, latest_volume, url):
         chapters = {}
@@ -107,17 +110,20 @@ class Command(BaseCommand):
             # Get all pages from newly detected chapters
             for chapter in chapters:
                 chapter_data = await self.get_pages(chapters[chapter])
-                chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 padding = len(str(len(chapter_data["pages"])))
                 print(f"Downloading chapter {chapter}...")
                 async with aiohttp.ClientSession() as session:
                     for idx, page in enumerate(chapter_data["pages"]):
                         extension = page.rsplit(".", 1)[1]
+                        page_file = f"{str(idx+1).zfill(padding)}.{extension}"
                         async with session.get(page) as resp:
                             if resp.status == 200:
                                 page_content = await resp.read()
-                                with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), 'wb') as f:
+                                with open(os.path.join(chapter_folder, group_folder, page_file), 'wb') as f:
                                     f.write(page_content)
+                                create_preview_pages(chapter_folder, group_folder, page_file)
+
                 print(f"Successfully downloaded chapter and added to db.")
         except:
             traceback.print_exc()
@@ -145,7 +151,7 @@ class Command(BaseCommand):
                 else:
                     print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
             for chapter in chapters:
-                chapter_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 print(f"Downloading chapter {chapter}...")
                 async with session.get(chapters[chapter]["url"]) as resp:
                     if resp.status == 200:
@@ -155,8 +161,10 @@ class Command(BaseCommand):
                             padding = len(str(len(all_pages)))
                             for idx, page in enumerate(all_pages):
                                 extension = page.rsplit(".", 1)[1]
-                                with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), "wb") as f:
+                                page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+                                with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                                     f.write(zip_file.read(page))
+                                create_preview_pages(chapter_folder, group_folder, page_file)
                         print(f"Successfully downloaded chapter and added to db.")
 
     def handle(self, *args, **options):

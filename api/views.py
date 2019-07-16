@@ -6,6 +6,7 @@ from ratelimit.decorators import ratelimit
 from django.core.cache import cache
 from datetime import datetime, timezone
 from reader.models import Series, Volume, Chapter, Group
+from PIL import ImageFilter, Image
 import random
 import os
 import json
@@ -17,7 +18,7 @@ def series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
         series = Series.objects.get(slug=series_slug)
-        chapters = Chapter.objects.filter(series=series)
+        chapters = Chapter.objects.filter(series=series).select_related('group')
         chapters_dict = {}
         for chapter in chapters:
             chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
@@ -37,7 +38,6 @@ def series_data(request, series_slug):
         cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
     return HttpResponse(JsonResponse(series_api_data))
 
-
 @ratelimit(key='ip', rate='5/10s')
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
@@ -50,9 +50,16 @@ def get_groups(request, series_slug):
 def random_chars():
     return ''.join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
 
+def create_preview_pages(chapter_folder, group_folder, page_file):
+    image = Image.open(os.path.join(chapter_folder, group_folder, page_file))
+    image = image.convert("L")
+    image.thumbnail((image.width, 250), Image.ANTIALIAS)
+    image.save(os.path.join(chapter_folder, f"shrunk_{group_folder}", page_file))
+    image = image.filter(ImageFilter.BLUR)
+    image.save(os.path.join(chapter_folder, f"shrunk_blur_{group_folder}", page_file))
 
 def upload_new_chapter(request, series_slug):
-    if request.POST and request.user.is_staff:
+    if request.POST and request.user and request.user.is_staff:
         group = Group.objects.get(name=request.POST["scanGroup"])
         series = Series.objects.get(slug=series_slug)
         chapter_number = float(request.POST["chapterNumber"])
@@ -67,19 +74,21 @@ def upload_new_chapter(request, series_slug):
             else:
                 uid = existing_chapter.folder
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
-        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid, str(group.id))
-        if os.path.exists(chapter_folder):
+        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid)
+        group_folder = str(group.id)
+        if os.path.exists(os.path.join(chapter_folder, group_folder)):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
-        os.makedirs(chapter_folder)
+        os.makedirs(os.path.join(chapter_folder, group_folder))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
             all_pages = sorted(zip_file.namelist())
             padding = len(str(len(all_pages)))
             for idx, page in enumerate(all_pages):
                 extension = page.rsplit(".", 1)[1]
-                with open(os.path.join(chapter_folder, f"{str(idx+1).zfill(padding)}.{extension}"), "wb") as f:
+                page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+                with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                     f.write(zip_file.read(page))
+                create_preview_pages(chapter_folder, group_folder, page_file)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
-
 
 @ratelimit(key='ip', rate='5/10s')
 def get_volume_covers(request, series_slug):
@@ -92,18 +101,31 @@ def get_volume_covers(request, series_slug):
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
 
-
 def clear_series_cache(series_slug):
     cache.delete(f"series_api_data_{series_slug}")
     cache.delete(f"groups_data_{series_slug}")
     cache.delete(f"vol_covers_{series_slug}")
 
+def clear_pages_cache():
+    online = cache.get("online_now")
+    if not online:
+        online = []
+    peak_traffic = cache.get("peak_traffic")
+    ip_list = []
+    for ip in online:
+        if cache.get(ip):
+            ip_list.append(ip)
+    cache.clear()
+    for ip in ip_list:
+        cache.set(ip, ip, 450)
+    cache.set("online_now", set(ip_list))
+    cache.set("peak_traffic", peak_traffic)
 
 def clear_cache(request):
     if request.POST and request.user and request.user.is_staff:
         print(request.POST["clear_type"])
         if request.POST["clear_type"] == "all":
-            cache.clear()
+            clear_pages_cache()
             response = "Cleared all cache"
         elif request.POST["clear_type"] == "chapter":
             for series_slug in Series.objects.all().values_list('slug'):
@@ -111,5 +133,4 @@ def clear_cache(request):
             response = "Cleared series cache"
         else:
             response = "Not a valid option"
-
         return HttpResponse(json.dumps({"response": response}), content_type="application/json")

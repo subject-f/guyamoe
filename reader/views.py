@@ -53,32 +53,9 @@ def hit_count(request):
         return HttpResponse(json.dumps({}), content_type='application/json')
 
 
-def get_chapter_time(chapter):
-    upload_date = chapter.uploaded_on
-    upload_time = (datetime.utcnow().replace(tzinfo=timezone.utc) - upload_date).total_seconds()
-    days = int(upload_time // (24 * 3600))
-    upload_time = upload_time % (24 * 3600)
-    hours = int(upload_time // 3600)
-    upload_time %= 3600
-    minutes = int(upload_time // 60)
-    upload_time %= 60
-    seconds = int(upload_time)
-    if days == 0 and hours == 0 and minutes == 0:
-        upload_date = f"{seconds} second{'s' if seconds != 1 else ''} ago"
-    elif days == 0 and hours == 0:
-        upload_date = f"{minutes} min{'s' if minutes != 1 else ''} ago"
-    elif days == 0:
-        upload_date = f"{hours} hour{'s' if hours != 1 else ''} ago"
-    elif days < 7:
-        upload_date = f"{days} day{'s' if days != 1 else ''} ago"
-    else:
-        upload_date = upload_date.strftime("%Y-%m-%d")
-    return upload_date
-
-
 def series_page_data(series_slug):
     series = get_object_or_404(Series, slug=series_slug)
-    chapters = Chapter.objects.filter(series=series)
+    chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
     latest_chapter = chapters.latest('uploaded_on')
     vols = Volume.objects.filter(series=series).order_by('-volume_number')
     cover_vol_url = ""
@@ -107,21 +84,21 @@ def series_page_data(series_slug):
             "synopsis": series.synopsis, 
             "author": series.author.name,
             "artist": series.artist.name,
-            "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on],
+            "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
             "chapter_list": chapter_list,
             "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
     }
 
-@cache_page(3600 * 48)
+@cache_page(3600 * 12)
 def series_info(request, series_slug):
     return render(request, 'reader/series_info.html', series_page_data(series_slug))
 
 @staff_member_required
-@cache_page(3600 * 48)
+@cache_page(3600 * 12)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
 
-@cache_page(3600 * 48)
+@cache_page(3600 * 12)
 def reader(request, series_slug, chapter, page):
     return render(request, 'reader/reader.html', {"slug": series_slug})

@@ -8,16 +8,18 @@
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Jekyll v3.8.5">
     <title>Ka.guya.moe</title>
-      <script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"> </script>
+      <script src="{% static 'js/jquery.min.js' %}"> </script>
       <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
       <link rel="stylesheet" href="{% static  'css/bootstrap.min.css' %}">
-      <script src="https://bootswatch.com/_vendor/bootstrap/dist/js/bootstrap.min.js"> </script>
+      <script src="{% static 'js/bootstrap.min.js' %}"> </script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
       <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
       {% block head %}
       {% endblock %}
    </head>
    <body class="d-flex flex-column h-100">
+   {% load cache %}
+   {% cache 500 sidebar %}
    <header>
    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container-fluid">
@@ -63,6 +65,7 @@
       </div>
    </nav>
    </header>
+   {% endcache %}
    {% block body %}
    {% endblock %}
    </body>

@@ -275,14 +275,14 @@
                </div>
                
                
-               <div id="compactView" class="d-none" style="font-size: .8rem">
+               <div id="compactView" class="d-none" style="font-size: .75rem">
                   
                      {% for volume, data in volume_list %}
                         <div class="card col-12 mb-3" style="border-radius: 0px;">
                         <h6 class="card-title mt-2 mb-0">Volume {{ volume }}</h6>
                         <div class="row mb-0 pt-0">
                            {% for chapter in data %}
-                           <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 pt-2">
+                           <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3 pt-2">
                               <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center text-muted small mb-1 compact-chapter-upload-date"></p></div></a>
                            </div>
                            {% endfor %}

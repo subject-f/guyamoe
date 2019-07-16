@@ -24,10 +24,16 @@
 {% endblock %}
 {% block body %}
 <div class="container-fluid">
-    <div class="col-3 ">
-        <p class="mt-3 pt-2 ml-3">{{ request.online_now }} online</p>
-    </div>
-    <button class="btn btn-primary mt-3 mt-2 ml-3 " onclick="clearCache('all')">Clear all cache</button>
+        <div class="row">
+            <div class="col-lg-1 col-md-2">
+                <p class="mt-4 ml-3" style="color: green">Online: {{ request.online_now }}</p>
+            </div>
+            <div class="col-lg-1 col-md-2">
+                <p class="mt-4">Peak traffic: {{ request.peak_traffic }}</p>
+            </div>
+            <button class="btn btn-primary mt-3 mt-2 ml-3 " onclick="clearCache('all')">Clear all cache</button>
     <button class="btn btn-primary mt-3 mt-2 ml-3 " onclick="clearCache('chapter')">Clear series cache</button>
+        </div>
+    
 </div>
 {% endblock %}
