@@ -11,7 +11,6 @@ import aiohttp
 import re
 import os
 import io
-from PIL import ImageFilter, Image
 import zipfile
 import traceback
 
