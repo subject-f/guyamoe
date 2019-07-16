@@ -160,7 +160,7 @@ function SettingsHandler(){
 		'preload',
 		'Preload amount',
 		[1,2,3,4,5,6,7,8],
-		1,
+		2,
 		i => 'Reader will preload %i pages.'.replace('%i', i).replace('1 pages', '1 page')
 	)
 	this.all.sidebar = new Setting(
@@ -200,6 +200,7 @@ function SettingsHandler(){
 		for(var setting in this.all) {
 			settings[setting] = this.all[setting].get();
 		}
+		settings.VER = this.ver;
 		return JSON.stringify(settings);
 	}
 
@@ -210,6 +211,12 @@ function SettingsHandler(){
 		try{
 			settings = JSON.parse(settings);
 			for(var setting in settings) {
+				if(setting == 'VER') {
+					if(settings[setting] != this.ver) {
+						throw 'Settings ver changed';
+					}
+					continue;
+				}
 				this.all[setting].set(settings[setting], true);
 			}
 		}catch (e){
@@ -224,6 +231,8 @@ function SettingsHandler(){
 		this.S.out('setting', {setting: setting.name, value: setting.get()})
 		this.S.out('message', setting.getFormatted());
 	}
+
+	this.ver = '0.4';
 
 	this.deserialize();
 
