@@ -40,7 +40,6 @@ class Command(BaseCommand):
             while True:
                 try:
                     self.page = await browser.newPage()
-                    print(chapter["url"] + f"/{p}")
                     await self.page.goto(chapter["url"] + f"/{p}")
                     image_dom = await self.page.waitForSelector("img.noselect", timeout=6000)
                     image_url = await self.page.evaluate("(image_dom) => image_dom.src", image_dom)
@@ -96,7 +95,6 @@ class Command(BaseCommand):
                 total_pages = 1
             for page_numb in range(1, total_pages+1):
                 url = f"{url}/chapters/{page_numb}/"
-                print(url)
                 await self.page.goto(url)
                 elements = await self.page.querySelectorAll(".chapter-row")
                 for element in elements:
@@ -181,10 +179,9 @@ class Command(BaseCommand):
         loop = asyncio.get_event_loop()
         for manga in self.jaiminisbox_manga:
             latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-            #chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
-            #loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
+            chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
+            loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
         for manga in self.mangadex_manga:
             latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
             chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
-            print(chapters)
             loop.run_until_complete(self.new_chapter_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))

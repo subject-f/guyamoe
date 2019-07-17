@@ -126,7 +126,6 @@ def clear_pages_cache():
 
 def clear_cache(request):
     if request.POST and request.user and request.user.is_staff:
-        print(request.POST["clear_type"])
         if request.POST["clear_type"] == "all":
             clear_pages_cache()
             response = "Cleared all cache"

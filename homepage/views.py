@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page
@@ -29,3 +29,7 @@ def home(request):
 @cache_page(3600 * 48)
 def about(request):
     return render(request, 'homepage/about.html', {})
+
+
+def main_series_chapter(request, chapter):
+    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter[2:], '1')

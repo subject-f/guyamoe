@@ -49,51 +49,52 @@ def hit_count(request):
 
 
 def series_page_data(series_slug):
-    series = get_object_or_404(Series, slug=series_slug)
-    chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
-    latest_chapter = chapters.latest('uploaded_on')
-    vols = Volume.objects.filter(series=series).order_by('-volume_number')
-    cover_vol_url = ""
-    for vol in vols:
-        if vol.volume_cover:
-            cover_vol_url = f"/media/{vol.volume_cover}"
-            break
-    content_series = ContentType.objects.get(app_label='reader', model='series')
-    hit, _ = HitCount.objects.get_or_create(content_type=content_series, object_id=series.id)
-    chapter_list = []
-    volume_dict = defaultdict(list)
-    for chapter in chapters:
-        u = chapter.uploaded_on
-        chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
-        volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
-    volume_list = []
-    for key, value in volume_dict.items():
-        volume_list.append([key, sorted(value, key=lambda x: float(x[0]), reverse=True)])
-    chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
-    return {
-            "series": series.name,
-            "series_id": series.id,
-            "slug": series.slug,
-            "cover_vol_url": cover_vol_url,
-            "views": hit.hits + 1,
-            "synopsis": series.synopsis, 
-            "author": series.author.name,
-            "artist": series.artist.name,
-            "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
-            "chapter_list": chapter_list,
-            "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
-    }
+    series_view_data = cache.get(f"series_view_data_{series_slug}")
+    if not series_view_data:
+        series = get_object_or_404(Series, slug=series_slug)
+        chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
+        latest_chapter = chapters.latest('uploaded_on')
+        vols = Volume.objects.filter(series=series).order_by('-volume_number')
+        cover_vol_url = ""
+        for vol in vols:
+            if vol.volume_cover:
+                cover_vol_url = f"/media/{vol.volume_cover}"
+                break
+        content_series = ContentType.objects.get(app_label='reader', model='series')
+        hit, _ = HitCount.objects.get_or_create(content_type=content_series, object_id=series.id)
+        chapter_list = []
+        volume_dict = defaultdict(list)
+        for chapter in chapters:
+            u = chapter.uploaded_on
+            chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
+            volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
+        volume_list = []
+        for key, value in volume_dict.items():
+            volume_list.append([key, sorted(value, key=lambda x: float(x[0]), reverse=True)])
+        chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
+        series_view_data = {
+                "series": series.name,
+                "series_id": series.id,
+                "slug": series.slug,
+                "cover_vol_url": cover_vol_url,
+                "views": hit.hits + 1,
+                "synopsis": series.synopsis, 
+                "author": series.author.name,
+                "artist": series.artist.name,
+                "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
+                "chapter_list": chapter_list,
+                "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
+        }
+        cache.set(f"series_view_data_{series_slug}", series_view_data, 3600 * 12)
+    return series_view_data
 
-@cache_page(3600 * 12)
 def series_info(request, series_slug):
     return render(request, 'reader/series_info.html', series_page_data(series_slug))
 
 @staff_member_required
-@cache_page(3600 * 12)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
 
-@cache_page(3600 * 12)
 def reader(request, series_slug, chapter, page):
     return render(request, 'reader/reader.html', {"slug": series_slug})
