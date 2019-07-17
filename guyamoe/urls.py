@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/', include('api.urls')),
 ]
 
+handler404 = 'homepage.views.handle404'
+
 if settings.DEBUG:
     # import debug_toolbar
     # urlpatterns = [

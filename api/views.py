@@ -38,7 +38,7 @@ def series_data(request, series_slug):
         cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
     return HttpResponse(JsonResponse(series_api_data))
 
-@ratelimit(key='ip', rate='5/10s')
+@ratelimit(key='ip', rate='5/10s', block=True)
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
@@ -93,7 +93,7 @@ def upload_new_chapter(request, series_slug):
                 create_preview_pages(chapter_folder, group_folder, page_file)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
 
-@ratelimit(key='ip', rate='5/10s')
+@ratelimit(key='ip', rate='5/10s', block=True)
 def get_volume_covers(request, series_slug):
     if request.POST:
         covers = cache.get(f"vol_covers_{series_slug}")

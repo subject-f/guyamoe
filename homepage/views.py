@@ -10,6 +10,7 @@ from reader.models import Series, Volume, Chapter
 def admin_home(request):
     return render(request, 'homepage/admin_home.html')
 
+
 @cache_page(3600 * 48)
 def home(request):
     home_screen_series = {"Kaguya-Wants-To-Be-Confessed-To": "", "We-Want-To-Talk-About-Kaguya": "", "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": ""}
@@ -33,3 +34,7 @@ def about(request):
 
 def main_series_chapter(request, chapter):
     return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter[2:], '1')
+
+
+def handle404(request, exception):
+    return render(request, 'homepage/how_cute_404.html')
