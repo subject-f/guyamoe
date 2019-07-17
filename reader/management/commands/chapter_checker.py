@@ -34,10 +34,13 @@ class Command(BaseCommand):
 
     async def get_pages(self, chapter):
         try:
+            browser = await pp.launch()
             chapter["pages"] = []
             p = 1
             while True:
                 try:
+                    self.page = await browser.newPage()
+                    print(chapter["url"] + f"/{p}")
                     await self.page.goto(chapter["url"] + f"/{p}")
                     image_dom = await self.page.waitForSelector("img.noselect", timeout=6000)
                     image_url = await self.page.evaluate("(image_dom) => image_dom.src", image_dom)
@@ -49,6 +52,7 @@ class Command(BaseCommand):
                         total_pages = await self.page.querySelectorEval(".reader-controls-page-text > .total-pages", "(totalPages) => totalPages.textContent")
                         chapter["total_pages"] = int(total_pages)
                     chapter["pages"].append(image_url)
+                    await self.page.close()
                     p += 1
                 except pp.errors.TimeoutError:
                     if p == chapter["total_pages"] + 1:
@@ -58,8 +62,10 @@ class Command(BaseCommand):
                     break
         except:
             traceback.print_exc()
-            return {}
-        else:
+            chapter = {}
+            return chapter
+        finally:
+            await browser.close()
             return chapter
 
     def create_chapter_obj(self, chapter, group, series, latest_volume, chapter_data):
@@ -90,6 +96,7 @@ class Command(BaseCommand):
                 total_pages = 1
             for page_numb in range(1, total_pages+1):
                 url = f"{url}/chapters/{page_numb}/"
+                print(url)
                 await self.page.goto(url)
                 elements = await self.page.querySelectorAll(".chapter-row")
                 for element in elements:
@@ -107,8 +114,12 @@ class Command(BaseCommand):
                         chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_url}
 
             # Get all pages from newly detected chapters
+            await self.browser.close()
             for chapter in chapters:
                 chapter_data = await self.get_pages(chapters[chapter])
+                if not chapter_data:
+                    print('could not download chapter')
+                    continue
                 chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 padding = len(str(len(chapter_data["pages"])))
                 print(f"Downloading chapter {chapter}...")
@@ -170,9 +181,10 @@ class Command(BaseCommand):
         loop = asyncio.get_event_loop()
         for manga in self.jaiminisbox_manga:
             latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-            chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
-            loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
+            #chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
+            #loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
         for manga in self.mangadex_manga:
             latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
             chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+            print(chapters)
             loop.run_until_complete(self.new_chapter_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
