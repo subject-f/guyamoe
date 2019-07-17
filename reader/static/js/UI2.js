@@ -370,6 +370,14 @@ function Linkable(o) {
 		return this.S;
 	}
 
+	this.S.proxyOut = (streamID, targetStructure) => {
+		this.S.addOut(streamID);
+		this.S.addIn(streamID, data => this.S.out(streamID, data));
+		if(targetStructure) {
+			targetStructure.S.link(this);
+		}
+	}
+
 	//Returns an input function for use in other objects by the stream index or alias.
 	//This function is a map to an internal function of 'this' object.
 	/*this.S.in = streamID => {

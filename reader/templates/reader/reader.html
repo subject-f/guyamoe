@@ -27,26 +27,26 @@
 			<div class="rdr-aside-content">
 				<section class="rdr-selector">
 					<div class="rdr-selector-top">
-						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev"></button>
+						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev" data-tip="Previous volume"></button>
 						<div id="message-box" data-bind='message'></div>
 					</div>
 					<div class="rdr-selector-mid">
 						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>
-						<div class="rdr-vol-wrap">
-							<select data-bind='selector_vol'id="rdr-vol">
-							</select>
+						<div class="rdr-vol-wrap" data-bind='selector_vol'>
+							<label></label>
+							<select id="rdr-vol"></select>
 						</div>
-						<div class="rdr-chap-wrap">
-							<select data-bind='selector_chap' id="rdr-chap">
-							</select>
+						<div class="rdr-chap-wrap" data-bind='selector_chap'>
+							<label></label>
+							<select id="rdr-chap"></select>
 						</div>
 						<button data-bind='chap_next' class="rdr-selector-chap is-ico-button next"></button>
 					</div>
 					<div class="rdr-selector-bot">
-						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next"></button>
+						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next" data-tip="Next volume"></button>
 						<div class="flex-spacer"></div>
 						<button data-bind='preload_button' class="rdr-selector-vol is-ico-button preload"></button>
-						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
+						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout" data-tip="Change layout direction"></button>
 						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter"></button>
 						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin"></button>
 					</div>
@@ -59,6 +59,14 @@
 						<div class="is-ico-button expander"></div>
 					</div>
 					<div data-bind='previews' class="rdr-previews-gallery">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
+						<img src="" alt="">
 						<img src="" alt="">
 						<img src="" alt="">
 						<img src="" alt="">
@@ -97,6 +105,7 @@
 			<div class="is-ico-button" data-bind="zoom_level_minus"></div>
 		</div>
 	</main>
+	<div class="Tooltippy"></div>
 </body>
 <script type="text/javascript" src="{% static 'js/init.js' %}"></script>
 		

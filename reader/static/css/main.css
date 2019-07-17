@@ -235,6 +235,7 @@ header > .search:before {
 }
 .fadeOut {
 	opacity: 0;
+	transition: opacity 0.3s ease;
 }
 
 @keyframes flash {
@@ -347,6 +348,12 @@ header > .search:before {
 .Reader[data-preload="8"] .is-ico-button.preload:before {
 	content: "\e918";
 }
+.Reader[data-preload="9"] .is-ico-button.preload:before {
+	content: "\e919";
+}
+.Reader[data-preload="100"] .is-ico-button.preload:before {
+	content: "\e91b";
+}
 
 .rdr-page-selector .preloaded {
 	border-left-color: #6699b9;
@@ -355,15 +362,17 @@ header > .search:before {
 
 .rdr-vol-wrap {
 	position: relative;
-	flex-grow: 1;
-	min-width: 3ch;
+	flex-grow: 0;
+	min-width: 2rem;
 	overflow: hidden;
+	font-size: 12px;
 }
 
 .rdr-chap-wrap {
 	position: relative;
 	flex-grow: 7;
 	overflow: hidden;
+	font-size: 12px;
 }
 
 .rdr-chap-wrap:after {
@@ -377,26 +386,15 @@ header > .search:before {
 	pointer-events: none;
 }
 
-#rdr-vol {
-	display: block;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	top: 0;
-	text-align: center;
-	text-align-last: center;
-	width: calc(100% + 2.3ch);
+.rdr-vol-wrap label {
+	justify-content: center;
 }
-#rdr-chap {
-	display: block;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	top: 0;
-	width: calc(100% + 2.3ch);
+.rdr-chap-wrap label {
+	padding-left: 1ch;
+	white-space: nowrap;
 }
 
-#rdr-vol:hover, #rdr-chap:hover {
+.rdr-vol-wrap:hover label, .rdr-chap-wrap:hover label {
 	color: #b2dffb;
 }
 
@@ -667,6 +665,15 @@ header > .search:before {
 	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;
 }
 
+.selector-pinned .rdr-page-selector-keys div.is-active {
+	color: rgba(255,255,255,0.9)
+}
+
+.selector-pinned.nonum .rdr-page-selector-keys div.is-active {
+	color: transparent;
+	text-shadow: none;
+}
+
 
 .rdr-page-selector-counter {
 	position: absolute;
@@ -811,10 +818,6 @@ header > .search:before {
 	}
 }
 
-.zoom-level:hover {
-	opacity: 1;
-}
-
 .zoom-level .is-ico-button {
 	background: rgba(0,0,0,0.7);
 	width: 3rem;
@@ -835,6 +838,12 @@ header > .search:before {
 .zoom-level .is-ico-button:hover {
 	background: rgba(0,0,0,0.9);
 }
+
+.fit-width .zoom-level:hover {
+	opacity: 1 !important;
+	animation-play-state: paused;
+}
+
 
 .fit-width.zl10 .WrappedImage img {min-width: 10%; max-width: 10%}
 .fit-width.zl20 .WrappedImage img {min-width: 20%; max-width: 20%}
@@ -904,4 +913,37 @@ header > .search:before {
 	.fit-width div.zoom-level {
 		display: none !important;
 	}
+}
+
+.Tooltippy {
+	position: absolute;
+	padding: 0.4em 0.6em;
+	background: rgba(20,20,20,0.9);
+	border-radius: 2px;
+	box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+	z-index: 1000;
+	font-size: 11px;
+	pointer-events: none; 
+	display: none;
+}
+
+.FauxDrop {
+	position: relative;
+	display: flex;
+}
+
+.FauxDrop select {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	opacity: 0;
+}
+
+.FauxDrop label {
+	display: flex;
+	flex-grow: 1;
+	align-items: center;
+	pointer-events: none;
 }
