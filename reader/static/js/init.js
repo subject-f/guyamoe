@@ -125,7 +125,7 @@ function SettingsHandler(){
 		'fit',
 		'Page fit',
 		['fit-width', 'fit-height', 'fit-none'],
-		(IS_MOBILE)?'fit-width':'fit-none',
+		(IS_MOBILE)?'fit-width':'fit-height',
 		{
 			'fit-width': 'Images fit to width.',
 			'fit-height': 'Images fit to height.',
@@ -232,7 +232,7 @@ function SettingsHandler(){
 		this.S.out('message', setting.getFormatted());
 	}
 
-	this.ver = '0.4';
+	this.ver = '0.41';
 
 	this.deserialize();
 
