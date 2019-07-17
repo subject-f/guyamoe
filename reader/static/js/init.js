@@ -210,13 +210,10 @@ function SettingsHandler(){
 		if(!settings) return;
 		try{
 			settings = JSON.parse(settings);
+			if(settings.VER && settings.VER != this.ver) {
+				throw 'Settings ver changed';
+			}
 			for(var setting in settings) {
-				if(setting == 'VER') {
-					if(settings[setting] != this.ver) {
-						throw 'Settings ver changed';
-					}
-					continue;
-				}
 				this.all[setting].set(settings[setting], true);
 			}
 		}catch (e){
@@ -232,7 +229,7 @@ function SettingsHandler(){
 		this.S.out('message', setting.getFormatted());
 	}
 
-	this.ver = '0.41';
+	this.ver = '0.42';
 
 	this.deserialize();
 
@@ -312,11 +309,11 @@ function UI_Reader(o) {
 		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
 		.attach('minus', ['Minus'], s => {
 			Settings.all.fit.set('fit-width')
-			Settings.all.zoom.next()
+			Settings.all.zoom.prev()
 		})
 		.attach('plus', ['Equal'], s => {
 			Settings.all.fit.set('fit-width')
-			Settings.all.zoom.prev()
+			Settings.all.zoom.next()
 		})
 		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
 
@@ -718,6 +715,7 @@ function UI_ReaderImageView(o) {
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
 		var index = offsets.indexOf(st) - 1;
+			if(index + 2 == offsets.length) return;
 			if(Reader.SCP.page == index) return;
 			Reader.displayPage(index, true);
 			return;
@@ -770,6 +768,14 @@ function UI_WrappedImage(o) {
 		this.S.out('loaded', this.index);
 		if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
 			this.$.classList.add('too-wide');
+			// this.$.addEventListener('wheel', e => {
+			// 	if(e.type != 'wheel') return;
+			// 	let delta = ((e.deltaY || -e.wheelDelta || e.detail) >> 10) || 1;
+			// 	delta = delta * (-300);
+			// 	this.$.scrollLeft += delta;
+			// 	if(this.$.scrollLeft != (this.$.offsetWidth - this._.image.offsetWidth))
+			// 		e.preventDefault();
+			// });
 		}
 	}
 
