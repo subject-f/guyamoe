@@ -93,18 +93,14 @@ def series_info(request, series_slug):
     data = series_page_data(series_slug)
     series_render = cache.get(f"series_render_{series_slug}")
     if not series_render:
-        series_render = render(request, 'reader/series_info_admin.html', data)
+        series_render = render(request, 'reader/series_info.html', data)
         cache.set(f"series_render_{series_slug}", series_render, 3600 * 12)
     return series_render
 
 @staff_member_required
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
-    series_render = cache.get(f"series_render_{series_slug}")
-    if not series_render:
-        series_render = render(request, 'reader/series_info_admin.html', data)
-        cache.set(f"series_render_{series_slug}", series_render, 3600 * 12)
-    return series_render
+    return render(request, 'reader/series_info_admin.html', data)
 
 @ratelimit(key='ip', rate='10/20s', block=True)
 def reader(request, series_slug, chapter, page):
