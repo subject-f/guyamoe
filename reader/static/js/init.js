@@ -786,7 +786,7 @@ function UI_ReaderImageView(o) {
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
 		var index = offsets.indexOf(st) - 1;
-			if(index + 2 == offsets.length) return;
+			if(index + 1 == offsets.length) return;
 			if(Reader.SCP.page == index) return;
 			Reader.displayPage(index, true);
 			return;
