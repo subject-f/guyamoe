@@ -901,7 +901,7 @@ header > .search:before {
 		display: none !important;
 	}
 
-	.zoom-level {
+	.fit-width div.zoom-level {
 		display: none !important;
 	}
 }
