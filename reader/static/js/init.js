@@ -73,7 +73,7 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							+ "shrunk_"+group 
+							+ group+"_shrunk" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
