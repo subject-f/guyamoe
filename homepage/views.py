@@ -33,8 +33,10 @@ def about(request):
 
 
 def main_series_chapter(request, chapter):
-    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter[2:], '1')
+    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, "1")
 
+def main_series_page(request, chapter, page):
+    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, page)
 
 def handle404(request, exception):
     return render(request, 'homepage/how_cute_404.html')
