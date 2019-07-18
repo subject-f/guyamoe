@@ -30,7 +30,7 @@
                $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
                $(".compact-chapter-upload-date").addClass('text-muted');
             }
-            else if (days > 7 && days < 0) {
+            else if (days < 7 && days > 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
                $(".compact-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
                $(".compact-chapter-upload-date").addClass('text-muted');
