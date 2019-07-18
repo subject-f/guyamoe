@@ -48,8 +48,8 @@ def hit_count(request):
 
 
 def series_page_data(series_slug):
-    series_view_data = cache.get(f"series_view_data_{series_slug}")
-    if not series_view_data:
+    series_page_data = cache.get(f"series_page_data_{series_slug}")
+    if not series_page_data:
         series = get_object_or_404(Series, slug=series_slug)
         chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
         latest_chapter = chapters.latest('uploaded_on')
@@ -71,7 +71,7 @@ def series_page_data(series_slug):
         for key, value in volume_dict.items():
             volume_list.append([key, sorted(value, key=lambda x: float(x[0]), reverse=True)])
         chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
-        series_view_data = {
+        series_page_data = {
                 "series": series.name,
                 "series_id": series.id,
                 "slug": series.slug,
@@ -84,8 +84,8 @@ def series_page_data(series_slug):
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
         }
-        cache.set(f"series_view_data_{series_slug}", series_view_data, 3600 * 12)
-    return series_view_data
+        cache.set(f"series_page_data_{series_slug}", series_page_data, 3600 * 12)
+    return series_page_data
 
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
@@ -98,3 +98,7 @@ def series_info_admin(request, series_slug):
 
 def reader(request, series_slug, chapter, page):
     return render(request, 'reader/reader.html', {"slug": series_slug})
+
+def chapter_comments(request, series_slug, chapter):
+    data = series_page_data(series_slug)
+    return render(request, 'reader/chapter_comments.html', {"series": data["series"], "slug": series_slug, "chapter_slug": chapter, "chapter": chapter.replace("-", ".")})

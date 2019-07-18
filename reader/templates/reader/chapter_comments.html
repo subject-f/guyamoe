@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+    <script defer src="https://kuu.guya.moe/js/commento.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row d-flex justify-content-center mt-3">
+            <div class="col-lg-10 col-12 text-center">
+            <a href="/reader/series/{{ slug }}/{{ chapter_slug }}/1"><p style="float: left"><i class="fa fa-arrow-left"></i></p></a>
+            <p style="font-size: 1.5rem">{{ series }} Chapter {{ chapter }} Discussion</p>
+            </div>
+            <div class="col-lg-10 col-12">
+                <div id="commento"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
