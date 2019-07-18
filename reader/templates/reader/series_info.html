@@ -215,7 +215,6 @@
                            <tr>                     
                               <th scope="col">Title&nbsp;&nbsp;&nbsp;&nbsp;<input class="form-control-sm" id="chapterTitleSearch" style="color: #fff !important; background-color: #272B30 !important; border: 1px solid #000 !important" type="text" placeholder="Search.."></th>
                               <th scope="col"><i class="fa fa-comment"></i></th>
-                              <th scope="col">Volume</th>
                               <th scope="col">Group</th>
                               <th scope="col">Uploaded</th>
                            </tr>
@@ -225,12 +224,8 @@
                               <tr class="table-default">                           
                                     <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row"><a class="text-muted" href="/reader/series/{{ slug }}/{{ ch_slug }}/comments"><i class="fa fa-comment"></i></a></td>
-                                    <td scope="row">{{ volume }}</td>
                                     <td scope="row">{{ group }}</td>
-                                    <td scope="row" class="detailed-chapter-upload-date"></td>         
-                                    {% if is_mod %}
-                                    <th scope="row"><i class="fa fa-cog"></i></th>
-                                    {% endif %}                        
+                                    <td scope="row" class="detailed-chapter-upload-date"></td>                    
                               </tr>
                            {% endfor %}
                         </tbody>
