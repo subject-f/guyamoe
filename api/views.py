@@ -2,7 +2,6 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.db import IntegrityError
-from ratelimit.decorators import ratelimit
 from django.core.cache import cache
 from datetime import datetime, timezone
 from reader.models import Series, Volume, Chapter, Group
@@ -13,7 +12,6 @@ import json
 import zipfile
 
 
-@ratelimit(key='ip', rate='10/20s', block=True)
 def series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
@@ -38,7 +36,6 @@ def series_data(request, series_slug):
         cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
     return HttpResponse(JsonResponse(series_api_data))
 
-@ratelimit(key='ip', rate='5/10s', block=True)
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
@@ -93,7 +90,6 @@ def upload_new_chapter(request, series_slug):
                 create_preview_pages(chapter_folder, group_folder, page_file)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
 
-@ratelimit(key='ip', rate='5/10s', block=True)
 def get_volume_covers(request, series_slug):
     if request.POST:
         covers = cache.get(f"vol_covers_{series_slug}")

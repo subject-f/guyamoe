@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
-from ratelimit.decorators import ratelimit
 from collections import defaultdict
 import os
 import json
@@ -88,24 +87,14 @@ def series_page_data(series_slug):
         cache.set(f"series_view_data_{series_slug}", series_view_data, 3600 * 12)
     return series_view_data
 
-@ratelimit(key='ip', rate='10/20s', block=True)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
-    series_render = cache.get(f"series_render_{series_slug}")
-    if not series_render:
-        series_render = render(request, 'reader/series_info.html', data)
-        cache.set(f"series_render_{series_slug}", series_render, 3600 * 12)
-    return series_render
+    return render(request, 'reader/series_info.html', data)
 
 @staff_member_required
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
 
-@ratelimit(key='ip', rate='10/20s', block=True)
 def reader(request, series_slug, chapter, page):
-    reader_render = cache.get("reader_render")
-    if not reader_render:
-        reader_render = render(request, 'reader/reader.html', {"slug": series_slug})
-        cache.set("reader_render", reader_render, 3600 * 12)
-    return reader_render
+    return render(request, 'reader/reader.html', {"slug": series_slug})
