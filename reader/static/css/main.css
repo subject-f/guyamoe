@@ -157,6 +157,7 @@ header > h1 {
 	text-align: center;
 	padding: 1rem 0.5rem;
 	font-size: 1rem;
+	flex-grow: 1;
 }
 
 header > .close {
@@ -673,6 +674,10 @@ header > .search:before {
 	color: transparent;
 	text-shadow: none;
 }
+.selector-pinned.nonum .rdr-page-selector-keys div.is-active:hover {
+	color: rgba(255,255,255,1);
+	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;
+}
 
 
 .rdr-page-selector-counter {
@@ -758,6 +763,10 @@ header > .search:before {
 	border-color: transparent transparent #2b2f33 transparent;
 }
 
+.hide-side:hover:before {
+	border-color: transparent transparent #222529 transparent;
+}
+
 .sidebar-hidden aside {
 	margin-left: -16em;
 }
@@ -781,6 +790,9 @@ header > .search:before {
 
 .sidebar-hidden .hide-side::before {
 	border-color: transparent transparent #3a3f44 transparent;
+}
+.sidebar-hidden .hide-side:hover:before {
+	border-color: transparent transparent #2b2f33 transparent;
 }
 
 .zoom-level {
@@ -917,14 +929,25 @@ header > .search:before {
 
 .Tooltippy {
 	position: absolute;
-	padding: 0.4em 0.6em;
-	background: rgba(20,20,20,0.9);
+	padding: 0.4em 0.8em;
+	background: rgba(20,20,20,0.95);
 	border-radius: 2px;
 	box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
 	z-index: 1000;
 	font-size: 11px;
 	pointer-events: none; 
 	display: none;
+}
+
+.Tooltippy .Tooltippy-key {
+	display: inline-block;
+	border: 1px solid rgba(255,255,255,0.2);
+	padding: 0.1em 0.2em;
+	min-width: 1em;
+	text-align: center;
+	border-radius: 2px;
+	font-family: monospace;
+	margin-left: 1ch;
 }
 
 .FauxDrop {
@@ -945,5 +968,13 @@ header > .search:before {
 	display: flex;
 	flex-grow: 1;
 	align-items: center;
+	pointer-events: none;
+}
+
+
+
+
+.disabled {
+	opacity: 0.2;
 	pointer-events: none;
 }
