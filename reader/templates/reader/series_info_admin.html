@@ -28,30 +28,30 @@
             if (days >= 7) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
                $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
-               $(".compact-chapter-upload-date").addClass('text-muted');
+               $($(".compact-chapter-upload-date")[idx]).addClass('text-muted');
             }
             else if (days < 7 && days > 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
                $(".compact-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
-               $(".compact-chapter-upload-date").addClass('text-muted');
+               $($(".compact-chapter-upload-date")[idx]).addClass('text-muted');
             }
             else if (hours > 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
-               $(".detailed-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
                $(".compact-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
-               $(".compact-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             else if (minutes > 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-               $(".detailed-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
                $(".compact-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-               $(".compact-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             else if (seconds > 0) {
                $(".detailed-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
-               $(".detailed-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
                $(".compact-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
-               $(".compact-chapter-upload-date")[idx].css({'color': 'green'});
+               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             idx += 1;
          });
