@@ -8,8 +8,8 @@ class HitCountAdmin(admin.ModelAdmin):
     def series(self, obj):
         print(type(obj.content))
         if isinstance(obj.content, Series):
-            return obj.content.series.name
-        elif isinstance(obj.content, Chapter):
+            return obj.content.name
+        if isinstance(obj.content, Chapter):
             return obj.content.title
         else:
             return obj
