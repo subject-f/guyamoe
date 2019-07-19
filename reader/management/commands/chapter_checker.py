@@ -198,18 +198,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
-        print(options)
         if options['lookup'] == 'all' or options['lookup'] == 'jb':
             for manga in self.jaiminisbox_manga:
                 latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
                 chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
-                # loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
+                loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
         if options['lookup'] == 'all' or options['lookup'] == 'md':
             for manga in self.mangadex_manga:
                 latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
                 chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
                 loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
-        
         if options['dl_md']:
             for manga in self.mangadex_manga:
                 latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
