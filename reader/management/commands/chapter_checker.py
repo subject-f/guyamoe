@@ -17,6 +17,24 @@ import traceback
 class Command(BaseCommand):
     help = 'Import new chapters from JaiminisBox and Mangadex'
 
+    def add_arguments(self, parser):
+        # # Positional arguments
+        parser.add_argument('--lookup', nargs='?', default='all')
+        parser.add_argument('--dl_md', nargs='?')
+
+        # # Named (optional) arguments
+        # parser.add_argument(
+        #     '--jb',
+        #     action='store_true',
+        #     help='lookup specific site. options: jb or md',
+        # )
+        # parser.add_argument(
+        #     '--jb',
+        #     action='store_true',
+        #     help='lookup specific site. options: jb or md',
+        # )
+    
+
     def __init__(self):
         self.browser = None
         self.page = None
@@ -80,7 +98,29 @@ class Command(BaseCommand):
         clear_pages_cache()
         return chapter_folder, str(group.id)
 
-    async def new_chapter_checker(self, downloaded_chapters, series, latest_volume, url):
+    async def mangadex_download(self, chapters, series, group, latest_volume, url=""):
+        for chapter in chapters:
+            chapter_data = await self.get_pages(chapters[chapter])
+            if not chapter_data:
+                print('could not download chapter')
+                continue
+            chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+            padding = len(str(len(chapter_data["pages"])))
+            print(f"Downloading chapter {chapter}...")
+            async with aiohttp.ClientSession() as session:
+                for idx, page in enumerate(chapter_data["pages"]):
+                    extension = page.rsplit(".", 1)[1]
+                    page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+                    async with session.get(page) as resp:
+                        if resp.status == 200:
+                            page_content = await resp.read()
+                            with open(os.path.join(chapter_folder, group_folder, page_file), 'wb') as f:
+                                f.write(page_content)
+                            create_preview_pages(chapter_folder, group_folder, page_file)
+
+            print(f"Successfully downloaded chapter and added to db.")
+
+    async def mangadex_checker(self, downloaded_chapters, series, latest_volume, url):
         chapters = {}
         group = Group.objects.get(pk=self.md_group)
         series = Series.objects.get(slug=series)
@@ -113,26 +153,7 @@ class Command(BaseCommand):
 
             # Get all pages from newly detected chapters
             await self.browser.close()
-            for chapter in chapters:
-                chapter_data = await self.get_pages(chapters[chapter])
-                if not chapter_data:
-                    print('could not download chapter')
-                    continue
-                chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
-                padding = len(str(len(chapter_data["pages"])))
-                print(f"Downloading chapter {chapter}...")
-                async with aiohttp.ClientSession() as session:
-                    for idx, page in enumerate(chapter_data["pages"]):
-                        extension = page.rsplit(".", 1)[1]
-                        page_file = f"{str(idx+1).zfill(padding)}.{extension}"
-                        async with session.get(page) as resp:
-                            if resp.status == 200:
-                                page_content = await resp.read()
-                                with open(os.path.join(chapter_folder, group_folder, page_file), 'wb') as f:
-                                    f.write(page_content)
-                                create_preview_pages(chapter_folder, group_folder, page_file)
-
-                print(f"Successfully downloaded chapter and added to db.")
+            await self.mangadex_download(chapters, series, group, latest_volume)
         except:
             traceback.print_exc()
         finally:
@@ -177,11 +198,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
-        for manga in self.jaiminisbox_manga:
-            latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-            chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
-            loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
-        for manga in self.mangadex_manga:
-            latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-            chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
-            loop.run_until_complete(self.new_chapter_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
+        print(options)
+        if options['lookup'] == 'all' or options['lookup'] == 'jb':
+            for manga in self.jaiminisbox_manga:
+                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
+                # loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
+        if options['lookup'] == 'all' or options['lookup'] == 'md':
+            for manga in self.mangadex_manga:
+                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+                loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
+        
+        if options['dl_md']:
+            for manga in self.mangadex_manga:
+                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+                loop.run_until_complete(self.mangadex_download({}, manga, self.md_group, latest_volume, url=options["dl_md"]))
