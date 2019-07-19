@@ -8,9 +8,11 @@ class HitCountAdmin(admin.ModelAdmin):
     def series(self, obj):
         print(type(obj.content))
         if isinstance(obj.content, Series):
-            return obj.content.name
-        else:
             return obj.content.series.name
+        elif isinstance(obj.content, Chapter):
+            return obj.content.title
+        else:
+            return obj
 
 admin.site.register(HitCount, HitCountAdmin)
 admin.site.register(Person)
@@ -20,7 +22,7 @@ admin.site.register(Series)
 
 class VolumeAdmin(admin.ModelAdmin):
     ordering = ('volume_number',)
-    # list_display = ('volume_number', 'series', 'volume_cover', )
+    list_display = ('volume_number', 'series', 'volume_cover', )
 
     exclude=("volume_cover ",)
     def get_readonly_fields(self, request, obj=None):

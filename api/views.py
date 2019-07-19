@@ -102,6 +102,7 @@ def get_volume_covers(request, series_slug):
 
 def clear_series_cache(series_slug):
     cache.delete(f"series_api_data_{series_slug}")
+    cache.delete(f"series_page_data_{series_slug}")
     cache.delete(f"groups_data_{series_slug}")
     cache.delete(f"vol_covers_{series_slug}")
 

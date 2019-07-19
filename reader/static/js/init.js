@@ -150,7 +150,7 @@ function SettingsHandler(){
 		'selectorPinned',
 		'Page selector',
 		['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
-		'hide',
+		'selector-fade',
 		{
 			'selector-pinned': 'Page selector pinned with number.',
 			'selector-pinned-nonum': 'Page selector pinned without number.',
@@ -298,20 +298,29 @@ function UI_Tooltippy(o) {
 	var tip = e.target.getAttribute('data-tip');
 		if(tip) {
 		var rect = e.target.getBoundingClientRect()
+		var align = e.target.getAttribute('data-tip-align')
 			this.set(tip);
 			this.$.style.display = 'block';
-			this.$.style.bottom = window.innerHeight - rect.top + 10 + 'px';
+			if(align == 'right')
+				this.$.style.bottom = window.innerHeight - rect.top - rect.height + this.$.offsetHeight + 2 + 'px';
+			else
+				this.$.style.bottom = window.innerHeight - rect.top + 2 + 'px';
 			if(e.pageX > window.innerWidth / 2) {
 				this.$.style.left = 'unset';
 				this.$.style.right = window.innerWidth - rect.left - rect.width + 'px';
 			}else{
 				this.$.style.right = 'unset';
-				this.$.style.left = rect.left + 'px';
+				if(align == 'right')
+					this.$.style.left = rect.left + rect.width + 4 + 'px';
+				else
+					this.$.style.left = rect.left + 'px';
 			}
 		}
 	}
 
 	this.set = function(text) {
+		if(text.length < 1) return;
+		text = text.replace(/\[(.)\]/, '<span class="Tooltippy-key">$1</span>')
 		this.$.innerHTML = text;
 		this.$.classList.remove('fadeOut');
 		clearTimeout(this.fader);
@@ -322,10 +331,11 @@ function UI_Tooltippy(o) {
 		this.$.style.display = 'none';
 	}
 
-	this.attach = function(element, text) {
+	this.attach = function(element, text, align) {
 		element.onmouseover = e => this.handler(e);
 		element.onmouseleave = e => this.reset()
 		element.setAttribute('data-tip', text);
+		if(align) element.setAttribute('data-tip-align', align);
 		return this;
 	}
 }
@@ -349,6 +359,8 @@ function UI_Reader(o) {
 		.pre(() => this._.image_container.focus())
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
+		.attach('prevVo', ['Comma'], e => this.prevVolume())
+		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.all.fit.cycle())
 		.attach('layout', ['KeyD'], e => Settings.all.layout.cycle())
 		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
@@ -483,8 +495,30 @@ function UI_Reader(o) {
 		this.imageView.drawImages(chapterObj.images[group]);
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(chapterObj.volume, true);
+
+		if(this.SCP.chapter == this.current.chaptersIndex[this.current.chaptersIndex.length - 1]) {
+			this._.chap_next.classList.add('disabled');
+		}else{
+			this._.chap_next.classList.remove('disabled');
+		}
+		if(this.SCP.chapter == this.current.chaptersIndex[0]) {
+			this._.chap_prev.classList.add('disabled');
+		}else{
+			this._.chap_prev.classList.remove('disabled');
+		}
+		if(this.SCP.volume >= Math.max.apply(null, Object.keys(this.current.volMap))) {
+			this._.vol_next.classList.add('disabled');
+		}else{
+			this._.vol_next.classList.remove('disabled');
+		}
+		if(this.SCP.volume <= Math.min.apply(null, Object.keys(this.current.volMap))) {
+			this._.vol_prev.classList.add('disabled');
+		}else{
+			this._.vol_prev.classList.remove('disabled');
+		}
+
 		this._.page_selector.classList.add('vis')
-		setTimeout(() => this._.page_selector.classList.remove('vis'), 2000);
+		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this.plusOne();
 		this.selector_page.clearPreload();
 		this.displayPage();
@@ -498,7 +532,7 @@ function UI_Reader(o) {
 		else
 			if(page !== undefined) this.SCP.page = page;
 		this.imageView.selectPage(this.SCP.page, dry);
-		this.messageBox.displayMessage(this.SCP.page +'/'+ (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1), 'none', 1000000)
+		this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
 		this.S.out('SCP', this.SCP);
 	}
 
@@ -670,16 +704,16 @@ function UI_Reader(o) {
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
 
 	Tooltippy
-		.attach(this._.chap_prev, 'Previous chapter')
-		.attach(this._.chap_next, 'Next chapter')
-		.attach(this._.vol_prev, 'Previous volume')
-		.attach(this._.vol_next, 'Next volume')
-		.attach(this._.preload_button, 'Change preload')
-		.attach(this._.layout_button, 'Change layout direction')
-		.attach(this._.fit_button, 'Change fit mode')
-		.attach(this._.sel_pin_button, 'Pin page selector')
-		// .attach(this._.sidebar_button, 'Show/hide sidebar')
-		.attach(this._.previews_button, 'Show previews')
+		.attach(this._.chap_prev, 'Previous chapter [[]')
+		.attach(this._.chap_next, 'Next chapter []]')
+		.attach(this._.vol_prev, 'Previous volume [,]')
+		.attach(this._.vol_next, 'Next volume [.]')
+		.attach(this._.preload_button, 'Change preload [L]')
+		.attach(this._.layout_button, 'Change layout direction [D]')
+		.attach(this._.fit_button, 'Change fit mode [F]')
+		.attach(this._.sel_pin_button, 'Pin page selector [N]')
+		.attach(this._.sidebar_button, 'Show/hide sidebar [S]', 'right')
+		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
