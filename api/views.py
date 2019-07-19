@@ -79,6 +79,8 @@ def upload_new_chapter(request, series_slug):
         if os.path.exists(os.path.join(chapter_folder, group_folder)):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
         os.makedirs(os.path.join(chapter_folder, group_folder))
+        os.makedirs(os.path.join(chapter_folder, f"{group_folder}_shrunk"))
+        os.makedirs(os.path.join(chapter_folder, f"{group_folder}_shrunk_blur"))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
             all_pages = sorted(zip_file.namelist())
             padding = len(str(len(all_pages)))
