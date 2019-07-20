@@ -39,10 +39,9 @@ def series_data(request, series_slug):
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
-        groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
+        groups_data = {str(group.id) : group.name for group in Group.objects.all()}
         cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
     return HttpResponse(JsonResponse({"groups": groups_data}))
-
 
 def random_chars():
     return ''.join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
