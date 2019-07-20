@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.db import IntegrityError
 from django.core.cache import cache
 from datetime import datetime, timezone
-from reader.models import Series, Volume, Chapter, Group
+from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from PIL import ImageFilter, Image
 import random
 import os
@@ -101,6 +101,17 @@ def get_volume_covers(request, series_slug):
             covers = {"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
+
+def search_index(request, series_slug):
+    if request.POST:
+        search_query = request.POST["searchQuery"]
+        search_results = []
+        for word in search_query.split():
+            word_query = ChapterIndex.objects.filter(word=word.upper()).first()
+            if word_query:
+                chapter_and_pages = word_query.chapter_and_pages
+                search_results.append({word : chapter_and_pages})
+        return HttpResponse(json.dumps(search_results), content_type="application/json")
 
 def clear_series_cache(series_slug):
     cache.delete(f"series_api_data_{series_slug}")
