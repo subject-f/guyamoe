@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.postgres.fields import JSONField
 from datetime import datetime, timezone
 import os
+import json
 
 class HitCount(models.Model):
     content = GenericForeignKey('content_type', 'object_id')
@@ -44,7 +46,7 @@ def path_file_name(instance, filename):
     return os.path.join("manga", instance.series.slug, "volume_covers", str(instance.volume_number), filename)
 
 class Volume(models.Model):
-    volume_number = models.PositiveIntegerField(blank=False, null=False)
+    volume_number = models.PositiveIntegerField(blank=False, null=False, db_index=True)
     series = models.ForeignKey(Series, blank=False, null=False, on_delete=models.CASCADE)
     volume_cover = models.ImageField(blank=True, upload_to=path_file_name)
 
@@ -55,11 +57,11 @@ class Volume(models.Model):
 class Chapter(models.Model):
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, blank=True)
-    chapter_number = models.FloatField(blank=False, null=False)
+    chapter_number = models.FloatField(blank=False, null=False, db_index=True)
     folder = models.CharField(max_length=255, blank=True, null=True)
-    volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
+    volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None, db_index=True)
     group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
-    uploaded_on = models.DateTimeField(default=None, blank=True, null=True)
+    uploaded_on = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
 
     def clean_chapter_number(self):
         return str(int(self.chapter_number)) if self.chapter_number % 1 == 0 else str(self.chapter_number)
@@ -95,3 +97,11 @@ class Chapter(models.Model):
     class Meta:
         ordering = ('chapter_number',)
         unique_together = ('chapter_number', 'series', 'group',)
+
+
+class ChapterIndex(models.Model):
+    word = models.CharField(max_length=48, unique=True, db_index=True)
+    chapter_and_pages = JSONField()
+
+    def __str__(self):
+        return self.word
