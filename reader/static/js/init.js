@@ -486,6 +486,7 @@ function UI_Reader(o) {
 		if(chapter) this.SCP.chapter = chapter;
 	var chapterObj = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = chapterObj.volume;
+		this.SCP.chapterName = chapterObj.title
 	var group = Settings.all.groupPreference.get();
 		if(group === undefined || chapterObj.groups[group] == undefined) {
 			group = Object.keys(chapterObj.groups)[0];
@@ -1106,11 +1107,14 @@ function URLChanger(o) {
 	this.updateURL = function(SCP) {
 		window.history.replaceState(
 			{},
-			Reader.current.title
-				+ ' - Chapter '
-				+ SCP.chapter
+			SCP.chapter
+				+ ' - '
+				+ SCP.chapterName
 				+ ', Page '
-				+ (SCP.page + 1),
+				+ (SCP.page + 1)
+				+ ' - '
+				+ Reader.current.title
+				+ ' :: Guya',
 			"/reader/series/"
 				+ SCP.series
 				+ '/'
@@ -1118,11 +1122,14 @@ function URLChanger(o) {
 				+ '/'
 				+ (SCP.page + 1)
 		);
-		document.title = Reader.current.title
-				+ ' - Chapter '
-				+ SCP.chapter
+		document.title = SCP.chapter
+				+ ' - '
+				+ SCP.chapterName
 				+ ', Page '
 				+ (SCP.page + 1)
+				+ ' - '
+				+ Reader.current.title
+				+ ' :: Guya'
 	}
 
 	this.S.mapIn({
