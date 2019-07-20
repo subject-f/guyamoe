@@ -582,7 +582,7 @@ function UI_Reader(o) {
 
 
 	this.nextChapter = function(){
-		if(this.SCP.chapter < this.current.chaptersIndex.length - 1) {
+		if(this.SCP.chapter != this.SCP.lastChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
 			this.drawChapter(
@@ -592,13 +592,14 @@ function UI_Reader(o) {
 		}
 	}
 	this.prevChapter = function(page) {
-		if(this.SCP.chapter > 1)
+		if(this.SCP.chapter != this.SCP.firstChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
 			this.drawChapter(
 				this.current.chaptersIndex[index - 1],
 				page || 0
 			)
+		}
 	}
 	this.nextPage = function(){
 		if(this.SCP.page < this.SCP.lastPage) 
