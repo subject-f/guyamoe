@@ -172,8 +172,8 @@ function SettingsHandler(){
 		['hide', 'show'],
 		'show',
 		{
-			'hide': 'Sidebar hidden.',
-			'show': 'Sidebar shown.',
+			'hide': '',
+			'show': '',
 		}
 	)
 	this.all.previews = new Setting(
@@ -246,11 +246,12 @@ function Setting(name, prettyName, options, dflt, strings) {
 	this.setting = dflt;
 	this.options = options;
 	this.strings = strings;
-	this.cycle = function() {
-		if(this.options) {
-		var index = this.options.indexOf(this.setting);
+	this.cycle = function(options) {
+		options = options || this.options;
+		if(options) {
+		var index = options.indexOf(this.setting);
 			this.set(
-				(index+1 > this.options.length - 1)?this.options[0]:this.options[index+1]
+				(index+1 > options.length - 1)?options[0]:options[index+1]
 			);
 		}
 		return this;
@@ -298,13 +299,14 @@ function UI_Tooltippy(o) {
 	var tip = e.target.getAttribute('data-tip');
 		if(tip) {
 		var rect = e.target.getBoundingClientRect()
+		var bodyRect = document.body.getBoundingClientRect();
 		var align = e.target.getAttribute('data-tip-align')
 			this.set(tip);
 			this.$.style.display = 'block';
 			if(align == 'right')
-				this.$.style.bottom = window.innerHeight - rect.top - rect.height + this.$.offsetHeight + 2 + 'px';
+				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) - rect.height + this.$.offsetHeight + 2 + 'px';
 			else
-				this.$.style.bottom = window.innerHeight - rect.top + 2 + 'px';
+				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + 2 + 'px';
 			if(e.pageX > window.innerWidth / 2) {
 				this.$.style.left = 'unset';
 				this.$.style.right = window.innerWidth - rect.left - rect.width + 'px';
@@ -392,8 +394,7 @@ function UI_Reader(o) {
 	this.selector_chap = new UI_FauxDrop({
 		node: this._.selector_chap
 	}).S.linkAnonymous('value', value => {
-		this.SCP.page = 0;
-		this.drawChapter(value);
+		this.drawChapter(value, 0);
 	});
 	this.selector_vol = new UI_FauxDrop({
 		node: this._.selector_vol
@@ -432,6 +433,8 @@ function UI_Reader(o) {
 
 	this.drawReader = function(slug) {
 		if(slug) this.SCP.series = slug;
+		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
+		this.SCP.firstChapter = this.current.chaptersIndex[0];
 		this._.title.innerHTML = this.current.title;
 	var chapterElements = [];
 	var volElements = {};
@@ -471,16 +474,18 @@ function UI_Reader(o) {
 		this.drawChapter()
 	}
 
-	this.drawChapter = function(chapter) {
+	this.drawChapter = function(chapter, page) {
 		if(chapter) this.SCP.chapter = chapter;
 	var chapterObj = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = chapterObj.volume;
+
 	var group = Settings.all.groupPreference.get();
 		if(group === undefined || chapterObj.groups[group] == undefined) {
 			group = Object.keys(chapterObj.groups)[0];
 		}
 		this.SCP.group = group;
 		this.SCP.pageCount = chapterObj.groups[group].length;
+		this.SCP.lastPage = this.SCP.pageCount - 1;
 
 		this.groupList.clear();
 	var groupElements = {};
@@ -496,12 +501,12 @@ function UI_Reader(o) {
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(chapterObj.volume, true);
 
-		if(this.SCP.chapter == this.current.chaptersIndex[this.current.chaptersIndex.length - 1]) {
+		if(this.SCP.chapter == this.SCP.lastChapter) {
 			this._.chap_next.classList.add('disabled');
 		}else{
 			this._.chap_next.classList.remove('disabled');
 		}
-		if(this.SCP.chapter == this.current.chaptersIndex[0]) {
+		if(this.SCP.chapter == this.SCP.firstChapter) {
 			this._.chap_prev.classList.add('disabled');
 		}else{
 			this._.chap_prev.classList.remove('disabled');
@@ -521,14 +526,14 @@ function UI_Reader(o) {
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 		this.plusOne();
 		this.selector_page.clearPreload();
-		this.displayPage();
+		this.displayPage(page);
 		this.showPreviews(Settings.all.previews.get());
 		return this;
 	}
 
 	this.displayPage = function(page, dry) {
 		if(page == 'last')
-			this.SCP.page = this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1;
+			this.SCP.page = this.SCP.lastPage;
 		else
 			if(page !== undefined) this.SCP.page = page;
 		this.imageView.selectPage(this.SCP.page, dry);
@@ -580,23 +585,23 @@ function UI_Reader(o) {
 		if(this.SCP.chapter < this.current.chaptersIndex.length - 1) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
-			this.SCP.page = 0;
 			this.drawChapter(
-				this.current.chaptersIndex[index + 1]
+				this.current.chaptersIndex[index + 1],
+				0
 			)
 		}
 	}
-	this.prevChapter = function() {
+	this.prevChapter = function(page) {
 		if(this.SCP.chapter > 1)
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
-			this.SCP.page = 0;
 			this.drawChapter(
-				this.current.chaptersIndex[index - 1]
+				this.current.chaptersIndex[index - 1],
+				page || 0
 			)
 	}
 	this.nextPage = function(){
-		if(this.SCP.page < this.current.chapters[this.SCP.chapter].images[this.SCP.group].length - 1) 
+		if(this.SCP.page < this.SCP.lastPage) 
 			this.displayPage(this.SCP.page + 1)
 		else {
 			this.nextChapter();
@@ -606,8 +611,7 @@ function UI_Reader(o) {
 		if(this.SCP.page > 0) 
 			this.displayPage(this.SCP.page - 1)
 		else {
-			this.prevChapter();
-			this.displayPage('last');
+			this.prevChapter('last');
 		}
 	}
 	this.nextVolume = function(){
@@ -690,10 +694,10 @@ function UI_Reader(o) {
 		})[o.setting](o.value)
 	}
 
-	this._.chap_prev.onmousedown = e => this.prevChapter(e);
-	this._.chap_next.onmousedown = e => this.nextChapter(e);
-	this._.vol_prev.onmousedown = e => this.prevVolume(e);
-	this._.vol_next.onmousedown = e => this.nextVolume(e);
+	this._.chap_prev.onmousedown = e => this.prevChapter();
+	this._.chap_next.onmousedown = e => this.nextChapter();
+	this._.vol_prev.onmousedown = e => this.prevVolume();
+	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.preload_button.onmousedown = e => Settings.all.preload.cycle();
 	this._.layout_button.onmousedown = e => Settings.all.layout.cycle();
 	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
@@ -743,6 +747,7 @@ function UI_ReaderImageView(o) {
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
 	this.drawImages = function(images) {
+		this.imageContainer.$.style.transition = '';
 		this.imageContainer.clear();
 	var imageInstances = [];
 		images.forEach((url, index) => {
@@ -764,7 +769,7 @@ function UI_ReaderImageView(o) {
 	var direction = (Settings.all.layout.get() == 'rtl')?-1:1;
 	var loadIndex = realIndex;
 		if(Settings.all.preload.get()==100)
-			loadIndex = 0;
+			loadIndex = direction==-1?this.imageContainer.$.children.length - 1:0;
 		for(var i = -1; i < Settings.all.preload.get() + 1; i++){
 		var image = this.imageContainer.get(i*direction + loadIndex);
 			if(image) image.load(); else continue;
@@ -786,7 +791,7 @@ function UI_ReaderImageView(o) {
 					})
 			}
 		}else{
-			this.imageContainer.$.style.left = -1 * 100 * realIndex - 0.001 + '%';
+			this.imageContainer.$.style.transform = 'translateX(' + (-100 * realIndex - 0.001) + '%)';
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
 			// setTimeout(() => {
 				// this.imageContainer.selectedItems[0].$.style.top = 0;
@@ -831,21 +836,136 @@ function UI_ReaderImageView(o) {
 				this.imageContainer.selectedItems[0].$.prevSibling.style.top = this.$.scrollTop + 'px';
 		}
 	}
-	this.mouseHandler = function(e) {
+
+const SCROLL = 1;
+const SWIPE = 2;
+const SCROLL_X = 3;
+
+	this.toucha = {
+		start: 0,
+		startY: 0,
+		leftPos: 0,
+		transitionTimer: null,
+		delta: 0,
+		deltaY: 0,
+		em: parseFloat(getComputedStyle(document.body).fontSize),
+		watdo: null,
+		time: null,
+		escapeVelocity: 0.1,
+		escapeDelta: 40,
+		imagePosition: 0
+	};
+
+	this._.image_container.ontouchstart = e => {
 		if(Settings.all.layout.get() == 'ttb') return;
+		this.toucha.leftPos = parseFloat(this._.image_container.style.transform.replace(/[^\d\.-]/g, ''));
+		this.toucha.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
+		this.toucha.startY = e.touches[0].pageY;
+		this._.image_container.style.transition = '';
+		this.toucha.watdo = null;
+		this.toucha.delta = 0;
+		this.toucha.deltaY = 0;
+		this.toucha.time = Date.now();
+	var maxScroll = this.imageContainer.selectedItems[0]._.image.offsetWidth - this.imageContainer.selectedItems[0].$.offsetWidth;
+		if(maxScroll <= 0){
+			this.toucha.imagePosition = null;
+		}else if(this.imageContainer.selectedItems[0].$.scrollLeft == maxScroll) {
+			this.toucha.imagePosition = 1;
+		}else if(this.imageContainer.selectedItems[0].$.scrollLeft == 0) {
+			this.toucha.imagePosition = -1;
+		}else{
+			this.toucha.imagePosition = 0;
+		}
+		console.log(maxScroll, this.toucha.imagePosition, this.imageContainer.selectedItems[0].$.scrollLeft)
+	}
+
+	this._.image_container.ontouchmove = e => {
+		if(this.toucha.watdo == SCROLL) return;
+		if(Settings.all.layout.get() == 'ttb') return;
+		this.toucha.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.toucha.start;
+		if(this.toucha.imagePosition == 0
+		|| this.toucha.imagePosition == 1 && this.toucha.delta > 0
+		|| this.toucha.imagePosition == -1 && this.toucha.delta < 0)
+			return this.toucha.watdo = SCROLL_X;
+		this.toucha.deltaY = e.touches[0].pageY - this.toucha.startY;
+		this._.image_container.style.transform = 'translateX(' + (this.toucha.leftPos + this.toucha.delta) + '%)';
+		if(this.toucha.watdo == SWIPE) return e.preventDefault();
+		if(Math.abs(this.toucha.delta) > 5) {
+			this.toucha.watdo = SWIPE;
+		}
+		if(Math.abs(this.toucha.deltaY) > this.toucha.em * 1.2) {
+			this.toucha.watdo = SCROLL;
+			this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
+		}
+	}
+
+	this._.image_container.ontouchend = e => {
+		if(this.toucha.watdo == SCROLL_X || this.toucha.watdo == SCROLL) return;
+		if(Settings.all.layout.get() == 'ttb') return;
+		clearTimeout(this.toucha.transitionTimer);
+		this._.image_container.style.transition = 'transform 0.4s ease';
+	var ms = Date.now() - this.toucha.time;
+	var velocity = this.toucha.delta / ms;
+		
+		if(velocity < this.toucha.escapeVelocity * -1 || this.toucha.delta < this.toucha.escapeDelta * -1) {
+			Settings.all.layout.get() == 'rtl'?Reader.prevPage():Reader.nextPage();
+		}else{
+			if(velocity > this.toucha.escapeVelocity || this.toucha.delta > this.toucha.escapeDelta) {
+				Settings.all.layout.get() == 'rtl'?Reader.nextPage():Reader.prevPage();
+			}else{
+				this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
+			}
+		}
+		this.toucha.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 400)
+	}
+
+
+	this.mouseHandler = function(e) {
 		if(e.button != 0) return;
 	var box = this.$.getBoundingClientRect();
-	var cutoff = box.width * 0.35 + box.left;
-	var scroll = box.width + box.left - 30;
-		if(e.pageX > cutoff) {
-			if(e.pageX < scroll)
-				(Settings.all.layout.get() == 'ltr')?
-					this.next(e):
-					this.prev(e);
-		}else if(e.pageX > box.left){
-			(Settings.all.layout.get() == 'ltr')?
-				this.prev(e):
-				this.next(e);
+	var areas = [
+			0,
+			box.width * 0.35 + box.left,
+			box.width * 0.5 + box.left,
+			box.width * 0.65 + box.left,
+			box.width + box.left
+		];
+		areas.push(e.pageX);
+		areas.sort((a,b) => a - b);
+		console.log(areas)
+		switch (areas.indexOf(e.pageX)) {
+			case 1:
+				if(Settings.all.layout.get() != 'ttb')
+					(Settings.all.layout.get() == 'ltr')?
+						this.prev(e):
+						this.next(e);
+				break;
+			case 2:
+				if(IS_MOBILE)
+					Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+				else
+					if(Settings.all.layout.get() != 'ttb')
+						(Settings.all.layout.get() == 'ltr')?
+							this.prev(e):
+							this.next(e);
+				break;
+			case 3:
+				if(IS_MOBILE)
+					Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+				else
+					if(Settings.all.layout.get() != 'ttb')
+						(Settings.all.layout.get() == 'ltr')?
+							this.next(e):
+							this.prev(e);
+				break;
+			case 4:
+				if(Settings.all.layout.get() != 'ttb')
+					(Settings.all.layout.get() == 'ltr')?
+						this.next(e):
+						this.prev(e);
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -921,7 +1041,7 @@ function UI_PageSelector(o) {
 			this.keys.clear().add(keys)
 		}
 		this.keys.select(SCP.page, undefined, undefined, true)
-		// this._.page_keys_count.innerHTML = SCP.page + 1;
+		this._.page_keys_count.innerHTML = SCP.page + 1 + '/' + (SCP.pageCount);
 	}
 	this.proxy = function(i) {
 		this.S.out('page', i);
