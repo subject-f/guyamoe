@@ -211,6 +211,11 @@ header > .search:before {
 	height: 2rem;
 }
 
+.rdr-selector-top .is-ico-button,
+.rdr-selector-bot .is-ico-button {
+	height: 2rem;
+}
+
 .rdr-selector-mid {
 	height: 2.5rem;
 	background: #2b2f33;
@@ -273,11 +278,6 @@ header > .search:before {
 }
 
 
-.rdr-selector-top
- .is-ico-button {
-	height: 2.5rem;
-	width: 3rem;
-}
 .rdr-selector-vol {
 	height: 2rem;
 }
@@ -333,6 +333,14 @@ header > .search:before {
 	content: "\e907";
 	transform: rotate(90deg);
 }
+.rdr-comment.is-ico-button:before {
+	content: "\e91d";
+	font-size:0.9em;
+}
+.rdr-share.is-ico-button:before {
+	content: "\e91e";	
+}
+
 .is-ico-button.preload:before {
 	content: "\e90a";
 }
@@ -362,15 +370,6 @@ header > .search:before {
 }
 .Reader[data-preload="100"] .is-ico-button.preload:before {
 	content: "\e91b";
-}
-.rdr-comment.is-ico-button:before {
-	content: "\e91d";
-font-size:0.9em;
-}
-.rdr-share.is-ico-button:before {
-	content: "\e91e";
-	
-	
 }
 .rdr-page-selector .preloaded {
 	border-left-color: #6699b9;
@@ -923,6 +922,10 @@ font-size:0.9em;
 	left: 0;
 	top: 0;
 	bottom: 0;
+	opacity: 0;
+}
+
+#rdr-vol, #rdr-chap {
 	opacity: 0;
 }
 

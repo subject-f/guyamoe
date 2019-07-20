@@ -368,6 +368,13 @@ function UI_Reader(o) {
 		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
 		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
 		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
+		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
+		.attach('comments', ['KeyC'], s => {
+			window.location.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
+		})
+		.attach('share', ['KeyR'], s => {
+			this.copyShortLink(s);
+		})
 		.attach('minus', ['Minus'], s => {
 			Settings.all.fit.set('fit-width')
 			Settings.all.zoom.prev()
@@ -376,7 +383,6 @@ function UI_Reader(o) {
 			Settings.all.fit.set('fit-width')
 			Settings.all.zoom.next()
 		})
-		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
 
 	new KeyListener()
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -480,10 +486,6 @@ function UI_Reader(o) {
 		if(chapter) this.SCP.chapter = chapter;
 	var chapterObj = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = chapterObj.volume;
-
-
-	this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
-	
 	var group = Settings.all.groupPreference.get();
 		if(group === undefined || chapterObj.groups[group] == undefined) {
 			group = Object.keys(chapterObj.groups)[0];
@@ -529,10 +531,12 @@ function UI_Reader(o) {
 
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
-		this.plusOne();
+
 		this.selector_page.clearPreload();
 		this.displayPage(page);
 		this.showPreviews(Settings.all.previews.get());
+		this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
+		this.plusOne();
 		return this;
 	}
 
@@ -544,7 +548,6 @@ function UI_Reader(o) {
 		this.imageView.selectPage(this.SCP.page, dry);
 		//this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
 		this.S.out('SCP', this.SCP);
-		this._.share_button.href = '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
 	}
 
 	this.showPreviews = function(state) {
@@ -626,6 +629,16 @@ function UI_Reader(o) {
 	}
 	this.prevVolume = function(){
 		this.selectVolume(+this.SCP.volume-1)
+	}
+
+	this.copyShortLink = function() {
+	var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
+		navigator.clipboard.writeText(url)
+		.then(function() {
+		  Tooltippy.set('Link copied to clipboard!');
+		}, function(err) {
+		  Tooltippy.set('Link copy failed ('+url+')');
+		});
 	}
 
 	this.setFit = function(fit) {
@@ -713,6 +726,7 @@ function UI_Reader(o) {
 	this._.previews_button.onmousedown = e => Settings.all.previews.cycle();
 	this._.zoom_level_plus.onmousedown = e => Settings.all.zoom.next();
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
+	this._.share_button.onmousedown = e => this.copyShortLink(e);
 
 	Tooltippy
 		.attach(this._.chap_prev, 'Previous chapter [[]')
@@ -725,6 +739,8 @@ function UI_Reader(o) {
 		.attach(this._.sel_pin_button, 'Pin page selector [N]')
 		.attach(this._.sidebar_button, 'Show/hide sidebar [S]', 'right')
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
+		.attach(this._.comment_button, 'Go to comments [C]')
+		.attach(this._.share_button, 'Copy short link [R]')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
