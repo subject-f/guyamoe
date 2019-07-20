@@ -782,15 +782,17 @@ function UI_ReaderImageView(o) {
 					left: 0,
 					top: pageElement.offsetTop
 				})
-				if(pageElement.offsetTop > 0)
+				if(pageElement.offsetTop > 0) {
+				var bodyRect = document.body.getBoundingClientRect();
 					document.documentElement.scrollTo({
 						left: 0,
 						top:
 							Math.round(
 								pageElement.offsetTop
-								+ (this._.image_container.getBoundingClientRect()).top
+								+ (this._.image_container.getBoundingClientRect().top - bodyRect.top)
 							)
 					})
+				}
 			}
 		}else{
 			this.imageContainer.$.style.transform = 'translateX(' + (-100 * realIndex - 0.001) + '%)';
