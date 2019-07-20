@@ -15,6 +15,7 @@
 			CSRF_TOKEN = "{{ csrf_token }}"
 		</script>
 	</head>
+	
 <body>
 	<main id="rdr-main" class="ltr">
 		<aside>
@@ -28,7 +29,11 @@
 				<section class="rdr-selector">
 					<div class="rdr-selector-top">
 						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev" data-tip="Previous volume"></button>
-						<div id="message-box" data-bind='message'></div>
+						<div class="flex-spacer" data-bind='message'></div>
+						
+						
+						<a data-bind='share_button' class="rdr-share is-ico-button "></a>
+						<a data-bind='comment_button' class="rdr-comment is-ico-button"></a>
 					</div>
 					<div class="rdr-selector-mid">
 						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>

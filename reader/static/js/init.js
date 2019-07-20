@@ -465,8 +465,10 @@ function UI_Reader(o) {
 		setTimeout(() => {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
-		}, 3000);
+	}, 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
+		
+	
 	}
 
 	this.drawGroup = function(group) {
@@ -478,7 +480,8 @@ function UI_Reader(o) {
 		if(chapter) this.SCP.chapter = chapter;
 	var chapterObj = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = chapterObj.volume;
-
+this._.share_button.href = '/' + this.SCP.chapter + '/'+ this.SCP.page;
+	this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
 	var group = Settings.all.groupPreference.get();
 		if(group === undefined || chapterObj.groups[group] == undefined) {
 			group = Object.keys(chapterObj.groups)[0];
@@ -537,7 +540,7 @@ function UI_Reader(o) {
 		else
 			if(page !== undefined) this.SCP.page = page;
 		this.imageView.selectPage(this.SCP.page, dry);
-		this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
+		//this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
 		this.S.out('SCP', this.SCP);
 	}
 
@@ -882,7 +885,7 @@ const SCROLL_X = 3;
 		}else{
 			this.toucha.imagePosition = 0;
 		}
-Reader.messageBox.displayMessage(maxScroll +' '+this.toucha.imagePosition +' '+this.imageContainer.selectedItems[0].$.scrollLeft)
+
 	}
 
 	this._.image_container.ontouchmove = e => {

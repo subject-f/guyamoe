@@ -272,6 +272,12 @@ header > .search:before {
 	width: 2.5rem;
 }
 
+
+.rdr-selector-top
+ .is-ico-button {
+	height: 2.5rem;
+	width: 3rem;
+}
 .rdr-selector-vol {
 	height: 2rem;
 }
@@ -357,7 +363,15 @@ header > .search:before {
 .Reader[data-preload="100"] .is-ico-button.preload:before {
 	content: "\e91b";
 }
-
+.rdr-comment.is-ico-button:before {
+	content: "\e91d";
+font-size:0.9em;
+}
+.rdr-share.is-ico-button:before {
+	content: "\e91e";
+	
+	
+}
 .rdr-page-selector .preloaded {
 	border-left-color: #6699b9;
 }
