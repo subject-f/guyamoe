@@ -875,13 +875,14 @@ const SCROLL_X = 3;
 	var maxScroll = this.imageContainer.selectedItems[0]._.image.offsetWidth - this.imageContainer.selectedItems[0].$.offsetWidth;
 		if(maxScroll <= 0){
 			this.toucha.imagePosition = null;
-		}else if(this.imageContainer.selectedItems[0].$.scrollLeft == maxScroll) {
-			this.toucha.imagePosition = 1;
-		}else if(this.imageContainer.selectedItems[0].$.scrollLeft == 0) {
+		}else if(Math.abs(this.imageContainer.selectedItems[0].$.scrollLeft) >= maxScroll-2) {
 			this.toucha.imagePosition = -1;
+		}else if(Math.abs(this.imageContainer.selectedItems[0].$.scrollLeft) == 0) {
+			this.toucha.imagePosition = 1;
 		}else{
 			this.toucha.imagePosition = 0;
 		}
+Reader.messageBox.displayMessage(maxScroll +' '+this.toucha.imagePosition +' '+this.imageContainer.selectedItems[0].$.scrollLeft)
 	}
 
 	this._.image_container.ontouchmove = e => {
