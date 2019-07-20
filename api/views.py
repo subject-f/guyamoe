@@ -105,12 +105,12 @@ def get_volume_covers(request, series_slug):
 def search_index(request, series_slug):
     if request.POST:
         search_query = request.POST["searchQuery"]
-        search_results = []
-        for word in search_query.split():
+        search_results = {}
+        for word in set(search_query.split()[:20]):
             word_query = ChapterIndex.objects.filter(word=word.upper()).first()
             if word_query:
                 chapter_and_pages = word_query.chapter_and_pages
-                search_results.append({word : chapter_and_pages})
+                search_results[word] = chapter_and_pages
         return HttpResponse(json.dumps(search_results), content_type="application/json")
 
 def clear_series_cache(series_slug):
