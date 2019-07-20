@@ -776,6 +776,8 @@ function UI_ReaderImageView(o) {
 		}
 		if(Settings.all.layout.get() == 'ttb'){
 			if(!dry) {
+				this.scrollPreventer = true;
+				setTimeout(() => this.scrollPreventer = false, 200);
 				this._.image_container.scrollTo({
 					left: 0,
 					top: pageElement.offsetTop
@@ -813,6 +815,7 @@ function UI_ReaderImageView(o) {
 
 
 	document.onscroll = this._.image_container.onscroll = e => {
+		if(this.scrollPreventer) return;
 		if(Settings.all.layout.get() == 'ttb') {
 
 		var st = (
@@ -876,7 +879,6 @@ const SCROLL_X = 3;
 		}else{
 			this.toucha.imagePosition = 0;
 		}
-		console.log(maxScroll, this.toucha.imagePosition, this.imageContainer.selectedItems[0].$.scrollLeft)
 	}
 
 	this._.image_container.ontouchmove = e => {
@@ -889,10 +891,10 @@ const SCROLL_X = 3;
 			return this.toucha.watdo = SCROLL_X;
 		this.toucha.deltaY = e.touches[0].pageY - this.toucha.startY;
 		this._.image_container.style.transform = 'translateX(' + (this.toucha.leftPos + this.toucha.delta) + '%)';
-		if(this.toucha.watdo == SWIPE) return e.preventDefault();
 		if(Math.abs(this.toucha.delta) > 5) {
 			this.toucha.watdo = SWIPE;
 		}
+		if(this.toucha.watdo == SWIPE) return e.preventDefault();
 		if(Math.abs(this.toucha.deltaY) > this.toucha.em * 1.2) {
 			this.toucha.watdo = SCROLL;
 			this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
