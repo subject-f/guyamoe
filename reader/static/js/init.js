@@ -900,6 +900,7 @@ const SCROLL_X = 3;
 
 	this._.image_container.ontouchstart = e => {
 		if(Settings.all.layout.get() == 'ttb') return;
+		if(e.touches.length > 1) return;
 		this.toucha.leftPos = parseFloat(this._.image_container.style.transform.replace(/[^\d\.-]/g, ''));
 		this.toucha.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
 		this.toucha.startY = e.touches[0].pageY;
@@ -923,6 +924,7 @@ const SCROLL_X = 3;
 
 	this._.image_container.ontouchmove = e => {
 		if(this.toucha.watdo == SCROLL) return;
+		if(e.touches.length > 1) return;
 		if(Settings.all.layout.get() == 'ttb') return;
 		this.toucha.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.toucha.start;
 		if(this.toucha.imagePosition == 0
