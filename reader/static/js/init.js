@@ -124,12 +124,13 @@ function SettingsHandler(){
 	this.all.fit = new Setting(
 		'fit',
 		'Page fit',
-		['fit-width', 'fit-height', 'fit-none'],
-		(IS_MOBILE)?'fit-width':'fit-height',
+		['fit-width', 'fit-height', 'fit-none','fit-all'],
+		'fit-all',
 		{
 			'fit-width': 'Images fit to width.<br>Zoom enabled.',
 			'fit-height': 'Images fit to height.',
-			'fit-none': 'Images are displayed in original size.'
+			'fit-none': 'Images are displayed in original size.',
+			'fit-all': 'Images fit to width and height.'
 		} 
 	)
 	this.all.layout = new Setting(
@@ -233,7 +234,7 @@ function SettingsHandler(){
 		this.S.out('message', setting.getFormatted());
 	}
 
-	this.ver = '0.42';
+	this.ver = '0.5';
 
 	this.deserialize();
 
@@ -957,20 +958,20 @@ const SCROLL_X = 3;
 		if(this.toucha.watdo == SCROLL_X || this.toucha.watdo == SCROLL) return;
 		if(Settings.all.layout.get() == 'ttb') return;
 		clearTimeout(this.toucha.transitionTimer);
-		this._.image_container.style.transition = 'transform 0.4s ease';
+		this._.image_container.style.transition = 'transform 0.3s ease';
 	var ms = Date.now() - this.toucha.time;
 	var velocity = this.toucha.delta / ms;
 		
 		if(velocity < this.toucha.escapeVelocity * -1 || this.toucha.delta < this.toucha.escapeDelta * -1) {
-			Settings.all.layout.get() == 'rtl'?Reader.prevPage():Reader.nextPage();
+			setTimeout(()=>Settings.all.layout.get() == 'rtl'?Reader.prevPage():Reader.nextPage(), 1);
 		}else{
 			if(velocity > this.toucha.escapeVelocity || this.toucha.delta > this.toucha.escapeDelta) {
-				Settings.all.layout.get() == 'rtl'?Reader.nextPage():Reader.prevPage();
+				setTimeout(()=>Settings.all.layout.get() == 'rtl'?Reader.nextPage():Reader.prevPage(),1);
 			}else{
 				this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
 			}
 		}
-		this.toucha.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 400)
+		this.toucha.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
 	}
 
 
@@ -1047,15 +1048,18 @@ function UI_WrappedImage(o) {
 		this.S.out('loaded', this.index);
 		if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
 			this.$.classList.add('too-wide');
-			// this.$.addEventListener('wheel', e => {
-			// 	if(e.type != 'wheel') return;
-			// 	let delta = ((e.deltaY || -e.wheelDelta || e.detail) >> 10) || 1;
-			// 	delta = delta * (-300);
-			// 	this.$.scrollLeft += delta;
-			// 	if(this.$.scrollLeft != (this.$.offsetWidth - this._.image.offsetWidth))
-			// 		e.preventDefault();
-			// });
 		}
+		// this.$.addEventListener('wheel', e => {
+		// 	if(e.type != 'wheel') return;
+		// 	if(Settings.all.layout.get() != 'ttb'
+		// 		&& this._.image.offsetWidth > this.$.offsetWidth) {
+		// 		let delta = ((e.deltaY || -e.wheelDelta || e.detail) >> 10) || 1;
+		// 		delta = delta * (300);
+		// 		this.$.scrollLeft += delta;
+		// 		if(this.$.scrollLeft != (this.$.offsetWidth - this._.image.offsetWidth))
+		// 			e.preventDefault();
+		// 	}
+		// });
 		this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 

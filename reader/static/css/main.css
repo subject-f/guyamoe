@@ -317,8 +317,11 @@ header > .search:before {
 .is-ico-button.fitter.fit-width:before {
 	content: "\e911";
 }
+.is-ico-button.fitter.fit-all:before {
+	content: "\e921";
+}
 .is-ico-button.fitter.fit-none:before {
-	content: "\e90d";
+	content: "\e923";
 }
 .is-ico-button.layout:before {
 	font-size: 0.8em;
@@ -573,6 +576,18 @@ header > .search:before {
 	flex-shrink: 0;
 }
 
+.fit-all .rdr-image-wrap .WrappedImage {
+	min-height: 100vh;
+	min-width: 100%;
+	align-items: center;
+}
+
+.fit-all .rdr-image-wrap .WrappedImage img {
+	max-height: 100vh;
+	max-width: 100%;
+	min-height: unset;
+	min-width: unset;
+}
 
 .rdr-image-wrap .too-wide {
 	justify-content: flex-start !important;
@@ -1177,6 +1192,9 @@ header > .search:before {
 	}
 
 	.ttb.fit-width .rdr-image-wrap .WrappedImage {
+		min-height: auto;
+	}
+	.ttb.fit-all .rdr-image-wrap .WrappedImage {
 		min-height: auto;
 	}
 	
