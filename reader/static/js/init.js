@@ -23,7 +23,7 @@ function LoadHandler(o) {
 			})
 	}
 
-	document.body.onload = this.onload;
+	document.addEventListener("DOMContentLoaded", e => this.onload());
 }
 
 function ReaderAPI(o) {
@@ -270,10 +270,14 @@ function Setting(name, prettyName, options, dflt, strings) {
 		return this.setting;
 	}
 	this.getFormatted = function() {
-		if(this.strings instanceof Function) {
-			return this.strings(this.setting);
+		if(this.strings) {
+			if(this.strings instanceof Function) {
+				return this.strings(this.setting);
+			}
+			return this.strings[this.setting];
+		}else{
+			return '';
 		}
-		return this.strings[this.setting];
 	}
 	this.set = function(value, silent) {
 		if(value == this.setting) return;
@@ -357,7 +361,7 @@ function UI_Reader(o) {
 	};
 	
 
-	new KeyListener()
+	new KeyListener(this.$)
 		.pre(() => this._.image_container.focus())
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
@@ -369,9 +373,7 @@ function UI_Reader(o) {
 		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
 		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
 		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
-		.attach('comments', ['KeyC'], s => {
-			window.location.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
-		})
+		.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
@@ -384,13 +386,13 @@ function UI_Reader(o) {
 			Settings.all.zoom.next()
 		})
 
-	new KeyListener()
+	new KeyListener(this.$)
 		.condition(() => Settings.all.layout.get() == 'ltr')
 		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
 
-	new KeyListener()
+	new KeyListener(this.$)
 		.condition(() => Settings.all.layout.get() == 'rtl')
 		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
@@ -640,6 +642,11 @@ function UI_Reader(o) {
 		}, function(err) {
 		  Tooltippy.set('Link copy failed ('+url+')');
 		});
+	}
+
+	this.openComments = function() {
+		if(this.SCP.series && this.SCP.chapter !== undefined)
+			window.location.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
 	this.setFit = function(fit) {
@@ -1255,6 +1262,83 @@ function UI_SimpleListItem(o) {
 		this.$.innerHTML = o.text || o.value || 'List Element';
 }
 
+
+function UI_LodaManager(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['LodaManager'].concat(o.kind || []),
+		html: o.html || '<div></div>'
+	});
+	Linkable.call(this);
+
+	this.library = {
+		test: new UI_Loda().S.link(this),
+		search: new UI_Loda_Search().S.link(this)
+	}
+
+	this.display = function(loda) {
+		this.$.classList.remove('hidden');
+		this.$.innerHTML = '';
+		this.$.appendChild(this.library[loda].$);
+	}
+
+	this.close = function() {
+		this.$.classList.add('hidden');
+		this.$.innerHTML = '';
+	}
+
+	this.S.mapIn({
+		'close': this.close
+	})
+}
+
+function UI_Loda(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['Loda'].concat(o.kind || []),
+		html: o.html || '<div class="Loda-window" tabindex=""><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content"></content></div>'
+	});
+	Linkable.call(this);
+	this.manager = o.manager;
+	if(o.name) this._.header.innerHTML = o.name;
+
+	this.close = function() {
+		this.S.out('close');
+	}
+
+	this.S.mapOut([
+		'close'
+	])
+
+	this._.close.onclick = this.close.bind(this)
+}
+
+function UI_Loda_Search(o) {
+	o=be(o);
+	UI_Loda.call(this, {
+		node: o.node,
+		kind: ['Loda_Search'].concat(o.kind || []),
+		name: 'Indexer',
+		html: o.html || `<div class="Loda-window" tabindex=""><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
+				<input type="text" data-bind="input" placeholder="⌕" />
+				<div class="list" data-bind="list"></div>
+			</content></div>`
+	});
+	this.manager = o.manager;
+
+	this.name = 'Indexer';
+
+
+}
+
+
+
+
+
+
+
 alg.createBin();
 
 API = new ReaderAPI();
@@ -1267,7 +1351,12 @@ Reader = new UI_Reader({
 });
 Loader = new LoadHandler();
 URL = new URLChanger();
+Loda = new UI_LodaManager({
+	node: document.querySelector('.LodaManager'),
+});
 
 API.S.link(Reader);
 Settings.S.link(Reader);
 Reader.S.link(URL)
+// Loda.display('search')
+Reader.$.focus()

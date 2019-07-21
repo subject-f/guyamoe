@@ -165,7 +165,7 @@ header > h1 {
 header > .close {
 	cursor: pointer;
 }
-header > .close:before {
+.is-ico-button.close:before {
 	content: "\e902";
 }
 header > .search:before {
@@ -936,9 +936,65 @@ header > .search:before {
 	pointer-events: none;
 }
 
+.LodaManager {
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	overflow: auto;
+	position: fixed;
+	background: rgba(0,0,0,0.4);
+	align-items: center;
+	justify-content: center;
+}
 
+.Loda {
+	display: flex;
+	flex-direction: column;
+	background: #232629;
+	border-radius: 4px;
+	position: relative;
+	box-shadow: 0px 4px 7px 3px rgba(0,0,0,0.3);
+}
 
+.Loda .close {
+	position: absolute;
+	right: 0;
+	top: 0;
 
+}
+
+.Loda header {
+	display: flex;
+	min-width: 10rem;
+	padding: 0 4rem 0 1rem;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	align-items: center;
+	min-height: 3rem;
+	font-weight: bold;
+	color: #ddd;
+}
+
+.Loda_Search input {
+	background: rgba(0,0,0,.3);
+	width: 100%;
+	height: 3rem;
+	line-height: 3rem;
+	padding: 0 1rem;
+	box-sizing: border-box;
+	border: none;
+	min-width: 30ch;
+	font-size: 1.2rem;
+}
+.Loda_Search input::-webkit-input-placeholder,
+.Loda_Search input::-moz-placeholder,
+.Loda_Search input:-ms-input-placeholder, 
+.Loda_Search input:-moz-placeholder {
+  font-family: 'guya';
+  opacity: 0.5;
+}
 
 
 @media (max-width: 700px) {
@@ -996,6 +1052,10 @@ header > .search:before {
 	}
 	.selector-pinned.nonum .rdr-page-selector-counter {
 		opacity: 0;
+	}
+
+	.rtl .rdr-page-selector-keys {
+		transform: scaleX(-1);
 	}
 
 	.rdr-page-selector:hover .rdr-page-selector-counter,
@@ -1159,4 +1219,8 @@ header > .search:before {
 .disabled {
 	opacity: 0.2;
 	pointer-events: none;
+}
+
+.hidden {
+	display: none;
 }
