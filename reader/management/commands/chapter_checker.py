@@ -44,6 +44,7 @@ class Command(BaseCommand):
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/"
         }
         self.mangadex_manga = {
+            "Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
             "We-Want-To-Talk-About-Kaguya": "https://mangadex.org/title/29338/we-want-to-talk-about-kaguya"
         }
         self.jb_group = 3
@@ -120,7 +121,7 @@ class Command(BaseCommand):
 
             print(f"Successfully downloaded chapter and added to db.")
 
-    async def mangadex_checker(self, downloaded_chapters, series, latest_volume, url):
+    async def mangadex_checker(self, downloaded_chapters, series, latest_volume, url, latest_only=False):
         chapters = {}
         group = Group.objects.get(pk=self.md_group)
         series = Series.objects.get(slug=series)
@@ -129,8 +130,9 @@ class Command(BaseCommand):
         try:
             await self.page.goto(url)
             try:
-                elements = await self.page.waitForSelector(".page-link", timeout=8000)
-                total_pages = int(elements[-1].attrs["href"].rsplit("/", 2)[1])
+                await self.page.waitForSelector(".page-link", timeout=8000)
+                element = await self.page.querySelectorEval(".paging > *:last-child", "(a) => a.href")
+                total_pages = int(element.rsplit("/", 2)[1])
             except pp.errors.TimeoutError:
                 total_pages = 1
             for page_numb in range(1, total_pages+1):
@@ -206,7 +208,10 @@ class Command(BaseCommand):
         if options['lookup'] == 'all' or options['lookup'] == 'md':
             for manga in self.mangadex_manga:
                 latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+                if manga == "Kaguya-Wants-To-Be-Confessed-To":
+                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga)])                    
+                else:
+                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
                 loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
         if options['dl_md']:
             for manga in self.mangadex_manga:
