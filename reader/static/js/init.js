@@ -1056,6 +1056,7 @@ function UI_WrappedImage(o) {
 			// 		e.preventDefault();
 			// });
 		}
+		this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
 	this.load = function() {
@@ -1063,7 +1064,6 @@ function UI_WrappedImage(o) {
 		this._.image.src = this.src;
 		this._.image.onload = e => this.onloadHandler(e);
 		this.loaded = true;
-		this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
 	this.$.setAttribute('data-index', this.index);
