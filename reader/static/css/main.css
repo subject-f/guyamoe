@@ -173,6 +173,7 @@ header > .close {
 }
 header > .search:before {
 	content: "⌕";
+	opacity: 0.2;
 }
 
 .rdr-aside-content {
