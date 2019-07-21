@@ -85,6 +85,7 @@ def series_page_data(series_slug):
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
         }
         cache.set(f"series_page_data_{series_slug}", series_page_data, 3600 * 12)
+        print('set cache')
     return series_page_data
 
 def series_info(request, series_slug):
@@ -96,8 +97,19 @@ def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
 
+def get_all_metadata(series_slug):
+    series_metadata = cache.get(f"series_metadata_{series_slug}")
+    if not series_metadata:
+        series = Series.objects.get(slug=series_slug)
+        chapters = Chapter.objects.filter(series=series).select_related('series')
+        series_metadata = {}
+        for chapter in chapters:
+            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title}
+        cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
+    return series_metadata
+
 def reader(request, series_slug, chapter, page):
-    return render(request, 'reader/reader.html', {"slug": series_slug})
+    return render(request, 'reader/reader.html', get_all_metadata(series_slug)[chapter])
 
 def chapter_comments(request, series_slug, chapter):
     data = series_page_data(series_slug)
