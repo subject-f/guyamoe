@@ -100,6 +100,7 @@ main {
 	overflow: hidden;
 	max-height: 100vh;
 	position: relative;
+	outline: none;
 	outline-style:none;
 	box-shadow:none;
 	border-color:transparent;
@@ -523,14 +524,15 @@ header > .search:before {
 }
 
 .rdr-image-wrap {
-	outline-style:none;
-	box-shadow:none;
-	border-color:transparent;
 	display: flex;
 	height: 100%;
 	width: 100%;
 	position: relative;
 	will-change: transform;
+	outline: none;
+	outline-style:none;
+	box-shadow:none;
+	border-color:transparent;
 }
 
 .rdr-image-wrap .WrappedImage {
@@ -826,7 +828,7 @@ header > .search:before {
 	top: 0;
 	flex-direction: column;
 	overflow: hidden;
-	right: 0;
+	right: 24px;
 	padding: 2rem 3.5rem;
 	opacity: 0.01;
 	transition: opacity 0.3s ease;
@@ -1040,6 +1042,7 @@ header > .search:before {
 		min-height: 3rem;
 		bottom: 0;
 		background: linear-gradient(0deg, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
+				top: unset !important;
 	}
 
 	.selector-pinned .rdr-page-selector,
@@ -1241,4 +1244,22 @@ header > .search:before {
 
 .hidden {
 	display: none;
+}
+
+.nextCha {
+	opacity: 0.5;
+	color: white;
+	min-height: 6rem;
+	display: flex;
+	min-width: 100%;
+	justify-content: center;
+	align-items: center;
+	padding-bottom: 1rem;
+	margin-bottom: 1rem;
+}
+
+.nextCha:before {
+	content: "Next chapter";
+	padding: 1.5rem 6rem;
+	border: 2px dashed rgba(255,255,255,0.4)
 }

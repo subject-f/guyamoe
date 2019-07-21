@@ -794,6 +794,16 @@ function UI_ReaderImageView(o) {
 			image.S.link(Reader.selector_page);
 		})
 		this.imageContainer.add(imageInstances);
+		if(Settings.all.layout.get() == 'ttb') {
+		var butt = new UI_Dummy();
+			butt.$.classList.add('nextCha');
+			butt.$.onmousedown = e => {
+				e.preventDefault();
+				Reader.nextChapter(0);
+				document.documentElement.scrollTo({top: 0})
+			}
+			this.imageContainer.add(butt);
+		}
 		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
 
@@ -808,8 +818,8 @@ function UI_ReaderImageView(o) {
 		if(Settings.all.preload.get()==100)
 			loadIndex = direction==-1?this.imageContainer.$.children.length - 1:0;
 		for(var i = -1; i < Settings.all.preload.get() + 1; i++){
-		var image = this.imageContainer.get(i*direction + loadIndex);
-			if(image) image.load(); else continue;
+			var image = this.imageContainer.get(i*direction + loadIndex);
+			if(image instanceof UI_WrappedImage) image.load(); else continue;
 		}
 		if(Settings.all.layout.get() == 'ttb'){
 			if(!dry) {
