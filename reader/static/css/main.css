@@ -336,6 +336,9 @@ header > .search:before {
 	content: "\e907";
 	transform: rotate(90deg);
 }
+.rdr-comment {
+	cursor: pointer;
+}
 .rdr-comment.is-ico-button:before {
 	content: "\e91d";
 	font-size:0.9em;
