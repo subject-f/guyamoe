@@ -754,6 +754,7 @@ function UI_Reader(o) {
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
 		.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
+		.attach(this._.search, 'Search coming soon!', 'right')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
