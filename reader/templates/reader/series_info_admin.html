@@ -149,8 +149,8 @@
          if (document.getElementById("scanGroup").options.length === 0){
             $.getJSON(`/api/get_all_groups/`, (data) => {
                for (var group in data) {
-                  if (data['groups'].hasOwnProperty(group)) {
-                     $("#scanGroup").append(`<option value="${data['groups'][group]}">${data['groups'][group]}</option>`);
+                  if (data.hasOwnProperty(group)) {
+                     $("#scanGroup").append(`<option value="${data[group]}">${data[group]}</option>`);
                   }
                }
             });
