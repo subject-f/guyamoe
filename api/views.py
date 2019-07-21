@@ -36,13 +36,21 @@ def series_data(request, series_slug):
         cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
     return HttpResponse(JsonResponse(series_api_data))
 
+def all_groups():
+    groups_data = cache.get(f"all_groups_data")
+    if not groups_data:
+        groups_data = {str(group.id) : group.name for group in Group.objects.all()}
+        cache.set(f"all_groups_data", groups_data, 3600 * 12)
+    return groups_data
+
 def get_all_series(request):
     all_series_data = cache.get(f"all_series_data")
     if not all_series_data:
         all_series = Series.objects.all().select_related("author", "artist")
         all_series_data = {}
         for series in all_series:
-            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug}
+            cover = Volume.objects.filter(series=series).order_by('-volume_number').values_list('volume_cover')[0]
+            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover[0], "groups": all_groups()}
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
@@ -52,13 +60,9 @@ def get_groups(request, series_slug):
         groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
         cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
     return HttpResponse(json.dumps({"groups": groups_data}), content_type="application/json")
-    
+
 def get_all_groups(request):
-    groups_data = cache.get(f"all_groups_data")
-    if not groups_data:
-        groups_data = {str(group.id) : group.name for group in Group.objects.all()}
-        cache.set(f"all_groups_data", groups_data, 3600 * 12)
-    return HttpResponse(json.dumps(groups_data), content_type="application/json")
+    return HttpResponse(json.dumps(all_groups()), content_type="application/json")
    
 def random_chars():
     return ''.join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
@@ -118,15 +122,6 @@ def get_volume_covers(request, series_slug):
             covers = {"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
-
-def get_latest_cover(request, series_slug):
-    cover = cache.get(f"latest_vol_cover{series_slug}")
-    if not cover:
-        series = Series.objects.get(slug=series_slug)
-        volume = Volume.objects.filter(series=series).order_by('-volume_number').values_list('volume_number', 'volume_cover')[0]
-        cover = {str(volume[0]): f"/media/{volume[1]}"}
-        cache.set(f"latest_vol_cover{series_slug}", cover)
-    return HttpResponse(json.dumps(cover), content_type="application/json")
 
 def search_index(request, series_slug):
     if request.POST:
