@@ -66,8 +66,11 @@ def series_page_data(series_slug):
         chapter_dict = OrderedDict()
         for chapter in chapters:
             ch_clean = chapter.clean_chapter_number()
-            if ch_clean in chapter_dict and chapter.uploaded_on > chapter_dict[ch_clean][0].uploaded_on:
-                chapter_dict[ch_clean] = [chapter, True]
+            if ch_clean in chapter_dict:
+                if chapter.uploaded_on > chapter_dict[ch_clean][0].uploaded_on:
+                    chapter_dict[ch_clean] = [chapter, True]
+                else:
+                    chapter_dict[ch_clean] = [chapter_dict[ch_clean][0], True]
             else:
                 chapter_dict[ch_clean] = [chapter, False]
         for ch in chapter_dict:
