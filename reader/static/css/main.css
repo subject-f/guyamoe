@@ -56,7 +56,7 @@ table {
 }
 @supports (-webkit-overflow-scrolling: touch) {
 	html, body {
-		height: 100.1vh;
+		height: 100.001vh;
 	}
 }
 
@@ -116,10 +116,6 @@ aside {
 	transition: all 0.3s ease;
 }
 
-.hide-side::before {
-	transition: all 0.3s ease;
-}
-
 aside > header {
 	display: flex;
 	align-items: flex-top;
@@ -173,7 +169,7 @@ header > .close {
 }
 header > .search:before {
 	content: "⌕";
-	opacity: 0.2;
+	opacity: 0;
 }
 
 .rdr-aside-content {
@@ -527,6 +523,9 @@ header > .search:before {
 }
 
 .rdr-image-wrap {
+	outline-style:none;
+	box-shadow:none;
+	border-color:transparent;
 	display: flex;
 	height: 100%;
 	width: 100%;
@@ -542,6 +541,9 @@ header > .search:before {
 	align-items: flex-start;
 	position: relative;
 	overflow: auto;
+	outline-style:none;
+	box-shadow:none;
+	border-color:transparent;
 }
 .rdr-image-wrap .WrappedImage img {
 	user-select: none;
@@ -608,6 +610,7 @@ header > .search:before {
 .rdr-page-selector {
 	height: 100vh;
 	width: 1px;
+	top: 0;
 	opacity: 0;
 	position: relative;
 	z-index: 3;
@@ -756,31 +759,38 @@ header > .search:before {
 
 .hide-side {
 	position: absolute;
-	bottom: 0;
+	top: 0;
 	right: 0;
+	top: unset !important;
+	z-index: 2000;
+	width: 3rem;
+}
+
+.hide-side div {
 	top: unset !important;
 }
 
-.hide-side::after {
+.hide-side div::after {
 	content: "\e905";
 	transform: scaleX(-1);
 	position: relative;
-	top: 0.5rem;
+	bottom: 0.5rem;
 	left: 0.6rem;
 }
 
-.hide-side::before {
+.hide-side div:before {
 	content: "";
 	position: absolute;
 	width: 0;
 	height: 0;
 	border-style: solid;
-	border-width: 0 0 3rem 3rem;
-	border-color: transparent transparent #2b2f33 transparent;
+	border-width: 0  3rem 3rem 0;
+	border-color: transparent #2b2f33 transparent  transparent;
+	transition: all 0.3s ease;
 }
 
-.hide-side:hover:before {
-	border-color: transparent transparent #222529 transparent;
+.hide-side:hover div:before {
+	border-color: transparent #222529 transparent  transparent;
 }
 
 .sidebar-hidden aside {
@@ -789,6 +799,7 @@ header > .search:before {
 
 .sidebar-hidden .rdr-page-selector {
 	height: calc(100vh - 3rem);
+	top: 3rem;
 }
 
 .sidebar-hidden .hide-side {
@@ -797,18 +808,18 @@ header > .search:before {
 	transform: scaleX(-1);
 }
 
-.sidebar-hidden .hide-side::after {
+.sidebar-hidden .hide-side div::after {
 	
 }
 
 .sidebar-hidden .hide-side {
 }
 
-.sidebar-hidden .hide-side::before {
-	border-color: transparent transparent #3a3f44 transparent;
+.sidebar-hidden .hide-side div::before {
+	border-color: transparent  #3a3f44 transparent  transparent;
 }
-.sidebar-hidden .hide-side:hover:before {
-	border-color: transparent transparent #2b2f33 transparent;
+.sidebar-hidden .hide-side div:hover:before {
+	border-color: transparent #2b2f33 transparent  transparent;
 }
 
 .zoom-level {
