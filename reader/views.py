@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 import os
 import json
 
@@ -48,8 +48,8 @@ def hit_count(request):
 
 
 def series_page_data(series_slug):
-    series_page_data = cache.get(f"series_page_data_{series_slug}")
-    if not series_page_data:
+    series_page_dt = cache.get(f"series_page_dt_{series_slug}")
+    if not series_page_dt:
         series = get_object_or_404(Series, slug=series_slug)
         chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
         latest_chapter = chapters.latest('uploaded_on')
@@ -63,15 +63,23 @@ def series_page_data(series_slug):
         hit, _ = HitCount.objects.get_or_create(content_type=content_series, object_id=series.id)
         chapter_list = []
         volume_dict = defaultdict(list)
+        chapter_dict = OrderedDict()
         for chapter in chapters:
+            ch_clean = chapter.clean_chapter_number()
+            if ch_clean in chapter_dict and chapter.uploaded_on > chapter_dict[ch_clean][0].uploaded_on:
+                chapter_dict[ch_clean] = [chapter, True]
+            else:
+                chapter_dict[ch_clean] = [chapter, False]
+        for ch in chapter_dict:
+            chapter, multiple_groups = chapter_dict[ch]
             u = chapter.uploaded_on
-            chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
-            volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name, [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
+            chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
+            volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
         volume_list = []
         for key, value in volume_dict.items():
             volume_list.append([key, sorted(value, key=lambda x: float(x[0]), reverse=True)])
         chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
-        series_page_data = {
+        series_page_dt = {
                 "series": series.name,
                 "series_id": series.id,
                 "slug": series.slug,
@@ -84,9 +92,9 @@ def series_page_data(series_slug):
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
         }
-        cache.set(f"series_page_data_{series_slug}", series_page_data, 3600 * 12)
+        cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
         print('set cache')
-    return series_page_data
+    return series_page_dt
 
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
@@ -109,7 +117,11 @@ def get_all_metadata(series_slug):
     return series_metadata
 
 def reader(request, series_slug, chapter, page):
-    return render(request, 'reader/reader.html', get_all_metadata(series_slug)[chapter])
+    metadata = get_all_metadata(series_slug)
+    if chapter in metadata:
+        return render(request, 'reader/reader.html', metadata[chapter])
+    else:
+        return render(request, 'homepage/how_cute_404.html', status=404)
 
 def chapter_comments(request, series_slug, chapter):
     data = series_page_data(series_slug)
