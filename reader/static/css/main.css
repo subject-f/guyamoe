@@ -611,6 +611,13 @@ header > .search:before {
 	box-shadow: 0 0 6px black;
 }
 
+.ttb.fit-width .rdr-image-wrap .WrappedImage {
+	min-height: auto;
+}
+.ttb.fit-all .rdr-image-wrap .WrappedImage {
+	min-height: auto;
+}
+
 /*
 .rdr-float-prev, .rdr-float-next {
 	position: absolute;
