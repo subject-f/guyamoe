@@ -442,8 +442,7 @@ function UI_Reader(o) {
 	}
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
-		this.SCP.page = SCP.page;
-		this.drawChapter(SCP.chapter);
+		this.drawChapter(SCP.chapter, SCP.page);
 	}
 
 	this.drawReader = function(slug) {
