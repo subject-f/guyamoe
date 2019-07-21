@@ -100,6 +100,9 @@ main {
 	overflow: hidden;
 	max-height: 100vh;
 	position: relative;
+	outline-style:none;
+	box-shadow:none;
+	border-color:transparent;
 }
 
 aside {
@@ -1196,7 +1199,7 @@ header > .search:before {
 		padding-right: 0.5em;
 		color: #111;
 	}
-
+/*
 	.rdr-image-wrap div:last-child:after {
 		content: "\e905\00000A\00000A\00000A\e905\00000A\00000A\00000A\e905";
 		font-family: 'guya';
@@ -1212,7 +1215,7 @@ header > .search:before {
 		right: -50%;
 		padding-left: 0.5em;
 		color: #111;
-	}
+	}*/
 }
 
 

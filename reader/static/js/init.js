@@ -360,9 +360,18 @@ function UI_Reader(o) {
 		page: 0,
 	};
 	
+	new KeyListener()
+		.condition(() => Loda.$.classList.contains('hidden'))
+		.condition(() => Settings.all.layout.get() != 'ttb')
+		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
+
+	new KeyListener()
+		.condition(() => Loda.$.classList.contains('hidden'))
+		.condition(() => Settings.all.layout.get() == 'ttb')
+		.pre(() => this._.image_container.focus())
+	
 
 	new KeyListener(this.$)
-		.pre(() => this._.image_container.focus())
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
@@ -388,13 +397,11 @@ function UI_Reader(o) {
 
 	new KeyListener(this.$)
 		.condition(() => Settings.all.layout.get() == 'ltr')
-		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
 
 	new KeyListener(this.$)
 		.condition(() => Settings.all.layout.get() == 'rtl')
-		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
 		.attach('next', ['ArrowLeft'], e => this.nextPage());
 
@@ -475,7 +482,6 @@ function UI_Reader(o) {
 			this._.zoom_level.classList.remove('vis')
 	}, 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
-		
 	
 	}
 
@@ -1016,7 +1022,7 @@ function UI_WrappedImage(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['WrappedImage'].concat(o.kind || []),
-		html: o.html || '<div><img data-bind="image" src="" /></div>'
+		html: o.html || '<div tabindex="-1"><img data-bind="image" src="" /></div>'
 	});
 	Linkable.call(this);
 
