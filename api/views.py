@@ -49,8 +49,13 @@ def get_all_series(request):
         all_series = Series.objects.all().select_related("author", "artist")
         all_series_data = {}
         for series in all_series:
-            cover = Volume.objects.filter(series=series).order_by('-volume_number').values_list('volume_cover')[0]
-            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover[0], "groups": all_groups()}
+            vols = Volume.objects.filter(series=series).order_by('-volume_number')
+            cover_vol_url = ""
+            for vol in vols:
+                if vol.volume_cover:
+                    cover_vol_url = f"/media/{vol.volume_cover}"
+                    break
+            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups()}
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
