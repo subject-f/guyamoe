@@ -85,8 +85,9 @@ def upload_new_chapter(request, series_slug):
         if not existing_chapter:
             uid = chapter_folder_numb + random_chars()
         else:
-            if Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first():
-                return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists! Click on edit next to the existing chapter for overwriting."}))
+            reupload = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
+            if reupload:
+                reupload.delete()
             else:
                 uid = existing_chapter.folder
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
