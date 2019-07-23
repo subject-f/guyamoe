@@ -162,7 +162,7 @@ function SettingsHandler(){
 		'preload',
 		'Preload amount',
 		[1,2,3,4,5,6,7,8,9,100],
-		(IS_MOBILE)?2:5,
+		(IS_MOBILE)?1:2,
 		i => 'Reader will preload %i pages.'.replace('%i', i)
 			.replace('1 pages', '1 page')
 			.replace('100 pages', 'all pages')
@@ -234,7 +234,7 @@ function SettingsHandler(){
 		this.S.out('message', setting.getFormatted());
 	}
 
-	this.ver = '0.5';
+	this.ver = '0.51';
 
 	this.deserialize();
 
