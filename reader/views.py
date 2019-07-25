@@ -8,6 +8,7 @@ from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
+from django.views.decorators.csrf import csrf_exempt
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
@@ -16,6 +17,7 @@ import os
 import json
 
 
+@csrf_exempt
 def hit_count(request):
     if request.POST:
         user_ip = get_user_ip(request)
@@ -119,6 +121,7 @@ def get_all_metadata(series_slug):
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
+@cache_page(3600)
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
