@@ -26,8 +26,8 @@
             delta -= minutes * 60;
             let seconds = parseInt(delta % 60);
             if (days >= 7) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
-               $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()}/${chapter_date.getDay()}`;
+               $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()+1}/${chapter_date.getDate()}`;
+               $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()+1}/${chapter_date.getDate()}`;
                $($(".compact-chapter-upload-date")[idx]).addClass('text-muted');
             }
             else if (days < 7 && days > 0) {

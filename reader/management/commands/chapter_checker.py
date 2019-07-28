@@ -44,7 +44,7 @@ class Command(BaseCommand):
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/"
         }
         self.mangadex_manga = {
-            "Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
+            #"Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
             "We-Want-To-Talk-About-Kaguya": "https://mangadex.org/title/29338/we-want-to-talk-about-kaguya"
         }
         self.jb_group = 3
@@ -88,9 +88,13 @@ class Command(BaseCommand):
 
     def create_chapter_obj(self, chapter, group, series, latest_volume, chapter_data):
         chapter_number = float(chapter)
+        existing_chapter = Chapter.objects.filter(chapter_number=chapter_number, series=series).first()
         chapter_folder_numb = f"{int(chapter_number):04}"
         chapter_folder_numb += f"-{str(chapter_number).rsplit('.')[1]}_" if not str(chapter_number).endswith("0") else "_"
-        uid = chapter_folder_numb + random_chars()
+        if not existing_chapter:
+            uid = chapter_folder_numb + random_chars()
+        else:
+            uid = existing_chapter.folder
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=chapter_data["title"], volume=latest_volume, uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid)
         os.makedirs(os.path.join(chapter_folder, str(group.id)))
