@@ -1366,6 +1366,7 @@ function UI_Loda(o) {
 
 	this.focus = function() {
 		this.focusElement.focus();
+		this.focusElement.select();
 	}
 
 	this.S.mapOut([
