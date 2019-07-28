@@ -35,13 +35,15 @@ function ReaderAPI(o) {
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
+	this.indexData = {};
 
-	this.infuseImageURLs = function(data) {
+	this.infuseSeriesData = function(data) {
 		for(var num in data.chapters) {
 		var chapter = data.chapters[num];
 			chapter.images = {};
 			chapter.blurs = {};
 			chapter.previews = {};
+			chapter.id = num;
 			for(var group in chapter.groups) {
 				chapter.images[group] = [];
 				chapter.blurs[group] = [];
@@ -63,7 +65,8 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							+ "shrunk_blur_"+group 
+							// + "shrunk_blur_"+ group
+							+ group+"_shrunk_blur" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
@@ -73,6 +76,7 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
+							// + "shrunk_"+ group
 							+ group+"_shrunk" 
 							+ '/' 
 							+ chapter.groups[group][i]
@@ -84,10 +88,10 @@ function ReaderAPI(o) {
 	}
 
 	this.requestSeries = function(slug) {
-		this.seriesRequest = fetch(this.seriesUrl + slug)
+		this.seriesRequest = fetch(this.seriesUrl + slug + '/')
 			.then(response => response.json())
 			.then(seriesData => {
-				seriesData = this.infuseImageURLs(seriesData);
+				seriesData = this.infuseSeriesData(seriesData);
 				seriesData.chaptersIndex =
 					Object.keys(
 						seriesData.chapters
@@ -100,7 +104,7 @@ function ReaderAPI(o) {
 				this.data[slug] = seriesData;
 			})
 			.then(o => {
-				return fetch(this.url + 'get_groups/' + slug)
+				return fetch(this.url + 'get_groups/' + slug + '/')
 			})
 			.then(response => response.json())
 			.then(o => {
@@ -110,10 +114,27 @@ function ReaderAPI(o) {
 		return this.seriesRequest;
 	}
 
+	this.requestIndex = function(o){
+		var formData = new FormData();
+		formData.append("searchQuery", o.query)
+		//formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
+		return fetch('https://guya.moe/api/search_index/'+ o.slug + '/', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.json())
+			.then(searchData => {
+				this.indexData[o.slug] = searchData;
+				this.S.out('indexUpdated', this.indexData[o.slug]);
+				return this.indexData[o.slug];
+			})
+	}
+
 	this.S.mapIn({
-		'loadSeries': this.requestSeries
+		'loadSeries': this.requestSeries,
+		'loadIndex': this.requestIndex
 	})
-	this.S.mapOut(['seriesUpdated'])
+	this.S.mapOut(['seriesUpdated', 'indexUpdated'])
 }
 
 function SettingsHandler(){
@@ -327,7 +348,7 @@ function UI_Tooltippy(o) {
 
 	this.set = function(text) {
 		if(text.length < 1) return;
-		text = text.replace(/\[(.)\]/, '<span class="Tooltippy-key">$1</span>')
+		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
 		this.$.innerHTML = text;
 		this.$.classList.remove('fadeOut');
 		clearTimeout(this.fader);
@@ -395,6 +416,12 @@ function UI_Reader(o) {
 			Settings.all.fit.set('fit-width')
 			Settings.all.zoom.next()
 		})
+
+	new KeyListener(this.$)
+		.attach('search', ['Ctrl+KeyF'], s => {
+			Loda.display('search')
+		})
+		
 
 	new KeyListener(this.$)
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -741,6 +768,7 @@ function UI_Reader(o) {
 	this._.zoom_level_plus.onmousedown = e => Settings.all.zoom.next();
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
+	this._.search.onclick = e => Loda.display('search');
 
 	Tooltippy
 		.attach(this._.chap_prev, 'Previous chapter [[]')
@@ -755,7 +783,7 @@ function UI_Reader(o) {
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
 		.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
-		.attach(this._.search, 'Search coming soon!', 'right')
+		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
@@ -1303,12 +1331,18 @@ function UI_LodaManager(o) {
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
+		this.$.focus();
+		this.library[loda].focus();
 	}
 
 	this.close = function() {
 		this.$.classList.add('hidden');
 		this.$.innerHTML = '';
+		Reader.$.focus();
 	}
+
+	new KeyListener(this.$)
+		.attach('close', ['Escape'], this.close.bind(this))
 
 	this.S.mapIn({
 		'close': this.close
@@ -1320,7 +1354,7 @@ function UI_Loda(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['Loda'].concat(o.kind || []),
-		html: o.html || '<div class="Loda-window" tabindex=""><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content"></content></div>'
+		html: o.html || '<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content"></content></div>'
 	});
 	Linkable.call(this);
 	this.manager = o.manager;
@@ -1328,6 +1362,10 @@ function UI_Loda(o) {
 
 	this.close = function() {
 		this.S.out('close');
+	}
+
+	this.focus = function() {
+		this.focusElement.focus();
 	}
 
 	this.S.mapOut([
@@ -1342,20 +1380,135 @@ function UI_Loda_Search(o) {
 	UI_Loda.call(this, {
 		node: o.node,
 		kind: ['Loda_Search'].concat(o.kind || []),
-		name: 'Indexer',
-		html: o.html || `<div class="Loda-window" tabindex=""><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
+		name: 'Search',
+		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
 				<input type="text" data-bind="input" placeholder="⌕" />
-				<div class="list" data-bind="list"></div>
+				<div class="list" data-bind="lookup"></div>
+				<div class="list" data-bind="indexer"></div>
 			</content></div>`
 	});
 	this.manager = o.manager;
-
 	this.name = 'Indexer';
+	this.focusElement = this._.input;
 
+	this.lookup = new UI_MangaSearch({
+		node: this._.lookup
+	})
+	this.indexer = new UI_IndexSearch({
+		node: this._.indexer
+	})
+
+	this.searchField = new UI_Input({
+		node: this._.input
+	}).S.link(this.lookup).S.link(this.indexer)
 
 }
 
 
+function UI_IndexSearch(o) {
+	o=be(o);
+	UI_Tabs.call(this, {
+		node: o.node,
+		kind: ['IndexSearch'].concat(o.kind || []),
+		html: o.html || `<div></div>`
+	});
+
+	this.search = function(query) {
+		API.requestIndex({
+			query: query,
+			slug: Reader.SCP.series
+		}).then(data => {
+
+		})
+	}
+
+	this.S.mapIn({
+		'text': this.search
+	})
+}
+function UI_MangaSearch(o) {
+	o=be(o);
+	UI_Tabs.call(this, {
+		node: o.node,
+		kind: ['MangaSearch'].concat(o.kind || []),
+		html: o.html || `<div></div>`
+	});
+
+	this.search = function(query, force) {
+	this.query = query;
+		if(query.length < 1) {
+			this.clear(); return;
+		}
+		if(this.debounce) {
+			clearTimeout(this.debouncer);
+			this.debouncer = setTimeout(e => {
+				this.debounce = false;
+				this.search(this.query, true);
+			}, 200);
+			return;
+		}
+		if(!force) this.debounce = true;
+
+	var chapters = {};
+		if(isNaN(this.query) == false) {
+			Reader.current.chaptersIndex.filter(id => {
+				return (''+id).indexOf(this.query) > -1;
+			}).map(id => {
+				return Reader.current.chapters[id];
+			}).forEach(chapter => {
+				chapters[chapter.id] = chapter;
+			})
+		}else{
+			if(this.query.length < 3) return;
+		}
+		for(var id in Reader.current.chapters) {
+		var chapter = Reader.current.chapters[id];
+			if(chapter.title.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
+				chapters[id] = chapter;
+			}
+		}
+	var chapterElements = [];
+		for(var id in chapters) {
+		var chapter = chapters[id];
+			chapterElements.push(new UI_ChapterUnit({
+				chapter: chapter,
+				substring: query
+			}))
+		}
+		
+		this.clear().add(chapterElements);
+	}
+
+	this.S.mapIn({
+		'text': this.search,
+		'quickText': this.search
+	})
+}
+
+
+function UI_ChapterUnit(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ChapterUnit'].concat(o.kind || []),
+		name: 'ChapterUnit',
+		html: o.html || `<div><figure data-bind="figure"></figure><content><h2 data-bind="title">123 - Miko Iino wants to yeet</h2><blockquote data-bind="text"></blockquote></content></div>`
+	});
+
+	this.chapter = o.chapter;
+	this.substring = o.substring
+
+	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
+	for(var group in o.chapter.images) {
+		this._.figure.style.backgroundImage = 'url('+o.chapter.previews[group][0]+')';
+		break;
+	}
+
+	this.$.onclick = e => {
+		Reader.drawChapter(this.chapter.id, 0);
+		Loda.close();
+	}
+}
 
 
 
@@ -1380,5 +1533,8 @@ Loda = new UI_LodaManager({
 API.S.link(Reader);
 Settings.S.link(Reader);
 Reader.S.link(URL)
-// Loda.display('search')
 Reader.$.focus()
+
+function debug() {
+	
+}

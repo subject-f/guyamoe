@@ -55,8 +55,20 @@ function KeyListener(target, mode) {
 		}
 		for(var id in this.listeners) {
 		var listener = this.listeners[id];
-			if(!listener.held && (listener.keys == true ||
-				listener.keys.indexOf(e.code) > -1) && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+		var listenerKeys = listener.keys.map(key => key.split('+')[1] || key.split('+')[0])
+			if(!listener.held
+			&& listenerKeys.indexOf(e.code) > -1) {
+			var keyIndex = listenerKeys.indexOf(e.code);
+				if(listener.keys[keyIndex].indexOf('Ctrl') < 0) {
+					if(e.ctrlKey || e.metaKey) continue;
+				}else{
+					if(!e.ctrlKey && !e.metaKey) continue;
+				}
+				if(listener.keys[keyIndex].indexOf('Shift') < 0) {
+					if(e.shiftKey) continue;
+				}else{
+					if(!e.ctrlKey) continue;
+				}
 				for(var i=0; i<listener.conditions.length;i++) {
 					if(listener.conditions[i](e) === false) return;
 				}
@@ -767,6 +779,10 @@ function UI_Input(o) {
 		this.value = this.$.value;
 		this.S.out('text', this.value);
 	}
+	this.quickHandler = function (e) {
+		this.value = this.$.value;
+		this.S.out('quickText', this.value);
+	}
 	this.clear = function () {
 		this.value = this.$.value = '';
 		this.S.out('text', this.value);
@@ -776,11 +792,16 @@ function UI_Input(o) {
 		if(!silent) this.S.out('text', this.value);
 	}
 
+	this.$.onkeyup = this.quickHandler.bind(this);
+
 	this.keyl = new KeyListener(this.$)
 			.attach('submit', ['Enter'], e => this.handler(e))
-			.attach('cancel', ['Escape'], e => this.clear());
+	//		.attach('cancel', ['Escape'], e => this.clear(), );
 
-	map
+	this.S.mapOut([
+		'text',
+		'quickText'
+	]);
 }
 
 function UI_Button(o) {

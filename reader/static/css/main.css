@@ -83,6 +83,12 @@ button:focus, option, details, summary {
 	outline: none !important;
 }
 
+*[tabindex="-1"] {
+	outline: none;
+	outline-style:none;
+	box-shadow:none;
+	border-color:transparent;
+}
 /* ---------------------- */
 
 body {
@@ -100,10 +106,6 @@ main {
 	overflow: hidden;
 	max-height: 100vh;
 	position: relative;
-	outline: none;
-	outline-style:none;
-	box-shadow:none;
-	border-color:transparent;
 }
 
 aside {
@@ -168,9 +170,8 @@ header > .close {
 .is-ico-button.close:before {
 	content: "\e902";
 }
-header > .search:before {
-	content: "⌕";
-	opacity: 0;
+.is-ico-button.search:before {
+	content: "";
 }
 
 .rdr-aside-content {
@@ -955,6 +956,10 @@ header > .search:before {
 	text-align: center;
 	border-radius: 2px;
 	font-family: monospace;
+
+}
+
+.Tooltippy .Tooltippy-key:first-of-type {
 	margin-left: 1ch;
 }
 
@@ -988,21 +993,32 @@ header > .search:before {
 	left: 0;
 	right: 0;
 	bottom: 0;
+	z-index: 2000;
 	display: flex;
 	overflow: auto;
 	position: fixed;
-	background: rgba(0,0,0,0.4);
+	background: rgba(0,0,0,0.6);
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
+	padding-bottom: 5vh;
+	flex-direction: column;
+}
+.LodaManager:after {
+	content: '';
+	display: block;
+	padding: 5vh;
 }
 
 .Loda {
-	display: flex;
+	display: inline-flex;
 	flex-direction: column;
 	background: #232629;
 	border-radius: 4px;
 	position: relative;
 	box-shadow: 0px 4px 7px 3px rgba(0,0,0,0.3);
+	margin-top: 10vh;
+	min-width: 40vw;
+	max-width: 50vw;
 }
 
 .Loda .close {
@@ -1024,16 +1040,21 @@ header > .search:before {
 	color: #ddd;
 }
 
+.Loda_Search content {
+	padding: 0 0.8em 0.8em 0.8em;
+}
+
 .Loda_Search input {
-	background: rgba(0,0,0,.3);
+	background: rgba(255,255,255,.1);
 	width: 100%;
 	height: 3rem;
 	line-height: 3rem;
 	padding: 0 1rem;
 	box-sizing: border-box;
 	border: none;
-	min-width: 30ch;
 	font-size: 1.2rem;
+	color: white;
+	box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
 }
 .Loda_Search input::-webkit-input-placeholder,
 .Loda_Search input::-moz-placeholder,
@@ -1041,6 +1062,70 @@ header > .search:before {
 .Loda_Search input:-moz-placeholder {
   font-family: 'guya';
   opacity: 0.5;
+}
+
+.Loda_Search .list {
+	padding: 1rem 0 0 0;
+}
+
+.Loda_Search .list:empty {
+	padding: 0;
+}
+
+
+.ChapterUnit {
+	display: flex;
+	flex-grow: 1;
+	justify-content: flex-start;
+	align-items: stretch;
+	margin-bottom: 0.8rem;
+	border-radius: 3px;
+	overflow: hidden;
+	border: 1px solid transparent;
+	cursor: pointer;
+}
+.ChapterUnit:last-child {
+	margin-bottom: 0;
+}
+
+
+
+.ChapterUnit:hover {
+	border: 1px solid #393939;
+	background: rgba(0,0,0,0.3)
+}
+
+.ChapterUnit figure {
+	flex-grow: 0;
+	max-width: 3rem;
+	min-width: 3rem;
+	margin-right: 0.2rem;
+	background-size: cover;
+	background-position: center center;
+}
+
+.ChapterUnit content {
+	display: flex;
+	flex-direction: column;
+	font-size: 1rem;
+	padding: 0.8em;
+}
+
+.ChapterUnit h2 {
+	font-size: 1.2em;
+	padding-bottom: 0.5em;
+}
+
+.ChapterUnit blockquote:before {
+	content:"Chapter text not yet available...";
+	color: rgba(255,255,255,0.1);
+	font-size: 0.8rem;
+}
+
+.ChapterUnit i {
+	color: #b2dffb;
+	text-decoration: none;
+	font-style: normal;
 }
 
 
@@ -1264,6 +1349,10 @@ header > .search:before {
 		padding-left: 0.5em;
 		color: #111;
 	}*/
+	.Loda {
+		min-width: 96vw;
+		max-width: 96vw;
+	}
 }
 
 
