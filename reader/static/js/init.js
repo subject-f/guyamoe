@@ -614,20 +614,18 @@ function UI_Reader(o) {
 	}
 
 	this.plusOne = function() {
-		if(this.plusOneTimeout) return;
-	var formData = new FormData();
-		formData.append("series", this.current.slug)
-		formData.append("group", this.SCP.group)
-		formData.append("chapter", this.SCP.chapter)
-		formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
-		fetch('/reader/update_view_count/', {
-			method: 'POST',
-			body: formData, // body data type must match "Content-Type" header
-		})
-		this.plusOneTimeout = true;
+		clearTimeout(this.plusOneTimer);
 		this.plusOneTimer = setTimeout(i => {
-			this.plusOneTimeout = false;
-		}, 60*1000)
+		var formData = new FormData();
+			formData.append("series", this.SCP.series)
+			formData.append("group", this.SCP.group)
+			formData.append("chapter", this.SCP.chapter)
+			formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
+			fetch('/reader/update_view_count/', {
+				method: 'POST',
+				body: formData, // body data type must match "Content-Type" header
+			})
+		}, 20*1000)
 	}
 
 
