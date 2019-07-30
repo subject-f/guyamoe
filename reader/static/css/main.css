@@ -792,7 +792,7 @@ header > .close {
 	top: 0;
 	right: 0;
 	top: unset !important;
-	z-index: 2000;
+	z-index: 00;
 	width: 3rem;
 }
 
@@ -942,7 +942,7 @@ header > .close {
 	background: rgba(20,20,20,0.95);
 	border-radius: 2px;
 	box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
-	z-index: 1000;
+	z-index: 3000;
 	font-size: 11px;
 	pointer-events: none; 
 	display: none;

@@ -1088,7 +1088,7 @@ function UI_WrappedImage(o) {
 		// 			e.preventDefault();
 		// 	}
 		// });
-		this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
+		if(this.fore) this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
 	this.load = function() {
