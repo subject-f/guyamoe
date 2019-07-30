@@ -620,10 +620,9 @@ function UI_Reader(o) {
 			formData.append("series", this.SCP.series)
 			formData.append("group", this.SCP.group)
 			formData.append("chapter", this.SCP.chapter)
-			formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
 			fetch('/reader/update_view_count/', {
 				method: 'POST',
-				body: formData, // body data type must match "Content-Type" header
+				body: formData
 			})
 		}, 20*1000)
 	}
