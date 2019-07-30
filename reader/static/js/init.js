@@ -614,6 +614,7 @@ function UI_Reader(o) {
 	}
 
 	this.plusOne = function() {
+		if(this.plusOneTimeout) return;
 	var formData = new FormData();
 		formData.append("series", this.current.slug)
 		formData.append("group", this.SCP.group)
@@ -623,6 +624,10 @@ function UI_Reader(o) {
 			method: 'POST',
 			body: formData, // body data type must match "Content-Type" header
 		})
+		this.plusOneTimeout = true;
+		this.plusOneTimer = setTimeout(i => {
+			this.plusOneTimeout = false;
+		}, 60*1000)
 	}
 
 
