@@ -55,21 +55,21 @@
             }
             idx += 1;
          });
-         var formData = new FormData();
-         formData.append("series", "{{ slug }}")
-         formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
-         $.ajax({
-            type: "POST",
-            url: "/reader/update_view_count/",
-            processData: false,
-            contentType: false,
-            data: formData,
-            success: function (data) {},
-            error: function(data){
-               console.log('POST failed');
-               console.log(data);
-            }
-         });
+         //var formData = new FormData();
+         //formData.append("series", "{{ slug }}")
+         //formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
+         //$.ajax({
+         //   type: "POST",
+         //   url: "/reader/update_view_count/",
+         //   processData: false,
+         //   contentType: false,
+         //   data: formData,
+         //   success: function (data) {},
+         //   error: function(data){
+         //      console.log('POST failed');
+         //     console.log(data);
+         //  }
+         //});
          $("#chapterTitleSearch").on("keyup", function() {
             var value = $(this).val().toLowerCase();
             $("#chapterTable tr").filter(function() {

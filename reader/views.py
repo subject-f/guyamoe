@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import HttpResponseNotFound
 from django.views.generic import DetailView, TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_page, cache_control
 from django.core.cache import cache
 from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
@@ -117,11 +117,12 @@ def get_all_metadata(series_slug):
         chapters = Chapter.objects.filter(series=series).select_related('series')
         series_metadata = {}
         for chapter in chapters:
-            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title}
+            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title, "version_query": settings.STATIC_VERSION}
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
 @cache_page(3600)
+@cache_control(max_age=21600)
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:

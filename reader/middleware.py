@@ -20,8 +20,8 @@ class OnlineNowMiddleware(object):
         online.add(user_ip)
         if len(online) > peak_traffic:
             peak_traffic = len(online)
+            cache.set("peak_traffic", peak_traffic, 3600 * 8)
         cache.set("online_now", online, 600)
-        cache.set("peak_traffic", peak_traffic, 3600 * 8)
         request.online_now = len(online)
         request.peak_traffic = peak_traffic
         response = self.get_response(request)

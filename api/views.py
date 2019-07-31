@@ -6,7 +6,9 @@ from django.core.cache import cache
 from datetime import datetime, timezone
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from PIL import ImageFilter, Image
+from django.views.decorators.csrf import csrf_exempt
 import random
+import hashlib
 import os
 import json
 import zipfile
@@ -18,9 +20,11 @@ def series_data(request, series_slug):
         series = Series.objects.get(slug=series_slug)
         chapters = Chapter.objects.filter(series=series).select_related('group')
         chapters_dict = {}
+        groups_dict = {}
         for chapter in chapters:
             chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
             ch_clean = Chapter.clean_chapter_number(chapter)
+            groups_dict[str(chapter.group.id)] = chapter.group.name
             if ch_clean in chapters_dict:
                 chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
             else:
@@ -32,9 +36,20 @@ def series_data(request, series_slug):
                         str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
                     }
                 }
-        series_api_data = {"slug": series_slug, "title": series.name, "chapters": chapters_dict}
-        cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 12)
-    return HttpResponse(JsonResponse(series_api_data))
+        vols = Volume.objects.filter(series=series).order_by('-volume_number')
+        cover_vol_url = ""
+        for vol in vols:
+            if vol.volume_cover:
+                cover_vol_url = f"/media/{vol.volume_cover}"
+                break
+        series_api_data = {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "chapters": chapters_dict}
+        series_api_hash = int(hashlib.sha256(json.dumps(series_api_data).encode('utf-8')).hexdigest(), 16) % 10**8
+        cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
+        cache.set(f"series_api_hash_{series_slug}", series_api_hash, 3600 * 48)
+    return HttpResponse(json.dumps(series_api_data), content_type="application/json")
+
+def series_data_hash(request, series_slug):
+    return HttpResponse(json.dumps(cache.get(f"series_api_hash_{series_slug}")), content_type="application/json")
 
 def all_groups():
     groups_data = cache.get(f"all_groups_data")
@@ -128,15 +143,17 @@ def get_volume_covers(request, series_slug):
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
 
+@csrf_exempt
 def search_index(request, series_slug):
     if request.POST:
         search_query = request.POST["searchQuery"]
         search_results = {}
         for word in set(search_query.split()[:20]):
-            word_query = ChapterIndex.objects.filter(word=word.upper()).first()
-            if word_query:
-                chapter_and_pages = word_query.chapter_and_pages
-                search_results[word] = chapter_and_pages
+            word_query = ChapterIndex.objects.filter(word__contains=word.upper())
+            search_results[word] = {}
+            for word_obj in word_query:
+                chapter_and_pages = word_obj.chapter_and_pages
+                search_results[word][word_obj.word] = chapter_and_pages
         return HttpResponse(json.dumps(search_results), content_type="application/json")
 
 def clear_series_cache(series_slug):
