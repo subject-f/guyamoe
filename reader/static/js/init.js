@@ -102,13 +102,7 @@ function ReaderAPI(o) {
 						seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume] = seriesData.chaptersIndex[i];
 				}
 				this.data[slug] = seriesData;
-			})
-			.then(o => {
-				return fetch(this.url + 'get_groups/' + slug + '/')
-			})
-			.then(response => response.json())
-			.then(o => {
-				this.data[slug].groups = o.groups;
+				this.data[slug].groups = seriesData.groups;
 				this.S.out('seriesUpdated', this.data[slug]);
 			})
 		return this.seriesRequest;
