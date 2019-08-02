@@ -43,6 +43,10 @@ class Command(BaseCommand):
             "We-Want-To-Talk-About-Kaguya": "https://jaiminisbox.com/reader/series/we-want-to-talk-about-kaguya/",
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/"
         }
+        self.blacklist_jb = {
+            "Kaguya-Wants-To-Be-Confessed-To": ["147.1", "148.1"],
+
+        }
         self.mangadex_manga = {
             #"Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
             "We-Want-To-Talk-About-Kaguya": "https://mangadex.org/title/29338/we-want-to-talk-about-kaguya"
@@ -177,14 +181,21 @@ class Command(BaseCommand):
                     for chapter in soup.select(".list .group .element"):
                         chapter_regex = re.search(r'^Chapter (\d*\.?\d*): (.*)$', chapter.select(".title")[0].text)
                         chap_numb = chapter_regex.group(1)
-                        if str(float(chap_numb)) in downloaded_chapters:
+                        if str(float(chap_numb)) in downloaded_chapters or str(float(chap_numb)) in self.blacklist_jb[series.slug]:
                             continue
                         else:
                             print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
                             chapter_dl_url = chapter.select(".icon_wrapper a")[0]["href"]
                             chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_dl_url}
                 else:
-                    print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
+                    print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Failed to reach JB page for {series}. Response status: {resp.status}")
+            #print(latest_chap)
+            #async with session.get(f"https://jaiminisbox.com/reader/read/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/page/1") as resp:
+            #    if resp.status == 200:
+            #        webpage = await resp.text()
+            #        soup = BeautifulSoup(webpage, "html.parser")
+            #        title = soup.select(".tbtitle .text a")[0].text.split(":", 1)[1].strip()
+            #        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/"}
             for chapter in chapters:
                 chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 print(f"Downloading chapter {chapter}...")
@@ -213,9 +224,9 @@ class Command(BaseCommand):
             for manga in self.mangadex_manga:
                 latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
                 if manga == "Kaguya-Wants-To-Be-Confessed-To":
-                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga)])                    
+                    chapters = [str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga)]
                 else:
-                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+                    chapters = [str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)]
                 loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
         if options['dl_md']:
             for manga in self.mangadex_manga:
