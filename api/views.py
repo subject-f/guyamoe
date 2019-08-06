@@ -14,41 +14,51 @@ import json
 import zipfile
 
 
-def series_data(request, series_slug):
+def series_data(series_slug):
+    series = Series.objects.get(slug=series_slug)
+    chapters = Chapter.objects.filter(series=series).select_related('group')
+    chapters_dict = {}
+    groups_dict = {}
+    for chapter in chapters:
+        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
+        ch_clean = Chapter.clean_chapter_number(chapter)
+        groups_dict[str(chapter.group.id)] = chapter.group.name
+        if ch_clean in chapters_dict:
+            chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
+        else:
+            chapters_dict[ch_clean] = {
+                "volume": str(chapter.volume),
+                "title": chapter.title,
+                "folder": chapter.folder,
+                "groups": {
+                    str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
+                }
+            }
+    vols = Volume.objects.filter(series=series).order_by('-volume_number')
+    cover_vol_url = ""
+    for vol in vols:
+        if vol.volume_cover:
+            cover_vol_url = f"/media/{vol.volume_cover}"
+            break
+    return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "chapters": chapters_dict}
+
+def series_data_cache(series_slug):
+    series_api_data = series_data(series_slug)
+    series_api_hash = int(hashlib.sha256(json.dumps(series_api_data).encode('utf-8')).hexdigest(), 16) % 10**16
+    cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
+    cache.set(f"series_api_hash_{series_slug}", series_api_hash, 3600 * 48)
+    return series_api_data, series_api_hash
+
+def get_series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
-        series = Series.objects.get(slug=series_slug)
-        chapters = Chapter.objects.filter(series=series).select_related('group')
-        chapters_dict = {}
-        groups_dict = {}
-        for chapter in chapters:
-            chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
-            ch_clean = Chapter.clean_chapter_number(chapter)
-            groups_dict[str(chapter.group.id)] = chapter.group.name
-            if ch_clean in chapters_dict:
-                chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
-            else:
-                chapters_dict[ch_clean] = {
-                    "volume": str(chapter.volume),
-                    "title": chapter.title,
-                    "folder": chapter.folder,
-                    "groups": {
-                        str(chapter.group.id): sorted(os.listdir(os.path.join(chapter_media_path, str(chapter.group.id))))
-                    }
-                }
-        vols = Volume.objects.filter(series=series).order_by('-volume_number')
-        cover_vol_url = ""
-        for vol in vols:
-            if vol.volume_cover:
-                cover_vol_url = f"/media/{vol.volume_cover}"
-                break
-        series_api_data = {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "chapters": chapters_dict}
-        series_api_hash = int(hashlib.sha256(json.dumps(series_api_data).encode('utf-8')).hexdigest(), 16) % 10**8
-        cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
-        cache.set(f"series_api_hash_{series_slug}", series_api_hash, 3600 * 48)
+        series_api_data, _ = series_data_cache(series_slug)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
 
 def series_data_hash(request, series_slug):
+    series_api_hash = cache.get(f"series_api_hash_{series_slug}")
+    if not series_api_hash:
+        _, series_api_hash = series_data_cache(series_slug)
     return HttpResponse(json.dumps(cache.get(f"series_api_hash_{series_slug}")), content_type="application/json")
 
 def all_groups():
@@ -70,14 +80,16 @@ def get_all_series(request):
                 if vol.volume_cover:
                     cover_vol_url = f"/media/{vol.volume_cover}"
                     break
-            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups()}
+            _, series_api_hash = series_data_cache(series.slug)
+            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups(), "series_data_hash": series_api_hash}
+            break
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
-        groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug)}
+        groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug).select_related('group')}
         cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
     return HttpResponse(json.dumps({"groups": groups_data}), content_type="application/json")
 
@@ -149,7 +161,7 @@ def search_index(request, series_slug):
         search_query = request.POST["searchQuery"]
         search_results = {}
         for word in set(search_query.split()[:20]):
-            word_query = ChapterIndex.objects.filter(word__contains=word.upper())
+            word_query = ChapterIndex.objects.filter(word__startswith=word.upper())
             search_results[word] = {}
             for word_obj in word_query:
                 chapter_and_pages = word_obj.chapter_and_pages

@@ -20,7 +20,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # # Positional arguments
         parser.add_argument('--lookup', nargs='?', default='all')
-        parser.add_argument('--dl_md', nargs='?')
+        parser.add_argument('--dl', nargs='?')
+        parser.add_argument('--series', nargs='?')
+        parser.add_argument('--latest_chap', nargs='?')
 
         # # Named (optional) arguments
         # parser.add_argument(
@@ -43,8 +45,12 @@ class Command(BaseCommand):
             "We-Want-To-Talk-About-Kaguya": "https://jaiminisbox.com/reader/series/we-want-to-talk-about-kaguya/",
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/"
         }
+        self.blacklist_jb = {
+            "Kaguya-Wants-To-Be-Confessed-To": ["147.1", "148.1"],
+
+        }
         self.mangadex_manga = {
-            #"Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
+            "Kaguya-Wants-To-Be-Confessed-To": "https://mangadex.org/title/17274/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen",
             "We-Want-To-Talk-About-Kaguya": "https://mangadex.org/title/29338/we-want-to-talk-about-kaguya"
         }
         self.jb_group = 3
@@ -59,7 +65,7 @@ class Command(BaseCommand):
             while True:
                 try:
                     self.page = await browser.newPage()
-                    await self.page.goto(chapter["url"] + f"/{p}")
+                    await self.page.goto(chapter["url"] + f"/{p}", timeout=10000)
                     image_dom = await self.page.waitForSelector("img.noselect", timeout=6000)
                     image_url = await self.page.evaluate("(image_dom) => image_dom.src", image_dom)
                     is_end = re.search(r'(\d+)\.\w+$', image_url).group(1)
@@ -76,7 +82,18 @@ class Command(BaseCommand):
                     if p == chapter["total_pages"] + 1:
                         print("Finished indexing all pages for this chapter.")
                     else:
-                        traceback.print_exc()
+                        url_match = re.search(r'(.*)(\d+)\.(\w+)', image_url)
+                        next_page = int(url_match.group(2))
+                        async with aiohttp.ClientSession() as session:
+                            while True:
+                                image_url = f"{url_match.group(1)}{next_page}.{url_match.group(3)}"
+                                async with session.get(image_url) as resp:
+                                    if resp.status == 200:
+                                        chapter["pages"].append(image_url)
+                                        next_page += 1
+                                    else:
+                                        break
+                        # traceback.print_exc()
                     break
         except:
             traceback.print_exc()
@@ -165,60 +182,78 @@ class Command(BaseCommand):
         finally:
             await self.browser.close()
 
-    async def jaiminis_box_checker(self, downloaded_chapters, series, latest_volume, url):
+    async def jaiminis_box_checker(self, downloaded_chapters, series, latest_volume, url, latest_chap=None):
         chapters = {}
         group = Group.objects.get(pk=self.jb_group)
         series = Series.objects.get(slug=series)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    webpage = await resp.text()
-                    soup = BeautifulSoup(webpage, "html.parser")
-                    for chapter in soup.select(".list .group .element"):
-                        chapter_regex = re.search(r'^Chapter (\d*\.?\d*): (.*)$', chapter.select(".title")[0].text)
-                        chap_numb = chapter_regex.group(1)
-                        if str(float(chap_numb)) in downloaded_chapters:
-                            continue
-                        else:
-                            print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
-                            chapter_dl_url = chapter.select(".icon_wrapper a")[0]["href"]
-                            chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_dl_url}
-                else:
-                    print(f"Failed to reach JB page for {series}. Response status: {resp.status}")
+        if not latest_chap:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        webpage = await resp.text()
+                        soup = BeautifulSoup(webpage, "html.parser")
+                        for chapter in soup.select(".list .group .element"):
+                            chapter_regex = re.search(r'^Chapter (\d*\.?\d*): (.*)$', chapter.select(".title")[0].text)
+                            chap_numb = chapter_regex.group(1)
+                            if str(float(chap_numb)) in downloaded_chapters or str(float(chap_numb)) in self.blacklist_jb[series.slug]:
+                                continue
+                            else:
+                                print(f"Found new chapter ({chap_numb}) on Jaiminisbox for {series}.")
+                                chapter_dl_url = chapter.select(".icon_wrapper a")[0]["href"]
+                                chapters[chap_numb] = {"title": chapter_regex.group(2), "url": chapter_dl_url}
+                    else:
+                        print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Failed to reach JB page for {series}. Response status: {resp.status}")
+        else:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://jaiminisbox.com/reader/read/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/page/1") as resp:
+                    if resp.status == 200:
+                        webpage = await resp.text()
+                        soup = BeautifulSoup(webpage, "html.parser")
+                        title = soup.select(".tbtitle .text a")[1].text.split(":", 1)[1].strip()
+                        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/"}
             for chapter in chapters:
                 chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
                 print(f"Downloading chapter {chapter}...")
-                async with session.get(chapters[chapter]["url"]) as resp:
-                    if resp.status == 200:
-                        data = await resp.read()
-                        with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
-                            all_pages = sorted(zip_file.namelist())
-                            padding = len(str(len(all_pages)))
-                            for idx, page in enumerate(all_pages):
-                                extension = page.rsplit(".", 1)[1]
-                                page_file = f"{str(idx+1).zfill(padding)}.{extension}"
-                                with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
-                                    f.write(zip_file.read(page))
-                                create_preview_pages(chapter_folder, group_folder, page_file)
-                        print(f"Successfully downloaded chapter and added to db.")
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(chapters[chapter]["url"]) as resp:
+                        if resp.status == 200:
+                            data = await resp.read()
+                            with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
+                                all_pages = sorted(zip_file.namelist())
+                                padding = len(str(len(all_pages)))
+                                for idx, page in enumerate(all_pages):
+                                    extension = page.rsplit(".", 1)[1]
+                                    page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+                                    with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
+                                        f.write(zip_file.read(page))
+                                    create_preview_pages(chapter_folder, group_folder, page_file)
+                            print(f"Successfully downloaded chapter and added to db.")
 
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
-        if options['lookup'] == 'all' or options['lookup'] == 'jb':
-            for manga in self.jaiminisbox_manga:
-                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
-                loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
-        if options['lookup'] == 'all' or options['lookup'] == 'md':
-            for manga in self.mangadex_manga:
-                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-                if manga == "Kaguya-Wants-To-Be-Confessed-To":
-                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga)])                    
+        if options['dl'] == 'jb' and options['series'] and options['latest_chap']:
+                latest_volume = Volume.objects.filter(series__slug=options['series']).order_by('-volume_number')[0].volume_number
+                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=options['series'], group=self.jb_group)])
+                if str(float(options['latest_chap'])) not in chapters:
+                    loop.run_until_complete(self.jaiminis_box_checker("", options['series'], latest_volume, self.jaiminisbox_manga[options['series']], latest_chap=options['latest_chap']))
                 else:
-                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
-                loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
-        if options['dl_md']:
-            for manga in self.mangadex_manga:
-                latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
-                chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
-                loop.run_until_complete(self.mangadex_download({}, manga, self.md_group, latest_volume, url=options["dl_md"]))
+                    print("Chapter has already been downloaded.")
+        else:
+            if options['lookup'] == 'all' or options['lookup'] == 'jb':
+                for manga in self.jaiminisbox_manga:
+                    latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+                    chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.jb_group)])
+                    loop.run_until_complete(self.jaiminis_box_checker(chapters, manga, latest_volume, self.jaiminisbox_manga[manga]))
+            if options['lookup'] == 'all' or options['lookup'] == 'md':
+                for manga in self.mangadex_manga:
+                    latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+                    if manga == "Kaguya-Wants-To-Be-Confessed-To":
+                        chapters = [str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga)]
+                    else:
+                        chapters = [str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)]
+                    loop.run_until_complete(self.mangadex_checker(chapters, manga, latest_volume, self.mangadex_manga[manga]))
+        # if options['dl_md']:
+        #     for manga in self.mangadex_manga:
+        #         latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
+        #         chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
+        #         loop.run_until_complete(self.mangadex_download({}, manga, self.md_group, latest_volume, url=options["dl_md"]))
