@@ -1072,6 +1072,15 @@ header > .close {
 	padding: 0;
 }
 
+.IndexSearch:empty:before {
+	content: "Type your query and press Enter to search the entire manga contents.";
+	width: 100%;
+	display: flex;
+	padding: 1rem 4rem;
+	text-align: center;
+	opacity: 0.5;
+	box-sizing: border-box;
+}
 
 .ChapterUnit {
 	display: flex;
@@ -1132,11 +1141,19 @@ header > .close {
 	font-family: monospace;
 	margin-right: 0.4rem;
 }
+.ChapterUnit .pages div:hover {
+	background: rgba(255,255,255,0.5);
+	color: black;
+}
 
 .ChapterUnit i {
 	color: #b2dffb;
 	text-decoration: none;
 	font-style: normal;
+}
+
+.Loadable {
+	position: relative;
 }
 
 .Loadable:after {
@@ -1152,7 +1169,81 @@ header > .close {
 	background-position: left center;
 	background-repeat: no-repeat;
 	background-size: contain;
+	display: none;
 }
+
+.Loadable.loading:after {
+	min-height: 6rem;
+	display: flex;
+	background-image: url(../img/fujiload.png);
+	animation: weewoo 1s infinite;
+}
+
+@keyframes weewoo {
+	0% {
+		transform: translateX(-50%), translateY(-50%) scale(1) rotate(0deg);
+	}
+	20% {
+		transform: translateX(-50%) translateY(-50%) scale(1.2) rotate(10deg);
+	}
+	50% {
+		transform: translateX(-50%) translateY(-50%) scale(1) rotate(0deg);
+	}
+	75% {
+		transform: translateX(-50%) translateY(-50%) scale(1.2) rotate(-10deg);
+	}
+	100% {
+		transform: translateX(-50%) translateY(-50%) scale(1) rotate(0deg);
+	}
+}
+
+.search-tabs {
+	display: flex;
+	width: 100%;
+	justify-content: stretch;
+	align-items: center;
+	margin-top: 0.5rem;
+}
+
+.search-tabs .Tab {
+	flex-grow: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.5rem 0;
+	font-size: 0.8em;
+	cursor: default;
+	border-bottom: 1px solid transparent;
+}
+
+.search-tabs .Tab:hover {
+	border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+.search-tabs .Tab.is-active {
+	border-bottom: 1px solid #b2dffbb3;
+}
+.search-tabs .Tab i {
+	font-style: normal;
+	font-weight: normal;
+	display: inline-block;
+	padding: 0.1em 0.3em;
+	border: 1px solid gray;
+	border-radius: 3px;
+	font-size: 0.8em;
+	margin-left: 1em;
+	text-align: center;
+	min-width: 2ch;
+}
+
+.search-tabs .Tab i:empty {
+	display: none;
+}
+
+.search-tabs .Tab:nth-child(2) > i {
+
+}
+
+
 
 
 @media (max-width: 700px) {
@@ -1387,7 +1478,7 @@ header > .close {
 	pointer-events: none;
 }
 
-.hidden {
+.hidden, .is-hidden {
 	display: none;
 }
 

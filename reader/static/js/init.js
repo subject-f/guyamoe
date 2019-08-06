@@ -65,8 +65,8 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							// + "shrunk_blur_"+ group
-							+ group+"_shrunk_blur" 
+							+ "shrunk_blur_"+ group
+							// + group+"_shrunk_blur" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
@@ -76,8 +76,8 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							// + "shrunk_"+ group
-							+ group+"_shrunk" 
+							+ "shrunk_"+ group
+							// + group+"_shrunk" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
@@ -102,13 +102,6 @@ function ReaderAPI(o) {
 						seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume] = seriesData.chaptersIndex[i];
 				}
 				this.data[slug] = seriesData;
-			})
-			.then(o => {
-				return fetch(this.url + 'get_groups/' + slug + '/')
-			})
-			.then(response => response.json())
-			.then(o => {
-				this.data[slug].groups = o.groups;
 				this.S.out('seriesUpdated', this.data[slug]);
 			})
 		return this.seriesRequest;
@@ -124,9 +117,8 @@ function ReaderAPI(o) {
 			})
 			.then(response => response.json())
 			.then(searchData => {
-				this.indexData[o.slug] = searchData;
-				this.S.out('indexUpdated', this.indexData[o.slug]);
-				return this.indexData[o.slug];
+				this.S.out('indexUpdated', searchData);
+				return {result:searchData, query: o.query};
 			})
 	}
 
@@ -382,15 +374,15 @@ function UI_Reader(o) {
 		page: 0,
 	};
 	
-	new KeyListener()
-		.condition(() => Loda.$.classList.contains('hidden'))
-		.condition(() => Settings.all.layout.get() != 'ttb')
-		.pre(() => this._.image_viewer.querySelector('.is-active').focus())
+	// new KeyListener()
+	// 	.condition(() => Loda.$.classList.contains('hidden'))
+	// 	.condition(() => Settings.all.layout.get() != 'ttb')
+	// 	.pre(() => this._.image_viewer.querySelector('.is-active').focus())
 
-	new KeyListener()
-		.condition(() => Loda.$.classList.contains('hidden'))
-		.condition(() => Settings.all.layout.get() == 'ttb')
-		.pre(() => this._.image_container.focus())
+	// new KeyListener()
+	// 	.condition(() => Loda.$.classList.contains('hidden'))
+	// 	.condition(() => Settings.all.layout.get() == 'ttb')
+	// 	.pre(() => this._.image_container.focus())
 	
 
 	new KeyListener(this.$)
@@ -871,6 +863,7 @@ function UI_ReaderImageView(o) {
 							)
 					})
 				}
+				this._.image_container.focus()
 			}
 		}else{
 			this.imageContainer.$.style.transform = 'translateX(' + (-100 * realIndex - 0.001) + '%)';
@@ -882,6 +875,7 @@ function UI_ReaderImageView(o) {
 				top: 0
 			})
 			// }, 150)
+			this.$.querySelector('.is-active').focus()
 		}
 	}
 
@@ -1386,13 +1380,20 @@ function UI_Loda_Search(o) {
 		name: 'Search',
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
 				<input type="text" data-bind="input" placeholder="⌕" />
-				<div class="list" data-bind="lookup"></div>
-				<div class="list" data-bind="indexer"></div>
+				<div class="search-tabs" data-bind="tabs">
+				</div>
+				<div class="list-container" data-bind="container">
+					<div class="list" data-bind="lookup"></div>
+					<div class="list is-hidden" data-bind="indexer"></div>
+				</div>
 			</content></div>`
 	});
 	this.manager = o.manager;
 	this.name = 'Indexer';
 	this.focusElement = this._.input;
+	this.container = new UI_ContainerList({
+		node: this._.container
+	});
 
 	this.lookup = new UI_MangaSearch({
 		node: this._.lookup
@@ -1401,9 +1402,34 @@ function UI_Loda_Search(o) {
 		node: this._.indexer
 	})
 
+	this.tabs = new UI_Tabs({
+			node: this._.tabs
+		})
+		.add(new UI_Tab({
+			text: 'Title search'
+		}))
+		.add(new UI_Tab({
+			text: 'Gantinomicon',
+			counterText: 'Press ⮠ &nbsp;'
+		}))
+		.S.link(this.container)
+		.S.linkAnonymous('number', num => {
+			this._.input.focus();
+		});
+	this.tabs.select(0);
+
+	this.lookup.S.link(this.tabs.get(0));
+	this.indexer.S.link(this.tabs.get(1));
+
 	this.searchField = new UI_Input({
 		node: this._.input
-	}).S.link(this.lookup).S.link(this.indexer)
+		})
+		.S.link(this.lookup)
+		.S.link(this.indexer)
+		.S.linkAnonymous('text', text => {
+			this.tabs.select(1);
+			this.tabs.get(1).update('Loading...');
+		})
 
 }
 
@@ -1415,18 +1441,100 @@ function UI_IndexSearch(o) {
 		kind: ['IndexSearch'].concat(o.kind || []),
 		html: o.html || `<div></div>`
 	});
+	Loadable.call(this);
 
 	this.search = function(query) {
+		if(query.length < 3) {
+			return this.clear();
+		}
 		API.requestIndex({
 			query: query,
 			slug: Reader.SCP.series
 		}).then(data => {
+			for(var searchWord in data.result) {
+			var searchResult = data.result[searchWord];
+				if(!searchResult._merged) searchResult._merged = {};
+				for(var wordVariant in searchResult) {
+				var chapters = searchResult[wordVariant];
+					if(wordVariant[0] == '_') continue;
+					for(var chapter in chapters) {
+					var pageList = chapters[chapter];
+						if(!searchResult._merged[chapter])
+							searchResult._merged[chapter] = pageList || [];
+						else {
+							pageList.forEach(page => {
+								if(searchResult._merged[chapter].indexOf(page) < 0)
+									searchResult._merged[chapter].push(page);
+							})
+						}
+					}
+				}
+			}
 
-		})
+		var wordAddrMap = {};
+			if(Object.keys(data.result).length > 1) {
+				for(var word in data.result) {
+				var chapters = data.result[word]._merged;
+					for(var chapter in chapters) {
+					var pageArray = chapters[chapter];
+						pageArray.forEach(page => {
+						var id = '' + chapter + '/' + page;
+							if(!wordAddrMap[id]) wordAddrMap[id] = 0;
+							wordAddrMap[id] += 1;
+						})
+					}
+				}
+			var wordAddrMap = Object.filter(wordAddrMap, id => {
+					return id == Object.keys(data.result).length;
+				})
+			var chapters = {};
+				for(var key in wordAddrMap) {
+				var id = key.split('/')
+					if(!chapters[id[0]]) chapters[id[0]] = [];
+					chapters[id[0]].push(id[1]);
+				}
+			}else{
+				chapters = data.result[Object.keys(data.result)[0]]._merged;
+			}
+
+
+			// if(Object.keys(data.result).length > 1) {
+			// var chapters = Object.keys(data.result[firstWord]._merged).filter((item, key) => {
+			// 		for(var word in data.result) {
+			// 			if(word == firstWord) continue;
+			// 		var chapters = Object.keys(data.result[word]._merged);
+			// 			if(chapters.indexOf(item) < 0)
+			// 				return false;
+			// 		}
+			// 		return true;
+			// 	})	
+			// }else{
+			// 	var chapters = Object.keys(data.result[firstWord]._merged);
+			// }
+
+		var chapterElements = [];
+			for(var key in chapters) {
+			var item = chapters[key];
+				try{
+				chapterElements.push(new UI_ChapterUnit({
+					chapter: Reader.current.chapters[key.replace('-', '.')],
+				//	substring: Object.keys(data.result)[0],
+					pages: item.sort((a,b) => a-b)
+				}))	
+				}catch(e){
+					console.warn('Chapter', key, 'wasn\'t found?')
+				}	
+			};
+
+			this.clear().add(chapterElements);
+
+		}).catch(err => {throw new Error(err)})
+
 	}
 
 	this.S.mapIn({
-		'text': this.search
+		'text': this.search,
+		// 'quickText': this.clear
 	})
 }
 function UI_MangaSearch(o) {
@@ -1495,16 +1603,32 @@ function UI_ChapterUnit(o) {
 		node: o.node,
 		kind: ['ChapterUnit'].concat(o.kind || []),
 		name: 'ChapterUnit',
-		html: o.html || `<div><figure data-bind="figure"></figure><content><h2 data-bind="title">123 - Miko Iino wants to yeet</h2><blockquote data-bind="text"></blockquote></content></div>`
+		html: o.html || `<div><figure data-bind="figure"></figure><content><h2 data-bind="title">123 - Miko Iino wants to yeet</h2><blockquote data-bind="text"></blockquote><div class="pages" data-bind="pages"></div></content></div>`
 	});
 
 	this.chapter = o.chapter;
+	this.pages = o.pages;
 	this.substring = o.substring
-
+	this.pageList = new UI_Tabs({
+		node: this._.pages
+	})
 	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
 	for(var group in o.chapter.images) {
 		this._.figure.style.backgroundImage = 'url('+o.chapter.previews[group][0]+')';
 		break;
+	}
+	if(this.pages) {
+		this.pages.forEach(page => {
+		var pageButton = new UI_Dummy({text: page});
+			pageButton.$.onclick = e => {
+				e.stopPropagation();
+				e.preventDefault();
+				Reader.drawChapter(this.chapter.id, +e.target.innerHTML-1);
+				Loda.close();
+				return false;
+			}
+			this.pageList.add(pageButton);
+		})
 	}
 
 	this.$.onclick = e => {

@@ -27,6 +27,10 @@ var index;
 	else
 		return null;
 }
+Object.filter = (obj, predicate) => 
+    Object.keys(obj)
+          .filter( key => predicate(obj[key]) )
+          .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
 DOMTokenList.prototype.cycle = function(array) {
 var classesArray = Array.prototype.slice.call(this);

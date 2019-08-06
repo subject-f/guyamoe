@@ -16,8 +16,6 @@
 	    <meta name="author" content="appu#4444 and Algoinde#8477">
 	 
 		<meta name="viewport" content="width=device-width">
-		<script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
-		<script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/icons.css' %}{{ version_query }}">
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
@@ -29,7 +27,7 @@
 			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual is-ico-button"></div></div>
 			<header>
 				<a data-bind='close' href="/reader/series/{{ slug }}" class="is-ico-button close"></a>
-				<h1 data-bind='title'></h1>
+				<h1 data-bind='title'>{{ series_name }}</h1>
 				<button class="is-ico-button"></button>
 			</header>
 			<div class="rdr-aside-content">
@@ -121,6 +119,7 @@
 	<div class="Tooltippy"></div>
 	<div class="LodaManager hidden" tabindex="-1"></div>
 </body>
+<script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
+<script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>
-		
 </html>

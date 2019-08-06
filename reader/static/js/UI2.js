@@ -421,6 +421,35 @@ function Linkable(o) {
 	}*/
 }
 
+function Loadable(o) {
+	this.L = {};
+	this.$.classList.add('Loadable');
+
+
+	this.L.loading = function() {
+		this.$.classList.add('loading');
+	};
+
+	this.L.loaded = function() {
+		this.$.classList.remove('loading');
+	}
+
+	this.L.error = function(o) {
+		this.classList.add('l-'+o.type)
+		if(o.persist) {
+			this.$.classList.add('load-error');
+		}else{
+			this.$.classList.add('load-error');
+			setTimeout(e => {
+					this.classList.remove('load-error');
+					this.classList.remove('l-'+o.type);
+				},
+				o.ms || 500
+			)
+		}
+	}
+}
+
 function UI_List(o) {
 	o=be(o);
 	UI.call(this, {
@@ -428,10 +457,13 @@ function UI_List(o) {
 		kind: ['List'].concat(o.kind || []),
 		html: o.html || '<ul></ul>',
 	});
+	Linkable.call(this);
+	this.childrenConstructor =  o.childrenConstructor || UI_Dummy;
 	this.lastAdded = [];
 
 	for (var i = 0; i < this.$.children.length; i++) {
-		if(!this.$.children[i]._struct) new UI_Dummy({node: this.$.children[i]})
+		if(!this.$.children[i]._struct) new this.childrenConstructor({node: this.$.children[i]})
+		this.S.out('count', this.$.children.length);
 	}
 
 	this.get = function(index) {
@@ -455,6 +487,7 @@ function UI_List(o) {
 			this.$.appendChild(item.$);
 			this.lastAdded.push(item);
 		});
+		this.S.out('count', this.$.children.length);
 		return this;
 	}
 
@@ -466,19 +499,25 @@ function UI_List(o) {
 			this.$.appendChild(item.$);
 			this.lastAdded.push(item);
 		}
+		this.S.out('count', this.$.children.length);
 		return this;
 	}
 
 	this.insertAt = function(uiInstance, referenceInstance) {
 		//TD if child of $
-		if(referenceInstance) return insertAfter(uiInstance.$, referenceInstance.$);
-		else
-			return; //errhandle
+		if(referenceInstance) {
+		var re = insertAfter(uiInstance.$, referenceInstance.$);
+			this.S.out('count', this.$.children.length);
+			return re;
+		} else {
+			return;
+		} //errhandle
 	}
 
 	this.clear = function() {
 		this.$.children.slice().forEach(item => alg.discardElement(item));
 		this.lastAdded = [];
+		this.S.out('count', this.$.children.length);
 		return this;
 	}
 
@@ -496,6 +535,8 @@ function UI_List(o) {
 		this.$.reverseChildren();
 		return this;
 	}
+
+	this.S.addOut('count')
 }
 
 
@@ -506,6 +547,7 @@ function UI_Dummy(o) {
 		kind: ['Dummy'].concat(o.kind || []),
 		html: o.html || '<div></div>'
 	});
+	this.text = o.text;
 	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
 }
 
@@ -527,9 +569,7 @@ function UI_Selector(o) {
 		node: o.node,
 		kind: ['Selector'].concat(o.kind || []),
 		html: o.html || '<div></div>',
-	});
-	Linkable.call(this, {
-		
+		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
 	this.singular = o.singular?true:false;
 	this.persistent = o.persistent?true:false;
@@ -714,12 +754,10 @@ function UI_ContainerList(o) {
 		singular: true,
 		inverse: true,
 	});
-	Linkable.call(this);
 
 	this.S.mapIn({
 		number: this.select,
 	})
-
 }
 
 function UI_ScrolledContainerList(o) {
@@ -758,9 +796,45 @@ function UI_Tabs(o){
 		refire: true,
 		toggleClass: 'is-active',
 		held: o.held||false,
+		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
 
 	return this;
+}
+
+function UI_IndicatorTabs(o) {
+	o=be(o);
+	UI_Tabs.call(this, {
+		node: o.node,
+		kind: ['IndicatorTabs'].concat(o.kind || []),
+		html: o.html || '<div></div>',
+		childrenConstructor: UI_Tab
+	})
+}
+
+function UI_Tab(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['Tab'].concat(o.kind || []),
+		html: o.html || '<div><span data-bind="text"></span><i data-bind="counter" class="hidden"></i></div>'
+	})
+	Linkable.call(this)
+
+	this.counter = o.counter;
+	if(this.counter) {
+		this._.counter.classList.remove('hidden');
+	}
+	this.counterText = o.counterText || '';
+
+	this._.text.innerHTML = o.text;
+	this._.counter.innerHTML = this.counterText;
+
+	this.update = function(value) {
+		this._.counter.innerHTML = value;
+	}
+
+	this.S.addIn('count', this.update);
 }
 
 function UI_Input(o) {
@@ -792,9 +866,9 @@ function UI_Input(o) {
 		if(!silent) this.S.out('text', this.value);
 	}
 
-	this.$.onkeyup = this.quickHandler.bind(this);
+	this.$.onkeypress = this.quickHandler.bind(this);
 
-	this.keyl = new KeyListener(this.$)
+	this.keyl = new KeyListener(this.$, 'keypress')
 			.attach('submit', ['Enter'], e => this.handler(e))
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
 
