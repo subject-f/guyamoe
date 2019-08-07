@@ -1409,7 +1409,7 @@ function UI_Loda_Search(o) {
 			text: 'Title search'
 		}))
 		.add(new UI_Tab({
-			text: 'Gantinomicon',
+			text: 'Text search',
 			counterText: 'Press ⮠ &nbsp;'
 		}))
 		.S.link(this.container)
