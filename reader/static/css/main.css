@@ -998,19 +998,21 @@ header > .close {
 	overflow: auto;
 	position: fixed;
 	background: rgba(0,0,0,0.6);
-	align-items: center;
-	justify-content: flex-start;
+	justify-content: center;
+	align-items: flex-start;
 	padding-bottom: 5vh;
-	flex-direction: column;
+	flex-direction: row;
+	flex-wrap: wrap;
 }
 .LodaManager:after {
 	content: '';
 	display: block;
-	padding: 5vh;
+	padding: 5vh 0;
+	min-width: 100%;
 }
 
 .Loda {
-	display: inline-flex;
+	display: flex;
 	flex-direction: column;
 	background: #232629;
 	border-radius: 4px;

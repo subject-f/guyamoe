@@ -41,6 +41,7 @@ function KeyListener(target, mode) {
 	}
 	this.target._keyListener.list.push(this);
 	this.handler = e => {
+	var keyCode = e.code || e.key;
 		if(this.held) return;
 		if(this.conditions.length > 0) {
 			for(var i=0; i<this.conditions.length;i++) {
@@ -51,14 +52,14 @@ function KeyListener(target, mode) {
 			this.pres.forEach(item => item(e))
 		}
 		if(this.exclusions.length > 0) {
-			if(this.exclusions.indexOf(e.code) > -1) return;
+			if(this.exclusions.indexOf(keyCode) > -1) return;
 		}
 		for(var id in this.listeners) {
 		var listener = this.listeners[id];
 		var listenerKeys = listener.keys.map(key => key.split('+')[1] || key.split('+')[0])
 			if(!listener.held
-			&& listenerKeys.indexOf(e.code) > -1) {
-			var keyIndex = listenerKeys.indexOf(e.code);
+			&& listenerKeys.indexOf(keyCode) > -1) {
+			var keyIndex = listenerKeys.indexOf(keyCode);
 				if(listener.keys[keyIndex].indexOf('Ctrl') < 0) {
 					if(e.ctrlKey || e.metaKey) continue;
 				}else{
@@ -603,6 +604,8 @@ function UI_Selector(o) {
 			uiInstance = what;
 		}
 
+		if(uiInstance == undefined) return;
+
 		if(this.inverse) {
 			if(this.singular) {
 				switch(state) {
@@ -866,7 +869,7 @@ function UI_Input(o) {
 		if(!silent) this.S.out('text', this.value);
 	}
 
-	this.$.onkeypress = this.quickHandler.bind(this);
+	this.$.oninput = this.quickHandler.bind(this);
 
 	this.keyl = new KeyListener(this.$, 'keypress')
 			.attach('submit', ['Enter'], e => this.handler(e))

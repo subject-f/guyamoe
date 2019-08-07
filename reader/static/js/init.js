@@ -1416,12 +1416,14 @@ function UI_Loda_Search(o) {
 		.S.linkAnonymous('number', num => {
 			this._.input.focus();
 		});
+	this.tabs.get(1).$.onmousedown = e => {
+		this.input.handler(e);
+	}
 	this.tabs.select(0);
 
 	this.lookup.S.link(this.tabs.get(0));
 	this.indexer.S.link(this.tabs.get(1));
-
-	this.searchField = new UI_Input({
+	this.input = new UI_Input({
 		node: this._.input
 		})
 		.S.link(this.lookup)
@@ -1513,7 +1515,9 @@ function UI_IndexSearch(o) {
 			// }
 
 		var chapterElements = [];
-			for(var key in chapters) {
+		var chapKeys = Object.keys(chapters).sort((a,b) => parseFloat(a) - parseFloat(b));
+			for(var i=0;i<chapKeys.length;i++) {
+			var key = chapKeys[i];
 			var item = chapters[key];
 				try{
 				chapterElements.push(new UI_ChapterUnit({
@@ -1614,7 +1618,7 @@ function UI_ChapterUnit(o) {
 	})
 	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
 	for(var group in o.chapter.images) {
-		this._.figure.style.backgroundImage = 'url('+o.chapter.previews[group][0]+')';
+		this._.figure.style.backgroundImage = 'url('+(this.pages?o.chapter.previews[group][+this.pages[0]-1]:o.chapter.previews[group][0])+')';
 		break;
 	}
 	if(this.pages) {
