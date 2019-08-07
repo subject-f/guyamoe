@@ -65,8 +65,8 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							+ "shrunk_blur_"+ group
-							// + group+"_shrunk_blur" 
+							// + "shrunk_blur_"+ group
+							+ group+"_shrunk_blur" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
@@ -76,8 +76,8 @@ function ReaderAPI(o) {
 							+ '/chapters/' 
 							+ chapter.folder 
 							+ '/' 
-							+ "shrunk_"+ group
-							// + group+"_shrunk" 
+							// + "shrunk_"+ group
+							+ group+"_shrunk" 
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
