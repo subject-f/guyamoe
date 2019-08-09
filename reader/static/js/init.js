@@ -646,6 +646,7 @@ function UI_Reader(o) {
 		else {
 			this.nextChapter();
 		}
+		
 	}
 	this.prevPage = function(){
 		if(this.SCP.page > 0) 
@@ -870,12 +871,13 @@ function UI_ReaderImageView(o) {
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
 			// setTimeout(() => {
 				// this.imageContainer.selectedItems[0].$.style.top = 0;
+			this.$.querySelector('.is-active').focus()
+			this.$.scrollTo(0,0)
 			pageElement.scrollTo({
 				left: 0,
 				top: 0
 			})
 			// }, 150)
-			this.$.querySelector('.is-active').focus()
 		}
 	}
 
@@ -981,16 +983,26 @@ const SCROLL_X = 3;
 	this._.image_container.ontouchend = e => {
 		if(this.toucha.watdo == SCROLL_X || this.toucha.watdo == SCROLL) return;
 		if(Settings.all.layout.get() == 'ttb') return;
+		
 		clearTimeout(this.toucha.transitionTimer);
 		this._.image_container.style.transition = 'transform 0.3s ease';
 	var ms = Date.now() - this.toucha.time;
 	var velocity = this.toucha.delta / ms;
 		
-		if(velocity < this.toucha.escapeVelocity * -1 || this.toucha.delta < this.toucha.escapeDelta * -1) {
-			setTimeout(()=>Settings.all.layout.get() == 'rtl'?Reader.prevPage():Reader.nextPage(), 1);
+		if(velocity < this.toucha.escapeVelocity * -1 || this.toucha.delta <this.toucha.escapeDelta * -1) {
+			setTimeout(() => {
+				Settings.all.layout.get() == 'rtl'?
+					this.prev():
+					this.next();
+			}, 1)
+			
 		}else{
 			if(velocity > this.toucha.escapeVelocity || this.toucha.delta > this.toucha.escapeDelta) {
-				setTimeout(()=>Settings.all.layout.get() == 'rtl'?Reader.nextPage():Reader.prevPage(),1);
+				setTimeout(() => {
+					Settings.all.layout.get() == 'rtl'?
+					this.next():
+					this.prev();
+				}, 1)
 			}else{
 				this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
 			}
