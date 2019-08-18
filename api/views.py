@@ -82,7 +82,6 @@ def get_all_series(request):
                     break
             _, series_api_hash = series_data_cache(series.slug)
             all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups(), "series_data_hash": series_api_hash}
-            break
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
