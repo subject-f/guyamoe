@@ -1678,6 +1678,8 @@ Settings.S.link(Reader);
 Reader.S.link(URL)
 Reader.$.focus()
 
+document.body.ontouchstart = e=>{}
+
 function debug() {
 	
 }
