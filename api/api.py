@@ -28,6 +28,11 @@ def series_data(series_slug):
                     str(chapter.group.id): sorted([u + query_string for u in os.listdir(os.path.join(chapter_media_path, str(chapter.group.id)))])
                 }
             }
+            if chapter.preferred_sort:
+                try:
+                    chapters_dict[ch_clean]["preferred_sort"] = json.loads(chapter.preferred_sort)
+                except:
+                    pass
     vols = Volume.objects.filter(series=series).order_by('-volume_number')
     cover_vol_url = ""
     for vol in vols:
