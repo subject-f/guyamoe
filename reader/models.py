@@ -63,6 +63,7 @@ class Chapter(models.Model):
     group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
     uploaded_on = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
     version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
+    preferred_sort = models.CharField(max_length=200, blank=True, null=True)
 
     def clean_chapter_number(self):
         return str(int(self.chapter_number)) if self.chapter_number % 1 == 0 else str(self.chapter_number)

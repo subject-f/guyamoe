@@ -34,7 +34,7 @@ def series_data(series_slug):
         if vol.volume_cover:
             cover_vol_url = f"/media/{vol.volume_cover}"
             break
-    return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "chapters": chapters_dict}
+    return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict}
 
 def series_data_cache(series_slug):
     series_api_data = series_data(series_slug)
