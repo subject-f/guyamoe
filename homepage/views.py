@@ -12,7 +12,7 @@ def admin_home(request):
     return render(request, 'homepage/admin_home.html')
 
 
-@cache_page(3600 * 8)
+@cache_page(3600 * 48)
 def home(request):
     home_screen_series = {"Kaguya-Wants-To-Be-Confessed-To": "", "We-Want-To-Talk-About-Kaguya": "", "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": ""}
     for series in home_screen_series:
@@ -40,5 +40,12 @@ def main_series_chapter(request, chapter):
 def main_series_page(request, chapter, page):
     return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, page)
 
+def latest(request):
+    latest_chap = cache.get("latest_chap")
+    if not latest_chap:
+        latest_chap = Chapter.objects.order_by('-chapter_number').filter(series__slug="Kaguya-Wants-To-Be-Confessed-To")[0].slug_chapter_number()
+        cache.set("latest_chap", latest_chap, 3600 * 96)
+    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
+
 def handle404(request, exception):
-    return render(request, 'homepage/how_cute_404.html')
+    return render(request, 'homepage/how_cute_404.html', status=404)

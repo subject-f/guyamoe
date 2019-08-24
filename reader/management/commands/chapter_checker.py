@@ -8,6 +8,7 @@ import pyppeteer as pp
 from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
+import subprocess
 import re
 import os
 import io
@@ -47,6 +48,8 @@ class Command(BaseCommand):
         }
         self.blacklist_jb = {
             "Kaguya-Wants-To-Be-Confessed-To": ["147.1", "148.1"],
+            "We-Want-To-Talk-About-Kaguya": [],
+            "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": [] 
 
         }
         self.mangadex_manga = {
@@ -204,40 +207,62 @@ class Command(BaseCommand):
                     else:
                         print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Failed to reach JB page for {series}. Response status: {resp.status}")
         else:
+            latest_chap_slug = latest_chap.replace(".", "/")
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://jaiminisbox.com/reader/read/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/page/1") as resp:
+                async with session.get(f"https://jaiminisbox.com/reader/read/kaguya-wants-to-be-confessed-to/en/0/{latest_chap_slug}/page/1") as resp:
                     if resp.status == 200:
                         webpage = await resp.text()
                         soup = BeautifulSoup(webpage, "html.parser")
                         title = soup.select(".tbtitle .text a")[1].text.split(":", 1)[1].strip()
-                        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap}/"}
-            for chapter in chapters:
+                        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap_slug}/"}
+        for chapter in chapters:
+            print(chapter)
+            print(series)
+            if str(float(chapter)) not in downloaded_chapters:
                 chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                ch = Chapter.objects.get(series=series, group=self.jb_group, chapter_number=float(chapter))
                 print(f"Downloading chapter {chapter}...")
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(chapters[chapter]["url"]) as resp:
-                        if resp.status == 200:
-                            data = await resp.read()
-                            with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
-                                all_pages = sorted(zip_file.namelist())
-                                padding = len(str(len(all_pages)))
-                                for idx, page in enumerate(all_pages):
-                                    extension = page.rsplit(".", 1)[1]
-                                    page_file = f"{str(idx+1).zfill(padding)}.{extension}"
-                                    with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
-                                        f.write(zip_file.read(page))
-                                    create_preview_pages(chapter_folder, group_folder, page_file)
-                            print(f"Successfully downloaded chapter and added to db.")
+                reupdating = False
+            else:
+                ch = Chapter.objects.get(series=series, group=self.jb_group, chapter_number=float(chapter))
+                ch.version = ch.version + 1 if ch.version else 2
+                ch.save()
+                chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", ch.folder)
+                group_folder = str(self.jb_group)
+                print(f"Reupdating chapter pages for {chapter}...")
+                reupdating = True
+                for f in os.listdir(os.path.join(chapter_folder, group_folder)):
+                    os.remove(os.path.join(chapter_folder, group_folder, f))
+            async with aiohttp.ClientSession() as session:
+                async with session.get(chapters[chapter]["url"]) as resp:
+                    if resp.status == 200:
+                        data = await resp.read()
+                        with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
+                            all_pages = sorted(zip_file.namelist())
+                            padding = len(str(len(all_pages)))
+                            for idx, page in enumerate(all_pages):
+                                extension = page.rsplit(".", 1)[1]
+                                page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+                                with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
+                                    f.write(zip_file.read(page))
+                                create_preview_pages(chapter_folder, group_folder, page_file)
+                        print(f"Successfully downloaded chapter and added to db.")
+                        if series.slug == "Kaguya-Wants-To-Be-Confessed-To":
+                            print("Indexing chapter pages...")
+                            subprocess.Popen(f'bash /home/appu/kaguyamoe/ocr_tool.sh {chapter_folder}/{group_folder} {ch.clean_chapter_number()} {ch.slug_chapter_number()}'.split())
+                # if reupdating:
+
+                #     pass
 
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
         if options['dl'] == 'jb' and options['series'] and options['latest_chap']:
                 latest_volume = Volume.objects.filter(series__slug=options['series']).order_by('-volume_number')[0].volume_number
                 chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=options['series'], group=self.jb_group)])
-                if str(float(options['latest_chap'])) not in chapters:
-                    loop.run_until_complete(self.jaiminis_box_checker("", options['series'], latest_volume, self.jaiminisbox_manga[options['series']], latest_chap=options['latest_chap']))
-                else:
-                    print("Chapter has already been downloaded.")
+                #if str(float(options['latest_chap'])) in chapters:
+                #    chapter = Chapter.objects.get(series__slug=options['series'], group=self.jb_group, chapter_number=float(options['latest_chap']))
+                #    chapter.delete()
+                loop.run_until_complete(self.jaiminis_box_checker(chapters, options['series'], latest_volume, self.jaiminisbox_manga[options['series']], latest_chap=options['latest_chap']))
         else:
             if options['lookup'] == 'all' or options['lookup'] == 'jb':
                 for manga in self.jaiminisbox_manga:
