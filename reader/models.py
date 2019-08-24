@@ -62,6 +62,7 @@ class Chapter(models.Model):
     volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None, db_index=True)
     group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
     uploaded_on = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
+    version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
 
     def clean_chapter_number(self):
         return str(int(self.chapter_number)) if self.chapter_number % 1 == 0 else str(self.chapter_number)
