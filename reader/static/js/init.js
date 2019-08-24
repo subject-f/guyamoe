@@ -1677,7 +1677,7 @@ API.S.link(Reader);
 Settings.S.link(Reader);
 Reader.S.link(URL)
 Reader.$.focus()
-
+if(window.location.hash == '#s') Loda.display('search');
 document.body.ontouchstart = e=>{}
 
 function debug() {
