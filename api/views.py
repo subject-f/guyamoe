@@ -50,16 +50,16 @@ def get_groups(request, series_slug):
 def get_all_groups(request):
     return HttpResponse(json.dumps(all_groups()), content_type="application/json")
 
-def download_all_chapters(request, series_slug):
-    if os.path.exists(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, f"{series_slug}.zip")):
-        zip_filename = f"{series_slug}.zip"
-        with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as f:
-            zip_file = f.read()
-    else:
-        zip_file, zip_filename = zip_series(series_slug)
-    resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
-    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
-    return resp
+# def download_all_chapters(request, series_slug):
+#     if os.path.exists(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, f"{series_slug}.zip")):
+#         zip_filename = f"{series_slug}.zip"
+#         with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as f:
+#             zip_file = f.read()
+#     else:
+#         zip_file, zip_filename = zip_series(series_slug)
+#     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
+#     resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+#     return resp
 
 def download_chapter(request, series_slug, chapter):
     ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter).first()
