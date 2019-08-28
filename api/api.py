@@ -101,7 +101,9 @@ def zip_series(series_slug):
         groups = os.listdir(chapter_media_path)
         for group in settings.PREFERRED_SORT:
             if group in groups:
-                ch_obj = Chapter.objects.get(series__slug=series_slug, folder=chapter_folder, group__id=group)
+                ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_folder=chapter_folder, group__id=group).first()
+                if not ch_obj:
+                    continue
                 group_dir = os.path.join(chapter_media_path, group)
                 for root, _, files in os.walk(group_dir):
                     for f in files:
@@ -114,7 +116,7 @@ def zip_series(series_slug):
     return zip_file, zip_filename
 
 def zip_chapter(series_slug, chapter):
-    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter).first()
+    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter.replace("-", ".")).first()
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
     groups = os.listdir(chapter_dir)
     chapter_group = None
