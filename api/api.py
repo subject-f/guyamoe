@@ -2,6 +2,8 @@ import random
 import hashlib
 import os
 import json
+import zipfile
+from io import BytesIO;
 from PIL import ImageFilter, Image
 from django.conf import settings
 from django.core.cache import cache
@@ -89,3 +91,47 @@ def clear_pages_cache():
         cache.set(ip, ip, 450)
     cache.set("online_now", set(ip_list), 600)
     cache.set("peak_traffic", peak_traffic, 3600 * 6)
+
+def zip_series(series_slug):
+    zip_filename = f"{series_slug}.zip"
+    zip_file = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename)
+    zf = zipfile.ZipFile(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "w")
+    for chapter_folder in os.listdir(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters")):
+        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter_folder)
+        groups = os.listdir(chapter_media_path)
+        for group in settings.PREFERRED_SORT:
+            if group in groups:
+                ch_obj = Chapter.objects.get(series__slug=series_slug, folder=chapter_folder, group__id=group)
+                group_dir = os.path.join(chapter_media_path, group)
+                for root, _, files in os.walk(group_dir):
+                    for f in files:
+                        zf.write(os.path.join(root, f), os.path.join(ch_obj.clean_chapter_number(), f))
+                break
+        else:
+            continue
+    with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as f:
+        zip_file = f.read()
+    return zip_file, zip_filename
+
+def zip_chapter(series_slug, chapter):
+    ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter)
+    chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
+    groups = os.listdir(chapter_dir)
+    chapter_group = None
+    for group in settings.PREFERRED_SORT:
+        if group in groups:
+            chapter_group = group
+            break
+    else:
+        return None
+    chapter_pages = [os.path.join(chapter_dir, chapter_group, f) for f in os.listdir(os.path.join(chapter_dir, chapter_group))]
+    zip_filename = f"{ch_obj.slug_chapter_number()}.zip"
+    zf = zipfile.ZipFile(os.path.join(chapter_dir, zip_filename), "w")
+    for fpath in chapter_pages:
+        _, fname = os.path.split(fpath)
+        zf.write(fpath, fname)
+    zf.close()
+    with open(os.path.join(chapter_dir, zip_filename), 'rb') as fh:
+        zip_file = fh.read()
+    return zip_file, zip_filename, fname
+    

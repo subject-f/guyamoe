@@ -7,7 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
-from .api import series_data, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache
+from .api import series_data, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_series, zip_chapter
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -50,6 +50,30 @@ def get_groups(request, series_slug):
 def get_all_groups(request):
     return HttpResponse(json.dumps(all_groups()), content_type="application/json")
 
+def download_all_chapters(request, series_slug):
+    if os.path.exists(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, f"{series_slug}.zip")):
+        zip_filename = f"{series_slug}.zip"
+        with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as f:
+            zip_file = f.read()
+    else:
+        zip_file, zip_filename = zip_series(series_slug)
+    resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
+    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+    return resp
+
+def download_chapter(request, series_slug, chapter):
+    ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter)
+    chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
+    if os.path.exists(os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip")):
+        zip_filename = f"{ch_obj.slug_chapter_number()}.zip"
+        with open(os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip"), "rb") as f:
+            zip_file = f.read()
+    else:
+        zip_file, zip_filename, _ = zip_chapter(series_slug, chapter)
+    resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
+    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+    return resp
+
 def upload_new_chapter(request, series_slug):
     if request.POST and request.user and request.user.is_staff:
         group = Group.objects.get(name=request.POST["scanGroup"])
@@ -83,6 +107,8 @@ def upload_new_chapter(request, series_slug):
                 with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                     f.write(zip_file.read(page))
                 create_preview_pages(chapter_folder, group_folder, page_file)
+                zip_chapter(series.slug, chapter_number)
+                zip_series(series.slug)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
 
 def get_volume_covers(request, series_slug):

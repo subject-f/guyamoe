@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reader.models import Group, Series, Volume, Chapter
-from api.views import random_chars, clear_pages_cache, create_preview_pages
+from api.views import random_chars, clear_pages_cache, create_preview_pages, zip_series, zip_chapter
 
 from datetime import datetime, timezone
 import pyppeteer as pp
@@ -130,6 +130,7 @@ class Command(BaseCommand):
                 print('could not download chapter')
                 continue
             chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+            ch = Chapter.objects.get(series=series, chapter_number=float(chapter), group=group)
             padding = len(str(len(chapter_data["pages"])))
             print(f"Downloading chapter {chapter}...")
             async with aiohttp.ClientSession() as session:
@@ -142,6 +143,8 @@ class Command(BaseCommand):
                             with open(os.path.join(chapter_folder, group_folder, page_file), 'wb') as f:
                                 f.write(page_content)
                             create_preview_pages(chapter_folder, group_folder, page_file)
+                            zip_chapter(series.slug, ch.chapter_number)
+                            zip_series(series.slug)
 
             print(f"Successfully downloaded chapter and added to db.")
 
@@ -246,6 +249,8 @@ class Command(BaseCommand):
                                 with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                                     f.write(zip_file.read(page))
                                 create_preview_pages(chapter_folder, group_folder, page_file)
+                                zip_chapter(series.slug, ch.chapter_number)
+                                zip_series(series.slug)
                         print(f"Successfully downloaded chapter and added to db.")
                         if series.slug == "Kaguya-Wants-To-Be-Confessed-To":
                             print("Indexing chapter pages...")

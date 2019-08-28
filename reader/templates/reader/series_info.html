@@ -186,10 +186,12 @@
                   </h6>
                   <p>{{ synopsis|linebreaks }}</p>
                </div>
+               <a href="/api/download_all_chapters/{{ slug }}"><button type="button" data-toggle="tooltip" data-placement="top" title="Download all chapters" class="ml-5 btn btn-sm" style="float: right"><i class="fa fa-download"></i></button></a>
                <div class="btn-group"  role="group" >
                   <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px; border-bottom: 0px;" onclick="listMode(1)">Detailed</button>
                   <button type="button" id="compactMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(2)">Compact</button>
                   <button type="button" id="volumeCoversMode" class="ml-5 tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(3)">Volume Covers</button>
+                  
                </div>
                
                
@@ -217,15 +219,17 @@
                               <th scope="col"><i class="fa fa-comment"></i></th>
                               <th scope="col">Group</th>
                               <th scope="col">Last Updated</th>
+                              <th scope="col"><i class="fa fa-download"></i></th>
                            </tr>
                         </thead>
                         <tbody id="chapterTable">
                            {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
                               <tr class="table-default">                           
                                     <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
-                                    <td scope="row"><a class="text-muted" href="/reader/series/{{ slug }}/{{ ch_slug }}/comments"><i class="fa fa-comment"></i></a></td>
+                                    <td scope="row"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="View the comments for this chapter" href="/reader/series/{{ slug }}/{{ ch_slug }}/comments"><i class="fa fa-comment"></i></a></td>
                                     <td scope="row">{{ group }}</td>
-                                    <td scope="row" class="detailed-chapter-upload-date"></td>                    
+                                    <td scope="row" class="detailed-chapter-upload-date"></td>
+                                    <td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>     
                               </tr>
                            {% endfor %}
                         </tbody>
