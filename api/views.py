@@ -62,7 +62,7 @@ def download_all_chapters(request, series_slug):
     return resp
 
 def download_chapter(request, series_slug, chapter):
-    ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter)
+    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter).first()
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
     if os.path.exists(os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip")):
         zip_filename = f"{ch_obj.slug_chapter_number()}.zip"
