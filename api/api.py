@@ -92,16 +92,20 @@ def clear_pages_cache():
     cache.set("online_now", set(ip_list), 600)
     cache.set("peak_traffic", peak_traffic, 3600 * 6)
 
-def zip_series(series_slug):
-    zip_filename = f"{series_slug}.zip"
+def zip_volume(series_slug, volume):
+    zip_filename = f"{series_slug}_vol_{volume}.zip"
     zip_file = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename)
     zf = zipfile.ZipFile(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "w")
-    for chapter_folder in os.listdir(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters")):
-        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter_folder)
+    checked_chapters = set([])
+    for chapter in Chapter.objects.filter(series__slug=series_slug, volume=volume):
+        if chapter.chapter_number in checked_chapters:
+            continue
+        checked_chapters.add(chapter.chapter_number)
+        chapter_media_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder)
         groups = os.listdir(chapter_media_path)
         for group in settings.PREFERRED_SORT:
             if group in groups:
-                ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_folder=chapter_folder, group__id=group).first()
+                ch_obj = Chapter.objects.filter(series__slug=series_slug, folder=chapter.folder, group__id=group).first()
                 if not ch_obj:
                     continue
                 group_dir = os.path.join(chapter_media_path, group)
@@ -111,8 +115,9 @@ def zip_series(series_slug):
                 break
         else:
             continue
-    with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as f:
-        zip_file = f.read()
+    zf.close()
+    with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as fh:
+        zip_file = fh.read()
     return zip_file, zip_filename
 
 def zip_chapter(series_slug, chapter):
@@ -133,7 +138,7 @@ def zip_chapter(series_slug, chapter):
         _, fname = os.path.split(fpath)
         zf.write(fpath, fname)
     zf.close()
-    with open(os.path.join(chapter_dir, zip_filename), 'rb') as fh:
+    with open(os.path.join(chapter_dir, zip_filename), "rb") as fh:
         zip_file = fh.read()
     return zip_file, zip_filename, fname
     

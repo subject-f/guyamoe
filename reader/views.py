@@ -98,7 +98,6 @@ def series_page_data(series_slug):
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True)
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
-        print('set cache')
     return series_page_dt
 
 def series_info(request, series_slug):
