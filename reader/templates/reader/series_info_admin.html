@@ -147,7 +147,7 @@
       }
       function loadGroups(slug) {
          if (document.getElementById("scanGroup").options.length === 0){
-            $.getJSON(`/api/get_all_groups/`, (data) => {
+            $.getJSON(`https://raw.githubusercontent.com/appu1232/guyamoe/master/api/data_cache/all_groups.json`, (data) => {
                for (var group in data) {
                   if (data.hasOwnProperty(group)) {
                      $("#scanGroup").append(`<option value="${data[group]}">${data[group]}</option>`);

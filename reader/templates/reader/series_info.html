@@ -198,8 +198,7 @@
                   
                      {% for volume, data in volume_list %}
                         <div class="card col-12 mb-3" style="border-radius: 0px;">
-                        <h6 class="card-title mt-2 mb-0">Volume {{ volume }}<a href="/api/download_volume/{{ slug }}/{{ volume }}"><div style="display: inline" class="ml-2" data-toggle="tooltip" data-placement="top" title="Download all chapters in this volume"><i class="text-muted fa fa-download"></i></div></a></h6>
-                        
+                        <h6 class="card-title mt-2 mb-0">Volume {{ volume }}</h6>
                         <div class="row mb-0 pt-0">
                            {% for chapter in data %}
                            <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3 pt-2">
