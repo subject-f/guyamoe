@@ -64,7 +64,8 @@ def download_volume(request, series_slug, volume):
     return resp
 
 def download_chapter(request, series_slug, chapter):
-    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter.replace("-", ".")).first()
+    chapter_number = float(chapter.replace("-", "."))
+    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter_number).first()
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
     zip_path = os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip")
     if os.path.exists(zip_path) and not (time.time() - os.stat(zip_path).st_mtime > (3600 * 8)):
@@ -72,7 +73,7 @@ def download_chapter(request, series_slug, chapter):
         with open(os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip"), "rb") as f:
             zip_file = f.read()
     else:
-        zip_file, zip_filename, _ = zip_chapter(series_slug, chapter)
+        zip_file, zip_filename, _ = zip_chapter(series_slug, chapter_number)
     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
     resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
     return resp

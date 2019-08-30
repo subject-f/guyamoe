@@ -121,7 +121,7 @@ def zip_volume(series_slug, volume):
     return zip_file, zip_filename
 
 def zip_chapter(series_slug, chapter):
-    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter.replace("-", ".")).first()
+    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter).first()
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
     groups = os.listdir(chapter_dir)
     chapter_group = None
