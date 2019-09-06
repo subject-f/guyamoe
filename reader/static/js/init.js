@@ -524,6 +524,12 @@ function UI_Reader(o) {
 
 		this.groupList.clear();
 	var groupElements = {};
+		if ("3" in chapterObj.groups){
+			groupElements["3"] = new UI_SimpleListItem({
+				html: '<div' + (("3"==group)?' class="is-active"':'') + '></div>',
+				text: this.current.groups["3"]
+			})
+		}
 		for(var grp in chapterObj.groups) {
 			groupElements[grp] = new UI_SimpleListItem({
 				html: '<div' + ((grp==group)?' class="is-active"':'') + '></div>',
