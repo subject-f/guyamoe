@@ -515,8 +515,15 @@ function UI_Reader(o) {
 		this.SCP.volume = chapterObj.volume;
 		this.SCP.chapterName = chapterObj.title
 	var group = Settings.all.groupPreference.get();
+		// TODO: even after setting group group preference is set, upon new version of the chapter by a new group, need to check group priority and re-pick preferred group
 		if(group === undefined || chapterObj.groups[group] == undefined) {
-			group = Object.keys(chapterObj.groups)[0];
+			// sry for the hardcode alg
+			if ('3' in chapterObj.groups){
+				group = '3';
+			}
+			else {
+				group = Object.keys(chapterObj.groups)[0];
+			}
 		}
 		this.SCP.group = group;
 		this.SCP.pageCount = chapterObj.groups[group].length;
@@ -524,12 +531,6 @@ function UI_Reader(o) {
 
 		this.groupList.clear();
 	var groupElements = {};
-		if ("3" in chapterObj.groups){
-			groupElements["3"] = new UI_SimpleListItem({
-				html: '<div' + (("3"==group)?' class="is-active"':'') + '></div>',
-				text: this.current.groups["3"]
-			})
-		}
 		for(var grp in chapterObj.groups) {
 			groupElements[grp] = new UI_SimpleListItem({
 				html: '<div' + ((grp==group)?' class="is-active"':'') + '></div>',
