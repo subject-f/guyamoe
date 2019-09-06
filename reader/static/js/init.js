@@ -217,6 +217,8 @@ function SettingsHandler(){
 		for(var setting in this.all) {
 			settings[setting] = this.all[setting].get();
 		}
+		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
+		delete settings['groupPreference'];
 		settings.VER = this.ver;
 		return JSON.stringify(settings);
 	}
@@ -515,9 +517,8 @@ function UI_Reader(o) {
 		this.SCP.volume = chapterObj.volume;
 		this.SCP.chapterName = chapterObj.title
 	var group = Settings.all.groupPreference.get();
-		// TODO: even after setting group group preference is set, upon new version of the chapter by a new group, need to check group priority and re-pick preferred group
 		if(group === undefined || chapterObj.groups[group] == undefined) {
-			// sry for the hardcode alg
+			// sry for the hardcode alg.
 			if ('3' in chapterObj.groups){
 				group = '3';
 			}
