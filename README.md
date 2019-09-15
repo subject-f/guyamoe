@@ -1,6 +1,9 @@
 # Guya.moe
 Kaguya-sama Manga Website
 
+Testing Supported By<br/>
+<img width="160" src="http://foundation.zurb.com/sites/docs/assets/img/logos/browser-stack.svg" alt="BrowserStack"/>
+
 ## Prerequisites 
 
 - Python 3.6.5+
