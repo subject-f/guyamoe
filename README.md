@@ -1,5 +1,5 @@
 # Guya.moe
-Kaguya-sama Manga Website
+Generalized manga reading framework. Adapted for Kaguya-sama manga, but can be used generically for any and all manga.
 
 Testing Supported By<br/>
 <img width="160" src="http://foundation.zurb.com/sites/docs/assets/img/logos/browser-stack.svg" alt="BrowserStack"/>
