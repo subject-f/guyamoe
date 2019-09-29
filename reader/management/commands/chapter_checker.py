@@ -4,7 +4,6 @@ from reader.models import Group, Series, Volume, Chapter, ChapterIndex
 from api.views import random_chars, clear_pages_cache, create_preview_pages, zip_chapter
 
 from datetime import datetime, timezone
-import pyppeteer as pp
 from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
@@ -48,7 +47,7 @@ class Command(BaseCommand):
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/"
         }
         self.blacklist_jb = {
-            "Kaguya-Wants-To-Be-Confessed-To": ["147.1", "148.1"],
+            "Kaguya-Wants-To-Be-Confessed-To": ["45.1", "147.1", "148.1"],
             "We-Want-To-Talk-About-Kaguya": [],
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": [] 
 
