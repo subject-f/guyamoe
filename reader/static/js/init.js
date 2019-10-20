@@ -1627,7 +1627,7 @@ function UI_ChapterUnit(o) {
 		node: o.node,
 		kind: ['ChapterUnit'].concat(o.kind || []),
 		name: 'ChapterUnit',
-		html: o.html || `<div><figure data-bind="figure"></figure><content><h2 data-bind="title">123 - Miko Iino wants to yeet</h2><blockquote data-bind="text"></blockquote><div class="pages" data-bind="pages"></div></content></div>`
+		html: o.html || `<div><figure data-bind="figure"></figure><content><h2 data-bind="title"></h2><blockquote data-bind="text"></blockquote><div class="pages" data-bind="pages"></div></content></div>`
 	});
 
 	this.chapter = o.chapter;
