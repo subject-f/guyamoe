@@ -120,8 +120,6 @@ def get_all_metadata(series_slug):
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
-@cache_page(3600)
-@cache_control(max_age=21600)
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
