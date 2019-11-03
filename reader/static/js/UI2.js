@@ -383,6 +383,11 @@ function Linkable(o) {
 		return this.S;
 	}
 
+	this.S.outAsync = (streamID, data) => {
+		setTimeout((function() { this.S.out(streamID, data) }).bind(this), 1);
+		return this.S;
+	}
+
 	this.S.proxyOut = (streamID, targetStructure) => {
 		this.S.addOut(streamID);
 		this.S.addIn(streamID, data => this.S.out(streamID, data));

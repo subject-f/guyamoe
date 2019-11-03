@@ -1,9 +1,7 @@
 @font-face {
   font-family: 'guya';
   src:
-    url('../fonts/guya.ttf?bx2v0s') format('truetype'),
-    url('../fonts/guya.woff?bx2sv0') format('woff'),
-    url('../fonts/guya.svg?bx2sv0#guya') format('svg');
+    url('../fonts/guya.woff?bcas2sv0') format('woff');
   font-weight: normal;
   font-style: normal;
 }

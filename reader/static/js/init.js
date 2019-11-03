@@ -157,6 +157,41 @@ function SettingsHandler(){
 			rtl: 'Layout set to right-to-left.'
 		}
 	)
+	this.all.spread = new Setting(
+		'spread',
+		'2-page spread',
+		['p1', 'p2', 'p2-odd'],
+		'p1',
+		{
+			'p1': 'Single-page layout',
+			'p2': 'Two-page layout',
+			'p2-odd': 'Two-page layout, odd'
+		}
+	)
+	this.all.spreadCount = new Setting(
+		'spreadCount',
+		'2-page spread count',
+		[1, 2, 3, 4, 5, 6, 7, 8, 9],
+		1,
+		i => {
+			return 'Spread page count: %i'.replace('%i', i)
+		}
+	)
+	this.all.spreadOffset = new Setting(
+		'spreadOffset',
+		'2-page spread offset',
+		i => {
+			return [...Array(this.all.spreadCount.get()).keys()]
+			// return i >= this.all.spreadCount.get()?null:i;
+		},
+		0,
+		i => {
+			return 'Spread page offset: %i pages'
+				.replace('%i', i)
+				.replace('1 pages', '1 page')
+				.replace('Spread page offset: 0 pages', 'No offset');
+		}
+	)
 	this.all.groupPreference = new Setting(
 		'groupPreference',
 	)
@@ -242,7 +277,26 @@ function SettingsHandler(){
 		}
 	}
 
+	this.query = function(qu) {
+		for(var key in qu) {
+		var setting = this.all[key];
+			if(qu[key][0] == '!') {
+				if(qu[key].substr(1) == setting.get()) return false;
+			}else{
+				if(qu[key] != setting.get()) return false;
+			}
+		}
+		return true;
+	}
+
+	this.refreshAll = function() {
+		for(var key in this.all) {
+			this.all[key].refresh()
+		}
+	}
+
 	this.settingUpdated = function(setting) {
+		this.refreshAll();
 		if(window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
 		this.S.out('setting', {setting: setting.name, value: setting.get()})
@@ -259,11 +313,39 @@ function SettingsHandler(){
 function Setting(name, prettyName, options, dflt, strings) {
 	this.name = name;
 	this.prettyName = prettyName;
-	this.setting = dflt;
+	this.default = dflt;
+	this.setting = this.default;
 	this.options = options;
 	this.strings = strings;
+
+	this.refresh = function() {
+		if(this.options instanceof Function) {
+			if(this.options() instanceof Array) {
+				if(this.options().indexOf(this.get()) < 0)
+					this.set(this.default);
+			}else{
+				if(this.options(this.get()) == null) {
+					this.set(this.default);
+				}
+			}
+		}else if(this.options instanceof Array){
+			if(this.options.indexOf(this.get()) < 0)
+				this.set(this.default);
+		}else{
+			// console.warn(this.name + ' has no valid options.')
+		}
+	}
+
 	this.cycle = function(options) {
-		options = options || this.options;
+		if(this.options instanceof Function) {
+			if(!(options = this.options()) instanceof Array) {
+				console.log('Option', this, 'did not return an array to cycle on.')
+				return this;
+			}
+		}else if(!(options = this.options) instanceof Array) {
+			console.log('Option', this, 'was not an array nor a function.')
+			return this;
+		}
 		if(options) {
 		var index = options.indexOf(this.setting);
 			this.set(
@@ -297,9 +379,20 @@ function Setting(name, prettyName, options, dflt, strings) {
 	}
 	this.set = function(value, silent) {
 		if(value == this.setting) return;
-		if(this.options) {
+		if(this.options instanceof Function) {
+			if(this.options() instanceof Array) {
+				if(this.options().indexOf(value) < 0)
+					throw new Error(this.name + ' must be one of: ' + this.options().join(', '))
+			}else{
+				if(this.options(value) == null) {
+					throw new Error(this.name + ' did not satisfy option constraints.');
+				}
+			}
+		}else if(this.options instanceof Array){
 			if(this.options.indexOf(value) < 0)
-				throw new Error('A setting must be one of: ' + this.options.join(', '))
+				throw new Error(this.name + ' must be one of: ' + this.options.join(', '))
+		}else{
+			throw new Error(this.name + ' has no valid options.')
 		}
 		this.setting = value;
 		if(!silent)
@@ -315,9 +408,12 @@ function UI_Tooltippy(o) {
 		html: o.html || '<div></div>',
 	});
 	
+	this.attached = false;
+
 	this.handler = e => {
 	var tip = e.target.getAttribute('data-tip');
 		if(tip) {
+			this.attached = true;
 		var rect = e.target.getBoundingClientRect()
 		var bodyRect = document.body.getBoundingClientRect();
 		var align = e.target.getAttribute('data-tip-align')
@@ -344,12 +440,20 @@ function UI_Tooltippy(o) {
 		if(text.length < 1) return;
 		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
 		this.$.innerHTML = text;
+		if(!this.attached) {
+			this.$.style.display = 'block';
+			this.$.style.bottom = window.innerHeight * 0.90 + 'px';
+			this.$.style.left = 'unset';
+			this.$.style.right = Reader.imageView.$.offsetWidth / 2 - this.$.offsetWidth / 2 + 'px'; // HARDCODE
+		}
 		this.$.classList.remove('fadeOut');
 		clearTimeout(this.fader);
 		this.fader = setTimeout(() => this.$.classList.add('fadeOut'), 3000);
+
 	}
 
 	this.reset = function () {
+		this.attached = false;
 		this.$.style.display = 'none';
 	}
 
@@ -394,10 +498,14 @@ function UI_Reader(o) {
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.all.fit.cycle())
 		.attach('layout', ['KeyD'], e => Settings.all.layout.cycle())
+		.attach('opacity', ['KeyO'], e => this.imageView.$.style.opacity = '0.01')
 		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
 		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
 		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
 		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
+		.attach('spread', ['KeyQ'], s => Settings.all.spread.cycle())
+		.attach('spreadCount', ['Digit1'], s => Settings.all.spreadCount.cycle())
+		.attach('spreadOffset', ['Digit2'], s => Settings.all.spreadOffset.cycle())
 		.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
@@ -494,6 +602,7 @@ function UI_Reader(o) {
 
 		this.setFit(Settings.all.fit.get());
 		this.setLayout(Settings.all.layout.get(), true);
+		this.setSpread(Settings.all.spread.get(), true);
 		this.setSelectorPin(Settings.all.selectorPinned.get());
 		this.setPreload(Settings.all.preload.get());
 		this.setSidebar(Settings.all.sidebar.get());
@@ -581,7 +690,12 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.lastPage;
 		else
 			if(page !== undefined) this.SCP.page = page;
+		
+		this.SCP.page = 
+			Math.max(0, this.SCP.page - (this.SCP.page + Settings.all.spreadOffset.get()) % Settings.all.spreadCount.get())
+
 		this.imageView.selectPage(this.SCP.page, dry);
+		this.SCP.visiblePages = this.imageView.visiblePages;
 		//this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
 		this.S.out('SCP', this.SCP);
 	}
@@ -648,14 +762,26 @@ function UI_Reader(o) {
 			)
 		}
 	}
+
 	this.nextPage = function(){
-		if(this.SCP.page < this.SCP.lastPage) 
-			this.displayPage(this.SCP.page + 1)
+	var newPage = Math.max(
+			0,
+			this.SCP.page
+			- (this.SCP.page + Settings.all.spreadOffset.get())
+			% Settings.all.spreadCount.get()
+		)
+		+ (
+			(this.SCP.page < Settings.all.spreadCount.get() - Settings.all.spreadOffset.get())?Settings.all.spreadCount.get() - Settings.all.spreadOffset.get()
+				: Settings.all.spreadCount.get()
+		);
+
+		if(newPage <= this.SCP.lastPage) 
+			this.displayPage(newPage)
 		else {
 			this.nextChapter();
 		}
-		
 	}
+
 	this.prevPage = function(){
 		if(this.SCP.page > 0) 
 			this.displayPage(this.SCP.page - 1)
@@ -692,6 +818,7 @@ function UI_Reader(o) {
 		});
 		this.$.classList.add(fit);
 		this._.fit_button.classList.add(fit);
+		this.updateWides();
 	}
 
 	this.setLayout = function(layout, silent) {
@@ -728,6 +855,19 @@ function UI_Reader(o) {
 			this.$.classList.remove('zl'+item);
 		});
 		this.$.classList.add('zl'+zoom);
+		this.updateWides();
+	}
+	this.setSpread = function(spread, silent) {
+		Settings.all.spread.options.forEach(item => {
+			this.$.classList.remove(item);
+		});
+		this.$.classList.add(spread);
+
+		if(!silent) {
+			this.displayPage();
+			if(spread == 'p1') this.nextPage();
+			this.updateWides();
+		}
 	}
 
 	this.setSidebar = function(state) {
@@ -736,6 +876,19 @@ function UI_Reader(o) {
 		}else{
 			this.$.classList.remove('sidebar-hidden');
 		}
+		this.updateWides();
+	}
+
+	this.updateWides = function() {
+	var images = document.querySelectorAll('.ReaderImageWrapper');
+		images.forEach(image => {
+			if(image.children[0].getBoundingClientRect().width > image.getBoundingClientRect().width) {
+				image.classList.add('too-wide');
+			}else{
+				image.classList.remove('too-wide');
+			}	
+		})
+
 	}
 
 	this.eventRouter = function(event){
@@ -755,6 +908,9 @@ function UI_Reader(o) {
 			'sidebar': o => this.setSidebar(o),
 			'previews': o => this.showPreviews(o),
 			'zoom': o => this.setZoom(o),
+			'spread': o => this.setSpread(o),
+			'spreadCount': o => this.drawChapter(),
+			'spreadOffset': o => this.drawChapter(),
 		})[o.setting](o.value)
 	}
 
@@ -770,6 +926,7 @@ function UI_Reader(o) {
 	this._.previews_button.onmousedown = e => Settings.all.previews.cycle();
 	this._.zoom_level_plus.onmousedown = e => Settings.all.zoom.next();
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
+	this._.spread_button.onmousedown = e => Settings.all.spread.cycle();
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 
@@ -787,6 +944,7 @@ function UI_Reader(o) {
 		.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
+		.attach(this._.spread_button, 'Change page spread type [Q]')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
@@ -818,14 +976,42 @@ function UI_ReaderImageView(o) {
 	this.drawImages = function(images) {
 		this.imageContainer.$.style.transition = '';
 		this.imageContainer.clear();
-	var imageInstances = [];
-		images.forEach((url, index) => {
-			imageInstances.push(new UI_WrappedImage({src: url, index: index, fore: images[index+1]}));
+		this.imageWrappers = [];
+	var spreadCount = Settings.all.spreadCount.get();
+	var	spreadOffset = Settings.all.spreadOffset.get();
+	var imageObjects = [];
+
+		for(var i=0; i < images.length; i++) {
+		var url = images[i];
+			imageObjects.push({
+				url: url,
+				index: i
+			});
+			if(spreadOffset >= spreadCount - 1 || i == images.length - 1) {
+				spreadOffset = 0;
+				this.imageWrappers.push(
+					new UI_ReaderImageWrapper({
+						imageObjects: imageObjects
+					})
+				);
+				imageObjects = [];
+			}else{
+				spreadOffset++;
+			}
+		}
+
+		this.imageList = [];
+
+		this.imageWrappers.forEach(wrapper => {
+			wrapper.S.link(Reader.selector_page);
+			this.imageList = this.imageList.concat(wrapper.get());
 		})
-		imageInstances.forEach(image => {
-			image.S.link(Reader.selector_page);
-		})
-		this.imageContainer.add(imageInstances);
+		if(Settings.all.layout.get() == 'rtl') {
+			this.imageWrappers.reverse();
+			this.imageWrappers.forEach(i => i.reverse());
+		}
+		this.imageContainer.add(this.imageWrappers);
+
 		if(Settings.all.layout.get() == 'ttb') {
 		var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
@@ -836,52 +1022,72 @@ function UI_ReaderImageView(o) {
 			}
 			this.imageContainer.add(butt);
 		}
-		if(Settings.all.layout.get() == 'rtl') this.imageContainer.reverse();
 	}
 
 	this.selectPage = function(index, dry) {
-		if(index < 0 || index >= this.imageContainer.$.children.length)
+		if(index < 0 || index >= this.imageList.length)
 			return;
-	var pageElement = this.$.querySelector('*[data-index="'+index+'"]')
-	var realIndex = this.imageContainer.$.children.indexOf(pageElement);
-		this.imageContainer.select(realIndex);
-	var direction = (Settings.all.layout.get() == 'rtl')?-1:1;
-	var loadIndex = realIndex;
-		if(Settings.all.preload.get()==100)
-			loadIndex = direction==-1?this.imageContainer.$.children.length - 1:0;
-		for(var i = -1; i < Settings.all.preload.get() + 1; i++){
-			var image = this.imageContainer.get(i*direction + loadIndex);
-			if(image instanceof UI_WrappedImage) image.load(); else continue;
+
+		this.selectedPage = this.imageList[index];
+		this.selectedWrapper = this.selectedPage.parentWrapper;
+		this.visiblePages = this.selectedWrapper.getIndices();
+
+	var toPreload = Settings.all.preload.get();
+		if(toPreload == 100) {
+			toPreload = this.imageList.length - 1;
 		}
+
+	// var loads = [[],[]];
+	// 	for(var i = realIndex; i <= realIndex + toPreload; i++){
+	// 		var image = this.imageContainer.get(i);
+	// 		if(image instanceof UI_ReaderImageWrapper) loads[0].push(image); else continue;
+	// 	}
+	// 	for(var i = realIndex ; i >= realIndex - toPreload; i--){
+	// 		var image = this.imageContainer.get(i);
+	// 		if(image instanceof UI_ReaderImageWrapper) loads[1].push(image); else continue;
+	// 	}
+	// 	if(Settings.query({layout:'rtl'})){
+	// 		loads = loads.reverse().flat();
+	// 	}else{
+	// 		loads = loads.flat()
+	// 	}
+	//	loads.forEach(image => image.load());
+
+		for (var i = index - 1; i < index + Math.max(toPreload, Settings.all.spreadCount.get()); i++) {
+			if(this.imageList[i]) this.imageList[i].load();
+		}
+
 		if(Settings.all.layout.get() == 'ttb'){
-			if(!dry) {
-				this.scrollPreventer = true;
-				setTimeout(() => this.scrollPreventer = false, 200);
-				this._.image_container.scrollTo({
-					left: 0,
-					top: pageElement.offsetTop
-				})
-				if(pageElement.offsetTop > 0) {
-				var bodyRect = document.body.getBoundingClientRect();
-					document.documentElement.scrollTo({
-						left: 0,
-						top:
-							Math.round(
-								pageElement.offsetTop
-								+ (this._.image_container.getBoundingClientRect().top - bodyRect.top)
-							)
-					})
-				}
-				this._.image_container.focus()
-			}
+		// 	if(!dry) {
+		// 		this.scrollPreventer = true;
+		// 		setTimeout(() => this.scrollPreventer = false, 200);
+		// 		this._.image_container.scrollTo({
+		// 			left: 0,
+		// 			top: pageElement.offsetTop
+		// 		})
+		// 		if(pageElement.offsetTop > 0) {
+		// 		var bodyRect = document.body.getBoundingClientRect();
+		// 			document.documentElement.scrollTo({
+		// 				left: 0,
+		// 				top:
+		// 					Math.round(
+		// 						pageElement.offsetTop
+		// 						+ (this._.image_container.getBoundingClientRect().top - bodyRect.top)
+		// 					)
+		// 			})
+		// 		}
+		// 		this._.image_container.focus()
+		// 	}
 		}else{
-			this.imageContainer.$.style.transform = 'translateX(' + (-100 * realIndex - 0.001) + '%)';
+			this.imageContainer.$.style.transform =
+				'translateX(' + ( -100 * this.imageWrappers.indexOf(this.selectedWrapper)) + '%)';
+
 			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
 			// setTimeout(() => {
 				// this.imageContainer.selectedItems[0].$.style.top = 0;
-			this.$.querySelector('.is-active').focus()
-			this.$.scrollTo(0,0)
-			pageElement.scrollTo({
+			this.selectedWrapper.$.focus()
+			this.$.scrollTo(0,0);
+			this.selectedWrapper.$.scrollTo({
 				left: 0,
 				top: 0
 			})
@@ -897,17 +1103,18 @@ function UI_ReaderImageView(o) {
 		this.S.out('event', {type: 'nextPage'})
 	}
 
-
 	document.onscroll = this._.image_container.onscroll = e => {
 		if(this.scrollPreventer) return;
 		if(Settings.all.layout.get() == 'ttb') {
 
-		var st = (
-				(e.target.scrollingElement)?
+		var scrollTop = (e.target.scrollingElement)?
 					e.target.scrollingElement.scrollTop:
 					undefined
-				|| e.target.scrollTop
-			) + 1;
+				|| e.target.scrollTop;
+		var st = scrollTop
+				+ document.documentElement.clientHeight / 8 * 6
+				* (scrollTop / this.imageContainer.$.scrollHeight)
+				+ document.documentElement.clientHeight / 8;
 		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
@@ -917,10 +1124,10 @@ function UI_ReaderImageView(o) {
 			Reader.displayPage(index, true);
 			return;
 		}else{
-			if(this.imageContainer.selectedItems[0].$.nextSibling)
-				this.imageContainer.selectedItems[0].$.nextSibling.style.top = this.$.scrollTop + 'px';
-			if(this.imageContainer.selectedItems[0].$.prevSibling)
-				this.imageContainer.selectedItems[0].$.prevSibling.style.top = this.$.scrollTop + 'px';
+			if(this.selectedWrapper.$.nextSibling)
+				this.selectedWrapper.$.nextSibling.style.top = this.$.scrollTop + 'px';
+			if(this.selectedWrapper.$.prevSibling)
+				this.selectedWrapper.$.prevSibling.style.top = this.$.scrollTop + 'px';
 		}
 	}
 
@@ -954,13 +1161,13 @@ const SCROLL_X = 3;
 		this.toucha.delta = 0;
 		this.toucha.deltaY = 0;
 		this.toucha.time = Date.now();
-	var maxScroll = this.imageContainer.selectedItems[0]._.image.offsetWidth - this.imageContainer.selectedItems[0].$.offsetWidth;
+	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
 		if(maxScroll <= 0){
 			this.toucha.imagePosition = null;
-		}else if(Math.abs(this.imageContainer.selectedItems[0].$.scrollLeft) >= maxScroll-2) {
-			this.toucha.imagePosition = -1;
-		}else if(Math.abs(this.imageContainer.selectedItems[0].$.scrollLeft) == 0) {
+		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
 			this.toucha.imagePosition = 1;
+		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
+			this.toucha.imagePosition = -1;
 		}else{
 			this.toucha.imagePosition = 0;
 		}
@@ -1018,8 +1225,27 @@ const SCROLL_X = 3;
 		this.toucha.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
 	}
 
-
 	this.mouseHandler = function(e) {
+		if(e.type == 'mousedown') {
+			this.mouseHandler.dead = false;
+			this.mouseHandler.active = true;
+			this.mouseHandler.initPos = {x: e.pageX, y: e.pageY};
+			return;
+		}
+		if(e.type == 'mousemove') {
+			if(this.mouseHandler.dead || !this.mouseHandler.active) return;
+			if(Math.abs(this.mouseHandler.initPos.x - e.pageX) > 20 ||
+			Math.abs(this.mouseHandler.initPos.y - e.pageY) > 20) {
+				this.mouseHandler.dead = true;
+			}
+			return;
+		}
+		if(e.type == 'click') {
+			this.mouseHandler.active = false;
+			if(this.mouseHandler.dead) {
+				return;
+			}
+		}
 		if(e.button != 0) return;
 	var box = this.$.getBoundingClientRect();
 	var areas = [
@@ -1069,52 +1295,80 @@ const SCROLL_X = 3;
 	}
 
 	this.$.onmousedown = e => this.mouseHandler(e);
+	this.$.onmousemove = e => this.mouseHandler(e);
+	this.$.onclick = e => this.mouseHandler(e);
 
 	this.S.mapOut(['event']);
 }
 
 
-function UI_WrappedImage(o) {
+function UI_ReaderImageWrapper(o) {
 	o=be(o);
-	UI.call(this, {
+	UI_List.call(this, {
 		node: o.node,
-		kind: ['WrappedImage'].concat(o.kind || []),
-		html: o.html || '<div tabindex="-1"><img data-bind="image" src="" /></div>'
+		kind: ['ReaderImageWrapper'].concat(o.kind || []),
+		html: o.html || '<div tabindex="-1"></div>'
 	});
 	Linkable.call(this);
 
-	this.src = o.src;
-	this.loaded = false;
+	this.imageInstances = [];
+
+	//imageObject = {url, index}
+	if(o.imageObjects) {
+		o.imageObjects.forEach(img => {
+		let image = new UI_ReaderImage({
+				url: img.url,
+				index: img.index,
+				parentWrapper: this
+			})
+			image.S.link(this);
+			this.imageInstances.push(image);
+		})
+	}else{
+		console.error(this, 'No images supplied!')
+	}
+	this.add(this.imageInstances);
+
+	this.load = function() {
+		this.imageInstances.forEach(img => img.load());
+	}
+	this.getIndices = function() {
+		return this.get().map(img => img.index)
+	}
+
+	this.S.proxyOut('loaded');
+}
+
+function UI_ReaderImage(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ReaderImage'].concat(o.kind || []),
+		html: o.html || '<img src="" />'
+	});
+	Linkable.call(this);
+
 	this.index = o.index;
-	this.fore = o.fore;
+	this.url = o.url;
+	this.parentWrapper = o.parentWrapper;
 
 	this.onloadHandler = function(e) {
 		this.S.out('loaded', this.index);
-		if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
-			this.$.classList.add('too-wide');
-		}
-		// this.$.addEventListener('wheel', e => {
-		// 	if(e.type != 'wheel') return;
-		// 	if(Settings.all.layout.get() != 'ttb'
-		// 		&& this._.image.offsetWidth > this.$.offsetWidth) {
-		// 		let delta = ((e.deltaY || -e.wheelDelta || e.detail) >> 10) || 1;
-		// 		delta = delta * (300);
-		// 		this.$.scrollLeft += delta;
-		// 		if(this.$.scrollLeft != (this.$.offsetWidth - this._.image.offsetWidth))
-		// 			e.preventDefault();
-		// 	}
-		// });
-		if(this.fore) this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
+		// if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
+		// 	this.$.classList.add('too-wide');
+		// }else{
+		// 	this.$.classList.remove('too-wide');
+		// }
+		//if(!IS_MOBILE) dragscroll.reset([this.$])
+		//if(this.fore) this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
 	this.load = function() {
 		if(this.loaded) return;
-		this._.image.src = this.src;
-		this._.image.onload = e => this.onloadHandler(e);
+		this.$.src = this.url;
+		this.$.onload = e => this.onloadHandler(e);
 		this.loaded = true;
 	}
-
-	this.$.setAttribute('data-index', this.index);
 
 	this.S.mapOut(['loaded'])
 }
@@ -1143,6 +1397,14 @@ function UI_PageSelector(o) {
 			this.keys.clear().add(keys)
 		}
 		this.keys.select(SCP.page, undefined, undefined, true)
+	var keys = this.keys.get();
+		keys.forEach((key, i) => {
+			if(SCP.visiblePages.indexOf(i) > -1) {
+				key.$.classList.add('shown');
+			}else{
+				key.$.classList.remove('shown');
+			}
+		})
 		this._.page_keys_count.innerHTML = SCP.page + 1 + '/' + (SCP.pageCount);
 	}
 	this.proxy = function(i) {
@@ -1178,31 +1440,32 @@ function URLChanger(o) {
 	Linkable.call(this);
 
 	this.updateURL = function(SCP) {
-		window.history.replaceState(
-			{},
-			SCP.chapter
-				+ ' - '
-				+ SCP.chapterName
-				+ ', Page '
-				+ (SCP.page + 1)
-				+ ' - '
-				+ Reader.current.title
-				+ ' :: Guya',
-			"/reader/series/"
-				+ SCP.series
-				+ '/'
-				+ SCP.chapter.replace('.', '-')
-				+ '/'
-				+ (SCP.page + 1)
-		);
-		document.title = SCP.chapter
-				+ ' - '
-				+ SCP.chapterName
-				+ ', Page '
-				+ (SCP.page + 1)
-				+ ' - '
-				+ Reader.current.title
-				+ ' :: Guya'
+		setTimeout((function(){
+			window.history.replaceState(
+				{},
+				SCP.chapter
+					+ ' - '
+					+ SCP.chapterName
+					+ ', Page '
+					+ (SCP.page + 1)
+					+ ' - '
+					+ Reader.current.title
+					+ ' :: Guya',
+				"/reader/series/"
+					+ SCP.series
+					+ '/'
+					+ SCP.chapter.replace('.', '-')
+					+ '/'
+					+ (SCP.page + 1)
+			);
+		var newtitle = SCP.chapter
+					+ ' - '
+					+ SCP.chapterName
+					+ ' - '
+					+ Reader.current.title
+					+ ' :: Guya';
+			if(newtitle != document.title) document.title = newtitle;
+		}).bind(this), 1)
 	}
 
 	this.S.mapIn({
@@ -1689,5 +1952,4 @@ if(window.location.hash == '#s') Loda.display('search');
 document.body.ontouchstart = e=>{}
 
 function debug() {
-	
 }

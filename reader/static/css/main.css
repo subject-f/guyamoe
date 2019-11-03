@@ -125,6 +125,26 @@ aside > header {
 	align-content: stretch;
 
 }
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.5) #34393d;
+}
+
+*::-webkit-scrollbar {
+    border-radius: 4px;
+    width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    border-radius: 4px;
+    background: rgba(0,0,0,0.3);
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: rgba(0,0,0,0.8);
+}
 
 .is-ico-button {
 	display: flex;
@@ -216,6 +236,7 @@ header > .close {
 .rdr-selector-top .is-ico-button,
 .rdr-selector-bot .is-ico-button {
 	height: 2rem;
+	width: 2.8rem;
 }
 
 .rdr-selector-mid {
@@ -337,6 +358,16 @@ header > .close {
 .ttb .is-ico-button.layout:before {
 	content: "\e907";
 	transform: rotate(90deg);
+}
+.p1 .is-ico-button.spread:before {
+	content: "\e92c";
+}
+.p2 .is-ico-button.spread:before {
+	content: "\e92a";
+}
+.p2-odd .is-ico-button.spread:before {
+	content: "\e92d";
+	transform: scaleX(-1);
 }
 .rdr-comment {
 	cursor: pointer;
@@ -550,7 +581,7 @@ header > .close {
 	-webkit-perspective: 1000;
 }
 
-.rdr-image-wrap .WrappedImage {
+.rdr-image-wrap .ReaderImageWrapper {
 	display: flex;
 	min-width: 100%;
 	min-height: 100%;
@@ -561,40 +592,42 @@ header > .close {
 	outline-style:none;
 	box-shadow:none;
 	border-color:transparent;
+	box-sizing: border-box;
 }
-.rdr-image-wrap .WrappedImage img {
+.rdr-image-wrap .ReaderImageWrapper img {
 	user-select: none;
 	min-height: 30vh;
+	min-width: 25%;
 	background:   url('data:image/png;base64,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');
 	background-size: 10vw auto;
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
 }
-.fit-width .rdr-image-wrap .WrappedImage img {
+.fit-width .rdr-image-wrap .ReaderImageWrapper img {
 	min-width: 100%;
 	max-width: 100%;
 }
 
-.fit-height .rdr-image-wrap .WrappedImage img {
+.fit-height .rdr-image-wrap .ReaderImageWrapper img {
 	min-height: 100%;
 	max-height: 100vh;
 }
 
-.fit-none .rdr-image-wrap .WrappedImage {
+.fit-none .rdr-image-wrap .ReaderImageWrapper {
 	min-height: 100vh;
 }
 
-.fit-none .rdr-image-wrap .WrappedImage img {
+.fit-none .rdr-image-wrap .ReaderImageWrapper img {
 	flex-shrink: 0;
 }
 
-.fit-all .rdr-image-wrap .WrappedImage {
+.fit-all .rdr-image-wrap .ReaderImageWrapper {
 	min-height: 100vh;
 	min-width: 100%;
 	align-items: center;
 }
 
-.fit-all .rdr-image-wrap .WrappedImage img {
+.fit-all .rdr-image-wrap .ReaderImageWrapper img {
 	max-height: 100vh;
 	max-width: 100%;
 	min-height: unset;
@@ -609,26 +642,93 @@ header > .close {
 
 .ttb .rdr-image-wrap {
 	transform: none !important;
-	flex-direction: column;
+	flex-direction: row;
+	flex-wrap: wrap;
 	overflow-y: auto;
 }
 
-.ttb .WrappedImage {
-	flex-shrink: 0;
-	margin-bottom: 1em;
-	min-height: 20%;
-}
-
-.ttb .WrappedImage img {
+.ttb .ReaderImageWrapper img {
 	box-shadow: 0 0 6px black;
 }
 
-.ttb.fit-width .rdr-image-wrap .WrappedImage {
+.ttb.fit-width .rdr-image-wrap .ReaderImageWrapper {
 	min-height: auto;
 }
-.ttb.fit-all .rdr-image-wrap .WrappedImage {
+.ttb.fit-all .rdr-image-wrap .ReaderImageWrapper {
 	min-height: auto;
 }
+
+.ttb .rdr-image-wrap .ReaderImageWrapper {
+	flex-shrink: 0;
+	margin-bottom: 1em;
+	min-height: 20% !important;
+}
+/*
+.p2 .UI.ReaderImageWrapper,
+.p2-odd .UI.ReaderImageWrapper {
+	max-width: 50%;
+	min-width: 50%;
+}
+
+.ltr.p2 .UI.ReaderImageWrapper:nth-child(2n),
+.ttb.p2 .UI.ReaderImageWrapper:nth-child(2n) {
+	justify-content: flex-start;
+	padding-left: 0.2em;
+}
+
+.ltr.p2 .UI.ReaderImageWrapper:nth-child(2n+1),
+.ttb.p2 .UI.ReaderImageWrapper:nth-child(2n+1) {
+	justify-content: flex-end;
+	padding-right: 0.2em;
+}
+.ltr.p2-odd .UI.ReaderImageWrapper:nth-child(2n),
+.ttb.p2-odd .UI.ReaderImageWrapper:nth-child(2n) {
+	justify-content: flex-end;
+	padding-right: 0.2em;
+}
+.ltr.p2-odd .UI.ReaderImageWrapper:nth-child(2n+1),
+.ttb.p2-odd .UI.ReaderImageWrapper:nth-child(2n+1) {
+	justify-content: flex-start;
+	padding-left: 0.2em;
+}
+.ltr.p2 .UI.ReaderImageWrapper:nth-child(2n+1):last-child,
+.ttb.p2 .UI.ReaderImageWrapper:nth-child(2n+1):last-child,
+.ltr.p2-odd .UI.ReaderImageWrapper:first-child,
+.ttb.p2-odd .UI.ReaderImageWrapper:first-child,
+.ltr.p2-odd .UI.ReaderImageWrapper:nth-child(2n):last-child,
+.ttb.p2-odd .UI.ReaderImageWrapper:nth-child(2n):last-child {
+	max-width: unset;
+	min-width: 100%;
+	justify-content: center;
+}
+
+
+.rtl.p2 .UI.ReaderImageWrapper:nth-last-child(2n) {
+	justify-content: flex-end;
+	padding-right: 0.2em;
+}
+.rtl.p2 .UI.ReaderImageWrapper:nth-last-child(2n+1) {
+	justify-content: flex-start;
+	padding-left: 0.2em;
+}
+
+.rtl.p2-odd .UI.ReaderImageWrapper:nth-last-child(2n) {
+	justify-content: flex-start;
+	padding-left: 0.2em;
+}
+.rtl.p2-odd .UI.ReaderImageWrapper:nth-last-child(2n+1) {
+	justify-content: flex-end;
+	padding-right: 0.2em;
+}
+.rtl.p2 .UI.ReaderImageWrapper:nth-last-child(2n+1):first-child,
+.rtl.p2-odd .UI.ReaderImageWrapper:last-child,
+.rtl.p2-odd .UI.ReaderImageWrapper:nth-last-child(2n):first-child {
+	max-width: unset;
+	min-width: 100%;
+	justify-content: center;
+}
+*/
+
 
 /*
 .rdr-float-prev, .rdr-float-next {
@@ -655,9 +755,9 @@ header > .close {
 	opacity: 0;
 	position: relative;
 	z-index: 3;
-	transition: all .3s ease;
-	min-width: 5rem;
-	margin-right: -5rem;
+	transition: left .3s ease, opacity .3s ease;
+	min-width: 3rem;
+	margin-right: -3rem;
 	cursor: pointer;
 }
 
@@ -679,7 +779,7 @@ header > .close {
 	flex-direction: column;
 	position: relative;
 	left: 0em;
-	transition: all .3s ease, opacity 0.2s ease;
+	transition: left .3s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
 .rdr-page-selector-keys div {
@@ -688,7 +788,7 @@ header > .close {
 	z-index: 2;
 	margin-bottom: 2px;
 	border-left: 1px solid #555;
-	transition: all 0.2s ease;
+	transition: left .2s ease, opacity 0.2s ease, box-shadow 0.2s ease, margin 0.2s ease, padding 0.2s ease, color 0.2s ease, text-shadow 0.2s ease, border 0.2s ease;
 	position: relative;
 	text-align: left;
 	color: transparent;
@@ -727,26 +827,32 @@ header > .close {
 	text-shadow: 1px 1px 1px rgba(0,0,0,0.7), -1px -1px 1px rgba(0,0,0,0.7), 1px -1px 1px rgba(0,0,0,0.7), -1px 1px 1px rgba(0,0,0,0.7);
 }
 
-.rdr-page-selector-keys div.is-active {
+.rdr-page-selector-keys div.shown {
 	border-left: 1px solid white;
 	box-shadow: 100px 0px 20px -100px white inset;
 	color: rgba(255,255,255,1);
 	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;
+	left: 0;
+	
 }
 
-.selector-pinned .rdr-page-selector-keys div.is-active {
+.selector-pinned .rdr-page-selector-keys div.shown {
 	color: rgba(255,255,255,0.9)
 }
 
-.selector-pinned.nonum .rdr-page-selector-keys div.is-active {
+.selector-pinned.nonum .rdr-page-selector-keys div.shown {
 	color: transparent;
 	text-shadow: none;
 }
-.selector-pinned.nonum .rdr-page-selector-keys div.is-active:hover {
+.selector-pinned.nonum .rdr-page-selector-keys div.shown:hover {
 	color: rgba(255,255,255,1);
 	text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;
 }
 
+.rdr-page-selector-keys div.shown {
+	padding-bottom: 2px;
+	margin-bottom: 0;
+}
 
 .rdr-page-selector-counter {
 	display: none;
@@ -925,26 +1031,26 @@ header > .close {
 }
 
 
-.fit-width.zl10 .WrappedImage img {min-width: 10%; max-width: 10%}
-.fit-width.zl20 .WrappedImage img {min-width: 20%; max-width: 20%}
-.fit-width.zl30 .WrappedImage img {min-width: 30%; max-width: 30%}
-.fit-width.zl40 .WrappedImage img {min-width: 40%; max-width: 40%}
-.fit-width.zl50 .WrappedImage img {min-width: 50%; max-width: 50%}
-.fit-width.zl60 .WrappedImage img {min-width: 60%; max-width: 60%}
-.fit-width.zl70 .WrappedImage img {min-width: 70%; max-width: 70%}
-.fit-width.zl80 .WrappedImage img {min-width: 80%; max-width: 80%}
-.fit-width.zl90 .WrappedImage img {min-width: 90%; max-width: 90%}
-.fit-width.zl100 .WrappedImage img{}
-/*.zl11 .fit-width .WrappedImage img {min-width: 110%; max-width: 110%}
-.zl12 .fit-width .WrappedImage img {min-width: 120%; max-width: 120%}
-.zl13 .fit-width .WrappedImage img {min-width: 130%; max-width: 130%}
-.zl14 .fit-width .WrappedImage img {min-width: 140%; max-width: 140%}
-.zl15 .fit-width .WrappedImage img {min-width: 150%; max-width: 150%}
-.zl16 .fit-width .WrappedImage img {min-width: 160%; max-width: 160%}
-.zl17 .fit-width .WrappedImage img {min-width: 170%; max-width: 170%}
-.zl18 .fit-width .WrappedImage img {min-width: 180%; max-width: 180%}
-.zl19 .fit-width .WrappedImage img {min-width: 190%; max-width: 190%}
-.zl20 .fit-width .WrappedImage img {min-width: 200%; max-width: 200%}*/
+.fit-width.zl10 .ReaderImageWrapper img {min-width: 10%; max-width: 10%}
+.fit-width.zl20 .ReaderImageWrapper img {min-width: 20%; max-width: 20%}
+.fit-width.zl30 .ReaderImageWrapper img {min-width: 30%; max-width: 30%}
+.fit-width.zl40 .ReaderImageWrapper img {min-width: 40%; max-width: 40%}
+.fit-width.zl50 .ReaderImageWrapper img {min-width: 50%; max-width: 50%}
+.fit-width.zl60 .ReaderImageWrapper img {min-width: 60%; max-width: 60%}
+.fit-width.zl70 .ReaderImageWrapper img {min-width: 70%; max-width: 70%}
+.fit-width.zl80 .ReaderImageWrapper img {min-width: 80%; max-width: 80%}
+.fit-width.zl90 .ReaderImageWrapper img {min-width: 90%; max-width: 90%}
+.fit-width.zl100 .ReaderImageWrapper img{}
+/*.zl11 .fit-width .ReaderImageWrapper img {min-width: 110%; max-width: 110%}
+.zl12 .fit-width .ReaderImageWrapper img {min-width: 120%; max-width: 120%}
+.zl13 .fit-width .ReaderImageWrapper img {min-width: 130%; max-width: 130%}
+.zl14 .fit-width .ReaderImageWrapper img {min-width: 140%; max-width: 140%}
+.zl15 .fit-width .ReaderImageWrapper img {min-width: 150%; max-width: 150%}
+.zl16 .fit-width .ReaderImageWrapper img {min-width: 160%; max-width: 160%}
+.zl17 .fit-width .ReaderImageWrapper img {min-width: 170%; max-width: 170%}
+.zl18 .fit-width .ReaderImageWrapper img {min-width: 180%; max-width: 180%}
+.zl19 .fit-width .ReaderImageWrapper img {min-width: 190%; max-width: 190%}
+.zl20 .fit-width .ReaderImageWrapper img {min-width: 200%; max-width: 200%}*/
 
 
 .Tooltippy {
@@ -1378,17 +1484,14 @@ header > .close {
 		bottom: 2px;
 	}
 
-	.rdr-page-selector-keys div.is-active {
+	.rdr-page-selector-keys div.shown {
 		border-left: none;
 		border-bottom: 1px solid white;
 		box-shadow:  0px -100px 20px -100px white inset;
 	}
 
-	.selector-pinned .rdr-page-selector-keys div.is-active {
-	}
-	.selector-pinned.nonum .rdr-page-selector-keys div.is-active {
-	}
-	.selector-pinned.nonum .rdr-page-selector-keys div.is-active:hover {
+	.rdr-page-selector-keys div.shown:hover {
+		bottom: 0 !important;
 	}
 	.rdr-page-selector .preloaded {
 	    border-bottom-color: #6699b9;
@@ -1398,25 +1501,25 @@ header > .close {
 		height: auto;
 	}
 
-	.fit-none .rdr-image-wrap .WrappedImage {
+	.fit-none .rdr-image-wrap .ReaderImageWrapper {
 		justify-content: center;
 	}
 
-	.fit-height .rdr-image-wrap .WrappedImage {
+	.fit-height .rdr-image-wrap .ReaderImageWrapper {
 		justify-content: center;
 		min-height: 100vh;
 		max-width: 100vw;
 	}
 
-	.fit-width .rdr-image-wrap .WrappedImage {
+	.fit-width .rdr-image-wrap .ReaderImageWrapper {
 		min-height: 100vh;
 		align-items: center;
 	}
 
-	.ttb.fit-width .rdr-image-wrap .WrappedImage {
+	.ttb.fit-width .rdr-image-wrap .ReaderImageWrapper {
 		min-height: auto;
 	}
-	.ttb.fit-all .rdr-image-wrap .WrappedImage {
+	.ttb.fit-all .rdr-image-wrap .ReaderImageWrapper {
 		min-height: auto;
 	}
 	
@@ -1428,9 +1531,13 @@ header > .close {
 		display: none;
 	}
 
-	.fit-width .WrappedImage img{
+	.fit-width .ReaderImageWrapper img{
 		min-width: 100% !important;
 		max-width: 100% !important;
+	}
+
+	.ReaderImageWrapper {
+		overflow: auto !important;
 	}
 /*
 	.selector-pinned.fit-width div.zoom-level {
