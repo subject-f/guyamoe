@@ -173,7 +173,7 @@ class Command(BaseCommand):
                         chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap_slug}/"}
         for chapter in chapters:
             if str(float(chapter)) not in downloaded_chapters:
-                chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter])
+                chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter]["title"])
                 ch = Chapter.objects.get(series=series, group=self.jb_group, chapter_number=float(chapter))
                 print(f"Downloading chapter {chapter}...")
                 reupdating = False
