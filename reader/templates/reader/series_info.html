@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 {% load static %}
 {% block head %}
-   <title>Read {{ series }} Manga :: Guya.moe</title>
+   <title>Read {{ series }} :: Guya.moe</title>
    <meta name="twitter:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya." />
    <meta property="og:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-   <meta name="description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-
+   <meta name="description" content="Read {{ series }} manga - all chapters on Guya.moe. No ads. No bad reader. All guya.">
+   <meta name="author" content="{{ author }}">
    <script>
       $(function () {
          if (localStorage.getItem("viewMode") === null) {
@@ -126,6 +126,13 @@
    .active {
       background-color:red;
       color: white;
+   }
+   h1 {
+      font-size: 1.4em;
+   }
+
+   p {
+      color: #dedede;
    }
 </style>
    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

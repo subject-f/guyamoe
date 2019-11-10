@@ -1,12 +1,11 @@
 {% extends "layout.html" %}
 {% load static %}
 {% block head %}
-	<title>Guya.moe :: Home of Kaguya-sama: Love is War Manga</title>
-	<meta name="twitter:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya." />
-	<meta property="og:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-	<meta name="description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-
-<style>
+	<title>Guya.moe :: Home of Kaguya-sama</title>
+	<meta name="twitter:description" content="A place to read the entirety of Kaguya-sama: Love is War manga (Kaguya Wants to Be Confessed To). No ads. No bad reader. All guya." />
+	<meta property="og:description" content="A place to read the entirety of Kaguya-sama: Love is War manga (Kaguya Wants to Be Confessed To). No ads. No bad reader. All guya.">
+	<meta name="description" content="A place to read the entirety of Kaguya-sama: Love is War manga (Kaguya Wants to Be Confessed To). No ads. No bad reader. All guya.">
+	<style>
 	* {
 		border: 0px solid red;
 	}
@@ -65,6 +64,75 @@
 		background-image: url({% static 'img/bg_box.png' %});
 		background-color:black;
 	}
+	body.h-100 {
+		min-height: 100%;
+		height: auto !important;
+	}
+	.manga h3 {
+		color: #ddd;
+		font-size: 1.5em;
+		padding: 0 0.5em;
+	}
+		
+	.tachi {
+		margin-bottom: 3em;
+	}
+
+	.tachi > div {
+		width: 100%;
+	}
+
+	.tachi img {
+		height: 33px;
+	}
+
+	.tachi-plus {
+		font-size: 1.5em;
+		padding: 0 0.6em 0 0.4em;
+	}
+
+	.tachi .ecks {
+		display: none;
+	}
+
+	@media only screen and (max-width: 760px) {
+		.tachi {
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			bottom: 0;
+			z-index: 1000;
+			background: #232323;
+			margin: 0;
+			left: 0;
+			padding: 1em 0 1.5em;
+			border-top: 2px #777 solid;
+		}
+
+		.tachi > div.mb-5 {
+			margin-bottom: 0 !important;
+		}
+
+		.tachi .ecks {
+			display: block;
+			position: absolute;
+			font-size: 2em;
+			color: white;
+			padding: 0.25em 0.25em;
+			box-sizing: content-box;
+			width: 1em;
+			line-height: 1em;
+			height: 1em;
+			right: 0;
+			top: 0;
+			cursor: pointer;
+		}
+
+	}
+
+	.hidden {
+		display: none !important;
+	}
 </style>
 
 {% endblock %}
@@ -74,16 +142,16 @@
 <div class="manga container-fluid justify-content-center sp-row-add mt-3">
 	<div class="row ">
 		<div class="col d-flex justify-content-center mb-3">
-			<img src="{% static '/img/logo_menu.png' %}">
+			<img src="{% static '/img/logo_menu.png' %}" alt="Kaguya-sama: Love is War - Read Manga on Guya.moe">
 		</div>
 	</div>
 	<div class="row d-flex justify-content-center mt-3" >
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To">
-					<img class="img-fluid mx-auto d-block" src="{{ main_cover }}" style="width: 80%">
+					<img class="img-fluid mx-auto d-block" src="{{ main_cover }}" style="width: 90%; margin-top: -5%" alt="Manga › Kaguya-sama: Love is War">
 					<div class="caption text-center">
-						<h4>Kaguya Wants to be Confessed to</h4>
+						<h2>Kaguya-sama: Love is War</h2>
 					</div>
 				</a>
 			</div>
@@ -91,9 +159,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/We-Want-To-Talk-About-Kaguya">
-					<img class="img-fluid mx-auto d-block" src="{{ 4koma_cover }}" style="width: 80%">
+					<img class="img-fluid mx-auto d-block" src="{{ 4koma_cover }}" style="width: 80%" alt="Manga › We Want to Talk About Kaguya">
 					<div class="caption text-center">
-						<h4>We Want to Talk About Kaguya</h4>
+						<h3>We Want to Talk About Kaguya</h3>
 					</div>
 				</a>
 			</div>
@@ -101,9 +169,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="/reader/series/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">
-					<img class="img-fluid mx-auto d-block" src="{{ doujin_cover }}" style="width: 80%">
+					<img class="img-fluid mx-auto d-block" src="{{ doujin_cover }}" style="width: 80%" alt="Manga › Kaguya Wants to be Confessed to Official Doujin">
 					<div class="caption text-center">
-						<h4>Kaguya Wants to be Confessed to Official Doujin</h4>
+						<h3>Kaguya Wants to be Confessed to Official Doujin</h3>
 					</div>
 				</a>
 			</div>
@@ -111,9 +179,9 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="//skythewood.blogspot.com/p/kaguya.html" target="_blank">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}" style="width: 80%">
+					<img class="img-fluid mx-auto d-block" src="{% static 'img/novelcover.jpg' %}" style="width: 80%" alt="Novels › The Seven Mysteries of Shuchin Academy">
 					<div class="caption text-center">
-						<h4>The Seven Mysteries of Shuchin Academy (Novel)</h4>
+						<h3>The Seven Mysteries of Shuchin Academy (Novel)</h3>
 					</div>
 				</a>
 			</div>
@@ -121,12 +189,27 @@
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
 				<a href="//kaguya-archive.tumblr.com/tagged/Fancomic" target="_blank">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}" style="width: 80%">
+					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}" style="width: 80%" alt="Fancomics">
 					<div class="caption text-center">
-						<h4>Fancomics</h4>
+						<h3>Fancomics</h3>
 					</div>
 				</a>
 			</div>
+		</div>
+	</div>
+	<div class="row justify-content-center tachi">
+		<div class="d-flex justify-content-center mb-2 tachi-title">
+			Also available on Tachiyomi.
+		</div>
+		<div class="d-flex justify-content-center mb-5">
+			<a class="tachi-tachi" href="https://tachiyomi.org/">
+				<img src="https://raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png" alt="Tachiyomi">
+			</a>
+			<span class="tachi-plus">+</span>
+			<a class="tachi-guya" href="https://tachiyomi.org/extensions/#Guya">
+				<img src="{% static '/logo.png' %}" alt="Guya.moe Tachiyomi extension">
+			</a>
+			<span class="ecks" onclick="event.target.parentNode.parentNode.classList.add('hidden')">&times;</span>
 		</div>
 	</div>
 </div>
