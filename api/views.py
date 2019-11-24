@@ -131,8 +131,9 @@ def get_volume_covers(request, series_slug):
         if not covers:
             series = Series.objects.get(slug=series_slug)
             volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
-            covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers]}
+            covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers if cover[1]]}
             cache.set(f"vol_covers_{series_slug}", covers)
+            print(covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
