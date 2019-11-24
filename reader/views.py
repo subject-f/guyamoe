@@ -143,7 +143,7 @@ def get_all_metadata(series_slug):
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
-        metadata["relative_url"] = f"{series_slug}/{chapter}/{page}"
+        metadata[chapter]["relative_url"] = f"{series_slug}/{chapter}/{page}"
         return render(request, 'reader/reader.html', metadata[chapter])
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
