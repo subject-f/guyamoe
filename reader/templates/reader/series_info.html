@@ -6,7 +6,9 @@
    <meta property="og:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
    <meta name="description" content="Read {{ series }} manga - all chapters on Guya.moe. No ads. No bad reader. All guya.">
    <meta name="author" content="{{ author }}">
-   <script>
+   <script src="{% static 'js/jquery.min.js' %}"> </script>
+   <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
+   <script defer >
       $(function () {
          if (localStorage.getItem("viewMode") === null) {
             window.localStorage.setItem("viewMode", 1)
@@ -145,7 +147,10 @@
                      </div>
                   </div>
                   <div class="media media-3x4 justify-content-center py-2">
-                     <img src="{{ cover_vol_url }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" >
+                     <picture >
+                        <source type="image/webp" srcset="{{ cover_vol_url_webp }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" alt="Manga › {{ series }}">
+                        <img src="{{ cover_vol_url }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" alt="Manga › {{ series }}">
+                     </picture>
                   </div>
                </div>
                <div class="card" style="border-radius: 0px;">

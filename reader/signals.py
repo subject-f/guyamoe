@@ -58,8 +58,7 @@ def save_volume(sender, instance, **kwargs):
         save_dir = os.path.join(os.path.dirname(str(instance.volume_cover)))
         vol_cover = os.path.basename(str(instance.volume_cover))
         filename = vol_cover.rsplit(".", 1)[0]
-        print(filename)
         image = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
-        image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.webp"), lossless=False, quality=0, method=6)
+        image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.webp"), lossless=False, quality=20, method=6)
         image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.jp2"))
 
