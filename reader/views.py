@@ -104,6 +104,7 @@ def series_page_data(series_slug):
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
 
+@cache_control(max_age=60)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info.html', data)
@@ -138,10 +139,12 @@ def get_all_metadata(series_slug):
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
+@cache_control(max_age=120)
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
-        return render(request, 'reader/reader.html', {"relative_url": f"{series_slug}/{chapter}/{page}"})
+        metadata["relative_url"] = f"{series_slug}/{chapter}/{page}"
+        return render(request, 'reader/reader.html', metadata[chapter])
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
 
