@@ -48,7 +48,7 @@ def hit_count(request):
                 hit.save()
         
         cache.set(page_hits_cache, page_cached_users)
-        return HttpResponse(json.dumps({}), content_type='application/json')
+    return HttpResponse(json.dumps({}), content_type='application/json')
 
 def series_page_data(series_slug):
     series_page_dt = cache.get(f"series_page_dt_{series_slug}")

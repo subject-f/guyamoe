@@ -121,6 +121,9 @@ def upload_new_chapter(request, series_slug):
                 create_preview_pages(chapter_folder, group_folder, page_file)
                 zip_chapter(series.slug, chapter_number)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
+
 
 def get_volume_covers(request, series_slug):
     if request.POST:
@@ -131,6 +134,8 @@ def get_volume_covers(request, series_slug):
             covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers]}
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({}), content_type="application/json")
 
 @csrf_exempt
 def search_index(request, series_slug):
@@ -144,6 +149,8 @@ def search_index(request, series_slug):
                 chapter_and_pages = word_obj.chapter_and_pages
                 search_results[word][word_obj.word] = chapter_and_pages
         return HttpResponse(json.dumps(search_results), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({}), content_type="application/json")
 
 def clear_cache(request):
     if request.POST and request.user and request.user.is_staff:
@@ -157,3 +164,5 @@ def clear_cache(request):
         else:
             response = "Not a valid option"
         return HttpResponse(json.dumps({"response": response}), content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({}), content_type="application/json")
