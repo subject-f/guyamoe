@@ -61,6 +61,7 @@ def series_page_data(series_slug):
         for vol in vols:
             if vol.volume_cover:
                 cover_vol_url = f"/media/{vol.volume_cover}"
+                cover_vol_url_webp = cover_vol_url.rsplit(".", 1)[0] + ".webp"
                 break
         content_series = ContentType.objects.get(app_label='reader', model='series')
         hit, _ = HitCount.objects.get_or_create(content_type=content_series, object_id=series.id)
@@ -90,6 +91,7 @@ def series_page_data(series_slug):
                 "series_id": series.id,
                 "slug": series.slug,
                 "cover_vol_url": cover_vol_url,
+                "cover_vol_url_webp": cover_vol_url_webp,
                 "views": hit.hits + 1,
                 "synopsis": series.synopsis, 
                 "author": series.author.name,
@@ -97,7 +99,7 @@ def series_page_data(series_slug):
                 "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
-                "relative_url": f"/{series.slug}"
+                "relative_url": f"{series.slug}"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
@@ -139,7 +141,7 @@ def get_all_metadata(series_slug):
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
-        return render(request, 'reader/reader.html', {"relative_url": f"/{series_slug}/{chapter}/{page}"})
+        return render(request, 'reader/reader.html', {"relative_url": f"{series_slug}/{chapter}/{page}"})
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
 
@@ -152,7 +154,7 @@ def md_proxy(request, md_series_id):
     # if chapter in metadata:
     # return HttpResponse(json.dumps(metadata), content_type="application/json")
     if metadata:
-        metadata["relative_url"] = f"/md_proxy/{md_series_id}"
+        metadata["relative_url"] = f"md_proxy/{md_series_id}"
         return render(request, 'reader/md_series.html', metadata)
     else:
         return render(request, 'reader/md_down.html', metadata)
@@ -162,7 +164,7 @@ def md_chapter(request, md_series_id, chapter, page):
     # if chapter in metadata:
     # return HttpResponse(json.dumps(metadata), content_type="application/json")
     if data and chapter in data["chapters"]:
-        data["relative_url"] = f"/md_proxy/{md_series_id}/{chapter}/{page}"
+        data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
         return render(request, 'reader/md_series.html', data)
     else:
         return render(request, 'reader/md_down.html', data)

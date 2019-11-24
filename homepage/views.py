@@ -35,7 +35,7 @@ def home(request):
 
 @cache_page(3600 * 48)
 def about(request):
-    return render(request, 'homepage/about.html', {"relative_url": "/about"})
+    return render(request, 'homepage/about.html', {"relative_url": "about"})
 
 
 def main_series_chapter(request, chapter):
