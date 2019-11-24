@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
-from .api import series_data, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
+from .api import series_data, md_series_data, md_chapter_pages, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -17,6 +17,14 @@ def get_series_data(request, series_slug):
     if not series_api_data:
         series_api_data, _ = series_data_cache(series_slug)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
+
+def get_md_series_data(request, series_id):
+    series_api_data = md_series_data(series_id)
+    return HttpResponse(json.dumps(series_api_data), content_type="application/json")
+
+def get_md_chapter_pages(request, chapter_id):
+    chapter_pages = md_chapter_pages(chapter_id)
+    return HttpResponse(json.dumps(chapter_pages), content_type="application/json")
 
 def series_data_hash(request, series_slug):
     series_api_hash = cache.get(f"series_api_hash_{series_slug}")
@@ -120,7 +128,7 @@ def get_volume_covers(request, series_slug):
         if not covers:
             series = Series.objects.get(slug=series_slug)
             volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
-            covers = {"covers": [[cover[0], f"/media/{cover[1]}"] for cover in volume_covers]}
+            covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers]}
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
 

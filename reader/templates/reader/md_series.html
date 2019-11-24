@@ -18,7 +18,9 @@
          var now = new Date();
          chapter_table = $("#chapterTable tr");
          var idx = 0;
+         console.log(chapter_list[0])
          chapter_list.forEach((chapter) => {
+            console.log(chapter)
             let chapter_date = new Date(Date.UTC(chapter[4][0], chapter[4][1], chapter[4][2], chapter[4][3], chapter[4][4], chapter[4][5], 0));
             let delta = Math.abs((now - chapter_date)) / 1000;
             let days = Math.floor(delta / 86400);
@@ -29,32 +31,22 @@
             delta -= minutes * 60;
             let seconds = parseInt(delta % 60);
             if (days >= 7) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()+1}/${chapter_date.getDate()}`;
-               $(".compact-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()+1}/${chapter_date.getDate()}`;
-               $($(".compact-chapter-upload-date")[idx]).addClass('text-muted');
+            $(".detailed-chapter-upload-date")[idx].textContent = `${chapter_date.getFullYear()}/${chapter_date.getMonth()+1}/${chapter_date.getDate()}`;
             }
             else if (days < 7 && days > 0) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
-               $(".compact-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
-               $($(".compact-chapter-upload-date")[idx]).addClass('text-muted');
+            $(".detailed-chapter-upload-date")[idx].textContent = `${days} day${days === 1 ? "" : "s"} ago`;
             }
             else if (hours > 0) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
-               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
-               $(".compact-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
-               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
+            $(".detailed-chapter-upload-date")[idx].textContent = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+            $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             else if (minutes > 0) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
-               $(".compact-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
+            $(".detailed-chapter-upload-date")[idx].textContent = `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+            $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             else if (seconds > 0) {
-               $(".detailed-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
-               $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
-               $(".compact-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
-               $($(".compact-chapter-upload-date")[idx]).css({'color': 'green'});
+            $(".detailed-chapter-upload-date")[idx].textContent = `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+            $($(".detailed-chapter-upload-date")[idx]).css({'color': 'green'});
             }
             idx += 1;
          });
@@ -67,7 +59,7 @@
       });
       
       function listMode(mode) {
-         modes = ["detailed", "compact", "volumeCovers"];
+         modes = ["detailed", "volumeCovers"];
          for (var i = 0; i < modes.length; i++) {
             if (i == mode-1) {
                $(`#${modes[i]}Mode`).removeClass("btn-primary");
@@ -91,7 +83,7 @@
                   data: formData,
                   success: function (data) {
                      data["covers"].forEach((cover) => {
-                        $("#volumeCoversView").append(`<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[2]}" style="width: 300px"></a>`);
+                        $("#volumeCoversView").append(`<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[1]}" style="width: 300px"></a>`);
                   });
                }
             });
@@ -145,7 +137,7 @@
                      </div>
                   </div>
                   <div class="media media-3x4 justify-content-center py-2">
-                     <img src="{{ cover_vol_url }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" >
+                     <img src="{{ cover_vol_url }}" class="img-fluid" style="width: 98%" >
                   </div>
                </div>
                <div class="card" style="border-radius: 0px;">
@@ -160,10 +152,6 @@
                                  <th>Artist</th>
                                  <td class="text-muted text-sm" style="">{{ artist }}</td>
                               </tr>
-                           <tr>
-                              <th>Views</th>
-                              <td class="text-muted text-sm" style="">{{ views }}</td>
-                           </tr>
                            <tr>
                               <th>Last Updated</th>
                               <td class="text-muted text-sm" style="">Ch. {{ last_added.0 }} - {{ last_added.1 }}</td>
@@ -182,28 +170,10 @@
                </div>
                <div class="btn-group"  role="group" >
                   <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px; border-bottom: 0px;" onclick="listMode(1)">Detailed</button>
-                  <button type="button" id="compactMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(2)">Compact</button>
                   <button type="button" id="volumeCoversMode" class="ml-5 tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(3)">Volume Covers</button>
                   
                </div>
                
-               
-               <div id="compactView" class="d-none" style="font-size: .75rem">
-                  
-                     {% for volume, data in volume_list %}
-                        <div class="card col-12 mb-3" style="border-radius: 0px;">
-                        <h6 class="card-title mt-2 mb-0">Volume {{ volume }}</h6>
-                        <div class="row mb-0 pt-0">
-                           {% for chapter in data %}
-                           <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3 pt-2">
-                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p></div></a>
-                           </div>
-                           {% endfor %}
-                           </div>
-                        </div>
-                     {% endfor %}
-                  
-               </div>
                <div id="detailedView" class="d-none table-responsive">
                   <table id="chapters" class="table table-hover">
                         <thead>
@@ -215,9 +185,9 @@
                            </tr>
                         </thead>
                         <tbody id="chapterTable">
-                           {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
+                           {% for chapter, title, ch_slug, group, upload_date, volume, chapter_id in chapter_list %}                        
                               <tr class="table-default">                           
-                                    <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
+                                    <td scope="row"><a href="/reader/series/md_proxy/chapter/{{ slug }}/{{ chapter_id }}">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row">{{ group }}</td>
                                     <td scope="row" class="detailed-chapter-upload-date"></td>
                                     <td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>     

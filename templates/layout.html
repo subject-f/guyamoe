@@ -9,6 +9,16 @@
     <meta property="og:image" content="https://i.imgur.com/aQmSq90.jpg">
     <meta property="og:url" content="/">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-153182310-1"></script>
+      <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-153182310-1');
+      </script>
+      <link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
       <script src="{% static 'js/jquery.min.js' %}"> </script>
       <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
       <link rel="stylesheet" href="{% static  'css/bootstrap.min.css' %}">
@@ -26,7 +36,7 @@
    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container-fluid">
          <a class="navbar-brand-logo" href="/">
-            <img src="{% static 'logo.png' %}" width="46" alt="Guya.moe" class="mr-1">
+            <img src="{% static 'logo_small.png' %}" width="46" alt="Guya.moe" class="mr-1">
          </a>
          <a class="navbar-brand" href="/">Guya.moe</a>
          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">

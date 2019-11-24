@@ -4,6 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.conf import settings
 from api.api import clear_pages_cache
+from PIL import Image
+from guyamoe.settings import MEDIA_ROOT
 import shutil
 import os
 
@@ -52,3 +54,12 @@ def save_chapter(sender, instance, **kwargs):
 def save_volume(sender, instance, **kwargs):
     if instance.series:
         clear_pages_cache()
+    if instance.volume_cover:
+        save_dir = os.path.join(os.path.dirname(str(instance.volume_cover)))
+        vol_cover = os.path.basename(str(instance.volume_cover))
+        filename = vol_cover.rsplit(".", 1)[0]
+        print(filename)
+        image = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
+        image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.webp"), lossless=False, quality=0, method=6)
+        image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.jp2"))
+

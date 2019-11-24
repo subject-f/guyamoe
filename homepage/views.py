@@ -19,19 +19,23 @@ def home(request):
         vols = Volume.objects.filter(series__slug=series).order_by('-volume_number')
         for vol in vols:
             if vol.volume_cover:
-                home_screen_series[series] = f"/media/{vol.volume_cover}"
+                home_screen_series[series] = [f"/media/{vol.volume_cover}", f"/media/{str(vol.volume_cover).rsplit('.', 1)[0]}.webp"]
                 break
     return render(request, 'homepage/home.html', {
             "quote": str(randint(1, 2)),
             "abs_url": request.build_absolute_uri(),
-            "main_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"],
-            "4koma_cover": home_screen_series["We-Want-To-Talk-About-Kaguya"],
-            "doujin_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"]
+            "main_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][0],
+            "main_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][1],
+            "4koma_cover": home_screen_series["We-Want-To-Talk-About-Kaguya"][0],
+            "4koma_cover_webp": home_screen_series["We-Want-To-Talk-About-Kaguya"][1],
+            "doujin_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][0],
+            "doujin_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][1],
+            "relative_url": ""
         })
 
 @cache_page(3600 * 48)
 def about(request):
-    return render(request, 'homepage/about.html', {})
+    return render(request, 'homepage/about.html', {"relative_url": "/about"})
 
 
 def main_series_chapter(request, chapter):
@@ -46,6 +50,16 @@ def latest(request):
         latest_chap = Chapter.objects.order_by('-chapter_number').filter(series__slug="Kaguya-Wants-To-Be-Confessed-To")[0].slug_chapter_number()
         cache.set("latest_chap", latest_chap, 3600 * 96)
     return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
+
+# def latest_releases(request):
+#     latest_releases = cache.get("latest_releases")
+#     if not latest_releases:
+#         latest_releases = Chapter.objects.order_by('-uploaded_on')
+#         latest_list = []
+#         #for _ in range(0, 10):
+
+#         cache.set("latest_chap", latest_chap, 3600 * 96)
+#     return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
 
 def handle404(request, exception):
     return render(request, 'homepage/how_cute_404.html', status=404)
