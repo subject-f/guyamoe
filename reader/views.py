@@ -168,6 +168,6 @@ def md_chapter(request, md_series_id, chapter, page):
     # return HttpResponse(json.dumps(metadata), content_type="application/json")
     if data and chapter in data["chapters"]:
         data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
-        return render(request, 'reader/md_series.html', data)
+        return render(request, 'reader/reader.html', data)
     else:
-        return render(request, 'reader/md_down.html', data)
+        return render(request, 'homepage/how_cute_404.html', status=404)
