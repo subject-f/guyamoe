@@ -171,13 +171,8 @@
                   </h6>
                   <p>{{ synopsis|linebreaks }}</p>
                </div>
-               <div class="btn-group"  role="group" >
-                  <button type="button" id="detailedMode" class="tag-display-mode-toggle btn btn-sm" style="border-radius: 0px; border-bottom: 0px;" onclick="listMode(1)">Detailed</button>
-                  <button type="button" id="volumeCoversMode" class="ml-5 tag-display-mode-toggle btn btn-sm" style="border-radius: 0px !important; border-bottom: 0px;" onclick="listMode(3)">Volume Covers</button>
-                  
-               </div>
-               
-               <div id="detailedView" class="d-none table-responsive">
+
+               <div id="view" class="table-responsive">
                   <table id="chapters" class="table table-hover">
                         <thead>
                            <tr>                     
@@ -199,7 +194,6 @@
                         </tbody>
                   </table>
                </div>
-               <div id="volumeCoversView" class="d-none"></div>
             </div>
          </div>
       </div>
