@@ -1,5 +1,5 @@
 aiohttp==3.5.4
-Django==2.2.3
+Django==2.2.4
 django-extensions==2.1.9
 django-ratelimit==2.0.0
 Pillow==6.1.0
