@@ -190,7 +190,7 @@
                         <tbody id="chapterTable">
                            {% for chapter, title, ch_slug, group, upload_date, volume, chapter_id in chapter_list %}                        
                               <tr class="table-default">                           
-                                    <td scope="row"><a href="/reader/md_proxy/chapter/{{ slug }}/{{ chapter }}/1">{{ chapter }} - {{ title }}</a></th>
+                                    <td scope="row"><a href="/reader/md_proxy/{{ slug }}/{{ chapter }}/1">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row">{{ group }}</td>
                                     <td scope="row" class="detailed-chapter-upload-date"></td>
                                     <td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>     
