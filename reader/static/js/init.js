@@ -43,11 +43,18 @@ function ReaderAPI(o) {
 			chapter.images = {};
 			chapter.blurs = {};
 			chapter.previews = {};
+			chapter.hasWide = {};
+			chapter.wides = {};
+
 			chapter.id = num;
 			for(var group in chapter.groups) {
 				chapter.images[group] = [];
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
+				chapter.wides[group] = [];
+				if(chapter.groups[group].join().indexOf('_w.') > -1) {
+					chapter.hasWide[group] = true;
+				}
 				for (var i = 0; i < chapter.groups[group].length; i++) {
 					chapter.images[group].push(
 						this.mediaURL
@@ -81,6 +88,9 @@ function ReaderAPI(o) {
 							+ '/' 
 							+ chapter.groups[group][i]
 					)
+					if(chapter.groups[group][i].indexOf('_w.') > -1) {
+						chapter.wides[group].push(i);
+					}
 				}
 			}
 		}
@@ -171,7 +181,7 @@ function SettingsHandler(){
 	this.all.spreadCount = new Setting(
 		'spreadCount',
 		'2-page spread count',
-		[1, 2, 3, 4, 5, 6, 7, 8, 9],
+		[1, 2],
 		1,
 		i => {
 			return 'Spread page count: %i'.replace('%i', i)
@@ -649,7 +659,7 @@ function UI_Reader(o) {
 		}
 		this.groupList.addMapped(groupElements);
 
-		this.imageView.drawImages(chapterObj.images[group]);
+		this.imageView.drawImages(chapterObj.images[group], chapterObj.wides[group]);
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(chapterObj.volume, true);
 
@@ -691,8 +701,7 @@ function UI_Reader(o) {
 		else
 			if(page !== undefined) this.SCP.page = page;
 		
-		this.SCP.page = 
-			Math.max(0, this.SCP.page - (this.SCP.page + Settings.all.spreadOffset.get()) % Settings.all.spreadCount.get())
+		this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
 
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.SCP.visiblePages = this.imageView.visiblePages;
@@ -763,22 +772,12 @@ function UI_Reader(o) {
 		}
 	}
 
-	this.nextPage = function(){
-	var newPage = Math.max(
-			0,
-			this.SCP.page
-			- (this.SCP.page + Settings.all.spreadOffset.get())
-			% Settings.all.spreadCount.get()
-		)
-		+ (
-			(this.SCP.page < Settings.all.spreadCount.get() - Settings.all.spreadOffset.get())?Settings.all.spreadCount.get() - Settings.all.spreadOffset.get()
-				: Settings.all.spreadCount.get()
-		);
-
-		if(newPage <= this.SCP.lastPage) 
-			this.displayPage(newPage)
-		else {
+	this.nextPage = function() {
+	var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
+		} else {
+			this.displayPage(this.imageView.imageWrappersMask[nextWrapper][0])
 		}
 	}
 
@@ -828,7 +827,7 @@ function UI_Reader(o) {
 		this.$.classList.add(layout);
 
 		if(!silent) {
-			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group]);
+			this.imageView.drawImages(chapterObj.images[this.SCP.group], chapterObj.wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
 		}
 	}
@@ -973,32 +972,41 @@ function UI_ReaderImageView(o) {
 	this.firstDraw = true;
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
-	this.drawImages = function(images) {
+	this.drawImages = function(images, wides) {
 		this.imageContainer.$.style.transition = '';
 		this.imageContainer.clear();
 		this.imageWrappers = [];
+		this.imageWrappersMask = [];
+		this.imageWrappersMap = {};
 	var spreadCount = Settings.all.spreadCount.get();
 	var	spreadOffset = Settings.all.spreadOffset.get();
-	var imageObjects = [];
-
+	var imageIndices = [];
 		for(var i=0; i < images.length; i++) {
-		var url = images[i];
-			imageObjects.push({
-				url: url,
-				index: i
-			});
-			if(spreadOffset >= spreadCount - 1 || i == images.length - 1) {
-				spreadOffset = 0;
-				this.imageWrappers.push(
-					new UI_ReaderImageWrapper({
-						imageObjects: imageObjects
-					})
-				);
-				imageObjects = [];
+			imageIndices.push(i);
+			this.imageWrappersMap[i] = this.imageWrappersMask.length;
+			if(wides.indexOf(i) > -1 || wides.indexOf(i+1) > -1){
+				spreadOffset++;
+			}
+			if(spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
+				if(wides.indexOf(i) > -1)
+					spreadOffset = Settings.all.spreadOffset.get();
+				else
+					spreadOffset = 0;
+				this.imageWrappersMask.push(imageIndices);
+				imageIndices = [];
 			}else{
 				spreadOffset++;
 			}
 		}
+
+		this.imageWrappers = this.imageWrappersMask.map(wrapper => 
+			new UI_ReaderImageWrapper({
+				imageObjects: wrapper.map(index => ({
+					url: images[index],
+					index: index
+				}))
+			})
+		);
 
 		this.imageList = [];
 
