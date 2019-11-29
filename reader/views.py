@@ -101,7 +101,7 @@ def series_page_data(series_slug):
                 "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
-                "relative_url": f"reader/series/{series.slug}"
+                "relative_url": f"reader/series/{series.slug}/"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
@@ -145,7 +145,7 @@ def get_all_metadata(series_slug):
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
-        metadata[chapter]["relative_url"] = f"reader/series/{series_slug}/{chapter}/{page}"
+        metadata[chapter]["relative_url"] = f"reader/series/{series_slug}/{chapter}/{page}/"
         return render(request, 'reader/reader.html', metadata[chapter])
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
