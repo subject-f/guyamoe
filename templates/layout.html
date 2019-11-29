@@ -27,11 +27,19 @@
       <meta name="theme-color" content="#2b2f33" />
       {% block head %}
       {% endblock %}
+      <style type="text/css">
+         .site-title, .site-description {
+            position: absolute;
+            clip: rect(1px, 1px, 1px, 1px);
+         }
+      </style>
    </head>
    <body class="d-flex flex-column h-100">
    {% load cache %}
    {% cache 500 sidebar %}
    <header>
+   <h1 class="site-title"><a href="https://guya.moe" rel="home">Kaguya-sama manga series | Guya.moe</a></h1>
+	<p class="site-description">Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga and spin-off series. No ads. No bad reader. All guya.</p>
    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container-fluid">
          <a class="navbar-brand-logo" href="/">
