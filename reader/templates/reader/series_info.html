@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 {% load static %}
 {% block head %}
-   <title>Read {{ series }} :: Guya.moe</title>
-   <meta name="twitter:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya." />
-   <meta property="og:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-   <meta name="description" content="Read {{ series }} manga - all chapters on Guya.moe. No ads. No bad reader. All guya.">
+   <title>Read {{ series }} | Guya.moe</title>
+   <meta name="twitter:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya." />
+   <meta property="og:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
+   <meta name="description" content="Read {{ series }} manga series by {{ author }}.{{ alt_titles_str|safe }}">
    <meta name="author" content="{{ author }}">
    <script src="{% static 'js/jquery.min.js' %}"> </script>
    <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
@@ -149,8 +149,8 @@
                   </div>
                   <div class="media media-3x4 justify-content-center py-2">
                      <picture >
-                        <source type="image/webp" srcset="{{ cover_vol_url_webp }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" alt="Manga › {{ series }}">
-                        <img src="{{ cover_vol_url }}" class="img-fluid" alt="Manga › {{ series }}" style="width: 98%" alt="Manga › {{ series }}">
+                        <source type="image/webp" srcset="{{ cover_vol_url_webp }}" class="img-fluid" style="width: 98%" alt="{{ series }} manga">
+                        <img src="{{ cover_vol_url }}" class="img-fluid" style="width: 98%" alt="{{ series }} manga">
                      </picture>
                   </div>
                </div>
@@ -181,9 +181,18 @@
             </div>
             <div class="col-lg-8 col-md-9 col-sm-12 col-xs-12">
                <div class="heading">
-                  <h6 class="text-highlight">
+                  {% if alt_titles %}
+                     <h3 style="font-size: 1.25em">Alternative Titles</h3>
+                     {% for alt in alt_titles %}
+                        <h3 class="text-highlight" style="inline: block; font-size: 1em">
+                           {{ alt }}
+                        </h3>
+                     {% endfor %}
+                     <div class="col-12 mt-3 mb-3" style="border:1px solid #444"></div>
+                  {% endif %}
+                  <h3 class="text-highlight" style="font-size: 1.25em">
                      Description
-                  </h6>
+                  </h3>
                   <p>{{ synopsis|linebreaks }}</p>
                </div>
                <div class="btn-group"  role="group" >
