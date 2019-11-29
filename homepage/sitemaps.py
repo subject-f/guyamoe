@@ -13,7 +13,7 @@ class StaticViewSitemap(Sitemap):
     def location(self, item):
         return reverse(item)
 
-class SeriesSitemap(Sitemap):
+class SeriesViewSitemap(Sitemap):
     changefreq = 'monthly'
     priority = 0.5
     protocol = 'https'
@@ -21,7 +21,7 @@ class SeriesSitemap(Sitemap):
     def items(self):
         return Series.objects.all()
 
-class ChapterSitemap(Sitemap):
+class ChapterViewSitemap(Sitemap):
     changefreq = 'monthly'
     priority = 0.4
     protocol = 'https'
