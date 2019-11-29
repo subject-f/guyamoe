@@ -17,10 +17,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from homepage.sitemaps import StaticViewSitemap, SeriesViewSitemap, ChapterViewSitemap
+
+sitemaps = {
+    'static': StaticViewSitemap,
+    'series': SeriesViewSitemap,
+    'chapter': ChapterViewSitemap
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('homepage.urls')),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
     path('reader/', include('reader.urls')),
     path('api/', include('api.urls')),
 ]
