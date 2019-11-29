@@ -34,9 +34,13 @@ class Series(models.Model):
     author = models.ForeignKey(Person, blank=True, null=True, on_delete=models.SET_NULL, related_name='series_author')
     artist = models.ForeignKey(Person, blank=True, null=True, on_delete=models.SET_NULL, related_name='series_artist')
     synopsis = models.TextField(blank=True, null=True)
+    alternative_titles = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return f'/reader/series/{self.slug}/'
 
     class Meta:
         ordering = ('name',)
@@ -95,6 +99,9 @@ class Chapter(models.Model):
 
     def __str__(self):
         return f"{self.chapter_number} - {self.title} | {self.group}"
+
+    def get_absolute_url(self):
+        return f'/reader/series/{self.series.slug}/{Chapter.slug_chapter_number(self)}/1'
 
     class Meta:
         ordering = ('chapter_number',)

@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/*
+Disallow: /admin_home/
+Disallow: /reader/update_view_count/
+Disallow: /reader/md_proxy/*
+
+Sitemap: https://guya.moe/sitemap.xml

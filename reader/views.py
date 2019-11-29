@@ -88,6 +88,8 @@ def series_page_data(series_slug):
         chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
         series_page_dt = {
                 "series": series.name,
+                "alt_titles": series.alternative_titles.split(", ") if series.alternative_titles else [],
+                "alt_titles_str": f" Alternative titles: {series.alternative_titles}." if series.alternative_titles else "",
                 "series_id": series.id,
                 "slug": series.slug,
                 "cover_vol_url": cover_vol_url,
