@@ -14,7 +14,7 @@ class StaticViewSitemap(Sitemap):
         return reverse(item)
 
 class SeriesViewSitemap(Sitemap):
-    changefreq = 'monthly'
+    changefreq = 'daily'
     priority = 0.5
     protocol = 'https'
 
