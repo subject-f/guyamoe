@@ -1028,7 +1028,7 @@ function UI_Reader(o) {
 			}
 			return array;
 		}
-		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 5).concat(shuffle(previews.slice(5,15)),previews.slice(-2));
+		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(shuffle(previews.slice(4,16)),previews.slice(-1));
 		this.current.chapters[this.SCP.chapter].images[this.SCP.group] = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].map(p => p.replace('_shrunk',''))
 	}
 
