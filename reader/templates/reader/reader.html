@@ -81,32 +81,6 @@
 						<div class="is-ico-button expander"></div>
 					</div>
 					<div data-bind='previews' class="rdr-previews-gallery">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
-						<img src="" alt="">
 					</div>
 				</section>
 			</div>
@@ -121,6 +95,18 @@
 		<content data-bind='image_viewer' class="rdr-area">
 			<div class="rdr-image-wrap" data-bind='image_container' tabindex="-1">
 			</div>
+			<div class="hover-prev" data-bind="hover_prev">
+				<div class="hover-wrap">
+					<div class="hover-arrow"></div>
+					<div class="hover-sub"></div>
+				</div>
+			</div>
+			<div class="hover-next" data-bind="hover_next">
+				<div class="hover-wrap">
+					<div class="hover-arrow"></div>
+					<div class="hover-sub"></div>
+				</div>
+			</div>
 		</content>
 		<div class="zoom-level vis" data-bind="zoom_level">
 			<div class="is-ico-button" data-bind="zoom_level_plus"></div>
@@ -130,6 +116,7 @@
 	<div class="Tooltippy"></div>
 	<div class="LodaManager hidden" tabindex="-1"></div>
 </body>
+<script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>

@@ -152,7 +152,7 @@ function SettingsHandler(){
 		{
 			'fit-width': 'Images fit to width.<br>Zoom enabled.',
 			'fit-height': 'Images fit to height.',
-			'fit-none': 'Images are displayed in original size.',
+			'fit-none': 'Images are displayed in original size (crisp image).',
 			'fit-all': 'Images fit to width and height.'
 		} 
 	)
@@ -176,6 +176,22 @@ function SettingsHandler(){
 			'p1': 'Single-page layout',
 			'p2': 'Two-page layout',
 			'p2-odd': 'Two-page layout, odd'
+		},
+		value => {
+			({
+				'p1': v => {
+					this.all.spreadCount.set(1)
+					this.all.spreadOffset.set(0)
+				},
+				'p2': v => {
+					this.all.spreadCount.set(2)
+					this.all.spreadOffset.set(0)
+				},
+				'p2-odd': v => {
+					this.all.spreadCount.set(2)
+					this.all.spreadOffset.set(1)
+				}
+			})[value]()
 		}
 	)
 	this.all.spreadCount = new Setting(
@@ -320,13 +336,14 @@ function SettingsHandler(){
 	this.S.mapOut(['setting', 'message']);
 }
 
-function Setting(name, prettyName, options, dflt, strings) {
+function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 	this.name = name;
 	this.prettyName = prettyName;
 	this.default = dflt;
 	this.setting = this.default;
 	this.options = options;
 	this.strings = strings;
+	this.postUpdate = postUpdate;
 
 	this.refresh = function() {
 		if(this.options instanceof Function) {
@@ -405,8 +422,10 @@ function Setting(name, prettyName, options, dflt, strings) {
 			throw new Error(this.name + ' has no valid options.')
 		}
 		this.setting = value;
-		if(!silent)
+		if(!silent) {
+			if(this.postUpdate) this.postUpdate(this.setting);
 			this.super.settingUpdated(this);
+		}
 	}
 }
 
@@ -508,7 +527,7 @@ function UI_Reader(o) {
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.all.fit.cycle())
 		.attach('layout', ['KeyD'], e => Settings.all.layout.cycle())
-		.attach('opacity', ['KeyO'], e => this.imageView.$.style.opacity = '0.01')
+		.attach('opacity', ['KeyO'], e => this.imageView.$.children[0].style.opacity = '0.03')
 		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
 		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
 		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
@@ -817,7 +836,7 @@ function UI_Reader(o) {
 		});
 		this.$.classList.add(fit);
 		this._.fit_button.classList.add(fit);
-		this.updateWides();
+		this.imageView.updateWides();
 	}
 
 	this.setLayout = function(layout, silent) {
@@ -827,7 +846,7 @@ function UI_Reader(o) {
 		this.$.classList.add(layout);
 
 		if(!silent) {
-			this.imageView.drawImages(chapterObj.images[this.SCP.group], chapterObj.wides[this.SCP.group]);
+			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
 		}
 	}
@@ -854,19 +873,13 @@ function UI_Reader(o) {
 			this.$.classList.remove('zl'+item);
 		});
 		this.$.classList.add('zl'+zoom);
-		this.updateWides();
+		this.imageView.updateWides();
 	}
-	this.setSpread = function(spread, silent) {
+	this.setSpread = function(spread) {
 		Settings.all.spread.options.forEach(item => {
 			this.$.classList.remove(item);
 		});
 		this.$.classList.add(spread);
-
-		if(!silent) {
-			this.displayPage();
-			if(spread == 'p1') this.nextPage();
-			this.updateWides();
-		}
 	}
 
 	this.setSidebar = function(state) {
@@ -875,19 +888,7 @@ function UI_Reader(o) {
 		}else{
 			this.$.classList.remove('sidebar-hidden');
 		}
-		this.updateWides();
-	}
-
-	this.updateWides = function() {
-	var images = document.querySelectorAll('.ReaderImageWrapper');
-		images.forEach(image => {
-			if(image.children[0].getBoundingClientRect().width > image.getBoundingClientRect().width) {
-				image.classList.add('too-wide');
-			}else{
-				image.classList.remove('too-wide');
-			}	
-		})
-
+		this.imageView.updateWides();
 	}
 
 	this.eventRouter = function(event){
@@ -971,6 +972,20 @@ function UI_ReaderImageView(o) {
 	Linkable.call(this);
 	this.firstDraw = true;
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
+
+
+	this.updateWides = () => {
+		if(!this.imageWrappers) return;
+		for(var i=0; i < this.imageWrappers.length; i++) {
+			if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
+				this.imageWrappers[i].$.classList.add('too-wide');
+			}else{
+				this.imageWrappers[i].$.classList.remove('too-wide');
+			}
+		}
+	}
+
+	new ResizeSensor(this.$, this.updateWides);
 
 	this.drawImages = function(images, wides) {
 		this.imageContainer.$.style.transition = '';
@@ -1241,18 +1256,34 @@ const SCROLL_X = 3;
 			return;
 		}
 		if(e.type == 'mousemove') {
-			if(this.mouseHandler.dead || !this.mouseHandler.active) return;
-			if(Math.abs(this.mouseHandler.initPos.x - e.pageX) > 20 ||
-			Math.abs(this.mouseHandler.initPos.y - e.pageY) > 20) {
-				this.mouseHandler.dead = true;
+			if(this.mouseHandler.dead || !this.mouseHandler.active) {
+				this.mouseHandler.justHover = true;
+			}else{
+				if(Math.abs(this.mouseHandler.initPos.x - e.pageX) > 20 ||
+				Math.abs(this.mouseHandler.initPos.y - e.pageY) > 20) {
+					this.mouseHandler.dead = true;
+				}
+				return;
 			}
-			return;
 		}
 		if(e.type == 'click') {
 			this.mouseHandler.active = false;
 			if(this.mouseHandler.dead) {
 				return;
 			}
+		}
+		if(e.type == 'mouseleave') {
+			this._.hover_prev.classList.add('nodelay');
+			this._.hover_next.classList.add('nodelay');
+			this._.hover_prev.classList.remove('viz');
+			this._.hover_next.classList.remove('viz');
+			setTimeout(t => {
+				this._.hover_prev.classList.remove('nodelay');
+				this._.hover_next.classList.remove('nodelay');
+			}, 1)
+			this.mouseHandler.previousArea = null;
+			clearTimeout(this.mouseHandler.arrowTimeout);
+			return;
 		}
 		if(e.button != 0) return;
 	var box = this.$.getBoundingClientRect();
@@ -1265,46 +1296,86 @@ const SCROLL_X = 3;
 		];
 		areas.push(e.pageX);
 		areas.sort((a,b) => a - b);
-		console.log(areas)
-		switch (areas.indexOf(e.pageX)) {
-			case 1:
-				if(Settings.all.layout.get() != 'ttb')
-					(Settings.all.layout.get() == 'ltr')?
-						this.prev(e):
-						this.next(e);
-				break;
-			case 2:
-				if(IS_MOBILE)
-					Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
-				else
+		if(e.type == 'click') {
+			switch (areas.indexOf(e.pageX)) {
+				case 1:
 					if(Settings.all.layout.get() != 'ttb')
 						(Settings.all.layout.get() == 'ltr')?
 							this.prev(e):
 							this.next(e);
-				break;
-			case 3:
-				if(IS_MOBILE)
-					Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
-				else
+					break;
+				case 2:
+					if(IS_MOBILE)
+						Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+					// else
+					// 	if(Settings.all.layout.get() != 'ttb')
+					// 		(Settings.all.layout.get() == 'ltr')?
+					// 			this.prev(e):
+					// 			this.next(e);
+					break;
+				case 3:
+					if(IS_MOBILE)
+						Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+					// else
+					// 	if(Settings.all.layout.get() != 'ttb')
+					// 		(Settings.all.layout.get() == 'ltr')?
+					// 			this.next(e):
+					// 			this.prev(e);
+					break;
+				case 4:
 					if(Settings.all.layout.get() != 'ttb')
 						(Settings.all.layout.get() == 'ltr')?
 							this.next(e):
 							this.prev(e);
-				break;
-			case 4:
-				if(Settings.all.layout.get() != 'ttb')
-					(Settings.all.layout.get() == 'ltr')?
-						this.next(e):
-						this.prev(e);
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
+			}
+		}else{
+			if(this.mouseHandler.previousArea == areas.indexOf(e.pageX))
+				return;
+			this.mouseHandler.previousArea = areas.indexOf(e.pageX);
+			clearTimeout(this.mouseHandler.arrowTimeout);
+			switch (this.mouseHandler.previousArea) {
+				case 1:
+					if(!IS_MOBILE) {
+						if(Settings.all.layout.get() != 'ttb') {
+							this._.hover_prev.classList.add('viz');
+							this._.hover_next.classList.remove('viz');
+							this.mouseHandler.arrowTimeout = setTimeout(t => {
+								this._.hover_prev.classList.remove('viz');
+								this.mouseHandler.previousArea = null;
+							}, 1000) //MAGICNUM
+						}
+					}
+					break;
+				case 2:
+				case 3:
+						this._.hover_prev.classList.remove('viz');
+						this._.hover_next.classList.remove('viz');
+					break;
+				case 4:
+					if(!IS_MOBILE) {
+						if(Settings.all.layout.get() != 'ttb') {
+							this._.hover_next.classList.add('viz');
+							this._.hover_prev.classList.remove('viz');
+							this.mouseHandler.arrowTimeout = setTimeout(t => {
+								this._.hover_next.classList.remove('viz');
+								this.mouseHandler.previousArea = null;
+							}, 1000) //MAGICNUM
+						}
+					}
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
 	this.$.onmousedown = e => this.mouseHandler(e);
 	this.$.onmousemove = e => this.mouseHandler(e);
 	this.$.onclick = e => this.mouseHandler(e);
+	this.$.onmouseleave = e => this.mouseHandler(e);
 
 	this.S.mapOut(['event']);
 }
@@ -1320,7 +1391,7 @@ function UI_ReaderImageWrapper(o) {
 	Linkable.call(this);
 
 	this.imageInstances = [];
-
+	this.totalWidth = 0;
 	//imageObject = {url, index}
 	if(o.imageObjects) {
 		o.imageObjects.forEach(img => {
@@ -1343,7 +1414,15 @@ function UI_ReaderImageWrapper(o) {
 	this.getIndices = function() {
 		return this.get().map(img => img.index)
 	}
-
+	this.checkTooWide = width => {
+		this.totalWidth += width;
+		if(this.totalWidth > this.$.clientWidth) {
+			this.$.classList.add('too-wide');
+		}
+	}
+	this.S.mapIn({
+		'imageWidth': this.checkTooWide
+	})
 	this.S.proxyOut('loaded');
 }
 
@@ -1361,24 +1440,33 @@ function UI_ReaderImage(o) {
 	this.parentWrapper = o.parentWrapper;
 
 	this.onloadHandler = function(e) {
-		this.S.out('loaded', this.index);
-		// if(this._.image.getBoundingClientRect().width > this.$.getBoundingClientRect().width) {
-		// 	this.$.classList.add('too-wide');
-		// }else{
-		// 	this.$.classList.remove('too-wide');
-		// }
+		if(e.type == 'load') {
+			this.S.out('loaded', this.index);
+			return;
+		}
 		//if(!IS_MOBILE) dragscroll.reset([this.$])
 		//if(this.fore) this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
+	this.watchImageWidth = () => {
+		if(this.$.naturalWidth > 0) {
+			this.S.out('imageWidth', this.$.offsetWidth);
+			cancelAnimationFrame(this.RAF);
+			this.RAF = null;
+			return;
+		}
+		requestAnimationFrame(this.watchImageWidth);
+	}
+
 	this.load = function() {
 		if(this.loaded) return;
+		this.RAF = requestAnimationFrame(this.watchImageWidth);
 		this.$.src = this.url;
 		this.$.onload = e => this.onloadHandler(e);
 		this.loaded = true;
 	}
 
-	this.S.mapOut(['loaded'])
+	this.S.mapOut(['loaded', 'imageWidth'])
 }
 
 function UI_PageSelector(o) {
