@@ -1015,7 +1015,10 @@ function UI_Reader(o) {
 			if(!force)
 				return;
 		}
-		var previews = this.current.chapters[this.SCP.chapter].previews[this.SCP.group];
+
+		if(!this.current.chapters[this.SCP.chapter].previewsBackup)
+			this.current.chapters[this.SCP.chapter].previewsBackup = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].slice();
+		var previews = this.current.chapters[this.SCP.chapter].previewsBackup;
 		var pages = this.current.chapters[this.SCP.chapter].images[this.SCP.group];
 		function shuffle(array) {
 			var currentIndex = array.length, temporaryValue, randomIndex;
@@ -1028,7 +1031,17 @@ function UI_Reader(o) {
 			}
 			return array;
 		}
-		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(shuffle(previews.slice(4,16)),previews.slice(-1));
+	var subarr = previews.slice(4,16);
+		subarr.unshift(subarr.pop());
+	var uarr = [];
+		for(var i=0; i<subarr.length; i=i+2) {
+			uarr.push([subarr[i], subarr[i+1]])
+			shuffle(uarr[uarr.length-1]);
+		}
+		uarr = shuffle(uarr);
+		uarr = uarr.reduce((acc, val) => acc.concat(val), []);
+
+		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(uarr,previews.slice(-1));
 		this.current.chapters[this.SCP.chapter].images[this.SCP.group] = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].map(p => p.replace('_shrunk',''))
 	}
 
