@@ -39,17 +39,17 @@ def about(request):
 
 
 def main_series_chapter(request, chapter):
-    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, "1")
+    return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, "1")
 
 def main_series_page(request, chapter, page):
-    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, page)
+    return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, page)
 
 def latest(request):
     latest_chap = cache.get("latest_chap")
     if not latest_chap:
         latest_chap = Chapter.objects.order_by('-chapter_number').filter(series__slug="Kaguya-Wants-To-Be-Confessed-To")[0].slug_chapter_number()
         cache.set("latest_chap", latest_chap, 3600 * 96)
-    return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
+    return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
 
 # def latest_releases(request):
 #     latest_releases = cache.get("latest_releases")
@@ -59,7 +59,7 @@ def latest(request):
 #         #for _ in range(0, 10):
 
 #         cache.set("latest_chap", latest_chap, 3600 * 96)
-#     return redirect('reader-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
+#     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
 
 def handle404(request, exception):
     return render(request, 'homepage/how_cute_404.html', status=404)

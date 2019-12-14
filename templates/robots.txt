@@ -3,5 +3,7 @@ Disallow: /admin/*
 Disallow: /admin_home/
 Disallow: /reader/update_view_count/
 Disallow: /reader/md_proxy/*
+Disallow: /api/download_chapter/*
+Disallow: /api/upload_new_chapter/*
 
-Sitemap: https://guya.moe/sitemap.xml
+Sitemap: https://ka.guya.moe/sitemap.xml
