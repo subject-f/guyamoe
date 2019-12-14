@@ -1258,6 +1258,34 @@ header > .close {
 
 
 
+.zoom-level.refresh-chapter {
+	flex-direction: row;
+	display: flex;
+	bottom: 10px;
+	top: unset;
+	right: 20px;
+	left: unset;
+	opacity: 1;
+}
+
+.zoom-level.refresh-chapter .is-ico-button {
+	border-radius: 4px;
+	background: rgba(200, 50, 0, 0.7);
+}
+.refresh-chapter-note {
+	background: rgba(0,0,0,.8);
+	margin-right: 6px;
+	padding: 0.5em 0.7em;
+	font-size: 1rem;
+	color: white;
+	opacity: 0;
+	border-radius: 4px;
+	transition: opacity 0.2s ease;
+}
+
+.zoom-level.refresh-chapter:hover .refresh-chapter-note {
+	opacity: 1;
+}
 
 @media (max-width: 700px) {
 	main {
@@ -1483,16 +1511,30 @@ header > .close {
 		min-width: 96vw;
 		max-width: 96vw;
 	}
+
+	.zoom-level.refresh-chapter {
+		position: fixed;
+		bottom: unset;
+		top: 0em;
+		right: 0.5rem;
+		padding: 0em;
+		align-items: flex-start;
+		z-index: 200;
+
+	}
+	.zoom-level.refresh-chapter .is-ico-button {
+		font-size: 0.8em;
+		height: 2em;
+		width: 2em;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
 }
 
 
 .disabled {
 	opacity: 0.2;
 	pointer-events: none;
-}
-
-.hidden, .is-hidden {
-	display: none;
 }
 
 .nextCha {
@@ -1511,4 +1553,9 @@ header > .close {
 	content: "Next chapter";
 	padding: 1.5rem 6rem;
 	border: 2px dashed rgba(255,255,255,0.4)
+}
+
+
+.hidden, .is-hidden {
+	display: none !important;
 }

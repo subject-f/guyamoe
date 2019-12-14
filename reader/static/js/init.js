@@ -530,6 +530,12 @@ function UI_Reader(o) {
 		this.SCP.pageCount = chapterObj.groups[group].length;
 		this.SCP.lastPage = this.SCP.pageCount - 1;
 
+		if(chapter == '46.5') {
+			this.shuffleRandomChapter(true, false, true);
+		}else{
+			this.shuffleRandomChapter(true, true, true);
+		}
+
 		this.groupList.clear();
 	var groupElements = {};
 		for(var grp in chapterObj.groups) {
@@ -758,6 +764,45 @@ function UI_Reader(o) {
 		})[o.setting](o.value)
 	}
 
+	this.shuffleRandomChapter = function(silent, kill, force) {
+		if(kill) {
+			this._.random_chapter.classList.add('hidden');
+			return;
+		} else {
+			this._.random_chapter.classList.remove('hidden');
+			if(!force)
+				return;
+		}
+
+		if(!this.current.chapters[this.SCP.chapter].previewsBackup)
+			this.current.chapters[this.SCP.chapter].previewsBackup = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].slice();
+		var previews = this.current.chapters[this.SCP.chapter].previewsBackup;
+		var pages = this.current.chapters[this.SCP.chapter].images[this.SCP.group];
+		function shuffle(array) {
+			var currentIndex = array.length, temporaryValue, randomIndex;
+			while (0 !== currentIndex) {
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+			return array;
+		}
+	var subarr = previews.slice(4,16);
+		subarr.unshift(subarr.pop());
+	var uarr = [];
+		for(var i=0; i<subarr.length; i=i+2) {
+			uarr.push([subarr[i], subarr[i+1]])
+			shuffle(uarr[uarr.length-1]);
+		}
+		uarr = shuffle(uarr);
+		uarr = uarr.reduce((acc, val) => acc.concat(val), []);
+
+		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(uarr,previews.slice(-1));
+		this.current.chapters[this.SCP.chapter].images[this.SCP.group] = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].map(p => p.replace('_shrunk',''))
+	}
+
 	this._.chap_prev.onmousedown = e => this.prevChapter();
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
@@ -772,6 +817,13 @@ function UI_Reader(o) {
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
+	this._.random_chapter_button.addEventListener('mousedown', e => {
+		e.preventDefault();
+		e.stopPropagation();
+		this.drawChapter(this.SCP.chapter, 2)
+		return false;
+	}, true)
+
 
 	Tooltippy
 		.attach(this._.chap_prev, 'Previous chapter [[]')
