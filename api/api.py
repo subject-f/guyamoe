@@ -1,5 +1,4 @@
 import random
-import hashlib
 import os
 import json
 import zipfile
@@ -10,6 +9,20 @@ from PIL import ImageFilter, Image
 from django.conf import settings
 from django.core.cache import cache
 from reader.models import Series, Volume, Chapter, Group
+
+def all_chapter_data_etag(request):
+    etag = cache.get("all_chapter_data_etag")
+    if not etag:
+        etag = str(datetime.now())
+        cache.set(f"all_chapter_data_etag", etag, 48 * 3600)
+    return etag
+
+def chapter_data_etag(request, series_slug):
+    etag = cache.get(f"{series_slug}_chapter_data_etag")
+    if not etag:
+        etag = str(datetime.now())
+        cache.set(f"{series_slug}_chapter_data_etag", etag, 48 * 3600)
+    return etag
 
 def series_data(series_slug):
     series = Series.objects.get(slug=series_slug)
@@ -149,10 +162,8 @@ def md_chapter_pages(chapter_id):
 
 def series_data_cache(series_slug):
     series_api_data = series_data(series_slug)
-    series_api_hash = int(hashlib.sha256(json.dumps(series_api_data).encode('utf-8')).hexdigest(), 16) % 10**16
     cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
-    cache.set(f"series_api_hash_{series_slug}", series_api_hash, 3600 * 48)
-    return series_api_data, series_api_hash
+    return series_api_data
 
 def all_groups():
     groups_data = cache.get(f"all_groups_data")
@@ -167,7 +178,6 @@ def random_chars():
 def create_preview_pages(chapter_folder, group_folder, page_file):
     shrunk = Image.open(os.path.join(chapter_folder, group_folder, page_file))
     if shrunk.width > shrunk.height:
-        print(page_file)
         page_name, ext = page_file.rsplit(".", 1)
         page_file = page_name + "_w." + ext
         shrunk.save(os.path.join(chapter_folder, group_folder, page_file))
@@ -252,4 +262,3 @@ def zip_chapter(series_slug, chapter):
     with open(os.path.join(chapter_dir, zip_filename), "rb") as fh:
         zip_file = fh.read()
     return zip_file, zip_filename, fname
-    

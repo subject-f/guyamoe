@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings
 from django.http import HttpResponseNotFound
+from django.views.decorators.http import condition
 from django.views.generic import DetailView, TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page, cache_control
@@ -9,11 +10,13 @@ from django.core.cache import cache
 from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import condition
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
-from api.api import md_series_page_data, md_series_data
+from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data
+
 import os
 import json
 import requests
@@ -101,12 +104,13 @@ def series_page_data(series_slug):
                 "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
-                "relative_url": f"reader/series/{series.slug}/"
+                "relative_url":f"read/manga/{series.slug}/"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
 
 @cache_control(max_age=60)
+@condition(etag_func=chapter_data_etag)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info.html', data)
@@ -115,20 +119,6 @@ def series_info(request, series_slug):
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
-
-# def get_mangadex_chapter_data(series_id, chapter_id):
-#     md_series_data = cache.get(f"series_page_dt_{series_id}")
-#     if not md_series_data:
-#         md_series_data = get_md_series_metadata(series_id)
-#     md_chapter_api = f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
-#     print(md_chapter_api)
-#     chapter_dict = {}
-#     resp = requests.get(md_chapter_api)
-#     print(resp.status_code)
-#     if resp.status_code == 200:
-#         data = resp.text
-#         api_data = json.loads(data)
-#     print(api_data)
 
 def get_all_metadata(series_slug):
     series_metadata = cache.get(f"series_metadata_{series_slug}")
@@ -145,14 +135,10 @@ def get_all_metadata(series_slug):
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
-        metadata[chapter]["relative_url"] = f"reader/series/{series_slug}/{chapter}/{page}"
+        metadata[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
         return render(request, 'reader/reader.html', metadata[chapter])
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
-
-# def chapter_comments(request, series_slug, chapter):
-#     data = series_page_data(series_slug)
-#     return render(request, 'reader/chapter_comments.html', {"series": data["series"], "slug": series_slug, "chapter_slug": chapter, "chapter": chapter.replace("-", ".")})
 
 def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
