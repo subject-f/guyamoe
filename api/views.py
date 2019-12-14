@@ -7,15 +7,17 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
+from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
-from .api import series_data, md_series_data, md_chapter_pages, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
+from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_pages, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
 from django.views.decorators.csrf import csrf_exempt
 
 
+@condition(etag_func=chapter_data_etag)
 def get_series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
-        series_api_data, _ = series_data_cache(series_slug)
+        series_api_data = series_data_cache(series_slug)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
 
 def get_md_series_data(request, series_id):
@@ -26,12 +28,7 @@ def get_md_chapter_pages(request, chapter_id):
     chapter_pages = md_chapter_pages(chapter_id)
     return HttpResponse(json.dumps(chapter_pages), content_type="application/json")
 
-def series_data_hash(request, series_slug):
-    series_api_hash = cache.get(f"series_api_hash_{series_slug}")
-    if not series_api_hash:
-        _, series_api_hash = series_data_cache(series_slug)
-    return HttpResponse(json.dumps(cache.get(f"series_api_hash_{series_slug}")), content_type="application/json")
-
+@condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):
     all_series_data = cache.get(f"all_series_data")
     if not all_series_data:
@@ -44,11 +41,11 @@ def get_all_series(request):
                 if vol.volume_cover:
                     cover_vol_url = f"/media/{vol.volume_cover}"
                     break
-            _, series_api_hash = series_data_cache(series.slug)
-            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups(), "series_data_hash": series_api_hash}
+            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups()}
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
+@condition(etag_func=chapter_data_etag)
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
@@ -56,6 +53,7 @@ def get_groups(request, series_slug):
         cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
     return HttpResponse(json.dumps({"groups": groups_data}), content_type="application/json")
 
+@condition(etag_func=all_chapter_data_etag)
 def get_all_groups(request):
     return HttpResponse(json.dumps(all_groups()), content_type="application/json")
 

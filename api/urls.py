@@ -3,7 +3,6 @@ from api import views
 
 urlpatterns = [
     re_path(r'^series/(?P<series_slug>[\w-]+)/$', views.get_series_data, name='api-series_data'),
-    re_path(r'^series/(?P<series_slug>[\w-]+)/hash', views.series_data_hash, name='api-series_data_hash'),
     re_path(r'^md_series/(?P<series_id>[\d]{1,9})/$', views.get_md_series_data, name='api-md_series_data'),
     re_path(r'^md_chapter_pages/(?P<chapter_id>[\d]{1,9})/$', views.get_md_chapter_pages, name='api-md_chapter_pages'),
     re_path(r'^get_all_series/', views.get_all_series, name='api-get-all-series'),
