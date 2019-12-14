@@ -40,7 +40,7 @@ class Series(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return f'/reader/series/{self.slug}/'
+        return f'/read/manga/{self.slug}/'
 
     class Meta:
         ordering = ('name',)
@@ -101,7 +101,7 @@ class Chapter(models.Model):
         return f"{self.chapter_number} - {self.title} | {self.group}"
 
     def get_absolute_url(self):
-        return f'/reader/series/{self.series.slug}/{Chapter.slug_chapter_number(self)}/1'
+        return f'/read/manga/{self.series.slug}/{Chapter.slug_chapter_number(self)}/1'
 
     class Meta:
         ordering = ('chapter_number',)

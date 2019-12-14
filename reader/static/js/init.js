@@ -111,7 +111,7 @@ function ReaderAPI(o) {
 		var formData = new FormData();
 		formData.append("searchQuery", o.query)
 		//formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
-		return fetch('https://guya.moe/api/search_index/'+ o.slug + '/', {
+		return fetch('/api/search_index/'+ o.slug + '/', {
 				method: 'POST',
 				body: formData
 			})
@@ -502,7 +502,7 @@ function UI_Reader(o) {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
 	}, 3000);
-		this._.close.href = '/reader/series/' + this.SCP.series;
+		this._.close.href = '/read/manga/' + this.SCP.series;
 	
 	}
 
@@ -577,7 +577,7 @@ function UI_Reader(o) {
 		this.selector_page.clearPreload();
 		this.displayPage(page);
 		this.showPreviews(Settings.all.previews.get());
-		this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
+		this._.comment_button.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
 		this.plusOne();
 		return this;
 	}
@@ -688,7 +688,7 @@ function UI_Reader(o) {
 
 	this.openComments = function() {
 		if(this.SCP.series && this.SCP.chapter !== undefined)
-			window.location.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
+			window.location.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
 	this.setFit = function(fit) {
@@ -1240,7 +1240,7 @@ function URLChanger(o) {
 				+ ' - '
 				+ Reader.current.title
 				+ ' :: Guya',
-			"/reader/series/"
+			"/read/manga/"
 				+ SCP.series
 				+ '/'
 				+ SCP.chapter.replace('.', '-')

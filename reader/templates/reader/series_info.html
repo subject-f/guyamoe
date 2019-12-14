@@ -209,7 +209,7 @@
                         <div class="row mb-0 pt-0">
                            {% for chapter in data %}
                            <div class="mb-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3 pt-2">
-                              <a href="/reader/series/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p></div></a>
+                              <a href="/read/manga/{{ slug }}/{{ chapter.1 }}/1" style="text-decoration: none !important"><div style="" ><p class="text-center mb-1">{{ chapter.0 }}</p><p class="text-center text-muted small mb-1">{{ chapter.2 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p></div></a>
                            </div>
                            {% endfor %}
                            </div>
@@ -230,7 +230,7 @@
                         <tbody id="chapterTable">
                            {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
                               <tr class="table-default">                           
-                                    <td scope="row"><a href="/reader/series/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
+                                    <td scope="row"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></th>
                                     <td scope="row">{{ group }}</td>
                                     <td scope="row" class="detailed-chapter-upload-date"></td>
                                     <td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>     
