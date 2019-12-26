@@ -52,9 +52,6 @@ function ReaderAPI(o) {
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
-				if(chapter.groups[group].join().indexOf('_w.') > -1) {
-					chapter.hasWide[group] = true;
-				}
 				for (var i = 0; i < chapter.groups[group].length; i++) {
 					chapter.images[group].push(
 						this.mediaURL
@@ -136,7 +133,6 @@ function ReaderAPI(o) {
 		'loadSeries': this.requestSeries,
 		'loadIndex': this.requestIndex
 	})
-	this.S.mapOut(['seriesUpdated', 'indexUpdated'])
 }
 
 function SettingsHandler(){
@@ -147,13 +143,15 @@ function SettingsHandler(){
 	this.all.fit = new Setting(
 		'fit',
 		'Page fit',
-		['fit-width', 'fit-height', 'fit-none','fit-all'],
+		['fit-width-limit', 'fit-height-limit', 'fit-width', 'fit-height', 'fit-none','fit-all'],
 		'fit-all',
 		{
-			'fit-width': 'Images fit to width.<br>Zoom enabled.',
-			'fit-height': 'Images fit to height.',
-			'fit-none': 'Images are displayed in original size (crisp image).',
-			'fit-all': 'Images fit to width and height.'
+			'fit-width': 'Images scale to max width.<br>Zoom enabled.',
+			'fit-height': 'Images scale to max height.',
+			'fit-width-limit': 'Images fit to width.',
+			'fit-height-limit': 'Images fit to height.',
+			'fit-none': 'Images are displayed in native resolution.',
+			'fit-all': 'Images scale to width or height.'
 		} 
 	)
 	this.all.layout = new Setting(
@@ -333,7 +331,10 @@ function SettingsHandler(){
 
 	this.deserialize();
 
-	this.S.mapOut(['setting', 'message']);
+	this.S.mapIn({
+		'settingObj': settingObj => this.all[settingObj.key].set(settingObj.value)
+	})
+
 }
 
 function Setting(name, prettyName, options, dflt, strings, postUpdate) {
@@ -567,12 +568,14 @@ function UI_Reader(o) {
 
 	this.selector_chap = new UI_FauxDrop({
 		node: this._.selector_chap
-	}).S.linkAnonymous('value', value => {
+	})
+	this.selector_chap.S.linkAnonymous('value', value => {
 		this.drawChapter(value, 0);
 	});
 	this.selector_vol = new UI_FauxDrop({
 		node: this._.selector_vol
-	}).S.linkAnonymous('value', value => this.selectVolume(value));
+	})
+	this.selector_vol.S.linkAnonymous('value', value => this.selectVolume(value));
 
 	this.imageView = new UI_ReaderImageView({
 		node: this._.image_viewer
@@ -582,13 +585,19 @@ function UI_Reader(o) {
 	}).S.linkAnonymous('id', id => this.drawGroup(id));
 	this.selector_page = new UI_PageSelector({
 		node: this._.page_selector
-	}).S.linkAnonymous('page', id => this.displayPage(id));
+	})
+	this.selector_page.S.linkAnonymous('page', id => this.displayPage(id));
 	this.messageBox = new UI_MessageBox({
 		node: this._.message
 	})
 	this.previews = new UI_Tabs({
 		node: this._.previews
 	}).S.linkAnonymous('number', id => this.displayPage(id));
+	this.fitView = new UI_ButtonGroup({
+		node: this._.fit_view
+	}).refresh().S.linkAnonymous('id', id => {
+		Settings.all.fit.set(id.split('_').join('-'))
+	});
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -957,7 +966,6 @@ function UI_Reader(o) {
 			Tooltippy.set(message);
 		},
 	})
-	this.S.mapOut(['SCP']);
 
 	this.S.link(this.selector_page);
 	this.S.linkAnonymous('SCP', SCP => this.previews.select(SCP.page, undefined, undefined, true));
@@ -1377,7 +1385,6 @@ const SCROLL_X = 3;
 	this.$.onclick = e => this.mouseHandler(e);
 	this.$.onmouseleave = e => this.mouseHandler(e);
 
-	this.S.mapOut(['event']);
 }
 
 
@@ -1466,7 +1473,6 @@ function UI_ReaderImage(o) {
 		this.loaded = true;
 	}
 
-	this.S.mapOut(['loaded', 'imageWidth'])
 }
 
 function UI_PageSelector(o) {
@@ -1523,10 +1529,10 @@ function UI_PageSelector(o) {
 
 	this.S.mapIn({
 		'number': this.proxy,
-		'SCP': this.render,
+		'SCP': dpraw(data => this.render(data.payload)),
 		'loaded': this.displayPreload
 	})
-	this.S.mapOut(['page'])
+
 
 	this.keys.S.link(this);
 }
@@ -1671,7 +1677,7 @@ function UI_SimpleList(o) {
 
 	this.$.onchange = this.handler;
 
-	this.S.mapOut(['value'])
+
 }
 
 function UI_SimpleListItem(o) {
@@ -1743,10 +1749,6 @@ function UI_Loda(o) {
 		this.focusElement.focus();
 		this.focusElement.select();
 	}
-
-	this.S.mapOut([
-		'close'
-	])
 
 	this._.close.onclick = this.close.bind(this)
 }

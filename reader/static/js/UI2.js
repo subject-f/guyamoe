@@ -206,6 +206,18 @@ function UI(o) {
 	}
 	*/
 
+
+	this.consume = function consume() {
+		this._ = {};
+	var binds = this.$.querySelectorAll('[data-bind]');
+		binds.forEach(item => {
+			this._[item.getAttribute('data-bind')] = item;
+		})
+		if(DEBUG)
+			if(binds.length > 0)
+				console.log('Binds added: ', Object.keys(this._), ': ', this);
+	}
+
 	this.init = function init(o) {
 		o=be(o);
 		this.me = {
@@ -218,14 +230,7 @@ function UI(o) {
 		this.$ = this.me.node?this.me.node:this.conjure();
 		this.$._struct = this;
 		this.$.classList.add.apply(this.$.classList, this.me.kind);
-		this._ = {};
-	var binds = this.$.querySelectorAll('[data-bind]');
-		binds.forEach(item => {
-			this._[item.getAttribute('data-bind')] = item;
-		})
-		if(DEBUG)
-			if(binds.length > 0)
-				console.log('Binds added: ', Object.keys(this._), ': ', this);
+		this.consume();
 		return o;
 	}
 	// Creates an element out of html template.
@@ -240,19 +245,29 @@ function UI(o) {
 		return holder.firstElementChild;
 	}
 
+
 	this.init(o);
 
 	//what?
 	this.markers = {};
 }
 
+function dpraw(fn){
+	fn._raw = true;
+	return fn;
+}
+
+function DataPacket(stream, payload, sourceStructure) {
+	this.stream = stream;
+	this.payload = payload;
+	this.source = sourceStructure;
+}
 
 function Linkable(o) {
 	o=be(o);
 	this.S = {};
-	this.S.outStreams = {};
+	this.S.targets = [];
 	this.S.inStreams = {};
-	this.S.outMappings = {};
 
 	this.S.deadEnd = function(data) {console.log('Arrived at the dead end: ', data); return false};
 
@@ -262,6 +277,7 @@ function Linkable(o) {
 	this.S.mapIn = streams => {
 		for(let id in streams) {
 			this.S.inStreams[id] = streams[id].bind(this) || this.S.deadEnd;
+			if(streams[id]._raw) this.S.inStreams[id]._raw = true;
 		}
 		return this;
 	}
@@ -275,23 +291,23 @@ function Linkable(o) {
 	//Declares output stream names.
 	//This creates empty arrays (for functions), because no external objects yet requested things to be outputted to them.
 	//streamIDs: [streamID, streamID, ...]
-	this.S.mapOut = streamIDs => {
-		for (var i = 0; i < streamIDs.length; i++) {
-			this.S.outStreams[streamIDs[i]] = [];
-			this.S.outMappings[streamIDs[i]] = [];
-		}
-		return this;
-	}
+	// this.S.mapOut = streamIDs => {
+	// 	for (var i = 0; i < streamIDs.length; i++) {
+	// 		this.S.outStreams[streamIDs[i]] = [];
+	// 		this.S.outMappings[streamIDs[i]] = [];
+	// 	}
+	// 	return this;
+	// }
 
-	this.S.addOut = streamID => {
-		this.S.outStreams[streamID] = [];
-		this.S.outMappings[streamID] = [];
-	}
+	// this.S.addOut = streamID => {
+	// 	this.S.outStreams[streamID] = [];
+	// 	this.S.outMappings[streamID] = [];
+	// }
 
-	this.S.delOut = streamID => {
-		delete this.S.outStreams[streamID];	
-		delete this.S.outMappings[streamID];	
-	}
+	// this.S.delOut = streamID => {
+	// 	delete this.S.outStreams[streamID];	
+	// 	delete this.S.outMappings[streamID];	
+	// }
 
 	this.S.addIn = (streamID, func) => {
 		this.S.inStreams[streamID] = func.bind(this);
@@ -308,21 +324,11 @@ function Linkable(o) {
 	])
 	*/
 
-	this.S.link = (targetStructure, streamID) => {
+	this.S.link = targetStructure => {
 		if(!targetStructure.S) {
 			throw 'AlgEx: Target does not have stream support';
 		}
-		if(!streamID)
-		var streamIDs = Object.keys(this.S.outStreams)
-		else
-			streamIDs = [streamID];
-
-		for (var i = 0; i < streamIDs.length; i++) {
-			if(!targetStructure.S.inStreams[streamIDs[i]])
-				if(DEBUG) console.info(this ,': Target structure does not have input stream '+streamIDs[i]+' at the moment.')
-			this.S.outStreams[streamIDs[i]].push(targetStructure);
-			this.S.outMappings[streamIDs[i]].push({});
-		}
+		this.S.targets.push(targetStructure);
 		return this;
 	}
 
@@ -331,66 +337,61 @@ function Linkable(o) {
 			throw('AlgEx: must specify a stream for anonymous mapping.')
 	var inObj = {}
 		inObj[streamID] = callback;
-	var targetStructure = new Linkable().S.mapIn(inObj);
-		this.S.outStreams[streamID].push(targetStructure);
-		this.S.outMappings[streamID].push({});
-		return this;
+		this.S.link(new Linkable().S.mapIn(inObj));
+	 	return this;
 	}
 
 	//{'source_stream_id': 'target_stream_id'}
 
-	this.S.linkMapped =  (targetStructure, mapping) => {
-		if(!targetStructure.S) {
-			throw 'AlgEx: Target does not have stream support';
-		}
-		if(!mapping)
-			throw 'AlgEx: No mapping supplied for mapped linking: ',this,'->',targetStructure;
+	// this.S.linkMapped =  (targetStructure, mapping) => {
+	// 	if(!targetStructure.S) {
+	// 		throw 'AlgEx: Target does not have stream support';
+	// 	}
+	// 	if(!mapping)
+	// 		throw 'AlgEx: No mapping supplied for mapped linking: ',this,'->',targetStructure;
 
-		for (var sourceStream in mapping) {
-		var targetStream = mapping[sourceStream];
-			if(!targetStructure.S.inStreams[targetStream])
-				if(DEBUG) console.info('Target structure does not have input stream '+targetStream+' at the moment.')
-			this.S.outStreams[sourceStream].push(targetStructure);
-			this.S.outMappings[sourceStream].push(mapping);
-		}
-		return this;
-	}
+	// 	for (var sourceStream in mapping) {
+	// 	var targetStream = mapping[sourceStream];
+	// 		if(!targetStructure.S.inStreams[targetStream])
+	// 			if(DEBUG) console.info('Target structure does not have input stream '+targetStream+' at the moment.')
+	// 		this.S.outStreams[sourceStream].push(targetStructure);
+	// 		this.S.outMappings[sourceStream].push(mapping);
+	// 	}
+	// 	return this;
+	// }
 
-	this.S.in = (streamID, data, sourceStructure) => {
-		if(!this.S.inStreams[streamID]) {
-			if(DEBUG) console.debug(streamID,'does not exist in',this);
+	this.S.in = (dataPacket) => {
+		if(!this.S.inStreams[dataPacket.stream]) {
+			if(DEBUG) console.debug(dataPacket.stream,'does not exist in',this);
 			return;
 		}
-		if(DEBUG) console.debug(this,': Received',data,'from',sourceStructure,'on',streamID);
-		this.S.inStreams[streamID](data);
+		if(DEBUG) console.debug(this,': Received',dataPacket,'from',sourceStructure,'on',dataPacket.stream);
+		if(this.S.inStreams[dataPacket.stream]._raw) {
+			this.S.inStreams[dataPacket.stream](dataPacket);
+		}else{
+			this.S.inStreams[dataPacket.stream](dataPacket.payload);
+		}
 	}
 
 	this.S.out = (streamID, data) => {
-	var targetStructures = this.S.outStreams[streamID];
-	var targetMappings = this.S.outMappings[streamID];
-		if(!targetStructures || targetStructures.length < 1) {
-			if(DEBUG) console.warn('I,', this ,', have no outputs registered!', 'Tried to send', data, 'through', streamID)
-			return this.S;
-		}
-		if(DEBUG) console.debug('Sending',data, 'using stream '+streamID, '...');
-		for (var i = 0; i < targetStructures.length; i++) {
-			if (targetMappings && targetMappings.length > 0 && Object.keys(targetMappings[i]).length > 0) {
-				targetStructures[i].S.in(targetMappings[i][streamID], data, this);
-			}else{
-				targetStructures[i].S.in(streamID, data, this);
+		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
+	var dataPacket = new DataPacket(streamID, data, this)
+		for (var i = 0; i < this.S.targets.length; i++) {
+			if(!(streamID in this.S.targets[i].S.inStreams)) {
+				continue;
 			}
+			this.S.targets[i].S.in(dataPacket);
 		}
 		return this.S;
 	}
 
-	this.S.outAsync = (streamID, data) => {
-		setTimeout((function() { this.S.out(streamID, data) }).bind(this), 1);
+	this.S.outAsync = (streamID, dataPacket) => {
+		setTimeout((function() { this.S.out(streamID, dataPacket) }).bind(this), 1);
 		return this.S;
 	}
 
 	this.S.proxyOut = (streamID, targetStructure) => {
-		this.S.addOut(streamID);
-		this.S.addIn(streamID, data => this.S.out(streamID, data));
+		this.S.addIn(streamID, dataPacket => this.S.out(streamID, dataPacket));
 		if(targetStructure) {
 			targetStructure.S.link(this);
 		}
@@ -426,6 +427,7 @@ function Linkable(o) {
 		}
 	}*/
 }
+
 
 function Loadable(o) {
 	this.L = {};
@@ -542,7 +544,6 @@ function UI_List(o) {
 		return this;
 	}
 
-	this.S.addOut('count')
 }
 
 
@@ -744,11 +745,8 @@ function UI_Selector(o) {
 
 	this.$.onmousedown = e => this.handler(e);
 
-	this.S.mapOut(['number','element','id']);
-
 	return this;
 }
-
 
 function UI_ContainerList(o) {
 	o=be(o);
@@ -879,14 +877,97 @@ function UI_Input(o) {
 	this.keyl = new KeyListener(this.$, 'keypress')
 			.attach('submit', ['Enter'], e => this.handler(e))
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
-
-	this.S.mapOut([
-		'text',
-		'quickText'
-	]);
 }
 
 function UI_Button(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['Button'].concat(o.kind || []),
+		html: o.html || '<div></div>',
+	});
+	Linkable.call(this);
+	this.method = o.method || 'mousedown';
+	this.data = o.data;
+
+	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
+
+	this.trigger = function trigger(event) {
+		this.S.out('click', this.data)
+		return this;
+	}
+
+	this.$['on'+this.method] = event => this.trigger(event);
+}
+
+function UI_StatefulButton(o) {
+	o=be(o);
+	UI_Button.call(this, Object.assign(o, {
+		kind: ['StatefulButton'].concat(o.kind || [])
+	}));
+	Linkable.call(this);
+	this.state = o.state || false;
+
+
+	this.on = function() {
+		this.$.classList.add('s');
+		this.state = true;
+		this.S.out('on',this.data);
+	}
+
+	this.off = function() {
+		this.$.classList.remove('s');
+		this.state = false;
+		this.S.out('off',this.data);
+	}
+
+	this.toggle = function() {
+		if(this.state) {
+			this.off();
+		}else{
+			this.on();
+		}
+	}
+
+}
+
+
+function UI_ButtonGroup(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['ButtonGroup'].concat(o.kind || []),
+	}));
+	Linkable.call(this);
+	this.unique = o.unique || true;
+
+	this.refresh = () => {
+		this.buttons = this.$.getElementsByClassName('StatefulButton').filter(b => b._struct == undefined);
+		this.buttons = this.buttons.map(b => new UI_StatefulButton({node: b}).S.link(this));
+		return this;
+	}
+
+	this.handler = packet => {
+		for (var i = 0; i < this.buttons.length; i++) {
+			if(this.buttons[i] == packet.source) {
+				this.buttons[i].on();
+			}else{
+				this.buttons[i].off();
+			}
+		}
+		this.S.out('id', packet.source.$.getAttribute('data-bind'));
+	}
+
+	this.S.mapIn({
+		click: dpraw(this.handler)
+	})
+
+}
+
+
+
+
+
+/* function UI_Button(o) {
 	o=be(o);
 	UI.call(this, {
 		node: o.node,
@@ -927,7 +1008,7 @@ function UI_Button(o) {
 
 	this.$[this.method] = event => this.trigger(event);
 }
-
+*/
 
 function DataElement(o) {
 	o=be(o);

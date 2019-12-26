@@ -564,8 +564,8 @@ header > .close {
 	bottom: 0;
 	right: 0;
 	width: 10rem;
-	height: 100%;
-	background: linear-gradient(277deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+	height: 13rem;
+	background: linear-gradient(310deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
 	transition: opacity 1s ease;
 	opacity: 0;
 	display: flex;
@@ -582,19 +582,19 @@ header > .close {
 	justify-content: flex-start;
 	align-items: flex-end;
 	right: unset;
-	background: linear-gradient(83deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
+	background: linear-gradient(50deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
 	padding-left: 2rem;
 }
 
 .rdr-area .hover-prev.viz,
 .rdr-area .hover-next.viz {
-	transition: opacity .2s ease;
+	transition: opacity .5s ease;
 	opacity: 1;
 }
 
 .rdr-area .hover-prev.nodelay,
 .rdr-area .hover-next.nodelay {
-	transition: opacity .2s ease;
+	transition: opacity .5s ease;
 }
 
 .rdr-area .hover-wrap {
@@ -1449,8 +1449,125 @@ header > .close {
 
 }
 
+/* Inline #3 | https://kagu.algoinde.ru/reader/series/Kaguya-Wants-To-Be-Confessed-To/58/6 */
 
+.rdr-aside-overlay {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	background: rgba(0,0,0,0.7);
+	z-index: 100;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	padding: 1rem;
+	box-sizing: border-box;
+}
+.card-arrow-up {
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 0 0.6em 0.6em 0.6em;
+	border-color: transparent transparent #3a3f40 transparent;
+}
+.rdr-aside-views {
+	width: 100%;
+}
 
+.rdr-aside-view {
+	padding: 1rem;
+	background: #3a3f44;
+	border-radius: 3px;
+	position: relative;
+	box-shadow: 0px 4px 7px 3px rgba(0,0,0,0.4);
+}
+.rdr-aside-view .close {
+	position: absolute;
+	font-size: 1.5em;
+	height: 2em;
+	width: 1.7em;
+	left: 0;
+	top: -2em;
+	font-weight: bold;
+	text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
+}
+.rdr-aside-view .close:before {
+	content: "×";
+}
+
+.rdr-aside-view .header {
+	text-align: center;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	margin-bottom: 1rem;
+}
+
+.t-row {
+	display: flex;
+	justify-content: left;
+	flex-wrap: nowrap;
+	width: 100%;
+	margin: 0.7rem 0;
+}
+
+.t-row > div {
+	display: flex;
+	align-items: stretch;
+}
+
+.t-0 {
+	flex-grow: 0;
+}
+.t-1 {
+	flex-grow: 1;
+}
+
+.fit-view .t-row .is-ico-button {
+	pointer-events: none;
+	height: 1.5em;
+	width: 2em;
+	justify-content: flex-start;
+}
+.fit-view .StatefulButton {
+	flex-grow: 1;
+	text-align: center;
+}
+
+.StatefulButton {
+	border: 1px solid #aaa;
+	border-radius: 3px;
+	display: inline-block;
+	padding: 0.3em 0.5em;
+	line-height: 1;
+	font-size: 0.75em;
+	cursor: pointer;
+	user-select: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;	
+}
+
+.StatefulButton.s {
+	background: #aaa;
+	color: black;
+}
+
+.StatefulButton:first-child:not(:last-child) {
+	border-bottom-right-radius: 0;
+	border-top-right-radius: 0;
+}
+.StatefulButton:first-child ~ .StatefulButton:last-child {
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+	border-left: none;
+}
+.StatefulButton:nth-child(2):not(:last-child),
+.StatefulButton:nth-child(2) ~ .StatefulButton:not(:last-child) {
+	border-radius: 0;
+	border-left: none;
+}
 
 @media (max-width: 700px) {
 	main {

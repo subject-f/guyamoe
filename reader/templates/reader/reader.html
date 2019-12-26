@@ -83,6 +83,50 @@
 					<div data-bind='previews' class="rdr-previews-gallery">
 					</div>
 				</section>
+				<section class="rdr-aside-overlay">
+					<div class="rdr-aside-views" data-bind="aside_views">
+						<div class="rdr-aside-view fit-view" data-bind="fit_view">
+							<div class="close is-ico-button"></div>
+							<div class="t-row">
+								<div class="t-0"><div class="is-ico-button"></div></div>
+								<div class="t-1">
+									<div class="StatefulButton" data-bind="zoom_rmb">RMB pull</div>
+									<div class="StatefulButton" data-bind="zoom_wheel">Wheel zoom</div>
+									<div class="StatefulButton" data-bind="zoom_lmb">LMB double-click</div>
+								</div>
+							</div>
+							<hr>
+							<div class="t-row">
+								<div class="t-0"><div class="is-ico-button fitter fit-all"></div></div>
+								<div class="t-1">
+									<div class="StatefulButton" data-bind="fit_all">Full fit</div>
+								</div>
+							</div>
+							<div class="t-row">
+								<div class="t-0"><div class="is-ico-button fitter fit-none"></div></div>
+								<div class="t-1">
+									<div class="StatefulButton" data-bind="fit_none">Original size</div>
+								</div>
+							</div>
+							<div class="t-row">
+								<div class="t-0"><div class="is-ico-button fitter fit-width"></div></div>
+								<div class="t-1">
+									<div class="StatefulButton" data-bind="fit_width">Width: fit</div>
+									<div class="StatefulButton" data-bind="fit_width_limit">Width: limit</div>
+								</div>
+							</div>
+							<div class="t-row">
+								<div class="t-0"><div class="is-ico-button fitter fit-height"></div></div>
+								<div class="t-1">
+									<div class="StatefulButton" data-bind="fit_height">Height: fit</div>
+									<div class="StatefulButton" data-bind="fit_height_limit">Height: limit</div>
+								</div>
+							</div>
+						</div>
+						<div class="rdr-aside-view extended-view hidden">
+							
+						</div>
+				</div></section>
 			</div>
 		</aside>
 		<div class="rdr-page-selector vis" data-bind="page_selector">
