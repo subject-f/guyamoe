@@ -133,11 +133,15 @@
 	.hidden {
 		display: none !important;
 	}
+	#quote:hover {
+		transform: scale(1.1);
+		border: 1px solid #3A3F44;
+	}
 </style>
 <script>
 	$(function(){
 		let quoteNumb = Math.floor(Math.random() * 9) + 1;
-		$("#quote-block").html(`<img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px">`);
+		$("#quote-block").html(`<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`);
 	});
 </script>
 
@@ -217,11 +221,11 @@
 			Also available on Tachiyomi.
 		</div>
 		<div class="d-flex justify-content-center">
-			<a class="tachi-tachi" href="https://tachiyomi.org/">
-				<img src="https://raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png" alt="Tachiyomi">
+			<a class="tachi-tachi" target="_blank" href="//tachiyomi.org/">
+				<img src="//raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png" alt="Tachiyomi">
 			</a>
 			<span class="tachi-plus">+</span>
-			<a class="tachi-guya" href="https://tachiyomi.org/extensions/#Guya">
+			<a class="tachi-guya" target="_blank" href="//tachiyomi.org/extensions/#Guya">
 				<img src="{% static '/logo_small.png' %}" alt="Guya.moe Tachiyomi extension">
 			</a>
 			<span class="ecks" onclick="event.target.parentNode.parentNode.classList.add('hidden')">&times;</span>
