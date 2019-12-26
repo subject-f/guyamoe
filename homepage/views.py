@@ -3,7 +3,6 @@ from django.http import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
-from random import randint
 from reader.models import Series, Volume, Chapter
 
 
@@ -22,7 +21,6 @@ def home(request):
                 home_screen_series[series] = [f"/media/{vol.volume_cover}", f"/media/{str(vol.volume_cover).rsplit('.', 1)[0]}.webp"]
                 break
     return render(request, 'homepage/home.html', {
-            "quote": str(randint(1, 2)),
             "abs_url": request.build_absolute_uri(),
             "main_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][0],
             "main_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][1],

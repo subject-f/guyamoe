@@ -134,6 +134,12 @@
 		display: none !important;
 	}
 </style>
+<script>
+	$(function(){
+		let quoteNumb = Math.floor(Math.random() * 9) + 1;
+		$("#quote-block").html(`<img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px">`);
+	});
+</script>
 
 {% endblock %}
 
@@ -166,7 +172,6 @@
 						<source type="image/webp" srcset="{{ 4koma_cover_webp }}" class="img-fluid mx-auto d-block" style="width: 80%" alt="Manga › We Want to Talk About Kaguya">
   						<img src="{{ 4koma_cover }}" class="img-fluid mx-auto d-block" style="width: 80%" alt="Manga › We Want to Talk About Kaguya">
 					</picture>
-					{% comment %} <img class="img-fluid mx-auto d-block" src="{{ 4koma_cover }}" style="width: 80%" alt="Manga › We Want to Talk About Kaguya"> {% endcomment %}
 					<div class="caption text-center">
 						<h3>We Want to Talk About Kaguya</h3>
 					</div>
@@ -180,7 +185,6 @@
 						<source type="image/webp" srcset="{{ doujin_cover_webp }}" class="img-fluid mx-auto d-block" style="width: 80%" alt="Manga › Kaguya Wants to be Confessed to Official Doujin">
   						<img src="{{ doujin_cover }}" class="img-fluid mx-auto d-block" style="width: 80%" alt="Manga › Kaguya Wants to be Confessed to Official Doujin">
 					</picture>
-					{% comment %} <img class="img-fluid mx-auto d-block" src="{{ doujin_cover }}" style="width: 80%" alt="Manga › Kaguya Wants to be Confessed to Official Doujin"> {% endcomment %}
 					<div class="caption text-center">
 						<h3>Kaguya Wants to be Confessed to Official Doujin</h3>
 					</div>
@@ -199,10 +203,10 @@
 		</div>
 		<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 			<div class="thumbnail img">
-				<a href="//kaguya-archive.tumblr.com/tagged/Fancomic" target="_blank">
-					<img class="img-fluid mx-auto d-block" src="{% static 'img/yeah_i_got_limited_font_so_what.png' %}" style="width: 80%" alt="Fancomics">
+				<a href="//kaguya-archive.tumblr.com/" target="_blank">
+					<img class="img-fluid mx-auto d-block" src="{% static 'img/fanmade_media.png' %}" style="width: 80%" alt="Fanmade Media">
 					<div class="caption text-center">
-						<h3>Fancomics</h3>
+						<h3>Fanmade Media</h3>
 					</div>
 				</a>
 			</div>
@@ -227,9 +231,8 @@
 </main>
 <footer class="container-fluid footer mt-auto">
 	<div class="row">
-		<div class="justify-content-center col-12"
+		<div id="quote-block" class="justify-content-center col-12"
 			style="background-image: url({% static 'img/bg_pink.gif' %});">
-			<img class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote{{ quote }}.png" style="max-height: 70px">
 		</div>
 	</div>
 	<div class="row justify-content-between pt-2 small" style="background-color:#2a2a2a;">
