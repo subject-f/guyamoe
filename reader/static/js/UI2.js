@@ -332,6 +332,12 @@ function Linkable(o) {
 		return this;
 	}
 
+	this.S.biLink = targetStructure => {
+		this.S.link(targetStructure);
+		targetStructure.S.link(this);
+		return this;
+	}
+
 	this.S.linkAnonymous = (streamID, callback) => {
 		if(!streamID)
 			throw('AlgEx: must specify a stream for anonymous mapping.')
@@ -365,7 +371,7 @@ function Linkable(o) {
 			if(DEBUG) console.debug(dataPacket.stream,'does not exist in',this);
 			return;
 		}
-		if(DEBUG) console.debug(this,': Received',dataPacket,'from',sourceStructure,'on',dataPacket.stream);
+		if(DEBUG) console.debug(this,': Received',dataPacket,'from',dataPacket.sourceStructure,'on',dataPacket.stream);
 		if(this.S.inStreams[dataPacket.stream]._raw) {
 			this.S.inStreams[dataPacket.stream](dataPacket);
 		}else{
@@ -383,6 +389,12 @@ function Linkable(o) {
 			this.S.targets[i].S.in(dataPacket);
 		}
 		return this.S;
+	}
+
+	this.S.call = (streamID, data, targetStructure) => {
+		//might be inefficient, redo to preserve the dummy
+		targetStructure = targetStructure || new UI_Dummy();
+		this.S.in(new DataPacket(streamID, data, targetStructure));
 	}
 
 	this.S.outAsync = (streamID, dataPacket) => {
@@ -427,7 +439,6 @@ function Linkable(o) {
 		}
 	}*/
 }
-
 
 function Loadable(o) {
 	this.L = {};
@@ -566,7 +577,6 @@ function UI_Separator(o) {
 		html: o.html || '<div></div>',
 		text: o.text
 	});
-
 }
 
 
@@ -582,9 +592,10 @@ function UI_Selector(o) {
 	this.persistent = o.persistent?true:false;
 	this.toggleClass = o.toggleClass || 's';
 	this.selectedItems = [];
-	this.held = o.held||false;
-	this.inverse = o.inverse||false;
-	this.refire = o.refire||false;
+	this.held = o.held || false;
+	this.inverse = o.inverse || false;
+	this.refire = o.refire || false;
+	this.dynamicHide = o.dynamicHide || false;;
 
 	this.updateSelected = function()	{
 		if(this.inverse)
@@ -608,6 +619,12 @@ function UI_Selector(o) {
 			uiInstance = this.get(what)
 		}else{
 			uiInstance = what;
+		}
+
+		if((what == null || what < 0) && this.dynamicHide) {
+			this.$.classList.add('hidden')
+		}else{
+			this.$.classList.remove('hidden')
 		}
 
 		if(uiInstance == undefined) return;
@@ -750,20 +767,32 @@ function UI_Selector(o) {
 
 function UI_ContainerList(o) {
 	o=be(o);
-	UI_Selector.call(this, {
-		node: o.node,
+	UI_Selector.call(this, Object.assign(o, {
 		kind: ['ContainerList'].concat(o.kind || []),
-		html: o.html || '<div></div>',
 		toggleClass: 'is-hidden',
 		held: true,
 		persistent: true,
 		singular: true,
 		inverse: true,
-	});
-
+	}));
+	
 	this.S.mapIn({
 		number: this.select,
 	})
+}
+function UI_WindowedContainerList(o) {
+	o=be(o);
+	UI_ContainerList.call(this, Object.assign(o, {
+		kind: ['WindowedContainerList'].concat(o.kind || []),
+	}));
+
+	this.select(-1);
+
+	this.$.onclick = (event) => {
+		if(event.target == this.$) {
+			this.select(-1);
+		}
+	}
 }
 
 function UI_ScrolledContainerList(o) {
@@ -788,7 +817,6 @@ function UI_ScrolledContainerList(o) {
 		number: this.scrollSelect,
 	})
 }
-
 
 
 function UI_Tabs(o){
@@ -938,27 +966,55 @@ function UI_ButtonGroup(o) {
 		kind: ['ButtonGroup'].concat(o.kind || []),
 	}));
 	Linkable.call(this);
-	this.unique = o.unique || true;
+	//this.unique = o.unique || true;
+	this.linkedSetting = o.linkedSetting;
 
 	this.refresh = () => {
 		this.buttons = this.$.getElementsByClassName('StatefulButton').filter(b => b._struct == undefined);
 		this.buttons = this.buttons.map(b => new UI_StatefulButton({node: b}).S.link(this));
+		this.buttonsMapping = {};
+		this.buttons.forEach(b => {
+			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
+		});
 		return this;
 	}
 
-	this.handler = packet => {
+	this.select = function(button, silent) {
+		if(typeof button == 'string') {
+			button = this.buttonsMapping[button];
+		}
 		for (var i = 0; i < this.buttons.length; i++) {
-			if(this.buttons[i] == packet.source) {
+			if(this.buttons[i] == button) {
 				this.buttons[i].on();
 			}else{
 				this.buttons[i].off();
 			}
 		}
-		this.S.out('id', packet.source.$.getAttribute('data-bind'));
+
+		//NOTE: data-bind in child buttons doubles as a setting value. Might cause issues.
+		this.S.out('id', button.$.getAttribute('data-bind'));
+		if(this.linkedSetting) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.linkedSetting,
+					button.$.getAttribute('data-bind')
+				)
+			);	
+		}
+	}
+
+	this.buttonPacketHandler = rawPacket => {
+		this.select(rawPacket.source);
+	}
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.linkedSetting)
+			this.select(settingsPacket.value, true);
 	}
 
 	this.S.mapIn({
-		click: dpraw(this.handler)
+		click: dpraw(this.buttonPacketHandler),
+		settingsPacket: this.settingsPacketHandler
 	})
 
 }

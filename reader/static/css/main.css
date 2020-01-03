@@ -97,6 +97,7 @@ body {
 	font-family: Open Sans, sans-serif;
 	line-height: 1.3;
 	color: #ddd;
+	overflow-anchor: none;
 }
 
 main {
@@ -158,6 +159,7 @@ aside > header {
 	text-decoration: none;
 	cursor: default;
 	position: relative;
+	transition: all 0.1s ease, top 0s linear;
 }
 .is-ico-button:hover {
 	color: #b2dffb;
@@ -165,15 +167,14 @@ aside > header {
 	top: -1px;
 }
 
-.is-ico-button {
-	transition: all 0.1s ease, top 0s linear;
+.inline-icon {
+    font-family: guya !important;
+    font-size: 1em;
 }
 
 .is-ico-button:active {
 	top: 0px;
 }
-
-
 
 header > h1 {
 	display: flex;
@@ -188,7 +189,7 @@ header > .close {
 	cursor: pointer;
 }
 .is-ico-button.close:before {
-	content: "\e902";
+	content: "\e907";
 }
 .is-ico-button.search:before {
 	content: "";
@@ -310,53 +311,63 @@ header > .close {
 }
 
 .rdr-selector-chap.prev:before {
-	content: "\e904";
+	content: "\e909";
 }
 .rdr-selector-chap.next:before {
-	content: "\e905";
+	content: "\e90a";
 }
 .rdr-selector-vol.prev:before {
-	content: "\e906";
+	content: "\e90b";
 }
 .rdr-selector-vol.next:before {
-	content: "\e903";
+	content: "\e902";
 }
 .is-ico-button.selpin:before {
-	content: "\e901";
+	content: "\e906";
 	transform: rotate(270deg);
 }
 .selector-pinned .is-ico-button.selpin:before {
-	content: "\e900";
+	content: "\e905";
 }
 .is-ico-button.fitter {
 	float: right;
+	cursor: pointer;
 }
 .is-ico-button.fitter:before {
 }
-.is-ico-button.fitter.fit-height:before {
-	content: "\e90e";
+.is-ico-button.fitter.fit_height:before {
+	content: "h";
 }
-.is-ico-button.fitter.fit-width:before {
-	content: "\e911";
+.is-ico-button.fitter.fit_width:before {
+	content: "w";
 }
-.is-ico-button.fitter.fit-all:before {
-	content: "\e921";
+.is-ico-button.fitter.fit_height_limit:before {
+	content: "H";
 }
-.is-ico-button.fitter.fit-none:before {
+.is-ico-button.fitter.fit_width_limit:before {
+	content: "W";
+}
+.is-ico-button.fitter.fit_all:before {
+	content: "\e900";
+}
+.is-ico-button.fitter.fit_all_limit:before {
 	content: "\e923";
+}
+.is-ico-button.fitter.fit_none:before {
+	content: "\e904";
 }
 .is-ico-button.layout:before {
 	font-size: 0.8em;
 }
 .ltr .is-ico-button.layout:before {
-	content: "\e907";
+	content: "\e90c";
 }
 .rtl .is-ico-button.layout:before {
-	content: "\e907";
+	content: "\e90c";
 	transform: scaleX(-1);
 }
 .ttb .is-ico-button.layout:before {
-	content: "\e907";
+	content: "\e90c";
 	transform: rotate(90deg);
 }
 .p1 .is-ico-button.spread:before {
@@ -380,14 +391,14 @@ header > .close {
 	content: "\e91e";	
 }
 
-.is-ico-button.preload:before {
-	content: "\e90a";
+.Reader[data-preload="1"] .is-ico-button.preload:before {
+	content: "\e90d";
 }
 .Reader[data-preload="2"] .is-ico-button.preload:before {
-	content: "\e90b";
+	content: "\e90e";
 }
 .Reader[data-preload="3"] .is-ico-button.preload:before {
-	content: "\e90c";
+	content: "\e90f";
 }
 .Reader[data-preload="4"] .is-ico-button.preload:before {
 	content: "\e914";
@@ -515,11 +526,11 @@ header > .close {
 }
 
 .rdr-previews .header .expander:before {
-	content: "\e905";
+	content: "\e90a";
 }
 
 .previews-open .rdr-previews .header .expander:before {
-	content: "\e903";
+	content: "\e902";
 }
 
 .rdr-previews-gallery {
@@ -674,26 +685,48 @@ header > .close {
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
 }
-.fit-width .rdr-image-wrap .ReaderImageWrapper img {
+.fit_width .rdr-image-wrap .ReaderImageWrapper img {
 	min-width: 0;
 	width: 100%;
 	max-width: unset;
 	flex-grow: 1;
 }
 
+.fit_width_limit .rdr-image-wrap .ReaderImageWrapper {
 
-.fit-height .rdr-image-wrap .ReaderImageWrapper {
+}
+
+.fit_width_limit .rdr-image-wrap .ReaderImageWrapper img {
+	width: 100%;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+
+.fit_height .rdr-image-wrap .ReaderImageWrapper {
 	/*justify-content: flex-start;*/
 }
-.fit-height .rdr-image-wrap .ReaderImageWrapper img {
+.fit_height .rdr-image-wrap .ReaderImageWrapper img {
 	max-width: unset;
 	min-width: unset;
 	max-height: 100%;
 	min-height: 100%;
-	flex-shrink: 0;
+	flex-shrink: 1;
 }
 
-.fit-none .rdr-image-wrap .ReaderImageWrapper {
+.fit_height_limit .rdr-image-wrap .ReaderImageWrapper {
+	max-height: 100vh;
+}
+.fit_height_limit .rdr-image-wrap .ReaderImageWrapper img {
+	min-width: unset;
+    max-width: unset;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    flex-shrink: 1;
+}
+
+.fit_none .rdr-image-wrap .ReaderImageWrapper {
 	min-height: 100vh;
 	/*justify-content: flex-start;*/
 }
@@ -702,20 +735,32 @@ header > .close {
 	justify-content: flex-start !important;
 }
 
-.fit-none .rdr-image-wrap .ReaderImageWrapper img {
+.fit_none .rdr-image-wrap .ReaderImageWrapper img {
 	flex-shrink: 0;
 }
 
-.fit-all .rdr-image-wrap .ReaderImageWrapper {
+.fit_all .rdr-image-wrap .ReaderImageWrapper {
 	min-height: 100vh;
 	min-width: 100%;
 	align-items: center;
 }
 
-.fit-all .rdr-image-wrap .ReaderImageWrapper img {
+.fit_all .rdr-image-wrap .ReaderImageWrapper img {
 	object-fit: contain;
 	min-width: 0;
 	height: 100%;
+}
+
+.fit_all_limit .rdr-image-wrap .ReaderImageWrapper {
+
+}
+
+.fit_all_limit .rdr-image-wrap .ReaderImageWrapper img {
+	width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .ttb .rdr-image-wrap {
@@ -733,19 +778,19 @@ header > .close {
 }
 
 .ttb .rdr-image-wrap .ReaderImageWrapper img {
-	box-shadow: 0 0 6px black;
+	/*box-shadow: 0 0 6px black;*/
 }
 
-.ttb.fit-width .rdr-image-wrap .ReaderImageWrapper {
+.ttb.fit_width .rdr-image-wrap .ReaderImageWrapper {
 	min-height: auto;
 }
-.ttb.fit-all .rdr-image-wrap .ReaderImageWrapper {
+.ttb.fit_all .rdr-image-wrap .ReaderImageWrapper {
 	min-height: auto;
 }
-.ttb.fit-all .rdr-image-wrap .ReaderImageWrapper img {
+.ttb.fit_all .rdr-image-wrap .ReaderImageWrapper img {
 	max-height: 100vh;
 }
-.ttb.fit-height .rdr-image-wrap .ReaderImageWrapper img {
+.ttb.fit_height .rdr-image-wrap .ReaderImageWrapper img {
 	min-height: 100vh;
 	max-height: 100vh;
 }
@@ -1005,7 +1050,7 @@ header > .close {
 }
 
 .hide-side div::after {
-	content: "\e905";
+	content: "\e90a";
 	transform: scaleX(-1);
 	position: relative;
 	bottom: 0.5rem;
@@ -1027,35 +1072,6 @@ header > .close {
 	border-color: transparent #222529 transparent  transparent;
 }
 
-.sidebar-hidden aside {
-	margin-left: -16em;
-}
-
-.sidebar-hidden .rdr-page-selector {
-	height: calc(100vh - 3rem);
-	top: 3rem;
-}
-
-.sidebar-hidden .hide-side {
-	right: -3rem;
-	z-index: 20;
-	transform: scaleX(-1);
-}
-
-.sidebar-hidden .hide-side div::after {
-	
-}
-
-.sidebar-hidden .hide-side {
-}
-
-.sidebar-hidden .hide-side div::before {
-	border-color: transparent  #3a3f44 transparent  transparent;
-}
-.sidebar-hidden .hide-side div:hover:before {
-	border-color: transparent #2b2f33 transparent  transparent;
-}
-
 .zoom-level {
 	top: 0;
 	flex-direction: column;
@@ -1069,7 +1085,7 @@ header > .close {
 	display: none;
 }
 
-.fit-width .zoom-level {
+.fit_width .zoom-level {
 	display: block;
 	animation: zoomFlash 3s;
 }
@@ -1112,32 +1128,32 @@ header > .close {
 	background: rgba(0,0,0,0.9);
 }
 
-.fit-width .zoom-level:hover {
+.fit_width .zoom-level:hover {
 	opacity: 1 !important;
 	animation-play-state: paused;
 }
 
 
-.fit-width.zl10 .ReaderImageWrapper img {min-width: 10%; max-width: 10%}
-.fit-width.zl20 .ReaderImageWrapper img {min-width: 20%; max-width: 20%}
-.fit-width.zl30 .ReaderImageWrapper img {min-width: 30%; max-width: 30%}
-.fit-width.zl40 .ReaderImageWrapper img {min-width: 40%; max-width: 40%}
-.fit-width.zl50 .ReaderImageWrapper img {min-width: 50%; max-width: 50%}
-.fit-width.zl60 .ReaderImageWrapper img {min-width: 60%; max-width: 60%}
-.fit-width.zl70 .ReaderImageWrapper img {min-width: 70%; max-width: 70%}
-.fit-width.zl80 .ReaderImageWrapper img {min-width: 80%; max-width: 80%}
-.fit-width.zl90 .ReaderImageWrapper img {min-width: 90%; max-width: 90%}
-.fit-width.zl100 .ReaderImageWrapper img{}
-/*.zl11 .fit-width .ReaderImageWrapper img {min-width: 110%; max-width: 110%}
-.zl12 .fit-width .ReaderImageWrapper img {min-width: 120%; max-width: 120%}
-.zl13 .fit-width .ReaderImageWrapper img {min-width: 130%; max-width: 130%}
-.zl14 .fit-width .ReaderImageWrapper img {min-width: 140%; max-width: 140%}
-.zl15 .fit-width .ReaderImageWrapper img {min-width: 150%; max-width: 150%}
-.zl16 .fit-width .ReaderImageWrapper img {min-width: 160%; max-width: 160%}
-.zl17 .fit-width .ReaderImageWrapper img {min-width: 170%; max-width: 170%}
-.zl18 .fit-width .ReaderImageWrapper img {min-width: 180%; max-width: 180%}
-.zl19 .fit-width .ReaderImageWrapper img {min-width: 190%; max-width: 190%}
-.zl20 .fit-width .ReaderImageWrapper img {min-width: 200%; max-width: 200%}*/
+.fit_width.zl10 .ReaderImageWrapper img {min-width: 10%; max-width: 10%}
+.fit_width.zl20 .ReaderImageWrapper img {min-width: 20%; max-width: 20%}
+.fit_width.zl30 .ReaderImageWrapper img {min-width: 30%; max-width: 30%}
+.fit_width.zl40 .ReaderImageWrapper img {min-width: 40%; max-width: 40%}
+.fit_width.zl50 .ReaderImageWrapper img {min-width: 50%; max-width: 50%}
+.fit_width.zl60 .ReaderImageWrapper img {min-width: 60%; max-width: 60%}
+.fit_width.zl70 .ReaderImageWrapper img {min-width: 70%; max-width: 70%}
+.fit_width.zl80 .ReaderImageWrapper img {min-width: 80%; max-width: 80%}
+.fit_width.zl90 .ReaderImageWrapper img {min-width: 90%; max-width: 90%}
+.fit_width.zl100 .ReaderImageWrapper img{}
+/*.zl11 .fit_width .ReaderImageWrapper img {min-width: 110%; max-width: 110%}
+.zl12 .fit_width .ReaderImageWrapper img {min-width: 120%; max-width: 120%}
+.zl13 .fit_width .ReaderImageWrapper img {min-width: 130%; max-width: 130%}
+.zl14 .fit_width .ReaderImageWrapper img {min-width: 140%; max-width: 140%}
+.zl15 .fit_width .ReaderImageWrapper img {min-width: 150%; max-width: 150%}
+.zl16 .fit_width .ReaderImageWrapper img {min-width: 160%; max-width: 160%}
+.zl17 .fit_width .ReaderImageWrapper img {min-width: 170%; max-width: 170%}
+.zl18 .fit_width .ReaderImageWrapper img {min-width: 180%; max-width: 180%}
+.zl19 .fit_width .ReaderImageWrapper img {min-width: 190%; max-width: 190%}
+.zl20 .fit_width .ReaderImageWrapper img {min-width: 200%; max-width: 200%}*/
 
 
 .Tooltippy {
@@ -1449,8 +1465,6 @@ header > .close {
 
 }
 
-/* Inline #3 | https://kagu.algoinde.ru/reader/series/Kaguya-Wants-To-Be-Confessed-To/58/6 */
-
 .rdr-aside-overlay {
 	position: absolute;
 	top: 0;
@@ -1460,10 +1474,11 @@ header > .close {
 	z-index: 100;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
-	align-items: center;
+	justify-content: flex-start;
+	align-items: stretch;
 	padding: 1rem;
 	box-sizing: border-box;
+	cursor: pointer;
 }
 .card-arrow-up {
 	width: 0;
@@ -1472,36 +1487,41 @@ header > .close {
 	border-width: 0 0.6em 0.6em 0.6em;
 	border-color: transparent transparent #3a3f40 transparent;
 }
-.rdr-aside-views {
-	width: 100%;
+.rdr-aside-overlay:before {
+	content: "×";
+	font-family: 'Open Sans';
+	font-size: 1.5em;
+	height: 2em;
+	width: 1.7em;
+	font-weight: bold;
+	text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	align-self: flex-start;
 }
 
 .rdr-aside-view {
-	padding: 1rem;
+	cursor: default;
+	padding: 0.5rem 1rem;
 	background: #3a3f44;
 	border-radius: 3px;
 	position: relative;
 	box-shadow: 0px 4px 7px 3px rgba(0,0,0,0.4);
 }
-.rdr-aside-view .close {
-	position: absolute;
-	font-size: 1.5em;
-	height: 2em;
-	width: 1.7em;
-	left: 0;
-	top: -2em;
-	font-weight: bold;
-	text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
-}
-.rdr-aside-view .close:before {
-	content: "×";
-}
+
 
 .rdr-aside-view .header {
 	text-align: center;
 	font-size: 0.8rem;
 	text-transform: uppercase;
 	margin-bottom: 1rem;
+}
+
+.rdr-aside-view .StatefulButton {
+	flex-grow: 1;
+	text-align: center;
 }
 
 .t-row {
@@ -1523,34 +1543,31 @@ header > .close {
 .t-1 {
 	flex-grow: 1;
 }
+.t-tooltip {
+	display: flex;
+	flex-basis: 5em;
+	font-size: 13px;
+	align-items: center !important;
+}
 
-.fit-view .t-row .is-ico-button {
-	pointer-events: none;
-	height: 1.5em;
-	width: 2em;
-	justify-content: flex-start;
-}
-.fit-view .StatefulButton {
-	flex-grow: 1;
-	text-align: center;
-}
 
 .StatefulButton {
 	border: 1px solid #aaa;
 	border-radius: 3px;
 	display: inline-block;
-	padding: 0.3em 0.5em;
+	padding: 0.4em 0.5em;
 	line-height: 1;
-	font-size: 0.75em;
-	cursor: pointer;
+	font-size: 0.65em;
+	line-height: 1.2;
+	cursor: default;
 	user-select: none;
 	display: flex;
 	justify-content: center;
-	align-items: center;	
+	align-items: center;
 }
 
 .StatefulButton.s {
-	background: #aaa;
+	background: #b2dffb;
 	color: black;
 }
 
@@ -1569,6 +1586,50 @@ header > .close {
 	border-left: none;
 }
 
+.Button .is-ico-button {
+	padding: 0;
+	height: auto;
+	width: auto;
+	padding-right: 0.4em;
+	pointer-events: none;
+	transition: none;
+}
+
+.s .is-ico-button {
+	color: #333;
+}
+
+@media (min-width: 699px) {
+	.sidebar-hidden aside {
+		margin-left: -16em;
+	}
+
+	.sidebar-hidden .rdr-page-selector {
+		height: calc(100vh - 3rem);
+		top: 3rem;
+	}
+
+	.sidebar-hidden .hide-side {
+		right: -3rem;
+		z-index: 20;
+		transform: scaleX(-1);
+	}
+
+	.sidebar-hidden .hide-side div::after {
+		
+	}
+
+	.sidebar-hidden .hide-side {
+	}
+
+	.sidebar-hidden .hide-side div::before {
+		border-color: transparent  #3a3f44 transparent  transparent;
+	}
+	.sidebar-hidden .hide-side div:hover:before {
+		border-color: transparent #2b2f33 transparent  transparent;
+	}
+}
+
 @media (max-width: 700px) {
 	main {
 		flex-direction: column;
@@ -1583,7 +1644,15 @@ header > .close {
 		height: auto;
 		position: relative;
 		flex-shrink: 0;
-	}	
+	}
+
+	.rdr-aside-overlay {
+		position: fixed;
+		justify-content: flex-start;
+	}
+	.rdr-aside-overlay:before {
+		align-self: flex-end;
+	}
 
 	.rdr-page-selector {
 		min-width: unset;
@@ -1701,31 +1770,57 @@ header > .close {
 	    border-bottom-color: #6699b9;
 	}
 
+	.rdr-selector {
+		padding-bottom: 10px;
+	}
+
+	.selector-pinned.ttb .rdr-selector {
+		
+	}
+
+	.stick.selector-pinned.ttb .rdr-selector {
+		width: 100%;
+		position: fixed;
+		z-index: 100;
+		background: #3a3f44;
+		top: 0;
+	}
+
 	.rdr-image-wrap {
 		height: auto;
 		max-height: 100vh;
+		min-height: 100vh;
 	}
+
+	.ttb .rdr-image-wrap {
+		max-height: unset;
+	}
+
+	.ttb.fit_all_limit .ReaderImageWrapper img {
+		height: unset;
+	}
+	.ttb.fit_all .ReaderImageWrapper img {
+		height: unset;
+	}
+
 /*
-	.fit-none .rdr-image-wrap .ReaderImageWrapper {
+	.fit_none .rdr-image-wrap .ReaderImageWrapper {
 		justify-content: center;
 	}
 
-	.fit-height .rdr-image-wrap .ReaderImageWrapper {
+	.fit_height .rdr-image-wrap .ReaderImageWrapper {
 		justify-content: center;
 		min-height: 100vh;
 		max-width: 100vw;
 	}
 */
-	.fit-width .rdr-image-wrap .ReaderImageWrapper {
+/*	.fit_width .rdr-image-wrap .ReaderImageWrapper {
 		min-height: 100vh;
 		align-items: center;
-	}
+	}*/
 
-	.ttb.fit-width .rdr-image-wrap .ReaderImageWrapper {
-		min-height: auto;
-	}
 /*
-	.ttb.fit-all .rdr-image-wrap .ReaderImageWrapper {
+	.ttb.fit_all .rdr-image-wrap .ReaderImageWrapper {
 		min-height: auto;
 	}
 	*/
@@ -1733,11 +1828,11 @@ header > .close {
 		display: none !important;
 	}
 
-	.fit-width div.zoom-level {
+	.fit_width div.zoom-level {
 		display: none;
 	}
 
-	.fit-width .ReaderImageWrapper img {
+	.fit_width .ReaderImageWrapper img {
 		flex-grow: 1;
 	}
 /*
@@ -1745,7 +1840,7 @@ header > .close {
 		overflow: auto !important;
 	}
 
-	.selector-pinned.fit-width div.zoom-level {
+	.selector-pinned.fit_width div.zoom-level {
 		display: block;
 		bottom: 0;
 		top: unset;
@@ -1753,13 +1848,18 @@ header > .close {
 		padding: 
 	}*/
 
+	.Tooltippy {
+		position: fixed;
+		bottom: 4rem;
+		top: unset;
+	}
 	.Tooltippy-key {
 		display: none;
 	}
 
 
 	.rdr-image-wrap:before {
-		content: "\e904\00000A\00000A\00000A\e904\00000A\00000A\00000A\e904";
+		content: "\e909\00000A\00000A\00000A\e909\00000A\00000A\00000A\e909";
 		font-family: 'guya';
 		justify-content: flex-end;
 		box-sizing: border-box;
@@ -1797,6 +1897,13 @@ header > .close {
 	}
 }
 
+.preload-entity {
+	width: 1px;
+	height: 1px;
+	position: absolute;
+	opacity: 0.0000000001;
+	pointer-events: none;
+}
 
 .disabled {
 	opacity: 0.2;

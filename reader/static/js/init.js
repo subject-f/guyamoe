@@ -143,15 +143,16 @@ function SettingsHandler(){
 	this.all.fit = new Setting(
 		'fit',
 		'Page fit',
-		['fit-width-limit', 'fit-height-limit', 'fit-width', 'fit-height', 'fit-none','fit-all'],
-		'fit-all',
+		['fit_width_limit', 'fit_height_limit', 'fit_width', 'fit_height', 'fit_none','fit_all', 'fit_all_limit'],
+		(IS_MOBILE)?'fit_all_limit':'fit_width_limit',
 		{
-			'fit-width': 'Images scale to max width.<br>Zoom enabled.',
-			'fit-height': 'Images scale to max height.',
-			'fit-width-limit': 'Images fit to width.',
-			'fit-height-limit': 'Images fit to height.',
-			'fit-none': 'Images are displayed in native resolution.',
-			'fit-all': 'Images scale to width or height.'
+			'fit_width': 'Images scale to max width.',
+			'fit_height': 'Images scale to max height.',
+			'fit_width_limit': 'Natural image size that does not exceed max width.',
+			'fit_height_limit': 'Natural image size that does not exceed max height.',
+			'fit_none': 'Images are displayed in natural resolution.',
+			'fit_all': 'Images scale to width or height.',
+			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
 		} 
 	)
 	this.all.layout = new Setting(
@@ -178,16 +179,16 @@ function SettingsHandler(){
 		value => {
 			({
 				'p1': v => {
-					this.all.spreadCount.set(1)
-					this.all.spreadOffset.set(0)
+					this.set('spreadCount', 1)
+					this.set('spreadOffset', 0)
 				},
 				'p2': v => {
-					this.all.spreadCount.set(2)
-					this.all.spreadOffset.set(0)
+					this.set('spreadCount', 2)
+					this.set('spreadOffset', 0)
 				},
 				'p2-odd': v => {
-					this.all.spreadCount.set(2)
-					this.all.spreadOffset.set(1)
+					this.set('spreadCount', 2)
+					this.set('spreadOffset', 1)
 				}
 			})[value]()
 		}
@@ -222,19 +223,19 @@ function SettingsHandler(){
 	this.all.selectorPinned = new Setting(
 		'selectorPinned',
 		'Page selector',
-		['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
+		(IS_MOBILE)?['selector-fade', 'selector-pinned']:['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
 		'selector-fade',
 		{
-			'selector-pinned': 'Page selector pinned with number.',
+			'selector-pinned': (IS_MOBILE)?'':'Page selector pinned with number.',
 			'selector-pinned-nonum': 'Page selector pinned without number.',
-			'selector-fade': 'Page selector is shown on hover.'
+			'selector-fade': (IS_MOBILE)?'':'Page selector is shown on hover.'
 		}
 	)
 	this.all.preload = new Setting(
 		'preload',
 		'Preload amount',
 		[1,2,3,4,5,6,7,8,9,100],
-		(IS_MOBILE)?1:2,
+		(IS_MOBILE)?2:3,
 		i => 'Reader will preload %i pages.'.replace('%i', i)
 			.replace('1 pages', '1 page')
 			.replace('100 pages', 'all pages')
@@ -267,8 +268,10 @@ function SettingsHandler(){
 		i => 'Zoom level set to %i%.'.replace('%i', i)
 	)
 
-	for (var key in this.all) {
-		this.all[key].super = this;
+	this.sendInit = function() {
+		for(var setting in this.all) {
+			this.S.out('settingsPacket', new SettingsPacket('change', setting, this.get(setting)))
+		}
 	}
 
 	this.serialize = function() {
@@ -293,7 +296,7 @@ function SettingsHandler(){
 			}
 			for(var setting in settings) {
 				if(setting == 'VER') continue;
-				this.all[setting].set(settings[setting], true);
+				this.set(setting, settings[setting], true);
 			}
 		}catch (e){
 			localStorage.setItem('settings','');
@@ -313,28 +316,66 @@ function SettingsHandler(){
 		return true;
 	}
 
+	this.get = function(settingID){
+		return this.all[settingID].get();
+	}
+	this.set = function(settingID, value, silent){
+	var setting = this.all[settingID];
+		if(setting.set(value) == false) return;
+		if(setting.postUpdate) setting.postUpdate(setting.get());
+		this.settingUpdated(setting, silent);
+	}
+
+	this.cycle = function(settingID, options, silent){
+	var setting = this.all[settingID];
+		if(setting.cycle(options) == false) return;
+		if(setting.postUpdate) setting.postUpdate(setting.get());
+		this.settingUpdated(setting, silent);
+	}
+
 	this.refreshAll = function() {
 		for(var key in this.all) {
 			this.all[key].refresh()
 		}
 	}
 
-	this.settingUpdated = function(setting) {
+	this.settingUpdated = function(setting, silent) {
 		this.refreshAll();
 		if(window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
-		this.S.out('setting', {setting: setting.name, value: setting.get()})
-		this.S.out('message', setting.getFormatted());
+		if(silent != true) {
+			this.S.out('settingsPacket', new SettingsPacket('change', setting.name, setting.setting))
+			this.S.out('message', setting.getFormatted());
+		}
 	}
 
-	this.ver = '0.51';
+	this.packetHandler = (packet) => {
+		switch(packet.type) {
+			case 'set':
+				this.set(packet.setting, packet.value, packet.silent); 
+				break;
+			case 'cycle':
+				this.cycle(packet.setting, packet.value, packet.silent);
+				break;
+		}
+	}
 
-	this.deserialize();
+	this.ver = '0.72';
 
 	this.S.mapIn({
-		'settingObj': settingObj => this.all[settingObj.key].set(settingObj.value)
+		settingsPacket: this.packetHandler,
+		init: this.sendInit
 	})
 
+	this.deserialize();
+}
+
+function SettingsPacket(type, settingName, value, silent) {
+	this.type = type;
+	this.setting = settingName;
+	this.value = value;
+	this.silent = silent;
+	return this;
 }
 
 function Setting(name, prettyName, options, dflt, strings, postUpdate) {
@@ -368,19 +409,19 @@ function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 		if(this.options instanceof Function) {
 			if(!(options = this.options()) instanceof Array) {
 				console.log('Option', this, 'did not return an array to cycle on.')
-				return this;
+				return false;
 			}
 		}else if(!(options = this.options) instanceof Array) {
 			console.log('Option', this, 'was not an array nor a function.')
-			return this;
+			return false;
 		}
 		if(options) {
 		var index = options.indexOf(this.setting);
-			this.set(
+			return this.set(
 				(index+1 > options.length - 1)?options[0]:options[index+1]
 			);
 		}
-		return this;
+		return false;
 	}
 	this.next = function() {
 		if(this.options.indexOf(this.setting) < this.options.length - 1) {
@@ -405,8 +446,8 @@ function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 			return '';
 		}
 	}
-	this.set = function(value, silent) {
-		if(value == this.setting) return;
+	this.set = function(value) {
+		if(value == this.setting) return false;
 		if(this.options instanceof Function) {
 			if(this.options() instanceof Array) {
 				if(this.options().indexOf(value) < 0)
@@ -423,10 +464,6 @@ function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 			throw new Error(this.name + ' has no valid options.')
 		}
 		this.setting = value;
-		if(!silent) {
-			if(this.postUpdate) this.postUpdate(this.setting);
-			this.super.settingUpdated(this);
-		}
 	}
 }
 
@@ -472,9 +509,13 @@ function UI_Tooltippy(o) {
 		this.$.innerHTML = text;
 		if(!this.attached) {
 			this.$.style.display = 'block';
-			this.$.style.bottom = window.innerHeight * 0.90 + 'px';
+			if(IS_MOBILE) {
+				this.$.style.bottom = window.innerHeight * 0.20 + 'px';
+			}else{
+				this.$.style.bottom = window.innerHeight * 0.90 + 'px';
+			}
 			this.$.style.left = 'unset';
-			this.$.style.right = Reader.imageView.$.offsetWidth / 2 - this.$.offsetWidth / 2 + 'px'; // HARDCODE
+			this.$.style.right = Reader.imageView.$.offsetWidth / 2 - this.$.offsetWidth / 2 + 'px'; // TODO: REMOVE HARDCODE
 		}
 		this.$.classList.remove('fadeOut');
 		clearTimeout(this.fader);
@@ -521,46 +562,46 @@ function UI_Reader(o) {
 	// 	.pre(() => this._.image_container.focus())
 	
 
-	new KeyListener(this.$)
+	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
 		.attach('nextVo', ['Period'], e => this.nextVolume())
-		.attach('fit', ['KeyF'], e => Settings.all.fit.cycle())
-		.attach('layout', ['KeyD'], e => Settings.all.layout.cycle())
+		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
+		.attach('layout', ['KeyD'], e => Settings.cycle('layout'))
 		.attach('opacity', ['KeyO'], e => this.imageView.$.children[0].style.opacity = '0.03')
-		.attach('sidebar', ['KeyS'], s => Settings.all.sidebar.cycle())
-		.attach('pageSelector', ['KeyN'], s => Settings.all.selectorPinned.cycle())
-		.attach('preload', ['KeyL'], s => Settings.all.preload.cycle())
-		.attach('previews', ['KeyP'], s => Settings.all.previews.cycle())
-		.attach('spread', ['KeyQ'], s => Settings.all.spread.cycle())
-		.attach('spreadCount', ['Digit1'], s => Settings.all.spreadCount.cycle())
-		.attach('spreadOffset', ['Digit2'], s => Settings.all.spreadOffset.cycle())
+		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
+		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
+		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
+		.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
+		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
+		.attach('spreadCount', ['Digit1'], s => Settings.cycle('spreadCount'))
+		.attach('spreadOffset', ['Digit2'], s => Settings.cycle('spreadOffset'))
 		.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
 		.attach('minus', ['Minus'], s => {
-			Settings.all.fit.set('fit-width')
+			Settings.set('fit', 'fit_width')
 			Settings.all.zoom.prev()
 		})
 		.attach('plus', ['Equal'], s => {
-			Settings.all.fit.set('fit-width')
+			Settings.set('fit', 'fit_width')
 			Settings.all.zoom.next()
 		})
 
-	new KeyListener(this.$)
+	new KeyListener(document.body)
 		.attach('search', ['Ctrl+KeyF'], s => {
 			Loda.display('search')
 		})
 		
 
-	new KeyListener(this.$)
+	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'ltr')
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
 
-	new KeyListener(this.$)
+	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'rtl')
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
 		.attach('next', ['ArrowLeft'], e => this.nextPage());
@@ -572,6 +613,7 @@ function UI_Reader(o) {
 	this.selector_chap.S.linkAnonymous('value', value => {
 		this.drawChapter(value, 0);
 	});
+
 	this.selector_vol = new UI_FauxDrop({
 		node: this._.selector_vol
 	})
@@ -580,24 +622,32 @@ function UI_Reader(o) {
 	this.imageView = new UI_ReaderImageView({
 		node: this._.image_viewer
 	}).S.link(this);
+
 	this.groupList = new UI_Tabs({
 		node: this._.groups
 	}).S.linkAnonymous('id', id => this.drawGroup(id));
+
 	this.selector_page = new UI_PageSelector({
 		node: this._.page_selector
 	})
 	this.selector_page.S.linkAnonymous('page', id => this.displayPage(id));
+
 	this.messageBox = new UI_MessageBox({
 		node: this._.message
 	})
 	this.previews = new UI_Tabs({
 		node: this._.previews
 	}).S.linkAnonymous('number', id => this.displayPage(id));
+
+	this.asideViews = new UI_WindowedContainerList({
+		node: this._.aside_views,
+		dynamicHide: true
+	})
+	//views: fit
 	this.fitView = new UI_ButtonGroup({
-		node: this._.fit_view
-	}).refresh().S.linkAnonymous('id', id => {
-		Settings.all.fit.set(id.split('_').join('-'))
-	});
+		node: this._.aside_views_fit,
+		linkedSetting: 'fit'
+	}).refresh().S.biLink(Settings);
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -611,6 +661,7 @@ function UI_Reader(o) {
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
 		this.drawChapter(SCP.chapter, SCP.page);
+		this.S.out('init');
 	}
 
 	this.drawReader = function(slug) {
@@ -638,24 +689,17 @@ function UI_Reader(o) {
 		this.selector_chap.clear().add(chapterElements);
 		this.selector_vol.clear().add(volElements);
 
-		this.setFit(Settings.all.fit.get());
-		this.setLayout(Settings.all.layout.get(), true);
-		this.setSpread(Settings.all.spread.get(), true);
-		this.setSelectorPin(Settings.all.selectorPinned.get());
-		this.setPreload(Settings.all.preload.get());
-		this.setSidebar(Settings.all.sidebar.get());
-		this.setZoom(Settings.all.zoom.get());
 		setTimeout(() => {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
-	}, 3000);
+		}, 3000);
 		this._.close.href = '/reader/series/' + this.SCP.series;
-	
+
 	}
 
 	this.drawGroup = function(group) {
-		Settings.all.groupPreference.set(group);
-		this.drawChapter()
+		Settings.set('groupPreference', group);
+		this.drawChapter();
 	}
 
 	this.drawChapter = function(chapter, page) {
@@ -715,6 +759,7 @@ function UI_Reader(o) {
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 
+		this._.preload_entity.innerHTML = '';
 		this.selector_page.clearPreload();
 		this.displayPage(page);
 		this.showPreviews(Settings.all.previews.get());
@@ -853,6 +898,7 @@ function UI_Reader(o) {
 			this.$.classList.remove(item);
 		});
 		this.$.classList.add(layout);
+		this.stickHeader();
 
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
@@ -871,6 +917,7 @@ function UI_Reader(o) {
 		}else{
 			this.$.classList.add(state);
 		}
+		this.stickHeader();
 	}
 
 	this.setPreload = function(number){
@@ -900,6 +947,28 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
+	this.stickHeader = () => {
+		if(IS_MOBILE) {
+			if(this._.rdr_aside_content.offsetTop <= window.scrollY && Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
+				this.$.classList.add('stick');
+				this._.rdr_aside_content.style.paddingTop = this._.rdr_selector.offsetHeight + 'px';
+			}else{
+				this.$.classList.remove('stick');
+				this._.rdr_aside_content.style.paddingTop = '0px';
+			}
+		}
+	}
+
+	this.enqueuePreload = url => {
+	var newPreload = 'url("'+url+'")';
+	var preloads = this._.preload_entity.children.map(item => item.style.background);
+		if(preloads.indexOf(newPreload) < 0) {
+		var newElement = document.createElement('div');
+			newElement.style.background = newPreload;
+			this._.preload_entity.appendChild(newElement);
+		}
+	}
+
 	this.eventRouter = function(event){
 		({
 			'nextPage': () => this.nextPage(),
@@ -908,6 +977,7 @@ function UI_Reader(o) {
 	}
 
 	this.settingsRouter = function(o) {
+		if(o.type != 'change') return;
 		({
 			'fit': o => this.setFit(o),
 			'layout': o => this.setLayout(o),
@@ -927,15 +997,17 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
-	this._.preload_button.onmousedown = e => Settings.all.preload.cycle();
-	this._.layout_button.onmousedown = e => Settings.all.layout.cycle();
-	this._.fit_button.onmousedown = e => Settings.all.fit.cycle();
-	this._.sel_pin_button.onmousedown = e => Settings.all.selectorPinned.cycle();
-	this._.sidebar_button.onmousedown = e => Settings.all.sidebar.cycle();
-	this._.previews_button.onmousedown = e => Settings.all.previews.cycle();
+	this._.preload_button.onmousedown = e => Settings.cycle('preload');
+	this._.layout_button.onmousedown = e => Settings.cycle('layout');
+	this._.fit_button.onmousedown = e => {
+		this.asideViews.S.call('number', 0);
+	}
+	this._.sel_pin_button.onmousedown = e => Settings.cycle('selectorPinned');
+	this._.sidebar_button.onmousedown = e => Settings.cycle('sidebar');
+	this._.previews_button.onmousedown = e => Settings.cycle('previews');
 	this._.zoom_level_plus.onmousedown = e => Settings.all.zoom.next();
 	this._.zoom_level_minus.onmousedown = e => Settings.all.zoom.prev();
-	this._.spread_button.onmousedown = e => Settings.all.spread.cycle();
+	this._.spread_button.onmousedown = e => Settings.cycle('spread');
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 
@@ -954,6 +1026,13 @@ function UI_Reader(o) {
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
+		.attach(this._.fit_none, 'Images are displayed in natural resolution.')
+		.attach(this._.fit_all, 'Images scale to width or height.')
+		.attach(this._.fit_width, 'Images scale to max width.')
+		.attach(this._.fit_height, 'Images scale to max height.')
+		.attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
+		.attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
+		.attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
@@ -961,7 +1040,7 @@ function UI_Reader(o) {
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
 		event: this.eventRouter,
-		setting: this.settingsRouter,
+		settingsPacket: this.settingsRouter,
 		message: message => {
 			Tooltippy.set(message);
 		},
@@ -1068,61 +1147,17 @@ function UI_ReaderImageView(o) {
 			toPreload = this.imageList.length - 1;
 		}
 
-	// var loads = [[],[]];
-	// 	for(var i = realIndex; i <= realIndex + toPreload; i++){
-	// 		var image = this.imageContainer.get(i);
-	// 		if(image instanceof UI_ReaderImageWrapper) loads[0].push(image); else continue;
-	// 	}
-	// 	for(var i = realIndex ; i >= realIndex - toPreload; i--){
-	// 		var image = this.imageContainer.get(i);
-	// 		if(image instanceof UI_ReaderImageWrapper) loads[1].push(image); else continue;
-	// 	}
-	// 	if(Settings.query({layout:'rtl'})){
-	// 		loads = loads.reverse().flat();
-	// 	}else{
-	// 		loads = loads.flat()
-	// 	}
-	//	loads.forEach(image => image.load());
-
 		for (var i = index - 1; i < index + Math.max(toPreload, Settings.all.spreadCount.get()); i++) {
-			if(this.imageList[i]) this.imageList[i].load();
+			if(this.imageList[i]) {
+				this.imageList[i].load();
+				Reader.enqueuePreload(this.imageList[i].url);
+			}
 		}
 
-		if(Settings.all.layout.get() == 'ttb'){
-		// 	if(!dry) {
-		// 		this.scrollPreventer = true;
-		// 		setTimeout(() => this.scrollPreventer = false, 200);
-		// 		this._.image_container.scrollTo({
-		// 			left: 0,
-		// 			top: pageElement.offsetTop
-		// 		})
-		// 		if(pageElement.offsetTop > 0) {
-		// 		var bodyRect = document.body.getBoundingClientRect();
-		// 			document.documentElement.scrollTo({
-		// 				left: 0,
-		// 				top:
-		// 					Math.round(
-		// 						pageElement.offsetTop
-		// 						+ (this._.image_container.getBoundingClientRect().top - bodyRect.top)
-		// 					)
-		// 			})
-		// 		}
-		// 		this._.image_container.focus()
-		// 	}
-		}else{
+		if(Settings.all.layout.get() != 'ttb') {
+			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
 			this.imageContainer.$.style.transform =
-				'translateX(' + ( -100 * this.imageWrappers.indexOf(this.selectedWrapper)) + '%)';
-
-			//setTimeout(() => scrollToY(this.$, 0, 0.15, 'easeInOutSine'), 150)
-			// setTimeout(() => {
-				// this.imageContainer.selectedItems[0].$.style.top = 0;
-			this.selectedWrapper.$.focus()
-			this.$.scrollTo(0,0);
-			this.selectedWrapper.$.scrollTo({
-				left: 0,
-				top: 0
-			})
-			// }, 150)
+				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
 		}
 	}
 
@@ -1137,15 +1172,15 @@ function UI_ReaderImageView(o) {
 	document.onscroll = this._.image_container.onscroll = e => {
 		if(this.scrollPreventer) return;
 		if(Settings.all.layout.get() == 'ttb') {
-
+			Reader.stickHeader();
 		var scrollTop = (e.target.scrollingElement)?
 					e.target.scrollingElement.scrollTop:
 					undefined
 				|| e.target.scrollTop;
-		var st = scrollTop
-				+ document.documentElement.clientHeight / 8 * 6
-				* (scrollTop / this.imageContainer.$.scrollHeight)
-				+ document.documentElement.clientHeight / 8;
+		var st = scrollTop + 1;
+				// + document.documentElement.clientHeight / 8 * 6
+				// * (scrollTop / this.imageContainer.$.scrollHeight)
+				// + document.documentElement.clientHeight / 8;
 		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
@@ -1166,15 +1201,15 @@ const SCROLL = 1;
 const SWIPE = 2;
 const SCROLL_X = 3;
 
-	this.toucha = {
+	this.touch = {
 		start: 0,
 		startY: 0,
-		leftPos: 0,
+		initialX: 0,
 		transitionTimer: null,
 		delta: 0,
 		deltaY: 0,
 		em: parseFloat(getComputedStyle(document.body).fontSize),
-		watdo: null,
+		gesture: null,
 		time: null,
 		escapeVelocity: 0.1,
 		escapeDelta: 40,
@@ -1184,77 +1219,177 @@ const SCROLL_X = 3;
 	this._.image_container.ontouchstart = e => {
 		if(Settings.all.layout.get() == 'ttb') return;
 		if(e.touches.length > 1) return;
-		this.toucha.leftPos = parseFloat(this._.image_container.style.transform.replace(/[^\d\.-]/g, ''));
-		this.toucha.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
-		this.toucha.startY = e.touches[0].pageY;
+		this.touch.initialX = this._.image_container._translateX;
+		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
+		this.touch.startY = e.touches[0].pageY;
 		this._.image_container.style.transition = '';
-		this.toucha.watdo = null;
-		this.toucha.delta = 0;
-		this.toucha.deltaY = 0;
-		this.toucha.time = Date.now();
+		this.touch.gesture = null;
+		this.touch.delta = 0;
+		this.touch.deltaY = 0;
+		this.touch.time = Date.now();
 	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
 		if(maxScroll <= 0){
-			this.toucha.imagePosition = null;
+			this.touch.imagePosition = null;
 		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
-			this.toucha.imagePosition = 1;
+			this.touch.imagePosition = 1;
 		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
-			this.toucha.imagePosition = -1;
+			this.touch.imagePosition = -1;
 		}else{
-			this.toucha.imagePosition = 0;
+			this.touch.imagePosition = 0;
 		}
 
 	}
 
 	this._.image_container.ontouchmove = e => {
-		if(this.toucha.watdo == SCROLL) return;
+		if(this.touch.gesture == SCROLL) return;
 		if(e.touches.length > 1) return;
 		if(Settings.all.layout.get() == 'ttb') return;
-		this.toucha.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.toucha.start;
-		if(this.toucha.imagePosition == 0
-		|| this.toucha.imagePosition == 1 && this.toucha.delta > 0
-		|| this.toucha.imagePosition == -1 && this.toucha.delta < 0)
-			return this.toucha.watdo = SCROLL_X;
-		this.toucha.deltaY = e.touches[0].pageY - this.toucha.startY;
-		this._.image_container.style.transform = 'translateX(' + (this.toucha.leftPos + this.toucha.delta) + '%)';
-		if(Math.abs(this.toucha.delta) > 5) {
-			this.toucha.watdo = SWIPE;
+		this.touch.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+		if(this.touch.imagePosition == 0
+		|| this.touch.imagePosition == 1 && this.touch.delta > 0
+		|| this.touch.imagePosition == -1 && this.touch.delta < 0)
+			return this.touch.gesture = SCROLL_X;
+		this.touch.deltaY = e.touches[0].pageY - this.touch.startY;
+		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
+		requestAnimationFrame(() => {
+			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+		})
+		if(this.touch.gesture == SWIPE || Math.abs(this.touch.delta) > 5) {
+			return this.touch.gesture = SWIPE;
 		}
-		if(this.toucha.watdo == SWIPE) return e.preventDefault();
-		if(Math.abs(this.toucha.deltaY) > this.toucha.em * 1.2) {
-			this.toucha.watdo = SCROLL;
-			this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
+		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
+			this.touch.gesture = SCROLL;
+			this._.image_container._translateX = this.touch.initialX;
+			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
 		}
 	}
 
+	// this._.image_container.ontouchmove = e => {
+	// 	if(this.touch.gesture == SCROLL) return;
+	// 	if(e.touches.length > 1) return;
+	// 	if(Settings.all.layout.get() == 'ttb') return;
+	// 	this.touch.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+	// 	this._.image_container._translateX = this.touch.initialX + this.touch.delta
+	// 	this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+	// }
+
 	this._.image_container.ontouchend = e => {
-		if(this.toucha.watdo == SCROLL_X || this.toucha.watdo == SCROLL) return;
+		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
 		if(Settings.all.layout.get() == 'ttb') return;
-		
-		clearTimeout(this.toucha.transitionTimer);
+		clearTimeout(this.touch.transitionTimer);
 		this._.image_container.style.transition = 'transform 0.3s ease';
-	var ms = Date.now() - this.toucha.time;
-	var velocity = this.toucha.delta / ms;
+	var ms = Date.now() - this.touch.time;
+	var velocity = this.touch.delta / ms;
 		
-		if(velocity < this.toucha.escapeVelocity * -1 || this.toucha.delta <this.toucha.escapeDelta * -1) {
+		if(velocity < this.touch.escapeVelocity * -1
+		|| this.touch.delta <this.touch.escapeDelta * -1) {
 			setTimeout(() => {
 				Settings.all.layout.get() == 'rtl'?
 					this.prev():
 					this.next();
 			}, 1)
-			
 		}else{
-			if(velocity > this.toucha.escapeVelocity || this.toucha.delta > this.toucha.escapeDelta) {
+			if(velocity > this.touch.escapeVelocity
+			|| this.touch.delta > this.touch.escapeDelta) {
 				setTimeout(() => {
 					Settings.all.layout.get() == 'rtl'?
 					this.next():
 					this.prev();
 				}, 1)
 			}else{
-				this._.image_container.style.transform = 'translateX(' + this.toucha.leftPos + '%)';
+				this._.image_container._translateX = this.touch.initialX;
+				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
 			}
 		}
-		this.toucha.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
+		this.touch.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
 	}
+
+
+// this._.image_container.ontouchstart = e => {
+// 		if(Settings.all.layout.get() == 'ttb') return;
+// 		if(e.touches.length > 1) return;
+// 		this.touch.initialX = this._.image_container._translateX;
+// 		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
+// 		this.touch.startY = e.touches[0].pageY;
+// 		this._.image_container.style.transition = '';
+// 		this.touch.gesture = null;
+// 		this.touch.delta = 0;
+// 		this.touch.deltaY = 0;
+// 		this.touch.time = Date.now();
+// 	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
+// 		if(maxScroll <= 0){
+// 			this.touch.imagePosition = null;
+// 		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
+// 			this.touch.imagePosition = 1;
+// 		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
+// 			this.touch.imagePosition = -1;
+// 		}else{
+// 			this.touch.imagePosition = 0;
+// 		}
+
+// 	}
+
+// 	this._.image_container.ontouchmove = e => {
+// 		if(this.touch.gesture == SCROLL) return;
+// 		if(e.touches.length > 1) return;
+// 		if(Settings.all.layout.get() == 'ttb') return;
+// 		this.touch.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+// 		if(this.touch.imagePosition == 0
+// 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
+// 		|| this.touch.imagePosition == -1 && this.touch.delta < 0)
+// 			return this.touch.gesture = SCROLL_X;
+// 		this.touch.deltaY = e.touches[0].pageY - this.touch.startY;
+// 		this._.image_container._translateX = this.touch.initialX + this.touch.delta
+// 		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+// 		if(Math.abs(this.touch.delta) > 5) {
+// 			this.touch.gesture = SWIPE;
+// 		}
+// 		if(this.touch.gesture == SWIPE) return e.preventDefault();
+// 		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
+// 			this.touch.gesture = SCROLL;
+// 			this._.image_container._translateX = this.touch.initialX;
+// 			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
+// 		}
+// 	}
+
+// 	// this._.image_container.ontouchmove = e => {
+// 	// 	if(this.touch.gesture == SCROLL) return;
+// 	// 	if(e.touches.length > 1) return;
+// 	// 	if(Settings.all.layout.get() == 'ttb') return;
+// 	// 	this.touch.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+// 	// 	this._.image_container._translateX = this.touch.initialX + this.touch.delta
+// 	// 	this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+// 	// }
+
+// 	this._.image_container.ontouchend = e => {
+// 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
+// 		if(Settings.all.layout.get() == 'ttb') return;
+		
+// 		clearTimeout(this.touch.transitionTimer);
+// 		this._.image_container.style.transition = 'transform 0.3s ease';
+// 	var ms = Date.now() - this.touch.time;
+// 	var velocity = this.touch.delta / ms;
+		
+// 		if(velocity < this.touch.escapeVelocity * -1 || this.touch.delta <this.touch.escapeDelta * -1) {
+// 			setTimeout(() => {
+// 				Settings.all.layout.get() == 'rtl'?
+// 					this.prev():
+// 					this.next();
+// 			}, 1)
+			
+// 		}else{
+// 			if(velocity > this.touch.escapeVelocity || this.touch.delta > this.touch.escapeDelta) {
+// 				setTimeout(() => {
+// 					Settings.all.layout.get() == 'rtl'?
+// 					this.next():
+// 					this.prev();
+// 				}, 1)
+// 			}else{
+// 				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
+// 			}
+// 		}
+// 		this.touch.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
+// 	}
 
 	this.mouseHandler = function(e) {
 		if(e.type == 'mousedown') {
@@ -1314,7 +1449,7 @@ const SCROLL_X = 3;
 					break;
 				case 2:
 					if(IS_MOBILE)
-						Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
 					// else
 					// 	if(Settings.all.layout.get() != 'ttb')
 					// 		(Settings.all.layout.get() == 'ltr')?
@@ -1323,7 +1458,7 @@ const SCROLL_X = 3;
 					break;
 				case 3:
 					if(IS_MOBILE)
-						Settings.all.selectorPinned.cycle(['selector-pinned', 'selector-fade']);
+						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
 					// else
 					// 	if(Settings.all.layout.get() != 'ttb')
 					// 		(Settings.all.layout.get() == 'ltr')?
@@ -1791,7 +1926,7 @@ function UI_Loda_Search(o) {
 		}))
 		.add(new UI_Tab({
 			text: 'Text search',
-			counterText: 'Press ⮠ &nbsp;'
+			counterText: 'Press <span class="inline-icon">⮠</span>'
 		}))
 		.S.link(this.container)
 		.S.linkAnonymous('number', num => {
@@ -2045,9 +2180,9 @@ Loda = new UI_LodaManager({
 API.S.link(Reader);
 Settings.S.link(Reader);
 Reader.S.link(URL)
+Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
 document.body.ontouchstart = e=>{}
-
 function debug() {
 }
