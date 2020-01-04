@@ -143,16 +143,24 @@ function SettingsHandler(){
 	this.all.fit = new Setting(
 		'fit',
 		'Page fit',
-		['fit_width_limit', 'fit_height_limit', 'fit_width', 'fit_height', 'fit_none','fit_all', 'fit_all_limit'],
+		[
+			'fit_none',
+			'fit_all_limit',
+			'fit_width_limit',
+			'fit_height_limit',
+			'fit_all',
+			'fit_width',
+			'fit_height'
+		],
 		(IS_MOBILE)?'fit_all_limit':'fit_width_limit',
 		{
-			'fit_width': 'Images scale to max width.',
-			'fit_height': 'Images scale to max height.',
+			'fit_none': 'Images are displayed in natural resolution.',
+			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
 			'fit_width_limit': 'Natural image size that does not exceed max width.',
 			'fit_height_limit': 'Natural image size that does not exceed max height.',
-			'fit_none': 'Images are displayed in natural resolution.',
 			'fit_all': 'Images scale to width or height.',
-			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
+			'fit_width': 'Images scale to max width.',
+			'fit_height': 'Images scale to max height.',
 		} 
 	)
 	this.all.layout = new Setting(
@@ -762,7 +770,6 @@ function UI_Reader(o) {
 		this._.preload_entity.innerHTML = '';
 		this.selector_page.clearPreload();
 		this.displayPage(page);
-		this.showPreviews(Settings.all.previews.get());
 		this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
 		this.plusOne();
 		return this;
@@ -1062,17 +1069,17 @@ function UI_ReaderImageView(o) {
 
 
 	this.updateWides = () => {
-		if(!this.imageWrappers) return;
-		for(var i=0; i < this.imageWrappers.length; i++) {
-			if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
-				this.imageWrappers[i].$.classList.add('too-wide');
-			}else{
-				this.imageWrappers[i].$.classList.remove('too-wide');
-			}
-		}
+		// if(!this.imageWrappers) return;
+		// for(var i=0; i < this.imageWrappers.length; i++) {
+		// 	if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
+		// 		this.imageWrappers[i].$.classList.add('too-wide');
+		// 	}else{
+		// 		this.imageWrappers[i].$.classList.remove('too-wide');
+		// 	}
+		// }
 	}
 
-	new ResizeSensor(this.$, this.updateWides);
+	// new ResizeSensor(this.$, this.updateWides);
 
 	this.drawImages = function(images, wides) {
 		this.imageContainer.$.style.transition = '';
@@ -1122,6 +1129,8 @@ function UI_ReaderImageView(o) {
 		}
 		this.imageContainer.add(this.imageWrappers);
 
+		this.imageContainer.$.scroll(0,0);
+
 		if(Settings.all.layout.get() == 'ttb') {
 		var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
@@ -1146,11 +1155,11 @@ function UI_ReaderImageView(o) {
 		if(toPreload == 100) {
 			toPreload = this.imageList.length - 1;
 		}
-
-		for (var i = index - 1; i < index + Math.max(toPreload, Settings.all.spreadCount.get()); i++) {
+		toPreload = toPreload * Settings.get('spreadCount');
+		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
-				Reader.enqueuePreload(this.imageList[i].url);
+			//	Reader.enqueuePreload(this.imageList[i].url);
 			}
 		}
 
@@ -1158,6 +1167,11 @@ function UI_ReaderImageView(o) {
 			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
 			this.imageContainer.$.style.transform =
 				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
+		}else if (!dry){
+			if(IS_MOBILE)
+				window.scroll(0,this.imageList[index].$.getBoundingClientRect().top + window.scrollY);
+			else
+				this.imageContainer.$.scroll(0,this.imageList[index].$.parentNode.offsetTop);
 		}
 	}
 
@@ -1177,23 +1191,27 @@ function UI_ReaderImageView(o) {
 					e.target.scrollingElement.scrollTop:
 					undefined
 				|| e.target.scrollTop;
-		var st = scrollTop + 1;
-				// + document.documentElement.clientHeight / 8 * 6
-				// * (scrollTop / this.imageContainer.$.scrollHeight)
-				// + document.documentElement.clientHeight / 8;
-		var offsets = this.imageContainer.$.children.map(item => item.offsetTop);
+		var st = scrollTop
+				+ document.documentElement.clientHeight / 8 * 6
+				* (scrollTop / this.imageContainer.$.scrollHeight)
+				+ document.documentElement.clientHeight / 8;
+		//document.getElementById('scan_line').style.bottom = (this.imageContainer.$.scrollHeight - st)/this.imageContainer.$.scrollHeight*100 +'%';
+		var offsets = this.imageList.map(item => item.$.offsetTop + item.$.parentNode.offsetTop);
 			offsets.push(st);
 			offsets = offsets.sort((a, b) => a - b);
 		var index = offsets.indexOf(st) - 1;
 			if(index + 1 == offsets.length) return;
 			if(Reader.SCP.page == index) return;
+			for(var i=0; i<index; i++) {
+				this.imageList[i].load();
+			}
 			Reader.displayPage(index, true);
 			return;
 		}else{
-			if(this.selectedWrapper.$.nextSibling)
-				this.selectedWrapper.$.nextSibling.style.top = this.$.scrollTop + 'px';
-			if(this.selectedWrapper.$.prevSibling)
-				this.selectedWrapper.$.prevSibling.style.top = this.$.scrollTop + 'px';
+			// if(this.selectedWrapper.$.nextSibling)
+			// 	this.selectedWrapper.$.nextSibling.style.top = this.$.scrollTop + 'px';
+			// if(this.selectedWrapper.$.prevSibling)
+			// 	this.selectedWrapper.$.prevSibling.style.top = this.$.scrollTop + 'px';
 		}
 	}
 
@@ -1205,6 +1223,7 @@ const SCROLL_X = 3;
 		start: 0,
 		startY: 0,
 		initialX: 0,
+		scrollY: 0,
 		transitionTimer: null,
 		delta: 0,
 		deltaY: 0,
@@ -1213,9 +1232,10 @@ const SCROLL_X = 3;
 		time: null,
 		escapeVelocity: 0.1,
 		escapeDelta: 40,
-		imagePosition: 0
+		imagePosition: 0,
+		a: null
 	};
-
+	
 	this._.image_container.ontouchstart = e => {
 		if(Settings.all.layout.get() == 'ttb') return;
 		if(e.touches.length > 1) return;
@@ -1226,6 +1246,7 @@ const SCROLL_X = 3;
 		this.touch.gesture = null;
 		this.touch.delta = 0;
 		this.touch.deltaY = 0;
+		this.touch.scrollY = window.scrollY;
 		this.touch.time = Date.now();
 	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
 		if(maxScroll <= 0){
@@ -1237,10 +1258,45 @@ const SCROLL_X = 3;
 		}else{
 			this.touch.imagePosition = 0;
 		}
-
+		this.touch.pageX = e.touches[0].pageX;
+		this.touch.pageY = e.touches[0].pageY;
+		this.touch.a = requestAnimationFrame(this.touch.anim);
 	}
-
+	
+	this.touch.anim = () => {
+		this.touch.a = requestAnimationFrame(this.touch.anim);
+		if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
+		if(Settings.all.layout.get() == 'ttb') return cancelAnimationFrame(this.touch.a);
+		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+		if(this.touch.imagePosition == 0
+		|| this.touch.imagePosition == 1 && this.touch.delta > 0
+		|| this.touch.imagePosition == -1 && this.touch.delta < 0)
+			return this.touch.gesture = SCROLL_X;
+		this.touch.deltaY = this.touch.pageY - this.touch.startY;
+		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
+		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+		if(this.touch.gesture == SWIPE) return;
+		if(Math.abs(this.touch.delta) > 5) {
+			//document.body.style.touchAction = 'none';
+			this.touch.gesture = SWIPE;
+			return;
+		}
+		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
+			this.touch.gesture = SCROLL;
+			this._.image_container._translateX = this.touch.initialX;
+			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
+			cancelAnimationFrame(this.touch.a);
+		}
+	}
+	
 	this._.image_container.ontouchmove = e => {
+		this.touch.pageX = e.touches[0].pageX;
+		this.touch.pageY = e.touches[0].pageY;
+		if(this.touch.gesture == SWIPE)
+{ e.preventDefault(); e.stopPropagation(); }
+	}
+	
+	this._.image_container.ontouchmov = e => {
 		if(this.touch.gesture == SCROLL) return;
 		if(e.touches.length > 1) return;
 		if(Settings.all.layout.get() == 'ttb') return;
@@ -1277,7 +1333,9 @@ const SCROLL_X = 3;
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
 		if(Settings.all.layout.get() == 'ttb') return;
 		clearTimeout(this.touch.transitionTimer);
-		this._.image_container.style.transition = 'transform 0.3s ease';
+		cancelAnimationFrame(this.touch.a);
+		//this._.image_container.style.touchAction = 'unset';
+		this._.image_container.style.transition = 'transform 0.25s ease-out';
 	var ms = Date.now() - this.touch.time;
 	var velocity = this.touch.delta / ms;
 		
@@ -1301,7 +1359,7 @@ const SCROLL_X = 3;
 				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
 			}
 		}
-		this.touch.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 300)
+		this.touch.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 250)
 	}
 
 
@@ -1603,6 +1661,7 @@ function UI_ReaderImage(o) {
 	this.load = function() {
 		if(this.loaded) return;
 		this.RAF = requestAnimationFrame(this.watchImageWidth);
+		this.$.loading = 'eager';
 		this.$.src = this.url;
 		this.$.onload = e => this.onloadHandler(e);
 		this.loaded = true;
@@ -1858,6 +1917,7 @@ function UI_LodaManager(o) {
 	}
 
 	new KeyListener(this.$)
+		.noPropagation(true)
 		.attach('close', ['Escape'], this.close.bind(this))
 
 	this.S.mapIn({

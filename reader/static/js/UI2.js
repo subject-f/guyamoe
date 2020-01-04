@@ -16,6 +16,7 @@ function KeyListener(target, mode) {
 	this.mode = mode || 'keydown';
 	this.held = false;
 	this.exclusiveness = false;
+	this.stopper = false;
 	if(!this.target._keyListener) {
 		this.target._keyListener = {};
 		this.target._keyListener.list = [];
@@ -43,6 +44,7 @@ function KeyListener(target, mode) {
 	this.handler = e => {
 	var keyCode = e.code || e.key;
 		if(this.held) return;
+		if(this.stopper) e.stopPropagation();
 		if(this.conditions.length > 0) {
 			for(var i=0; i<this.conditions.length;i++) {
 				if(this.conditions[i](e) === false) return;
@@ -73,7 +75,6 @@ function KeyListener(target, mode) {
 				for(var i=0; i<listener.conditions.length;i++) {
 					if(listener.conditions[i](e) === false) return;
 				}
-				e.stopPropagation();
 				e.preventDefault();
 				if(listener.callback) listener.callback(e);
 				if(listener.exclusiveness) e.stopImmediatePropagation();
@@ -88,6 +89,10 @@ KeyListener.prototype = {
 		if(f) {
 			this.pres.push(f);
 		}
+		return this;
+	},
+	noPropagation(st) {
+		this.stopper = st;
 		return this;
 	},
 	condition(f, listenerID) {
