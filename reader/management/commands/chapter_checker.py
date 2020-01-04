@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from reader.models import Group, Series, Volume, Chapter, ChapterIndex
-from api.views import random_chars, clear_pages_cache, create_preview_pages, zip_chapter
+from api.api import random_chars, clear_pages_cache, create_preview_pages, zip_chapter
 
 from datetime import datetime, timezone
 from bs4 import BeautifulSoup
@@ -54,7 +54,8 @@ class Command(BaseCommand):
         }
         self.mangadex_manga_id = {
             "Kaguya-Wants-To-Be-Confessed-To": 17274,
-            "We-Want-To-Talk-About-Kaguya": 29338
+            "We-Want-To-Talk-About-Kaguya": 29338,
+            "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": 28363 
         }
         self.jb_group = 3
         self.md_group = 2
@@ -86,6 +87,7 @@ class Command(BaseCommand):
             ch = Chapter.objects.get(series=series, chapter_number=float(chapter), group=group)
             padding = len(str(len(chapter_pages)))
             print(f"Downloading chapter {chapter}...")
+            print(f"Found {len(chapter_pages)} pages...")
             async with aiohttp.ClientSession() as session:
                 for idx, page in enumerate(chapter_pages):
                     extension = page.rsplit(".", 1)[1]
@@ -97,7 +99,11 @@ class Command(BaseCommand):
                                 f.write(page_content)
                             create_preview_pages(chapter_folder, group_folder, page_file)
                             zip_chapter(series.slug, ch.chapter_number)
+                        else:
+                            print("failed at mangadex_download", idx, page)
+            clear_pages_cache()
             print(f"Successfully downloaded chapter and added to db.")
+            await self.index_chapter(ch, group_folder)
 
     async def get_chapter_list(self, series_id):
         md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
@@ -128,7 +134,31 @@ class Command(BaseCommand):
                     domain = api_data['server'] if not api_data['server'].startswith('/') else f"https://mangadex.org" + api_data['server']
                     chapter_data = (api_data["title"], [f"{domain}{api_data['hash']}/{page}" for page in api_data["page_array"]], chapter_id)
                     return chapter_data
+                else:
+                    print("failed at get_chapter_pages")
         return None
+
+    async def index_chapter(self, chapter, group_folder):
+        ch_slug = chapter.slug_chapter_number()
+        curr_chap_index_priority = settings.PREFERRED_SORT.index(str(chapter.group.id))
+        all_chap_versions = [ch.group.id for ch in Chapter.objects.filter(chapter_number=chapter.chapter_number, series=chapter.series)]
+        for version in all_chap_versions:
+            try:
+                if settings.PREFERRED_SORT.index(str(version)) <= curr_chap_index_priority:
+                    break
+            except ValueError:
+                continue
+        else:
+            return
+        print("Deleting old chapter index from db.")
+        for index in ChapterIndex.objects.filter(series=chapter.series):
+            if ch_slug in index.chapter_and_pages:
+                print(index.word, index.chapter_and_pages[ch_slug])
+                del index.chapter_and_pages[ch_slug]
+                index.save()
+        print("Finished deleting old chapter index from db.")
+        print("Indexing chapter pages...")
+        subprocess.Popen(f'bash /home/appu/kaguyamoe/ocr_tool.sh {chapter.chapter_folder}/{group_folder} {chapter.clean_chapter_number()} {chapter.clean_chapter_number()}_{chapter.series.id} {ch_slug}'.split())
 
     async def mangadex_checker(self, downloaded_chapters, series_slug, latest_volume, latest_only=False):
         chapters = {}
@@ -165,18 +195,19 @@ class Command(BaseCommand):
         else:
             latest_chap_slug = latest_chap.replace(".", "/")
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://jaiminisbox.com/reader/read/kaguya-wants-to-be-confessed-to/en/0/{latest_chap_slug}/page/1") as resp:
+                async with session.get(f"https://jaiminisbox.com/reader/read/{series.slug.lower()}/en/0/{latest_chap_slug}/page/1") as resp:
                     if resp.status == 200:
                         webpage = await resp.text()
                         soup = BeautifulSoup(webpage, "html.parser")
                         title = soup.select(".tbtitle .text a")[1].text.split(":", 1)[1].strip()
-                        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/kaguya-wants-to-be-confessed-to/en/0/{latest_chap_slug}/"}
+                        chapters[str(latest_chap)] = {"title": title, "url": f"https://jaiminisbox.com/reader/download/{series.slug.lower()}/en/0/{latest_chap_slug}/"}
+                    else:
+                        print(resp.status)
         for chapter in chapters:
             if str(float(chapter)) not in downloaded_chapters:
                 chapter_folder, group_folder = self.create_chapter_obj(chapter, group, series, latest_volume, chapters[chapter]["title"])
                 ch = Chapter.objects.get(series=series, group=self.jb_group, chapter_number=float(chapter))
                 print(f"Downloading chapter {chapter}...")
-                reupdating = False
             else:
                 ch = Chapter.objects.get(series=series, group=self.jb_group, chapter_number=float(chapter))
                 ch.version = ch.version + 1 if ch.version else 2
@@ -184,7 +215,6 @@ class Command(BaseCommand):
                 chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series.slug, "chapters", ch.folder)
                 group_folder = str(self.jb_group)
                 print(f"Reupdating chapter pages for {chapter}...")
-                reupdating = True
                 for f in os.listdir(os.path.join(chapter_folder, group_folder)):
                     os.remove(os.path.join(chapter_folder, group_folder, f))
             async with aiohttp.ClientSession() as session:
@@ -201,22 +231,9 @@ class Command(BaseCommand):
                                     f.write(zip_file.read(page))
                                 create_preview_pages(chapter_folder, group_folder, page_file)
                                 zip_chapter(series.slug, ch.chapter_number)
+                        clear_pages_cache()
                         print(f"Successfully downloaded chapter and added to db.")
-                        if series.slug == "Kaguya-Wants-To-Be-Confessed-To":
-                            if reupdating:
-                                ch_slug = ch.slug_chapter_number()
-                                print("Deleting old chapter index from db.")
-                                for index in ChapterIndex.objects.all():
-                                    if ch_slug in index.chapter_and_pages:
-                                        print(index.word, index.chapter_and_pages[ch_slug])
-                                        del index.chapter_and_pages[ch_slug]
-                                        index.save()
-                                print("Finished deleting old chapter index from db.")
-                            print("Indexing chapter pages...")
-                            subprocess.Popen(f'bash /home/appu/kaguyamoe/ocr_tool.sh {chapter_folder}/{group_folder} {ch.clean_chapter_number()} {ch.slug_chapter_number()}'.split())
-                # if reupdating:
-
-                #     pass
+                        await self.index_chapter(ch, group_folder)
 
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
@@ -246,3 +263,4 @@ class Command(BaseCommand):
         #         latest_volume = Volume.objects.filter(series__slug=manga).order_by('-volume_number')[0].volume_number
         #         chapters = set([str(chapter.chapter_number) for chapter in Chapter.objects.filter(series__slug=manga, group=self.md_group)])
         #         loop.run_until_complete(self.mangadex_download({}, manga, self.md_group, latest_volume, url=options["dl_md"]))
+
