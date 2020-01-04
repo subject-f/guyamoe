@@ -109,8 +109,12 @@ class Chapter(models.Model):
 
 
 class ChapterIndex(models.Model):
-    word = models.CharField(max_length=48, unique=True, db_index=True)
+    word = models.CharField(max_length=48, db_index=True)
     chapter_and_pages = JSONField()
+    series = models.ForeignKey(Series, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.word
+
+    class Meta:
+        unique_together = ('word', 'series',)

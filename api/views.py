@@ -139,10 +139,11 @@ def get_volume_covers(request, series_slug):
 @csrf_exempt
 def search_index(request, series_slug):
     if request.POST:
+        series = Series.objects.get(slug=series_slug)
         search_query = request.POST["searchQuery"]
         search_results = {}
         for word in set(search_query.split()[:20]):
-            word_query = ChapterIndex.objects.filter(word__startswith=word.upper())
+            word_query = ChapterIndex.objects.filter(word__startswith=word.upper(), series=series)
             search_results[word] = {}
             for word_obj in word_query:
                 chapter_and_pages = word_obj.chapter_and_pages
