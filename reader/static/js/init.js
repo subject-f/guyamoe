@@ -508,6 +508,7 @@ function UI_Tooltippy(o) {
 		var align = e.target.getAttribute('data-tip-align')
 			this.set(tip);
 			this.$.style.display = 'block';
+			if(IS_MOBILE) return;
 			if(align == 'right')
 				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) - rect.height + this.$.offsetHeight + 2 + 'px';
 			else
@@ -529,7 +530,7 @@ function UI_Tooltippy(o) {
 		if(text.length < 1) return;
 		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
 		this.$.innerHTML = text;
-		if(!this.attached) {
+		if(!this.attached || IS_MOBILE) {
 			this.$.style.display = 'block';
 			if(IS_MOBILE) {
 				this.$.style.bottom = window.innerHeight * 0.20 + 'px';
@@ -545,14 +546,14 @@ function UI_Tooltippy(o) {
 
 	}
 
-	this.reset = function () {
+	this.reset = function (e) { 
 		this.attached = false;
 		this.$.style.display = 'none';
 	}
 
 	this.attach = function(element, text, align) {
 		element.onmouseover = e => this.handler(e);
-		element.onmouseleave = e => this.reset()
+		element.onmouseleave = e => this.reset(e)
 		element.setAttribute('data-tip', text);
 		if(align) element.setAttribute('data-tip-align', align);
 		return this;
@@ -1129,17 +1130,17 @@ function UI_ReaderImageView(o) {
 
 
 	this.updateWides = () => {
-		// if(!this.imageWrappers) return;
-		// for(var i=0; i < this.imageWrappers.length; i++) {
-		// 	if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
-		// 		this.imageWrappers[i].$.classList.add('too-wide');
-		// 	}else{
-		// 		this.imageWrappers[i].$.classList.remove('too-wide');
-		// 	}
-		// }
+		if(!this.imageWrappers) return;
+		for(var i=0; i < this.imageWrappers.length; i++) {
+			if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
+				this.imageWrappers[i].$.classList.add('too-wide');
+			}else{
+				this.imageWrappers[i].$.classList.remove('too-wide');
+			}
+		}
 	}
 
-	// new ResizeSensor(this.$, this.updateWides);
+	new ResizeSensor(this.$, this.updateWides);
 
 	this.drawImages = function(images, wides) {
 		this.imageContainer.$.style.transition = '';
@@ -1334,8 +1335,10 @@ const SCROLL_X = 3;
 		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
-		|| this.touch.imagePosition == -1 && this.touch.delta < 0)
-			return this.touch.gesture = SCROLL_X;
+		|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
+			this.touch.gesture = SCROLL_X;
+			return cancelAnimationFrame(this.touch.a);
+		}
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
 		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
