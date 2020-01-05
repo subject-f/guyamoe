@@ -18,16 +18,20 @@ def home(request):
         vols = Volume.objects.filter(series__slug=series).order_by('-volume_number')
         for vol in vols:
             if vol.volume_cover:
-                home_screen_series[series] = [f"/media/{vol.volume_cover}", f"/media/{str(vol.volume_cover).rsplit('.', 1)[0]}.webp"]
+                filename, ext = str(vol.volume_cover).rsplit('.', 1)
+                home_screen_series[series] = [f"/media/{vol.volume_cover}", f"/media/{filename}.webp", f"/media/{filename}_blur.{ext}"]
                 break
     return render(request, 'homepage/home.html', {
             "abs_url": request.build_absolute_uri(),
             "main_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][0],
             "main_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][1],
+            "main_cover_blur": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][2],
             "4koma_cover": home_screen_series["We-Want-To-Talk-About-Kaguya"][0],
             "4koma_cover_webp": home_screen_series["We-Want-To-Talk-About-Kaguya"][1],
+            "4koma_cover_blur": home_screen_series["We-Want-To-Talk-About-Kaguya"][2],
             "doujin_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][0],
             "doujin_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][1],
+            "doujin_cover_blur": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][2],
             "relative_url": ""
         })
 
