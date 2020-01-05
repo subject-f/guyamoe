@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.conf import settings
 from api.api import clear_pages_cache
-from PIL import Image
+from PIL import ImageFilter, Image
 from guyamoe.settings import MEDIA_ROOT
 import shutil
 import os
@@ -57,8 +57,12 @@ def save_volume(sender, instance, **kwargs):
     if instance.volume_cover:
         save_dir = os.path.join(os.path.dirname(str(instance.volume_cover)))
         vol_cover = os.path.basename(str(instance.volume_cover))
-        filename = vol_cover.rsplit(".", 1)[0]
+        filename, ext = vol_cover.rsplit(".", 1)
         image = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
         image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.webp"), lossless=False, quality=60, method=6)
         image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.jp2"))
-
+        blur = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
+        blur = blur.convert("RGB")
+        blur.thumbnail((blur.width/8, blur.height/8), Image.ANTIALIAS)
+        blur = blur.filter(ImageFilter.GaussianBlur(radius=2))
+        blur.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}_blur.{ext}"), "JPEG", quality=100, optimize=True, progressive=True)
