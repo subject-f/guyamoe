@@ -786,7 +786,7 @@ function UI_Reader(o) {
 		this._.preload_entity.innerHTML = '';
 		this.selector_page.clearPreload();
 		this.displayPage(page);
-		this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
+		// this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
 		this.plusOne();
 		return this;
 	}
@@ -1090,7 +1090,7 @@ function UI_Reader(o) {
 		.attach(this._.sel_pin_button, 'Pin page selector [N]')
 		.attach(this._.sidebar_button, 'Show/hide sidebar [S]', 'right')
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
-		.attach(this._.comment_button, 'Go to comments [C]')
+		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
