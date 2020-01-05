@@ -250,6 +250,14 @@ function UI(o) {
 		return holder.firstElementChild;
 	}
 
+	this.destroy = () => {
+		alg.discardElement(this.$);
+		for(var key in this._) {
+			if(this._[key]._struct) this._[key]._struct.destroy();
+		}
+		if(this.S) this.S.destroy();
+	}
+
 
 	this.init(o);
 
@@ -413,6 +421,10 @@ function Linkable(o) {
 			targetStructure.S.link(this);
 		}
 	}
+	this.S.destroy = () => {
+		this.targets = [];
+		this.inStreams = {};
+	}
 
 	//Returns an input function for use in other objects by the stream index or alias.
 	//This function is a map to an internal function of 'this' object.
@@ -539,7 +551,10 @@ function UI_List(o) {
 	}
 
 	this.clear = function() {
-		this.$.children.slice().forEach(item => alg.discardElement(item));
+		this.$.children.slice().map(item => item._struct).forEach(item => {
+			if(item) item.destroy();
+		})
+
 		this.lastAdded = [];
 		this.S.out('count', this.$.children.length);
 		return this;

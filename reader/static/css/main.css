@@ -584,6 +584,7 @@ header > .close {
 	align-items: flex-end;
 	align-content: flex-end;
 	pointer-events: none;
+	user-select: none;
 	padding-bottom: 1.5rem;
 	z-index: 1;
 	box-sizing: border-box;
@@ -697,9 +698,11 @@ header > .close {
 }
 
 .fit_width_limit .rdr-image-wrap .ReaderImageWrapper img {
-	width: 100%;
 	max-width: 100%;
 	object-fit: contain;
+}
+.fit_width_limit .rdr-image-wrap .ReaderImageWrapper.two-page img {
+	max-width: 50%;
 }
 
 
@@ -888,8 +891,8 @@ header > .close {
 	position: relative;
 	z-index: 3;
 	transition: left .3s ease, opacity .3s ease;
-	min-width: 3rem;
-	margin-right: -3rem;
+	min-width: 2rem;
+	margin-right: -2rem;
 	cursor: pointer;
 }
 
@@ -1085,7 +1088,8 @@ header > .close {
 	display: none;
 }
 
-.fit_width .zoom-level {
+.fit_width .zoom-level,
+.fit_width_limit .zoom-level {
 	display: block;
 	animation: zoomFlash 3s;
 }
@@ -1128,21 +1132,31 @@ header > .close {
 	background: rgba(0,0,0,0.9);
 }
 
-.fit_width .zoom-level:hover {
+.fit_width .zoom-level:hover,
+.fit_width_limit .zoom-level:hover {
 	opacity: 1 !important;
 	animation-play-state: paused;
 }
 
 
-.fit_width.zl10 .ReaderImageWrapper img {min-width: 10%; max-width: 10%}
-.fit_width.zl20 .ReaderImageWrapper img {min-width: 20%; max-width: 20%}
-.fit_width.zl30 .ReaderImageWrapper img {min-width: 30%; max-width: 30%}
-.fit_width.zl40 .ReaderImageWrapper img {min-width: 40%; max-width: 40%}
-.fit_width.zl50 .ReaderImageWrapper img {min-width: 50%; max-width: 50%}
-.fit_width.zl60 .ReaderImageWrapper img {min-width: 60%; max-width: 60%}
-.fit_width.zl70 .ReaderImageWrapper img {min-width: 70%; max-width: 70%}
-.fit_width.zl80 .ReaderImageWrapper img {min-width: 80%; max-width: 80%}
-.fit_width.zl90 .ReaderImageWrapper img {min-width: 90%; max-width: 90%}
+.fit_width.zl10 .ReaderImageWrapper,
+.fit_width_limit.zl10 .ReaderImageWrapper {padding: 0 45%}
+.fit_width.zl20 .ReaderImageWrapper,
+.fit_width_limit.zl20 .ReaderImageWrapper {padding: 0 40%}
+.fit_width.zl30 .ReaderImageWrapper,
+.fit_width_limit.zl30 .ReaderImageWrapper {padding: 0 35%}
+.fit_width.zl40 .ReaderImageWrapper,
+.fit_width_limit.zl40 .ReaderImageWrapper {padding: 0 30%}
+.fit_width.zl50 .ReaderImageWrapper,
+.fit_width_limit.zl50 .ReaderImageWrapper {padding: 0 25%}
+.fit_width.zl60 .ReaderImageWrapper,
+.fit_width_limit.zl60 .ReaderImageWrapper {padding: 0 20%}
+.fit_width.zl70 .ReaderImageWrapper,
+.fit_width_limit.zl70 .ReaderImageWrapper {padding: 0 15%}
+.fit_width.zl80 .ReaderImageWrapper,
+.fit_width_limit.zl80 .ReaderImageWrapper {padding: 0 10%}
+.fit_width.zl90 .ReaderImageWrapper,
+.fit_width_limit.zl90 .ReaderImageWrapper {padding: 0 5%}
 .fit_width.zl100 .ReaderImageWrapper img{}
 /*.zl11 .fit_width .ReaderImageWrapper img {min-width: 110%; max-width: 110%}
 .zl12 .fit_width .ReaderImageWrapper img {min-width: 120%; max-width: 120%}
@@ -1938,8 +1952,25 @@ header > .close {
 	.rdr-image-wrap {
 /*		transition: transform 0.02s linear; */
 	}
-}
+	.zoom-level.refresh-chapter {
+		position: fixed;
+		bottom: unset;
+		top: 0em;
+		right: 0.5rem;
+		padding: 0em;
+		align-items: flex-start;
+		z-index: 200;
 
+	}
+	.zoom-level.refresh-chapter .is-ico-button {
+		font-size: 0.8em;
+		height: 2em;
+		width: 2em;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
+}
+/*
 .preload-entity {
 	width: 100%;
 	height: 2px;
@@ -1948,6 +1979,16 @@ header > .close {
 	pointer-events: none;
 	z-index: 10000;
 	display: none;
+}*/
+
+.preload-entity {
+	width: 1px;
+	height: 1px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	background-size: 0px 0px;
 }
 
 .disabled {
