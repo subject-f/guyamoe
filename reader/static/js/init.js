@@ -204,7 +204,7 @@ function SettingsHandler(){
 	this.all.spreadCount = new Setting(
 		'spreadCount',
 		'2-page spread count',
-		[1, 2],
+		[1, 2, 3, 4],
 		1,
 		i => {
 			return 'Spread page count: %i'.replace('%i', i)
@@ -598,8 +598,8 @@ function UI_Reader(o) {
 		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
 		.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
 		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
-		.attach('spreadCount', ['Digit1'], s => Settings.cycle('spreadCount'))
-		.attach('spreadOffset', ['Digit2'], s => Settings.cycle('spreadOffset'))
+		.attach('spreadCount', ['Ctrl+Digit1'], s => Settings.cycle('spreadCount'))
+		.attach('spreadOffset', ['Ctrl+Digit2'], s => Settings.cycle('spreadOffset'))
 		.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
