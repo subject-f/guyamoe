@@ -1215,7 +1215,7 @@ function UI_ReaderImageView(o) {
 
 	var toPreload = Settings.all.preload.get();
 		if(toPreload == 100) {
-			toPreload = this.imageList.length - 1;
+			toPreload = this.imageList.length;
 		}
 		toPreload = toPreload * Settings.get('spreadCount');
 		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('spreadCount')); i++) {
