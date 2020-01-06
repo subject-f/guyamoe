@@ -1688,6 +1688,7 @@ header > .close {
 		height: auto;
 		position: relative;
 		flex-shrink: 0;
+		transition: none;
 	}
 
 	.rdr-aside-overlay {

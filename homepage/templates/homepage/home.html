@@ -138,18 +138,129 @@
 		border: 1px solid #3A3F44;
 	}
 </style>
-<script>
-	$(function(){
-		let quoteNumb = Math.floor(Math.random() * 9) + 1;
-		$("#quote-block").html(`<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`);
-	});
-</script>
 
 {% endblock %}
 
 {% block body %}
-<main role="main" class="flex-shrink-0">
-<div class="manga container-fluid justify-content-center sp-row-add mt-3">
+<main role="main">
+	<div class="manga-card" style="background-image: url({{ main_cover_blur }})">
+		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
+			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
+  			<img src="{{ main_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+		</picture></a>
+		<article>
+			<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><h2>Kaguya-sama: Love is War</h2></a>
+			<h3>Kaguya-sama Wants to Be Confessed To: The Geniuses' War of Love and Brains</h3>
+			<div class="manga-links">
+				<span>
+					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full guya">Read the manga ›</a>
+				</span>
+				<span>
+					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full after-anime">Where to start after the anime ›</a>
+				</span>
+			</div>
+			<p>All’s fair when love is war!</p>
+			<p>Two geniuses. Two brains. Two hearts. One battle. Who will confess their love first…?!</p>
+			<p>Kaguya Shinomiya and Miyuki Shirogane are two geniuses who stand atop their prestigious academy’s student council, making them the elite among elite. But it’s lonely at the top and each has fallen for the other. There’s just one huge problem standing in the way of lovey-dovey bliss—they’re both too prideful to be the first to confess their romantic feelings and thus become the “loser” in the competition of love! And so begins their daily schemes to force the other to confess first!</p>
+			<div class="manga-links">
+				<span>
+					Buy the official release:&nbsp;&nbsp;&nbsp;
+					<a rel="noreferrer nofollow" href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" class="manga-link viz">VIZ Media</a>
+					<a rel="noreferrer nofollow" href="https://www.amazon.com/Aka-Akasaka/e/B00IW99L0G" class="manga-link ama">Amazon</a>
+					<a rel="noreferrer nofollow" href="https://play.google.com/store/books/series?id=Cv3xGgAAABD65M&hl=en_US" class="manga-link gp">Google Play</a>
+					<a rel="noreferrer nofollow" href="https://apps.qoo-app.com/en/app/6233" class="manga-link yj jp">Young Jump Weekly</a>
+					<a rel="noreferrer nofollow" href="http://books.shueisha.co.jp/search/search.html?order=1&seriesid=37405" class="manga-link shu jp">Shueisha</a>
+				</span>
+			</div>
+		</article>
+		<div class="chapter-listing hidden">
+			<div class="chapter-row header">
+				<div class="chapter-name">Chapter name</div>
+				<div class="chapter-date">Release date</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+			<div class="chapter-row">
+				<div class="chapter-name">000 - Test chapter test chapter</div>
+				<div class="chapter-date">2020-01-05</div>
+			</div>
+		</div>
+	</div>
+	<a href="/read/manga/We-Want-To-Talk-About-Kaguya/" class="manga-card smol" style="background-image: url({{ 4koma_cover_blur }})">
+		<picture>
+			<source type="image/webp" srcset="{{ 4koma_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
+  			<img src="{{ 4koma_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+		</picture>
+		<article>
+			<h2>We Want to Talk About Kaguya <span class="tag">Spin-off</span></h2>
+			<p>A comedic tale of two delusional girls who have absolutely no idea what goes on in the Student Council room!</p>
+		</article>
+	</a>
+	<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin/" class="manga-card smol" style="background-image: url({{ doujin_cover_blur }})">
+		<picture>
+			<source type="image/webp" srcset="{{ doujin_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
+  			<img src="{{ doujin_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+		</picture>
+		<article>
+			<h2>Kaguya Wants to Be Confessed To: Official Doujin <span class="tag">Spin-off</span></h2>
+			<p>Official non-canon spin-off that contains assorted stories featuring characters from the main manga in lewd and foreign settings.</p>
+		</article>
+	</a>
+	<a href="//skythewood.blogspot.com/p/kaguya.html" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/novelcover_blur.jpg' %})">
+		<picture>
+  			<img src="{% static 'img/novelcover.jpg' %}" class="" alt="Manga › Kaguya-sama: Love is War">
+		</picture>
+		<article>
+			<h2>Novel: The Seven Mysteries of Shuchiin Academy <span class="tag">Spin-off</span></h2>
+			<p>The official spin-off novel about the paranormal Legend of the Seven Mysteries of Shuchiin that the Student Council suddenly gets drawn into.</p>
+		</article>
+	</a>
+	<a href="//kaguya-archive.tumblr.com/" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/fanmade_media_blur.png' %})">
+		<picture>
+  			<img src="{% static 'img/fanmade_media.png' %}" class="" alt="Manga › Kaguya-sama: Love is War">
+		</picture>
+		<article>
+			<h2>Fanmade Media</h2>
+			<p>The archive website that contains translations and links to most of the fanmade media that is being produced on our Discord or elsewhere.</p>
+		</article>
+	</a>
+</main>
+
+<!-- <div class="manga container-fluid justify-content-center sp-row-add mt-3">
 	<div class="row ">
 		<div class="col d-flex justify-content-center mb-3">
 			<img src="{% static '/img/logo_menu.png' %}" alt="Kaguya-sama: Love is War - Read Manga on Guya.moe">
@@ -231,7 +342,7 @@
 			<span class="ecks" onclick="event.target.parentNode.parentNode.classList.add('hidden')">&times;</span>
 		</div>
 	</div>
-</div>
+</div> -->
 </main>
 <footer class="container-fluid footer mt-auto">
 	<div class="row">
@@ -273,5 +384,14 @@
 			</div>
 		</div>
 	</div>
+	<a href="#" onclick="setTimeout(function () {  localStorage.setItem('reload', '1') }, 1);">reload stop</a><a href="#" onclick="setTimeout(function () {  localStorage.setItem('reload', '0')}, 1);">| start</a>
 </footer>
+
+<script>
+	$(function(){
+		let quoteNumb = Math.floor(Math.random() * 9) + 1;
+		$("#quote-block").html(`<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`);
+	});
+	setInterval(function () {if(localStorage.getItem('reload') != 1) location.reload(1); }, 4000);
+</script>
 {% endblock %}

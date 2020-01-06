@@ -1192,7 +1192,8 @@ function UI_ReaderImageView(o) {
 		this.imageContainer.add(this.imageWrappers);
 
 		this.imageContainer.$.scroll(0,0);
-
+		
+		
 		if(Settings.all.layout.get() == 'ttb') {
 		var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
