@@ -156,12 +156,27 @@ main .manga-card .manga-links span a:last-child {
 }
 .chapter-listing th {
 	font-weight: normal;
-	padding: 0.4em 1em;
+	padding: 0.7em 1em;
 	font-size: 1.1em;
 }
-.chapter-listing td{
+.chapter-listing th.chapter-date {
+	cursor: pointer;
+	user-select: none;
+}
+.chapter-listing th.chapter-date:before {
+	content: "△";
+	margin-right: 0.55em;
+	opacity: 0.5;
+}
+.chapter-listing th.chapter-date.desc:before {
+	content: "▽";
+}
+.chapter-listing td {
 	padding: 0.4em 1em;
 	border-top: 1px solid rgba(255,255,255,0.2);
+}
+.chapter-listing tr:hover td {
+	background: rgba(255,255,255,0.06)
 }
 .chapter-listing td a {
 	padding: 0.4em 0;
@@ -172,16 +187,16 @@ main .manga-card .manga-links span a:last-child {
 
 }
 .chapter-listing .chapter-name b {
+	display: inline-block;
 	font-weight: normal;
 	font-size: 1.1em;
 	margin-right: 1.2em;
 	margin-left: 0.1em;
+	min-width: 3ch;
 }
 .chapter-listing .adapted .chapter-name b {
-	margin-right: 0.6em;
 }
-.chapter-listing .adapted .chapter-name b:after {
-	content: "Season 1";
+.chapter-listing .adapted .chapter-name a span {
 	display: inline-block;
 	border: 1px solid #aaa;
 	padding: 0.1em 0.5em;
@@ -190,11 +205,26 @@ main .manga-card .manga-links span a:last-child {
 	margin-left: 2em;
 	margin-top: -0.2em;
 	vertical-align: middle;
+	position: relative;
+}
+.chapter-listing .adapted .chapter-name a span:hover:before {
+	content: attr(data-anime);
+	display: inline-block;
+	position: absolute;
+	left: 150%;
+	top: 50%;
+	transform: translateY(-50%);
+	white-space: nowrap;
+	text-align: center;
+	border: 1px solid #aaa;
+	padding: 0.2em 0.5em;
+	border-radius: 2px;
+	font-size: 1.3em;
 }
 .chapter-listing .chapter-date {
 	white-space: nowrap;
 	width: 0;
-	text-align: center;
+	text-align: right;
 }
 
 
