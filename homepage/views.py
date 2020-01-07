@@ -1,17 +1,20 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_page, cache_control
+from django.views.decorators.http import condition
 from django.core.cache import cache
-from reader.models import Series, Volume, Chapter
 
+from api.api import all_chapter_data_etag
+from reader.models import Series, Volume, Chapter
+from reader.views import series_page_data
 
 @staff_member_required
 def admin_home(request):
     return render(request, 'homepage/admin_home.html')
 
-
-@cache_page(3600 * 48)
+@cache_control(max_age=60)
+@condition(etag_func=all_chapter_data_etag)
 def home(request):
     home_screen_series = {"Kaguya-Wants-To-Be-Confessed-To": "", "We-Want-To-Talk-About-Kaguya": "", "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": ""}
     for series in home_screen_series:
@@ -21,8 +24,10 @@ def home(request):
                 filename, ext = str(vol.volume_cover).rsplit('.', 1)
                 home_screen_series[series] = [f"/media/{vol.volume_cover}", f"/media/{filename}.webp", f"/media/{filename}_blur.{ext}"]
                 break
+    data = series_page_data("Kaguya-Wants-To-Be-Confessed-To")
     return render(request, 'homepage/home.html', {
             "abs_url": request.build_absolute_uri(),
+            "main_series_data": data,
             "main_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][0],
             "main_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][1],
             "main_cover_blur": home_screen_series["Kaguya-Wants-To-Be-Confessed-To"][2],
