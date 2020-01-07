@@ -314,13 +314,25 @@ function SettingsHandler(){
 		}
 	}
 
-	this.query = function(qu) {
-		for(var key in qu) {
-		var setting = this.all[key];
-			if(qu[key][0] == '!') {
-				if(qu[key].substr(1) == setting.get()) return false;
-			}else{
-				if(qu[key] != setting.get()) return false;
+	this.query = function(qu, or) {
+		if(or) {
+			for(var key in qu) {
+			var setting = this.all[key];
+				if(qu[key][0] == '!') {
+					if(qu[key].substr(1) != setting.get()) return true;
+				}else{
+					if(qu[key] == setting.get()) return true;
+				}
+			}
+			return false;
+		}else{
+			for(var key in qu) {
+			var setting = this.all[key];
+				if(qu[key][0] == '!') {
+					if(qu[key].substr(1) == setting.get()) return false;
+				}else{
+					if(qu[key] != setting.get()) return false;
+				}
 			}
 		}
 		return true;
@@ -592,7 +604,7 @@ function UI_Reader(o) {
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
 		.attach('layout', ['KeyD'], e => Settings.cycle('layout'))
-		.attach('opacity', ['KeyO'], e => this.imageView.$.children[0].style.opacity = '0.03')
+		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
@@ -605,12 +617,12 @@ function UI_Reader(o) {
 			this.copyShortLink(s);
 		})
 		.attach('minus', ['Minus'], s => {
-			Settings.set('fit', 'fit_width')
-			Settings.all.zoom.prev()
+			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
+				Settings.prev('zoom')
 		})
 		.attach('plus', ['Equal'], s => {
-			Settings.set('fit', 'fit_width')
-			Settings.all.zoom.next()
+			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
+				Settings.next('zoom')
 		})
 
 	new KeyListener(document.body)
@@ -1418,7 +1430,11 @@ const SCROLL_X = 3;
 				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
 			}
 		}
-		this.touch.transitionTimer = setTimeout(() => {this._.image_container.style.transition = ''}, 250)
+	var startPage = (function(that) {return that.selectedWrapper})(this);
+		this.touch.transitionTimer = setTimeout(() => {
+			this._.image_container.style.transition = ''
+			startPage.$.scroll(startPage.$.scrollWidth,0)
+		}, 250)
 	}
 
 	this.mouseHandler = function(e) {
@@ -1595,7 +1611,20 @@ function UI_ReaderImageWrapper(o) {
 		if(this.totalWidth > this.$.clientWidth) {
 			this.$.classList.add('too-wide');
 		}
+		if(Settings.get('layout') == 'rtl') {
+			this.$.scroll(this.totalWidth,0)
+		}
 	}
+
+	this.destroy = () => {
+		var children = this.$.children.slice()
+		for(var i=0; i<children.length; i++) {
+			if(children[i]._struct) children[i]._struct.destroy();
+		}
+		alg.discardElement(this.$);
+		if(this.S) this.S.destroy();
+	}
+
 	this.S.mapIn({
 		'imageWidth': this.checkTooWide
 	})
@@ -1641,6 +1670,13 @@ function UI_ReaderImage(o) {
 		this.$.src = this.url;
 		this.$.onload = e => this.onloadHandler(e);
 		this.loaded = true;
+	}
+
+	this.destroy = () => {
+		this.$.src = 'data:image/gif;base64, R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=';
+		alg.discardElement(this.$);
+		if(this.S) this.S.destroy();
+		this.load = () => {}
 	}
 
 }

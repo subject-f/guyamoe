@@ -422,8 +422,8 @@ function Linkable(o) {
 		}
 	}
 	this.S.destroy = () => {
-		this.targets = [];
-		this.inStreams = {};
+		this.S.targets = [];
+		this.S.inStreams = {};
 	}
 
 	//Returns an input function for use in other objects by the stream index or alias.

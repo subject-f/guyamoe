@@ -191,6 +191,9 @@ header > .close {
 .is-ico-button.close:before {
 	content: "\e907";
 }
+.is-ico-button.search {
+	cursor: pointer;
+}
 .is-ico-button.search:before {
 	content: "";
 }
@@ -677,6 +680,11 @@ header > .close {
 	border-color:transparent;
 	box-sizing: border-box;
 }
+
+.o .rdr-image-wrap {
+	opacity: 0.03;
+}
+
 .rdr-image-wrap .ReaderImageWrapper img {
 	user-select: none;
 	min-height: 30vh;
@@ -722,17 +730,19 @@ header > .close {
 	max-height: 100vh;
 }
 .fit_height_limit .rdr-image-wrap .ReaderImageWrapper img {
-	min-width: unset;
     max-width: unset;
     max-height: 100%;
     width: auto;
     height: auto;
-    flex-shrink: 1;
+    flex-shrink: 0;
+}
+/*SAFARIHACC*/
+_:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .ReaderImageWrapper img {
+	flex-shrink: 1;
 }
 
 .fit_none .rdr-image-wrap .ReaderImageWrapper {
 	min-height: 100vh;
-	/*justify-content: flex-start;*/
 }
 
 .too-wide {
