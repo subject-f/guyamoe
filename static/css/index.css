@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 main {
 	display: flex;
 	flex-wrap: wrap;
@@ -92,9 +96,10 @@ main .manga-card article {
 
 main .manga-card article h2 {
 	font-size: 2em;
+	line-height: 1.5;
 }
 main .manga-card article h3 {
-	font-size: 1.2em;
+	font-size: 1.1em;
 	color: #aaa;
 }
 main .manga-card article p {
@@ -158,6 +163,9 @@ main .manga-card .manga-links span a:last-child {
 	font-weight: normal;
 	padding: 0.7em 1em;
 	font-size: 1.1em;
+}
+.chapter-listing th.chapter-name {
+	padding-left: 7ch
 }
 .chapter-listing th.chapter-date {
 	cursor: pointer;
@@ -405,8 +413,13 @@ main .manga-card.full {
 
 }
 
+@media (min-width: 1000px) {
+	main .manga-card .manga-links {
+		min-width: 37em;
+	}
+}
 @media (min-width: 1400px) {
 	body {
-		font-size: 1.2em;
+		font-size: 1.1em;
 	}
 }

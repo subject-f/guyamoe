@@ -76,6 +76,8 @@
 		
 	.tachi {
 		margin-bottom: 3em;
+		margin-right: 0;
+		margin-left: 0;
 	}
 
 	.tachi > div {
@@ -142,23 +144,27 @@
 <main role="main">
 	<div class="manga-card" style="background-image: url({{ main_cover_blur }})">
 		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
-			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
-  			<img src="{{ main_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Kaguya-sama: Love is War">
+  			<img src="{{ main_cover }}" class="" alt="Kaguya-sama: Love is War">
 		</picture></a>
 		<article>
 			<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><h2>Kaguya-sama: Love is War</h2></a>
 			<h3>Kaguya-sama Wants to Be Confessed To: The Geniuses' War of Love and Brains</h3>
+			<h3>Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen</h3>
 			<div class="manga-links">
 				<span>
-					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full guya">Read the manga ›</a>
+					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/1/1" class="manga-link full guya">Read the manga ›</a>
 				</span>
 				<span>
-					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full after-anime">Where to start after the anime ›</a>
+					<a href="#chapter_listing_exp" onclick="
+						document.getElementById('chapter_listing').classList.add('vis');
+						document.getElementById('chapter_listing_exp').classList.add('vis');
+					" class="manga-link full after-anime">Where to start after the anime ›</a>
 				</span>
 			</div>
 			<p>All’s fair when love is war!</p>
 			<p>Two geniuses. Two brains. Two hearts. One battle. Who will confess their love first…?!</p>
-			<p>Kaguya Shinomiya and Miyuki Shirogane are two geniuses who stand atop their prestigious academy’s student council, making them the elite among elite. But it’s lonely at the top and each has fallen for the other. There’s just one huge problem standing in the way of lovey-dovey bliss—they’re both too prideful to be the first to confess their romantic feelings and thus become the “loser” in the competition of love! And so begins their daily schemes to force the other to confess first!</p>
+			<p>Kaguya Shinomiya and Miyuki Shirogane are two geniuses who stand atop their prestigious academy’s student council, the elite among elite. But it’s lonely at the top and each has fallen for the other. There’s just one huge problem standing in the way of lovey-dovey bliss — they’re both too prideful to be the first to confess and thus become the “loser” in the competition of love! And so begins their daily schemes to force the other to confess first!</p>
 			<div class="manga-links shill">
 				<span>
 					<a rel="noreferrer nofollow" href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" class="manga-link viz">VIZ Media</a>
@@ -169,62 +175,18 @@
 				</span>
 			</div>
 		</article>
-		<div class="chapter-listing-expander" onmousedown="
+		<div  id="chapter_listing_exp" class="chapter-listing-expander" onmousedown="
 			event.stopImmediatePropagation();
 			document.getElementById('chapter_listing').classList.toggle('vis');
 			event.currentTarget.classList.toggle('vis');
-		"><span>Show chapters (173)</span></div>
+		"><span>Show all chapters</span></div>
 		<table id="chapter_listing" class="chapter-listing hidden">
-			<tr class="chapter-row header">
-				<th class="chapter-name">Chapter</th>
-				<th class="chapter-date">Release date</th>
-			</tr>
-			<tr class="chapter-row adapted">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row adapted">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row adapted">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row adapted">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
-			<tr class="chapter-row">
-				<td class="chapter-name"><a href="./"><b>000</b>Test chapter test chapter</a></td>
-				<td class="chapter-date">2020-01-05</td>
-			</tr>
 		</table>
 	</div>
 	<a href="/read/manga/We-Want-To-Talk-About-Kaguya/" class="manga-card smol" style="background-image: url({{ 4koma_cover_blur }})">
 		<picture>
-			<source type="image/webp" srcset="{{ 4koma_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
-  			<img src="{{ 4koma_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+			<source type="image/webp" srcset="{{ 4koma_cover_webp }}" class="" alt="We Want to Talk About Kaguya">
+  			<img src="{{ 4koma_cover }}" class="" alt="We Want to Talk About Kaguya">
 		</picture>
 		<article>
 			<h2>We Want to Talk About Kaguya <span class="tag">Spin-off</span></h2>
@@ -233,8 +195,8 @@
 	</a>
 	<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin/" class="manga-card smol" style="background-image: url({{ doujin_cover_blur }})">
 		<picture>
-			<source type="image/webp" srcset="{{ doujin_cover_webp }}" class="" alt="Manga › Kaguya-sama: Love is War">
-  			<img src="{{ doujin_cover }}" class="" alt="Manga › Kaguya-sama: Love is War">
+			<source type="image/webp" srcset="{{ doujin_cover_webp }}" class="" alt="Kaguya Wants to Be Confessed To: Official Doujin">
+  			<img src="{{ doujin_cover }}" class="" alt="Kaguya Wants to Be Confessed To: Official Doujin">
 		</picture>
 		<article>
 			<h2>Kaguya Wants to Be Confessed To: Official Doujin <span class="tag">Spin-off</span></h2>
@@ -243,7 +205,7 @@
 	</a>
 	<a href="//skythewood.blogspot.com/p/kaguya.html" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/novelcover_blur.jpg' %})">
 		<picture>
-  			<img src="{% static 'img/novelcover.jpg' %}" class="" alt="Manga › Kaguya-sama: Love is War">
+  			<img src="{% static 'img/novelcover.jpg' %}" class="" alt="Novel: The Seven Mysteries of Shuchiin Academy">
 		</picture>
 		<article>
 			<h2>Novel: The Seven Mysteries of Shuchiin Academy <span class="tag">Spin-off</span></h2>
@@ -252,7 +214,7 @@
 	</a>
 	<a href="//kaguya-archive.tumblr.com/" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/fanmade_media_blur.png' %})">
 		<picture>
-  			<img src="{% static 'img/fanmade_media.png' %}" class="" alt="Manga › Kaguya-sama: Love is War">
+  			<img src="{% static 'img/fanmade_media.png' %}" class="" alt="Fanmade Media">
 		</picture>
 		<article>
 			<h2>Fanmade Media</h2>
@@ -344,6 +306,21 @@
 		</div>
 	</div>
 </div> -->
+	<div class="row justify-content-center tachi">
+		<div class="d-flex justify-content-center mb-2 tachi-title">
+			Also available on Tachiyomi.
+		</div>
+		<div class="d-flex justify-content-center">
+			<a class="tachi-tachi" target="_blank" href="//tachiyomi.org/">
+				<img src="//raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png" alt="Tachiyomi">
+			</a>
+			<span class="tachi-plus">+</span>
+			<a class="tachi-guya" target="_blank" href="//tachiyomi.org/extensions/#Guya">
+				<img src="{% static '/logo_small.png' %}" alt="Guya.moe Tachiyomi extension">
+			</a>
+			<span class="ecks" onclick="event.target.parentNode.parentNode.classList.add('hidden')">&times;</span>
+		</div>
+	</div>
 </main>
 <footer class="container-fluid footer mt-auto">
 	<div class="row">
