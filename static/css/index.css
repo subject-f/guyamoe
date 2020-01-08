@@ -62,7 +62,6 @@ main .manga-card:before {
 	background-clip: padding-box;
 }
 
-
 main .manga-card > * {
 	z-index: 2;
 	position: relative;
@@ -94,12 +93,12 @@ main .manga-card article {
 	flex-direction: column;
 }
 
-main .manga-card article h2 {
-	font-size: 2em;
+main .manga-card article h1 {
+	font-size: 1.8em;
 	line-height: 1.5;
 }
-main .manga-card article h3 {
-	font-size: 1.1em;
+main .manga-card article h2 {
+	font-size: 1em;
 	color: #aaa;
 }
 main .manga-card article p {
@@ -114,9 +113,110 @@ main .manga-card .manga-links {
 	min-width: 20em;
 }
 main .manga-card .manga-links span {
+	margin-left: -12px;
+	display: flex;
 }
 main .manga-card .manga-links span a:last-child {
 	margin-right: 0;
+}
+
+.manga-link {
+	display: inline-block;
+	padding: 0.4em 1em 0.5em 0.75em;
+	border: 1px solid rgba(255,255,255,0.2);
+	border-radius: 0.2em;
+	text-align: center;
+	position: relative;
+	font-size: 0.8em;
+	margin: 0.75em 0 0 12px;
+}
+
+.manga-link img {
+	height: 1em;
+}
+
+.manga-link.full {
+	flex-grow: 1;
+	flex-shrink: 1;
+	width: 100%;
+}
+.manga-link.guya:before,
+.manga-link.tachiyom:before,
+.manga-link.viz:before,
+.manga-link.ama:before,
+.manga-link.gp:before,
+.manga-link.yj:before,
+.manga-link.shu:before {
+	content: "";
+	display: inline-block;
+	width: 1.2em;
+	height: 1.2em;
+	background-size: contain;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	vertical-align: middle;
+	margin-right: 0.75em;
+	position: relative;
+	top: -1px;
+}
+
+
+.manga-link.guya {
+	font-size: 1.18em;
+	border-color: #ff6644cc;
+	background-color: #ff000020;
+}
+.manga-link.after-anime {
+	font-size: 1em;
+	border-color: #ffffff88;
+	flex-grow: 1;
+}
+.manga-link.tachiyom {
+	font-size: 1em;
+	border-color: #6db4ff87;
+}
+.manga-link.viz {
+	border-color: #cc000088;
+}
+.manga-link.ama {
+	border-color: #f8981d88;
+}
+.manga-link.gp {
+	border-color: #009bf088;
+}
+.manga-link.yj {
+	border-color: #a7c6e688;
+}
+.manga-link.jp:after {
+	content:"あ";
+	position: absolute;
+	right: -0.5em;
+	top: -0.7em;
+	color: #ddd;
+	font-size: 0.8em;
+	text-shadow: 0 0 1px black, 0 0 1px black, 0 0 1px black; 
+}
+
+.manga-link.guya:before {
+	background-image: url('../logo_small.png');
+}
+.manga-link.tachiyom:before {
+	background-image: url('//raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png');
+}
+.manga-link.viz:before {
+	background-image: url('../img/viz.png');
+}
+.manga-link.ama:before {
+	background-image: url('../img/ama.png');
+}
+.manga-link.gp:before {
+	background-image: url('../img/gp.png');
+}
+.manga-link.yj:before {
+	background-image: url('../img/yj.png');
+}
+.manga-link.shu:before {
+	background-image: url('../img/shu.png');
 }
 
 .chapter-listing-expander {
@@ -138,18 +238,24 @@ main .manga-card .manga-links span a:last-child {
 	display: inline-block;
 }
 
-.chapter-listing-expander span:after {
-	content: "\e902";
+.chapter-listing-expander span:before {
+	content: "";
 	display: inline-block;
-	font-family: guya;
-	font-size: 2em;
+	width: 1em;
+	height: 1em;
+	border-bottom: 1px solid white;
+	border-right: 1px solid white;
 	vertical-align: middle;
 	line-height: 0;
-	margin-top: -0.15em;
-	transform: none;
+	position: relative;
+	top: -0.4em;
+	margin-right: 1em;
+	transform: scaleY(1) rotate(45deg);
+	transition: transform 0.2s ease, top 0.2s ease;
 }
-.chapter-listing-expander.vis span:after {
-	transform: rotate(180deg);
+.chapter-listing-expander.vis span:before {
+	transform: scaleY(-1) rotate(45deg);
+	top: 0.2em;
 }
 
 .chapter-listing.vis {
@@ -163,9 +269,10 @@ main .manga-card .manga-links span a:last-child {
 	font-weight: normal;
 	padding: 0.7em 1em;
 	font-size: 1.1em;
+	color: #bbb;
 }
 .chapter-listing th.chapter-name {
-	padding-left: 7ch
+	
 }
 .chapter-listing th.chapter-date {
 	cursor: pointer;
@@ -175,6 +282,7 @@ main .manga-card .manga-links span a:last-child {
 	content: "△";
 	margin-right: 0.55em;
 	opacity: 0.5;
+	font-size: 0.8em;
 }
 .chapter-listing th.chapter-date.desc:before {
 	content: "▽";
@@ -187,47 +295,45 @@ main .manga-card .manga-links span a:last-child {
 	background: rgba(255,255,255,0.06)
 }
 .chapter-listing td a {
-	padding: 0.4em 0;
-	display: inline-block;
-	width: 100%;
+	padding: 0.4em 1em 0.4em 0;
+	line-height: 1.8;
+	display: inline;
+	
 }
-.chapter-listing .chapter-name {
-
+.chapter-listing td.chapter-name {
+	padding: 0.6em 0;
 }
-.chapter-listing .chapter-name b {
-	display: inline-block;
-	font-weight: normal;
-	font-size: 1.1em;
-	margin-right: 1.2em;
-	margin-left: 0.1em;
-	min-width: 3ch;
+.chapter-listing .chapter-n {
+	font-size: 1.2em;
+	margin-right: 0;
+	padding-right: 0.2em;
+	width: 0;
 }
 .chapter-listing .adapted .chapter-name b {
 }
-.chapter-listing .adapted .chapter-name a span {
+.chapter-listing .adapted .chapter-name span {
 	display: inline-block;
 	border: 1px solid #aaa;
 	padding: 0.1em 0.5em;
 	border-radius: 2px;
 	font-size: 0.6em;
-	margin-left: 2em;
 	margin-top: -0.2em;
 	vertical-align: middle;
 	position: relative;
 }
-.chapter-listing .adapted .chapter-name a span:hover:before {
+.chapter-listing .adapted:hover .chapter-name span {
+	line-height: 0;
+	color: transparent;
+	text-indent: -1000px;
+	user-select: none;
+}
+.chapter-listing .adapted:hover .chapter-name span:before {
 	content: attr(data-anime);
-	display: inline-block;
-	position: absolute;
-	left: 150%;
-	top: 50%;
-	transform: translateY(-50%);
-	white-space: nowrap;
-	text-align: center;
-	border: 1px solid #aaa;
-	padding: 0.2em 0.5em;
-	border-radius: 2px;
-	font-size: 1.3em;
+	display: block;
+	color: #ddd;
+	text-indent: 0;
+	line-height: 1.5;
+	font-size: 1.4em;
 }
 .chapter-listing .chapter-date {
 	white-space: nowrap;
@@ -258,7 +364,9 @@ main .manga-card.smol:hover {
 }
 
 main .manga-card.smol h2 {
-	font-size: 1.4em;
+	font-size: 1.3em;
+	color: white;
+	line-height: 1.5;
 }
 main .manga-card.smol h3 {
 	font-size: 1em;
@@ -271,7 +379,7 @@ main .manga-card.smol picture {
 	margin-right: 1em;
 }
 main .manga-card.smol article {
-	padding-top: 0.7em;
+	padding-top: 0.5em;
 	padding-right: 1em;
 }
 
@@ -281,96 +389,6 @@ main .manga-card.full {
 	max-width: 100%;
 }
 
-
-.manga-link {
-	display: inline-block;
-	padding: 0.4em 1em 0.5em 0.75em;
-	border: 1px solid rgba(255,255,255,0.2);
-	border-radius: 0.2em;
-	text-align: center;
-	position: relative;
-	font-size: 0.8em;
-	margin: 0.75em 0.7em 0 0;
-}
-
-.manga-link img {
-	height: 1em;
-}
-
-.manga-link.full {
-	flex-grow: 1;
-	min-width: 100%;
-	flex-shrink: 1;
-	width: 100%;
-}
-.manga-link.guya:before,
-.manga-link.viz:before,
-.manga-link.ama:before,
-.manga-link.gp:before,
-.manga-link.yj:before,
-.manga-link.shu:before {
-	content: "";
-	display: inline-block;
-	width: 1.2em;
-	height: 1.2em;
-	background-size: contain;
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	vertical-align: middle;
-	margin-right: 0.75em;
-	position: relative;
-	top: -1px;
-}
-
-.manga-link.guya:before {
-	background-image: url('../logo_small.png');
-}
-.manga-link.viz:before {
-	background-image: url('../img/viz.png');
-}
-.manga-link.ama:before {
-	background-image: url('../img/ama.png');
-}
-.manga-link.gp:before {
-	background-image: url('../img/gp.png');
-}
-.manga-link.yj:before {
-	background-image: url('../img/yj.png');
-}
-.manga-link.shu:before {
-	background-image: url('../img/shu.png');
-}
-
-.manga-link.guya {
-	font-size: 1.18em;
-	border-color: #ff6644cc;
-	background-color: #ff000020;
-}
-.manga-link.after-anime {
-	font-size: 1em;
-	border-color: #ffffff88;
-}
-.manga-link.viz {
-	border-color: #cc000088;
-}
-.manga-link.ama {
-	border-color: #f8981d88;
-}
-.manga-link.gp {
-	border-color: #009bf088;
-}
-.manga-link.yj {
-	border-color: #a7c6e688;
-}
-.manga-link.jp:after {
-	content:"あ";
-	position: absolute;
-	right: -0.5em;
-	top: -0.7em;
-	color: #ddd;
-	font-size: 0.8em;
-	text-shadow: 0 0 1px black, 0 0 1px black, 0 0 1px black; 
-}
 
 .hidden {
 	display: none;
@@ -385,7 +403,7 @@ main .manga-card.full {
 	border: 1px solid rgba(255,255,255,0.5);
 	color: #aaa;
 	font-size: 0.6em;
-	padding: 0.2em 0.4em;
+	padding: 0.1em 0.4em;
 	white-space: nowrap;
 	display: inline-block;
 }
@@ -410,7 +428,17 @@ main .manga-card.full {
 			flex-grow: 1;
 	}
 
-
+	main .manga-card.smol {
+		min-width: 100%;
+	}
+	.manga-link.tachiyom,
+	.manga-link.after-anime {
+		font-size: 0.8em;
+		padding-top: 0.6em;
+	}
+	.chapter-listing {
+		font-size: 0.9em;
+	}
 }
 
 @media (min-width: 1000px) {
