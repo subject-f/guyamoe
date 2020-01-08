@@ -142,7 +142,7 @@
 
 {% block body %}
 <main role="main">
-	<div class="manga-card" style="background-image: url({{ main_cover_blur }})">
+	<div class="manga-card" style="background-image: url({% static 'img/main_series_blur.png' %}); background-position: 100% 0;">
 		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
 			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Kaguya-sama: Love is War">
   			<img src="{{ main_cover }}" class="" alt="Kaguya-sama: Love is War">
@@ -153,7 +153,7 @@
 			<h2>Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen</h2>
 			<div class="manga-links">
 				<span>
-					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/1/1" class="manga-link full guya">Read the manga ›</a>
+					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full guya">Read the manga ›</a>
 				</span>
 				<span>
 					<a href="#chapter_listing_exp" onclick="
