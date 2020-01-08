@@ -100,6 +100,8 @@ main .manga-card article h1 {
 main .manga-card article h2 {
 	font-size: 1em;
 	color: #aaa;
+	font-weight: normal;
+	line-height: 1.5;
 }
 main .manga-card article p {
 	margin: 0.4em 0 0 0;
