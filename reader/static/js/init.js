@@ -58,7 +58,7 @@ function ReaderAPI(o) {
 	Linkable.call(this);
 
 	this.url = o.url || '/api/';
-	this.seriesUrl =  this.url + 'series/';
+	this.seriesUrl =  this.url + (window.location.pathname.includes("md_proxy") ? 'md_' : '') + 'series/';
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
@@ -66,54 +66,73 @@ function ReaderAPI(o) {
 
 	this.infuseSeriesData = function(data) {
 		for(var num in data.chapters) {
-		var chapter = data.chapters[num];
+		let chapter = data.chapters[num];
 			chapter.images = {};
+			chapter.fetch = {};
 			chapter.blurs = {};
 			chapter.previews = {};
 			chapter.hasWide = {};
 			chapter.wides = {};
 
 			chapter.id = num;
-			for(var group in chapter.groups) {
+			for(let group in chapter.groups) {
 				chapter.images[group] = [];
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
-				for (var i = 0; i < chapter.groups[group].length; i++) {
-					chapter.images[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							+ group 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					chapter.blurs[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_blur_"+ group
-							+ group+"_shrunk_blur" 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					chapter.previews[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_"+ group
-							+ group+"_shrunk" 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					if(chapter.groups[group][i].indexOf('_w.') > -1) {
-						chapter.wides[group].push(i);
+				if (Array.isArray(chapter.groups[group])) {
+					for (var i = 0; i < chapter.groups[group].length; i++) {
+						chapter.images[group].push(
+							this.mediaURL
+								+ data.slug 
+								+ '/chapters/' 
+								+ chapter.folder 
+								+ '/' 
+								+ group 
+								+ '/' 
+								+ chapter.groups[group][i]
+						)
+						chapter.blurs[group].push(
+							this.mediaURL
+								+ data.slug 
+								+ '/chapters/' 
+								+ chapter.folder 
+								+ '/' 
+								// + "shrunk_blur_"+ group
+								+ group+"_shrunk_blur" 
+								+ '/' 
+								+ chapter.groups[group][i]
+						)
+						chapter.previews[group].push(
+							this.mediaURL
+								+ data.slug 
+								+ '/chapters/' 
+								+ chapter.folder 
+								+ '/' 
+								// + "shrunk_"+ group
+								+ group+"_shrunk" 
+								+ '/' 
+								+ chapter.groups[group][i]
+						)
+						if(chapter.groups[group][i].indexOf('_w.') > -1) {
+							chapter.wides[group].push(i);
+						}
+					}
+				} else {
+					chapter.fetch[group] = async function () {
+						let images = chapter.images[group];
+						try {
+							// Each group/chapter pair has a unique ID, returned by API
+							let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
+											.then(r => r.json());
+							pages.forEach(p => {
+								images.push(p);
+							});
+							return pages.length;
+						} catch (e) {
+							console.log(e);
+							return 0;
+						}
 					}
 				}
 			}
@@ -758,7 +777,7 @@ function UI_Reader(o) {
 		this.drawChapter();
 	}
 
-	this.drawChapter = function(chapter, page) {
+	this.drawChapter = async function(chapter, page) {
 		if(chapter) this.SCP.chapter = chapter;
 		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = this.SCP.chapterObject.volume;
@@ -777,7 +796,15 @@ function UI_Reader(o) {
 		this.SCP.pageCount = this.SCP.chapterObject.groups[group].length;
 		this.SCP.lastPage = this.SCP.pageCount - 1;
 
-		//Per-chapter plugins
+		if (chapterObj.fetch[this.SCP.group] && chapterObj.images[this.SCP.group].length === 0) {
+			let fun = chapterObj.fetch[this.SCP.group];
+			chapterObj.fetch[this.SCP.group] = undefined;
+			this.SCP.pageCount = await fun();
+		}
+
+		console.log(this.SCP);
+		console.log(chapterObj);
+
 		this.shuffleRandomChapter();
 
 		this.drawGroups();
@@ -1832,7 +1859,8 @@ function URLChanger(o) {
 					+ ' - '
 					+ Reader.current.title
 					+ ' :: Guya',
-				"/reader/series/"
+				window.location.pathname.split('/').slice(0, 3).join('/') // "/reader/series/"
+					+ '/'
 					+ SCP.series
 					+ '/'
 					+ SCP.chapter.replace('.', '-')
