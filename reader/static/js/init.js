@@ -158,9 +158,9 @@ function SettingsHandler(){
 			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
 			'fit_width_limit': 'Natural image size that does not exceed max width.',
 			'fit_height_limit': 'Natural image size that does not exceed max height.',
-			'fit_all': 'Images scale to width or height.',
-			'fit_width': 'Images scale to max width.',
-			'fit_height': 'Images scale to max height.',
+			'fit_all': 'Images expand to width or height.',
+			'fit_width': 'Images expand to max width.',
+			'fit_height': 'Images expand to max height.',
 		} 
 	)
 	this.all.layout = new Setting(
@@ -612,7 +612,7 @@ function UI_Reader(o) {
 		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
 		.attach('spreadCount', ['Ctrl+Digit1'], s => Settings.cycle('spreadCount'))
 		.attach('spreadOffset', ['Ctrl+Digit2'], s => Settings.cycle('spreadOffset'))
-		.attach('comments', ['KeyC'], s => this.openComments())
+		//.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
@@ -1107,9 +1107,9 @@ function UI_Reader(o) {
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
 		.attach(this._.fit_none, 'Images are displayed in natural resolution.')
-		.attach(this._.fit_all, 'Images scale to width or height.')
-		.attach(this._.fit_width, 'Images scale to max width.')
-		.attach(this._.fit_height, 'Images scale to max height.')
+		.attach(this._.fit_all, 'Images expand to width or height.')
+		.attach(this._.fit_width, 'Images expand to max width.')
+		.attach(this._.fit_height, 'Images expand to max height.')
 		.attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
 		.attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
 		.attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')

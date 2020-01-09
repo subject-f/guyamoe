@@ -58,7 +58,7 @@ main .manga-card:before {
 	background: rgba(10,10,10,1);
 	box-shadow: 0px 0px 5em 6em rgba(10,10,10,1);
 	z-index: 0;
-	opacity: 0.9;
+	opacity: 0.95;
 	background-clip: padding-box;
 }
 
@@ -98,13 +98,16 @@ main .manga-card article h1 {
 	line-height: 1.5;
 }
 main .manga-card article h2 {
-	font-size: 1em;
+	font-size: 0.9em;
 	color: #aaa;
 	font-weight: normal;
 	line-height: 1.5;
+	margin-top: 0.5em;
 }
 main .manga-card article p {
 	margin: 0.4em 0 0 0;
+	color: #ddd;
+	font-size: 0.9em;
 }
 
 main .manga-card .manga-links {
@@ -112,7 +115,7 @@ main .manga-card .manga-links {
 	display: inline-flex;
 	flex-direction: column;
 	max-width: 100%;
-	min-width: 20em;
+	min-width: 19em;
 }
 main .manga-card .manga-links span {
 	margin-left: -12px;
@@ -120,6 +123,10 @@ main .manga-card .manga-links span {
 }
 main .manga-card .manga-links span a:last-child {
 	margin-right: 0;
+}
+
+main .manga-card:first-child .manga-links.shill {
+	color: #ddd;
 }
 
 .manga-link {
@@ -152,6 +159,7 @@ main .manga-card .manga-links span a:last-child {
 }
 .manga-link.guya:before,
 .manga-link.tachiyom:before,
+.manga-link.after-anime:before,
 .manga-link.viz:before,
 .manga-link.ama:before,
 .manga-link.gp:before,
@@ -232,6 +240,9 @@ main .manga-card .manga-links span a:last-child {
 .manga-link.guya:before {
 	background-image: url('../logo_small.png');
 }
+.manga-link.after-anime:before {
+	background-image: url('../img/where-to-start-the-manga.png');
+}
 .manga-link.tachiyom:before {
 	background-image: url('//raw.githubusercontent.com/inorichi/tachiyomi/master/.github/readme-images/app-icon.png');
 }
@@ -258,7 +269,8 @@ main .manga-card .manga-links span a:last-child {
 	text-align: center;
 	cursor: pointer;
 	user-select: none;
-	background: rgba(255,255,255,0.04)
+	background: rgba(255,255,255,0.04);
+	float: left;
 }
 
 .chapter-listing-expander:hover {
@@ -338,8 +350,8 @@ main .manga-card .manga-links span a:last-child {
 .chapter-listing .chapter-n {
 	font-size: 1.2em;
 	margin-right: 0;
-	padding-right: 0.2em;
-	width: 0;
+	padding-right: 0.5em;
+	width: 1px;
 }
 .chapter-listing .adapted .chapter-name b {
 }
@@ -365,7 +377,6 @@ main .manga-card .manga-links span a:last-child {
 	color: #ddd;
 	text-indent: 0;
 	line-height: 1.5;
-	font-size: 1.4em;
 }
 .chapter-listing .chapter-date {
 	white-space: nowrap;
@@ -399,6 +410,7 @@ main .manga-card.smol h2 {
 	font-size: 1.3em;
 	color: white;
 	line-height: 1.5;
+	margin-top: 0;
 }
 main .manga-card.smol h3 {
 	font-size: 1em;
@@ -438,6 +450,180 @@ main .manga-card.full {
 	padding: 0.1em 0.4em;
 	white-space: nowrap;
 	display: inline-block;
+}
+
+
+
+.page-series .series-content {
+  border-radius: 4px;
+  background-color: #171717;
+  background-image: url(/static/img/bg_box_blur.jpg);
+  background-attachment: fixed;
+  background-position: 50% 0;
+  padding: 0;
+}
+
+.page-series article {
+	padding-bottom: 1.5em;
+	padding: 1em 1.3em;
+}
+.page-series article h1 {
+	color: white;
+	font-size: 1.7em;
+	margin-bottom: 0.5em;
+}
+.page-series article h2 {
+	font-size: 1em;
+	color: #aaa;
+}
+.page-series article p {
+	margin-bottom: 0.5em;
+	font-size: 0.9em;
+}
+
+
+.page-series article p {
+	margin-bottom: 0;
+	margin-top: 0.5em;
+	font-size: 0.9em;
+	color: #ccc;
+}
+
+.page-series article p:nth-of-type(1) {
+	margin-top: 1.5em;
+}
+
+.page-series .card {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border: none;
+}
+.page-series .card-body {
+	padding: 0.7em;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.page-series #chapters th {
+	white-space: nowrap;
+	padding: 0 1em;
+	line-height: 3em;
+	font-weight: normal;
+	font-size: 1em;
+	border-bottom: 0;
+}
+.page-series #chapters td {
+	border-bottom: 0;
+	border-top: 1px solid #444;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+.page-series #chapters a {
+	text-decoration: none;
+}
+
+
+.page-series .btn-group {
+	display: flex;
+	height: 3em;
+}
+.page-series .btn-group .btn {
+	outline: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 0;
+	border-bottom: 1px solid transparent !important;
+}
+.page-series .btn-group .btn.s {
+	border-bottom: 1px solid #6699b9 !important;
+	box-shadow: 0px -35px 20px -40px #6699b9 inset !important;
+	color: white;
+}
+.page-series .btn-group .btn:not(.s):hover {
+	box-shadow: 0px -35px 20px -40px #666 inset !important;
+	border-bottom: 1px solid #666 !important;
+}
+.page-series .btn-group a {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0 1em;
+	text-decoration: none;
+}
+
+.page-series .btn-group a i {
+	font-size: 1.5em;
+}
+
+.page-series #chapterTitleSearch {
+	border: none !important;
+	background:	transparent !important;
+	border-radius: 0 !important;
+	line-height: inherit;
+	height: 3em;
+	color: white;
+}
+
+.page-series #chapterTitleSearch::placeholder {
+	color: rgba(255,255,255,1)
+}
+
+.page-series .card table {
+	margin-bottom: 0;
+}
+
+.page-series .detailed-chapter-upload-date {
+	text-align: center;
+}
+
+#compactView .card {
+	background: none;
+	padding: 0;
+}
+#compactView .card-title {
+	color: white;
+	padding: 0 0 1em 1em;
+	border-bottom: 1px solid #555;
+}
+#compactView .card .chapter-number {
+	font-size: 1.3em;
+}
+#compactView .card .compact-chapter-upload-date,
+#compactView .card .chapter-group {
+	color: #aaa !important;
+}
+#compactView .card .row {
+	margin: 0 !important;
+}
+#compactView .card .col-3 {
+	padding: 0 !important;
+}
+#compactView .card .col-3 a {
+	text-decoration: none !important;
+	padding: 1em;
+	display: block;
+}
+#compactView .card .col-3 a:hover {
+	background: rgba(255,255,255,0.1);
+}
+
+#volumeCoversView {
+	display: flex;
+	flex-wrap: wrap;
+}
+#volumeCoversView a {
+	display: block;
+	flex-grow: 1;
+	flex-shrink: 1;
+	min-width: 12em;
+	flex-basis: 0;
+	padding: 1em;
+}
+#volumeCoversView a img {
+	height: 100%;
+	width: 100%;
 }
 
 @media (max-width: 799px) {
@@ -480,6 +666,6 @@ main .manga-card.full {
 }
 @media (min-width: 1400px) {
 	body {
-		font-size: 1.1em;
+		
 	}
 }

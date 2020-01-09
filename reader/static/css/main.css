@@ -570,6 +570,7 @@ header > .close {
 	min-height: 100%;
 	flex-grow: 1;
 	cursor: pointer;
+	background: #111;
 }
 
 .rdr-area .hover-prev,
