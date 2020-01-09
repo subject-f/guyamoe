@@ -65,7 +65,7 @@ def series_data(series_slug):
 def md_series_page_data(series_id):
     series_page_dt = cache.get(f"series_page_dt_{series_id}")
     if not series_page_dt:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
+        md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
         chapter_dict = {}
         headers = {
             'User-Agent': 'My User Agent 1.0',
@@ -96,7 +96,7 @@ def md_series_page_data(series_id):
                 "series": api_data["manga"]["title"],
                 "series_id": api_data["manga"]["description"],
                 "slug": series_id,
-                "cover_vol_url": "https://mangadex.org" + api_data["manga"]["cover_url"],
+                "cover_vol_url": "https://mangadex.cc" + api_data["manga"]["cover_url"],
                 "synopsis": api_data["manga"]["description"], 
                 "author": api_data["manga"]["author"],
                 "artist": api_data["manga"]["artist"],
@@ -112,7 +112,7 @@ def md_series_page_data(series_id):
 def md_series_data(series_id):
     data = cache.get(f"series_dt_{series_id}")
     if not data:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
+        md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
         headers = {
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
@@ -125,14 +125,14 @@ def md_series_data(series_id):
             for chapter in api_data["chapter"]:
                 groups_dict[api_data["chapter"][chapter]["group_id"]] = api_data["chapter"][chapter]["group_name"]
                 if api_data["chapter"][chapter]["chapter"] in chapters_dict:
-                    chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = []
+                    chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
                 else:
                     chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
-                        "chapter_id": chapter,
+                        # "chapter_id": chapter,
                         "volume": api_data["chapter"][chapter]["volume"],
                         "title": api_data["chapter"][chapter]["title"],
                         "groups": {
-                            api_data["chapter"][chapter]["group_id"]: []
+                            api_data["chapter"][chapter]["group_id"]: chapter
                         }
                     }
 
@@ -149,7 +149,7 @@ def md_series_data(series_id):
 def md_chapter_pages(chapter_id):
     chapter_pages = cache.get(f"chapter_dt_{chapter_id}")
     if not chapter_pages:
-        md_series_api = f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
+        md_series_api = f"https://mangadex.cc/api/?id={chapter_id}&server=null&type=chapter"
         print(md_series_api)
         headers = {
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
