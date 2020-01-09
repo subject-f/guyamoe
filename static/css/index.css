@@ -463,6 +463,14 @@ main .manga-card.full {
   padding: 0;
 }
 
+.page-series .sidecard {
+  background-color: #171717;
+  background-image: url(/static/img/bg_box_blur.jpg);
+  background-attachment: fixed;
+  background-position: 50% 0;
+
+}
+
 .page-series article {
 	padding-bottom: 1.5em;
 	padding: 1em 1.3em;
@@ -475,6 +483,7 @@ main .manga-card.full {
 .page-series article h2 {
 	font-size: 1em;
 	color: #aaa;
+	font-weight: normal;
 }
 .page-series article p {
 	margin-bottom: 0.5em;
@@ -537,8 +546,8 @@ main .manga-card.full {
 	border-bottom: 1px solid transparent !important;
 }
 .page-series .btn-group .btn.s {
-	border-bottom: 1px solid #6699b9 !important;
-	box-shadow: 0px -35px 20px -40px #6699b9 inset !important;
+	border-bottom: 1px solid #bbb !important;
+    box-shadow: 0px -34px 20px -40px #bbb inset !important;
 	color: white;
 }
 .page-series .btn-group .btn:not(.s):hover {
@@ -567,7 +576,8 @@ main .manga-card.full {
 }
 
 .page-series #chapterTitleSearch::placeholder {
-	color: rgba(255,255,255,1)
+	color: rgba(255,255,255,1);
+	opacity: 0.6;
 }
 
 .page-series .card table {
@@ -624,6 +634,28 @@ main .manga-card.full {
 #volumeCoversView a img {
 	height: 100%;
 	width: 100%;
+}
+
+.yeet {
+	position: relative;
+    font-size: 1.2em !important;
+    /* padding-right: 1em; */
+    font-style: italic;
+    padding-left: 2.2em;
+    margin-top: 1em !important;
+}
+
+.yeet:before {
+    content: '“';
+    font-family: Vollkorn;
+    font-size: 4em;
+    position: relative;
+    float: left;
+    top: -18px;
+    opacity: 0.6;
+    height: 1em;
+    margin-right: 16px;
+    font-style: italic;
 }
 
 @media (max-width: 799px) {
