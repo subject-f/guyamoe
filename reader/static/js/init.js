@@ -769,7 +769,7 @@ function UI_Reader(o) {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
 		}, 3000);
-		//this._.close.href = '/read/manga/' + this.SCP.series;
+		// this._.close.href = `/read/${window.location.pathname.split('/')[2]}/${this.SCP.series}`;
 	}
 
 	this.drawGroup = function(group) {
@@ -793,17 +793,15 @@ function UI_Reader(o) {
 			}
 		}
 		this.SCP.group = group;
-		this.SCP.pageCount = this.SCP.chapterObject.groups[group].length;
-		this.SCP.lastPage = this.SCP.pageCount - 1;
-
+		
 		if (chapterObj.fetch[this.SCP.group] && chapterObj.images[this.SCP.group].length === 0) {
 			let fun = chapterObj.fetch[this.SCP.group];
 			chapterObj.fetch[this.SCP.group] = undefined;
 			this.SCP.pageCount = await fun();
+		} else {
+			this.SCP.pageCount = chapterObj.images[group].length;
 		}
-
-		console.log(this.SCP);
-		console.log(chapterObj);
+		this.SCP.lastPage = this.SCP.pageCount - 1;
 
 		this.shuffleRandomChapter();
 
@@ -866,8 +864,11 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.lastPage;
 		else
 			if(page !== undefined) this.SCP.page = page;
-		
-		this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
+		try {
+			this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
+		} catch (e) {
+			this.SCP.page = this.SCP.page;
+		}
 
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.SCP.visiblePages = this.imageView.visiblePages;
