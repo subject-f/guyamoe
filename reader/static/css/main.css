@@ -568,8 +568,8 @@ header > .close {
 	min-height: 100%;
 	flex-grow: 1;
 	cursor: pointer;
-	background: #111;
 }
+
 
 .rdr-area .hover-prev,
 .rdr-area .hover-next {
@@ -590,6 +590,11 @@ header > .close {
 	padding-bottom: 1.5rem;
 	z-index: 1;
 	box-sizing: border-box;
+}
+
+.selector-fade .hover-prev,
+.selector-fade .hover-next {
+	visibility: hidden;
 }
 
 .rdr-area .hover-prev {
