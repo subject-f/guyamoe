@@ -265,6 +265,7 @@
                 dirty = size.width !== lastWidth || size.height !== lastHeight;
 
                 if (dirty && !rafId) {
+                    onResized();
                     rafId = requestAnimationFrame(onResized);
                 }
 

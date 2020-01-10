@@ -1,5 +1,22 @@
 IS_MOBILE = res = (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))return true; else return false})(navigator.userAgent||navigator.vendor||window.opera);
 
+let PROGRAMMATIC_SCROLL = false;
+let SCROLL_TIMER = null;
+let DBG_VAL = NaN;
+function shadowScroll() {
+	PROGRAMMATIC_SCROLL = true;
+	if(SCROLL_TIMER) clearTimeout(SCROLL_TIMER);
+	SCROLL_TIMER = setTimeout(() => {
+		PROGRAMMATIC_SCROLL = false;
+	}, 50)
+} 
+
+function scroll(element, x, y) {
+	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
+	shadowScroll();
+	console.log(element, 'scrolled to', x, y)
+	element.scroll(x, y)
+}
 
 function LoadHandler(o) {
 	o=be(o);
@@ -729,7 +746,6 @@ function UI_Reader(o) {
 			this._.zoom_level.classList.remove('vis')
 		}, 3000);
 		this._.close.href = '/read/manga/' + this.SCP.series;
-	
 	}
 
 	this.drawGroup = function(group) {
@@ -795,8 +811,8 @@ function UI_Reader(o) {
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
 
-		this._.preload_entity.innerHTML = '';
 		this.selector_page.clearPreload();
+		this.imageView.updateScrollPosition();
 		this.displayPage(page);
 		// this._.comment_button.href = '/reader/series/' + this.SCP.series + '/' + this.SCP.chapter + '/comments'
 		this.plusOne();
@@ -960,11 +976,12 @@ function UI_Reader(o) {
 	}
 
 	this.setZoom = function(zoom) {
+		this.imageView.updateScrollPosition();
 		Settings.all.zoom.options.forEach(item => {
 			this.$.classList.remove('zl'+item);
 		});
 		this.$.classList.add('zl'+zoom);
-		this.imageView.updateWides();
+		setTimeout(this.imageView.updateWides, 1);
 	}
 	this.setSpread = function(spread) {
 		Settings.all.spread.options.forEach(item => {
@@ -974,6 +991,7 @@ function UI_Reader(o) {
 	}
 
 	this.setSidebar = function(state) {
+		this.imageView.updateScrollPosition();
 		if(state == 'hide') {
 			this.$.classList.add('sidebar-hidden');
 		}else{
@@ -1140,8 +1158,72 @@ function UI_ReaderImageView(o) {
 	this.firstDraw = true;
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 
+	this.scroll = {
+		prevY: 0,
+		direction: null,
+		anchorObject: null,
+		anchorOffset: 0,
+		anchorRAF: 0,
+		anchorTimeout: 0
+	}
+
+	document.onscroll = this._.image_container.onscroll = e => {
+		if(PROGRAMMATIC_SCROLL) return;
+		if(!this.imageList) return;
+		if(Settings.all.layout.get() != 'ttb') return;
+
+		Reader.stickHeader();
+	var scrollTop = (e.target.scrollingElement)?
+				e.target.scrollingElement.scrollTop:
+				undefined
+			|| e.target.scrollTop;
+		// console.log('wideUpdate fire')
+		if(!this.scroll.anchorRAF) {
+			this.updateScrollPosition();
+		}
+	this.scroll.direction = scrollTop > this.scroll.prevY?1:-1;
+	var st = scrollTop + document.documentElement.clientHeight * (this.scroll.direction > 0?0.70:0.30);
+	if(window.test_element) window.test_element.style.top = st + 'px'; 
+	this.scroll.prevY = scrollTop;
+	var offsets = this.imageList.map(item => item.$.offsetTop + item.$.parentNode.offsetTop);
+		offsets.push(st);
+		offsets = offsets.sort((a, b) => a - b);
+	var index = offsets.indexOf(st) - 1;
+		if(index + 1 == offsets.length) return;
+		if(Reader.SCP.page == index) return;
+		for(var i=0; i<index; i++) {
+			this.imageList[i].load();
+		}
+		Reader.displayPage(index, true);
+	}
+
+	this.scrollAnchor = () => {
+		this.scroll.anchorRAF = requestAnimationFrame(this.scrollAnchor);
+		shadowScroll();
+		scroll(this.imageContainer.$, 0, this.scroll.anchorObject.offsetTop + (this.scroll.anchorOffset>0?this.scroll.anchorOffset*-1:this.scroll.anchorObject.offsetHeight * this.scroll.anchorPoint))
+	}
+
+	this.updateScrollPosition = () => {
+		if(!this.selectedWrapper) return;
+		this.scroll.anchorObject = this.selectedWrapper.$;
+		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
+		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
+	}
 
 	this.updateWides = () => {
+		if(Settings.get('layout') == 'ttb' && this.selectedWrapper ) {
+			// console.log('wideUpdate fire')
+			if(!this.scroll.anchorRAF && this.scroll.anchorObject) {
+				this.scrollAnchor();
+			}
+
+			if(this.scroll.anchorTimeout) clearTimeout(this.scroll.anchorTimeout);
+			this.scroll.anchorTimeout = setTimeout(() => {
+				cancelAnimationFrame(this.scroll.anchorRAF);
+				this.scroll.anchorRAF = 0;
+				this.updateScrollPosition();
+			}, 60)
+		}
 		if(!this.imageWrappers) return;
 		for(var i=0; i < this.imageWrappers.length; i++) {
 			if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
@@ -1151,8 +1233,6 @@ function UI_ReaderImageView(o) {
 			}
 		}
 	}
-
-	new ResizeSensor(this.$, this.updateWides);
 
 	this.drawImages = function(images, wides) {
 		this.imageContainer.$.style.transition = '';
@@ -1203,7 +1283,8 @@ function UI_ReaderImageView(o) {
 		}
 		this.imageContainer.add(this.imageWrappers);
 
-		this.imageContainer.$.scroll(0,0);
+		shadowScroll();
+		scroll(this.imageContainer.$, 0,0);
 		
 		
 		if(Settings.all.layout.get() == 'ttb') {
@@ -1212,7 +1293,6 @@ function UI_ReaderImageView(o) {
 			butt.$.onmousedown = e => {
 				e.preventDefault();
 				Reader.nextChapter(0);
-				document.documentElement.scrollTo({top: 0})
 			}
 			this.imageContainer.add(butt);
 		}
@@ -1245,11 +1325,18 @@ function UI_ReaderImageView(o) {
 			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
 			this.imageContainer.$.style.transform =
 				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
-		}else if (!dry){
-			if(IS_MOBILE)
-				window.scroll(0,this.imageList[index].$.getBoundingClientRect().top + window.scrollY);
-			else
-				this.imageContainer.$.scroll(0,this.imageList[index].$.parentNode.offsetTop);
+			this.selectedWrapper.$.focus();
+		}else{
+			if (!dry){	
+				shadowScroll();
+				if(IS_MOBILE) {
+					scroll(window, 0,this.imageList[index].$.getBoundingClientRect().top + window.scrollY);
+					document.body.focus();
+				}else{
+					scroll(this.imageContainer.$, 0,this.imageList[index].$.parentNode.offsetTop);
+					this.imageContainer.$.focus();
+				}
+			}
 		}
 	}
 
@@ -1259,38 +1346,6 @@ function UI_ReaderImageView(o) {
 	}
 	this.next = function() {
 		this.S.out('event', {type: 'nextPage'})
-	}
-
-	document.onscroll = this._.image_container.onscroll = e => {
-		if(this.scrollPreventer) return;
-		if(Settings.all.layout.get() == 'ttb') {
-			Reader.stickHeader();
-		var scrollTop = (e.target.scrollingElement)?
-					e.target.scrollingElement.scrollTop:
-					undefined
-				|| e.target.scrollTop;
-		var st = scrollTop
-				+ document.documentElement.clientHeight / 8 * 6
-				* (scrollTop / this.imageContainer.$.scrollHeight)
-				+ document.documentElement.clientHeight / 8;
-		//document.getElementById('scan_line').style.bottom = (this.imageContainer.$.scrollHeight - st)/this.imageContainer.$.scrollHeight*100 +'%';
-		var offsets = this.imageList.map(item => item.$.offsetTop + item.$.parentNode.offsetTop);
-			offsets.push(st);
-			offsets = offsets.sort((a, b) => a - b);
-		var index = offsets.indexOf(st) - 1;
-			if(index + 1 == offsets.length) return;
-			if(Reader.SCP.page == index) return;
-			for(var i=0; i<index; i++) {
-				this.imageList[i].load();
-			}
-			Reader.displayPage(index, true);
-			return;
-		}else{
-			// if(this.selectedWrapper.$.nextSibling)
-			// 	this.selectedWrapper.$.nextSibling.style.top = this.$.scrollTop + 'px';
-			// if(this.selectedWrapper.$.prevSibling)
-			// 	this.selectedWrapper.$.prevSibling.style.top = this.$.scrollTop + 'px';
-		}
 	}
 
 const SCROLL = 1;
@@ -1375,30 +1430,6 @@ const SCROLL_X = 3;
 		if(this.touch.gesture == SWIPE)
 			{ e.preventDefault(); e.stopPropagation(); }
 	}
-	
-	this._.image_container.ontouchmov = e => {
-		if(this.touch.gesture == SCROLL) return;
-		if(e.touches.length > 1) return;
-		if(Settings.all.layout.get() == 'ttb') return;
-		this.touch.delta = e.touches[0].pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
-		if(this.touch.imagePosition == 0
-		|| this.touch.imagePosition == 1 && this.touch.delta > 0
-		|| this.touch.imagePosition == -1 && this.touch.delta < 0)
-			return this.touch.gesture = SCROLL_X;
-		this.touch.deltaY = e.touches[0].pageY - this.touch.startY;
-		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
-		requestAnimationFrame(() => {
-			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
-		})
-		if(this.touch.gesture == SWIPE || Math.abs(this.touch.delta) > 5) {
-			return this.touch.gesture = SWIPE;
-		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
-			this.touch.gesture = SCROLL;
-			this._.image_container._translateX = this.touch.initialX;
-			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
-		}
-	}
 
 	this._.image_container.ontouchend = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
@@ -1433,7 +1464,8 @@ const SCROLL_X = 3;
 	var startPage = (function(that) {return that.selectedWrapper})(this);
 		this.touch.transitionTimer = setTimeout(() => {
 			this._.image_container.style.transition = ''
-			startPage.$.scroll(startPage.$.scrollWidth,0)
+			shadowScroll();
+			scroll(startPage.$, startPage.$.scrollWidth,0)
 		}, 250)
 	}
 
@@ -1488,10 +1520,9 @@ const SCROLL_X = 3;
 		if(e.type == 'click') {
 			switch (areas.indexOf(e.pageX)) {
 				case 1:
-					if(Settings.all.layout.get() != 'ttb')
-						(Settings.all.layout.get() == 'ltr')?
-							this.prev(e):
-							this.next(e);
+					(Settings.all.layout.get() == 'rtl')?
+						this.next(e):
+						this.prev(e);
 					break;
 				case 2:
 					if(IS_MOBILE)
@@ -1512,10 +1543,9 @@ const SCROLL_X = 3;
 					// 			this.prev(e);
 					break;
 				case 4:
-					if(Settings.all.layout.get() != 'ttb')
-						(Settings.all.layout.get() == 'ltr')?
-							this.next(e):
-							this.prev(e);
+					(Settings.all.layout.get() == 'rtl')?
+						this.prev(e):
+						this.next(e);
 					break;
 				default:
 					break;
@@ -1528,14 +1558,12 @@ const SCROLL_X = 3;
 			switch (this.mouseHandler.previousArea) {
 				case 1:
 					if(!IS_MOBILE) {
-						if(Settings.all.layout.get() != 'ttb') {
-							this._.hover_prev.classList.add('viz');
-							this._.hover_next.classList.remove('viz');
-							this.mouseHandler.arrowTimeout = setTimeout(t => {
-								this._.hover_prev.classList.remove('viz');
-								this.mouseHandler.previousArea = null;
-							}, 1000) //MAGICNUM
-						}
+						this._.hover_prev.classList.add('viz');
+						this._.hover_next.classList.remove('viz');
+						this.mouseHandler.arrowTimeout = setTimeout(t => {
+							this._.hover_prev.classList.remove('viz');
+							this.mouseHandler.previousArea = null;
+						}, 1000) //MAGICNUM
 					}
 					break;
 				case 2:
@@ -1545,14 +1573,12 @@ const SCROLL_X = 3;
 					break;
 				case 4:
 					if(!IS_MOBILE) {
-						if(Settings.all.layout.get() != 'ttb') {
-							this._.hover_next.classList.add('viz');
-							this._.hover_prev.classList.remove('viz');
-							this.mouseHandler.arrowTimeout = setTimeout(t => {
-								this._.hover_next.classList.remove('viz');
-								this.mouseHandler.previousArea = null;
-							}, 1000) //MAGICNUM
-						}
+						this._.hover_next.classList.add('viz');
+						this._.hover_prev.classList.remove('viz');
+						this.mouseHandler.arrowTimeout = setTimeout(t => {
+							this._.hover_next.classList.remove('viz');
+							this.mouseHandler.previousArea = null;
+						}, 1000) //MAGICNUM
 					}
 					break;
 				default:
@@ -1565,6 +1591,8 @@ const SCROLL_X = 3;
 	this.$.onmousemove = e => this.mouseHandler(e);
 	this.$.onclick = e => this.mouseHandler(e);
 	this.$.onmouseleave = e => this.mouseHandler(e);
+
+	this.resizeSensor = new ResizeSensor(this.$, this.updateWides);
 
 }
 
@@ -1612,7 +1640,8 @@ function UI_ReaderImageWrapper(o) {
 			this.$.classList.add('too-wide');
 		}
 		if(Settings.get('layout') == 'rtl') {
-			this.$.scroll(this.totalWidth,0)
+			shadowScroll();
+			scroll(this.$, this.totalWidth,0)
 		}
 	}
 
@@ -1654,13 +1683,13 @@ function UI_ReaderImage(o) {
 	}
 
 	this.watchImageWidth = () => {
+		this.RAF = requestAnimationFrame(this.watchImageWidth);
 		if(this.$.naturalWidth > 0) {
 			this.S.out('imageWidth', this.$.offsetWidth);
 			cancelAnimationFrame(this.RAF);
 			this.RAF = null;
 			return;
 		}
-		requestAnimationFrame(this.watchImageWidth);
 	}
 
 	this.load = function() {
@@ -2257,4 +2286,7 @@ Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
 document.body.ontouchstart = e=>{}
 function debug() {
+	var el = document.createElement('div');
+	el.id = 'test_element';
+	document.getElementsByClassName('rdr-image-wrap')[0].appendChild(el)
 }

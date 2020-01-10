@@ -60,11 +60,6 @@
 	.manga [class*="col-xs"] {
 		margin-bottom: 15px;
 	}
-	body {
-		background-image: url({% static 'img/bg_box.png' %});
-		background-position: 50% 0;
-		background-color:black;
-	}
 	body.h-100 {
 		min-height: 100%;
 		height: auto !important;
@@ -142,8 +137,8 @@
 {% endblock %}
 
 {% block body %}
-<main role="main">
-	<div class="manga-card" style="background-image: url({{ main_cover_blur }}); background-position: 100% 0;">
+<main role="main"> 
+	<div class="manga-card" style="background-image: url(/static/img/bg_box_blur.jpg);">
 		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
 			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Kaguya-sama: Love is War">
   			<img src="{{ main_cover }}" class="" alt="Kaguya-sama: Love is War">
@@ -202,7 +197,7 @@
 		</picture>
 		<article>
 			<h2>Kaguya Wants to Be Confessed To: Official Doujin <span class="tag">Spin-off</span></h2>
-			<p>Official non-canon spin-off that contains assorted stories featuring characters from the main manga in lewd and foreign settings.</p>
+			<p>Official non-canon spin-off that contains stories featuring characters from the main manga in lewd and foreign settings.</p>
 		</article>
 	</a>
 	<a href="//skythewood.blogspot.com/p/kaguya.html" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/novelcover_blur.jpg' %})">
@@ -211,7 +206,7 @@
 		</picture>
 		<article>
 			<h2>Novel: The Seven Mysteries of Shuchiin Academy <span class="tag">Spin-off</span></h2>
-			<p>The official spin-off novel about the paranormal Legend of the Seven Mysteries of Shuchiin that the Student Council suddenly gets drawn into.</p>
+			<p>A light novel side story about the paranormal Legend of the Seven Mysteries of Shuchiin that the Student Council suddenly gets drawn into.</p>
 		</article>
 	</a>
 	<a href="//kaguya-archive.tumblr.com/" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/fanmade_media_blur.png' %})">

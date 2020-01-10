@@ -125,13 +125,15 @@
    }
 
    html, html.h-100 {
-     background: url(/static/img/bg_box.png);
-     background-color: black !important;
-     background-attachment: fixed;
-     background-position: 50% 0;
+      background-attachment: fixed;
+     background-position: 50% 10%;
+      background-size: 1500px;
+      background-image: url('/static/img/bg_box.png');
+      background-color:black !important;
    }
    body {
-      background: none;
+      background: none !important;
+      background-color: none !important;
    }
 
 </style>
@@ -151,7 +153,7 @@
    <div class="container-fluid page-series">
       <div class="bs-docs-section clearfix mt-3">
          <div class="row justify-content-center">
-            <div class="col-lg-2 col-md-3 col-sm-12 col-xs-12 mb-4">
+            <div class="side-cover col-lg-2 col-md-3 col-sm-12 col-xs-12 mb-4">
                <div class="list-item ">
                   <div class="list-content ">
                      <div class="list-body d-flex justify-content-center">
@@ -191,8 +193,32 @@
                   </div>
                </div>
             </div>
-            <div class="col-lg-8 col-md-9 col-sm-12 col-xs-12 series-content">
+            <div class="col-lg-8 col-md-9 col-sm-11 col-xs-11 series-content">
                <article>
+                   <picture>
+                     <source type="image/webp" srcset="{{ cover_vol_url_webp }}" class="img-fluid"  alt="{{ series }} manga">
+                     <img src="{{ cover_vol_url }}" class="img-fluid" alt="{{ series }} manga">
+                  </picture>
+                  <table class="table table-borderless table-sm small" style="display: none">
+                     <tbody>
+                        <tr>
+                              <th>Author</th>
+                              <td class="text-sm" style="">{{ author }}</td>
+                           </tr>
+                           <tr>
+                              <th>Artist</th>
+                              <td class="text-sm" style="">{{ artist }}</td>
+                           </tr>
+                        <tr>
+                           <th>Views</th>
+                           <td class="text-sm" style="">{{ views }}</td>
+                        </tr>
+                        <tr>
+                           <th>Last Updated</th>
+                           <td class="text-sm" style="">Ch. {{ last_added.0 }} - {{ last_added.1 }}</td>
+                        </tr>
+                     </tbody>
+                  </table>
                   <h1>{{ series }}</h1>
                   {% if alt_titles %}
                      {% for alt in alt_titles %}

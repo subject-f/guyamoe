@@ -10,7 +10,6 @@
 	-webkit-tap-highlight-color: transparent;
 }
 
-
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -97,7 +96,6 @@ body {
 	font-family: Open Sans, sans-serif;
 	line-height: 1.3;
 	color: #ddd;
-	overflow-anchor: none;
 }
 
 main {
@@ -613,6 +611,10 @@ header > .close {
 	transition: opacity .5s ease;
 }
 
+.ttb .rdr-area .hover-arrow {
+	transform: translateX(18%) rotate(90deg) translateX(18%);
+}
+
 .rdr-area .hover-wrap {
 	display: flex;
 	flex-direction: column;
@@ -643,14 +645,20 @@ header > .close {
 .rtl .rdr-area .hover-prev .hover-sub:before { content: "next" }
 .rtl .rdr-area .hover-next .hover-sub:before { content: "prev" }
 
-
+#test_element {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	z-index: 3000;
+	height: 1px;
+	background: red;
+}
 
 .rdr-image-wrap {
 	display: flex;
 	height: 100%;
 	width: 100%;
 	position: relative;
-	will-change: transform;
 	outline: none;
 	outline-style:none;
 	box-shadow:none;
@@ -659,6 +667,15 @@ header > .close {
 	-webkit-transform: translate3d(0, 0, 0);
 	perspective: 1000;
 	-webkit-perspective: 1000;
+}
+
+.rtl .rdr-image-wrap,
+.ltr .rdr-image-wrap {
+	will-change: transform;
+}
+
+.loaded .rdr-image-wrap {
+	scroll-behavior: smooth;
 }
 
 .rdr-image-wrap * {
@@ -1664,28 +1681,32 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		border-color: transparent #2b2f33 transparent  transparent;
 	}
 
-
-	.fit_width.zl10 .ReaderImageWrapper,
-	.fit_width_limit.zl10 .ReaderImageWrapper {padding: 0 45%}
-	.fit_width.zl20 .ReaderImageWrapper,
-	.fit_width_limit.zl20 .ReaderImageWrapper {padding: 0 40%}
-	.fit_width.zl30 .ReaderImageWrapper,
-	.fit_width_limit.zl30 .ReaderImageWrapper {padding: 0 35%}
-	.fit_width.zl40 .ReaderImageWrapper,
-	.fit_width_limit.zl40 .ReaderImageWrapper {padding: 0 30%}
-	.fit_width.zl50 .ReaderImageWrapper,
-	.fit_width_limit.zl50 .ReaderImageWrapper {padding: 0 25%}
-	.fit_width.zl60 .ReaderImageWrapper,
-	.fit_width_limit.zl60 .ReaderImageWrapper {padding: 0 20%}
-	.fit_width.zl70 .ReaderImageWrapper,
-	.fit_width_limit.zl70 .ReaderImageWrapper {padding: 0 15%}
-	.fit_width.zl80 .ReaderImageWrapper,
-	.fit_width_limit.zl80 .ReaderImageWrapper {padding: 0 10%}
-	.fit_width.zl90 .ReaderImageWrapper,
-	.fit_width_limit.zl90 .ReaderImageWrapper {padding: 0 5%}
+	.fit_width.zl10 .ReaderImageWrapper img {max-width: 10%; min-height: 0}
+	.fit_width_limit.zl10 .ReaderImageWrapper img {max-width: 10%}
+	.fit_width.zl20 .ReaderImageWrapper img {max-width: 20%; min-height: 0}
+	.fit_width_limit.zl20 .ReaderImageWrapper img {max-width: 20%}
+	.fit_width.zl30 .ReaderImageWrapper img {max-width: 30%; min-height: 0}
+	.fit_width_limit.zl30 .ReaderImageWrapper img {max-width: 30%}
+	.fit_width.zl40 .ReaderImageWrapper img {max-width: 40%; min-height: 0}
+	.fit_width_limit.zl40 .ReaderImageWrapper img {max-width: 40%}
+	.fit_width.zl50 .ReaderImageWrapper img {max-width: 50%; min-height: 0}
+	.fit_width_limit.zl50 .ReaderImageWrapper img {max-width: 50%}
+	.fit_width.zl60 .ReaderImageWrapper img {max-width: 60%; min-height: 0}
+	.fit_width_limit.zl60 .ReaderImageWrapper img {max-width: 60%}
+	.fit_width.zl70 .ReaderImageWrapper img {max-width: 70%; min-height: 0}
+	.fit_width_limit.zl70 .ReaderImageWrapper img {max-width: 70%}
+	.fit_width.zl80 .ReaderImageWrapper img {max-width: 80%; min-height: 0}
+	.fit_width_limit.zl80 .ReaderImageWrapper img {max-width: 80%}
+	.fit_width.zl90 .ReaderImageWrapper img {max-width: 90%; min-height: 0}
+	.fit_width_limit.zl90 .ReaderImageWrapper img {max-width: 90%}
 }
 
+
 @media (max-width: 700px) {
+	html, body {
+		overflow-anchor: none;
+	}
+
 	main {
 		flex-direction: column;
 		height: auto;
@@ -1859,18 +1880,6 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		height: unset;
 	}
 
-	.rtl,
-	.ttb {
-		scroll-snap-type: y mandatory;
-	}
-
-	.rtl aside,
-	.ttb aside,
-	.rtl .rdr-area,
-	.ttb .rdr-area {
-		scroll-snap-align: start;
-	}
-
 /*
 	.fit_none .rdr-image-wrap .ReaderImageWrapper {
 		justify-content: center;
@@ -1920,7 +1929,9 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		position: fixed;
 		bottom: 4rem;
 		top: unset;
-		font-size: 1em;
+		font-size: 1rem;
+		text-align: center;
+		max-width: 80vw;
 	}
 	.Tooltippy .Tooltippy-key {
 		display: none;
