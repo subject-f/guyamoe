@@ -411,12 +411,13 @@ main .manga-card.smol {
 }
 
 main .manga-card.smol:before {
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	top: -10px;
+	left: -10px;
+	right: -10px;
+	bottom: -10px;
 	background:	rgba(10,10,10,1);
 	opacity: 0.83;
+	box-shadow: none !important;
 
 }
 main .manga-card.smol:hover {
