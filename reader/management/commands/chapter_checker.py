@@ -106,7 +106,7 @@ class Command(BaseCommand):
             await self.index_chapter(ch, group_folder)
 
     async def get_chapter_list(self, series_id):
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
+        md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
         chapter_dict = {}
         async with aiohttp.ClientSession() as session:
             async with session.get(md_series_api) as resp:
@@ -127,11 +127,11 @@ class Command(BaseCommand):
                 chapter_id = series_chapters[chapter_number]
             else:
                 return None
-            async with session.get(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter") as resp:
+            async with session.get(f"https://mangadex.cc/api/?id={chapter_id}&server=null&type=chapter") as resp:
                 if resp.status == 200:
                     data = await resp.text()
                     api_data = json.loads(data)
-                    domain = api_data['server'] if not api_data['server'].startswith('/') else f"https://mangadex.org" + api_data['server']
+                    domain = api_data['server'] if not api_data['server'].startswith('/') else f"https://mangadex.cc" + api_data['server']
                     chapter_data = (api_data["title"], [f"{domain}{api_data['hash']}/{page}" for page in api_data["page_array"]], chapter_id)
                     return chapter_data
                 else:
@@ -158,7 +158,8 @@ class Command(BaseCommand):
                 index.save()
         print("Finished deleting old chapter index from db.")
         print("Indexing chapter pages...")
-        subprocess.Popen(f'bash /home/appu/kaguyamoe/ocr_tool.sh {chapter.chapter_folder}/{group_folder} {chapter.clean_chapter_number()} {chapter.clean_chapter_number()}_{chapter.series.id} {ch_slug}'.split())
+        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder)
+        subprocess.Popen(f'bash /home/appu/kaguyamoe/ocr_tool.sh {chapter_folder}/{group_folder} {chapter.clean_chapter_number()} {chapter.clean_chapter_number()}_{chapter.series.id} {chapter.series.slug}'.split())
 
     async def mangadex_checker(self, downloaded_chapters, series_slug, latest_volume, latest_only=False):
         chapters = {}

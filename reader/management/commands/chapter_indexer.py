@@ -8,22 +8,24 @@ class Command(BaseCommand):
     help = 'Index pages and chapters'
 
     def add_arguments(self, parser):
-        parser.add_argument('series')
-        parser.add_argument('file')
+        parser.add_argument('--series')
+        parser.add_argument('--file')
         parser.add_argument('--update', nargs='?')
         parser.add_argument('--delete', nargs='?')
         parser.add_argument('--list', nargs='?')
 
     def handle(self, *args, **options):
         if options['update']:
+            print(options['series'])
             chapter_number = float(options['update'])
             series = Series.objects.get(slug=options['series'])
             ch_obj = Chapter.objects.filter(chapter_number=chapter_number, series__slug=options['series']).first()
             if ch_obj:
                 print("Adding chapter index to db.")
                 with open(options['file'], encoding='utf-8-sig') as f:
-                    data = json.load(f)["MentionedWordLocation"]
+                    data = json.load(f)["MentionedWordChapterLocation"]
                 for word in data:
+                    print(word)
                     index = ChapterIndex.objects.filter(word=word, series=series).first()
                     if not index:
                         index = ChapterIndex.objects.create(word=word, chapter_and_pages={}, series=series)
