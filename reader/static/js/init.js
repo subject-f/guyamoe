@@ -759,7 +759,7 @@ function UI_Reader(o) {
 		if(slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		this._.title.innerHTML = '<a href="/read/manga/'+this.current.slug+'">'+this.current.title+'</a>';
+		this._.title.innerHTML = `<a href="${window.location.pathname.split("/").splice(0, 3).join("/")}/${this.current.slug}">${this.current.title}</a>`;
 	var chapterElements = [];
 	var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
