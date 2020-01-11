@@ -56,9 +56,19 @@ function LoadHandler(o) {
 function ReaderAPI(o) {
 	o=be(o);
 	Linkable.call(this);
-
+	
 	this.url = o.url || '/api/';
-	this.seriesUrl =  this.url + (window.location.pathname.includes("md_proxy") ? 'md_' : '') + 'series/';
+	
+	let previews = true;
+
+	if (window.location.pathname.includes("proxy")) {
+		this.seriesUrl = this.url + window.location.pathname.split("/")
+			.filter((e) => e.includes("proxy"))[0].replace("proxy", "series") + "/";
+		previews = false;
+	} else {
+		this.seriesUrl = `${this.url}series/`;
+	}
+	
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
@@ -82,40 +92,44 @@ function ReaderAPI(o) {
 				chapter.wides[group] = [];
 				if (Array.isArray(chapter.groups[group])) {
 					for (var i = 0; i < chapter.groups[group].length; i++) {
-						chapter.images[group].push(
-							this.mediaURL
-								+ data.slug 
-								+ '/chapters/' 
-								+ chapter.folder 
-								+ '/' 
-								+ group 
-								+ '/' 
-								+ chapter.groups[group][i]
-						)
-						chapter.blurs[group].push(
-							this.mediaURL
-								+ data.slug 
-								+ '/chapters/' 
-								+ chapter.folder 
-								+ '/' 
-								// + "shrunk_blur_"+ group
-								+ group+"_shrunk_blur" 
-								+ '/' 
-								+ chapter.groups[group][i]
-						)
-						chapter.previews[group].push(
-							this.mediaURL
-								+ data.slug 
-								+ '/chapters/' 
-								+ chapter.folder 
-								+ '/' 
-								// + "shrunk_"+ group
-								+ group+"_shrunk" 
-								+ '/' 
-								+ chapter.groups[group][i]
-						)
-						if(chapter.groups[group][i].indexOf('_w.') > -1) {
-							chapter.wides[group].push(i);
+						if (previews) {
+							chapter.images[group].push(
+								this.mediaURL
+									+ data.slug 
+									+ '/chapters/' 
+									+ chapter.folder 
+									+ '/' 
+									+ group 
+									+ '/' 
+									+ chapter.groups[group][i]
+							)
+							chapter.blurs[group].push(
+								this.mediaURL
+									+ data.slug 
+									+ '/chapters/' 
+									+ chapter.folder 
+									+ '/' 
+									// + "shrunk_blur_"+ group
+									+ group+"_shrunk_blur" 
+									+ '/' 
+									+ chapter.groups[group][i]
+							)
+							chapter.previews[group].push(
+								this.mediaURL
+									+ data.slug 
+									+ '/chapters/' 
+									+ chapter.folder 
+									+ '/' 
+									// + "shrunk_"+ group
+									+ group+"_shrunk" 
+									+ '/' 
+									+ chapter.groups[group][i]
+							)
+							if(chapter.groups[group][i].indexOf('_w.') > -1) {
+								chapter.wides[group].push(i);
+							}
+						} else {
+							chapter.images[group].push(chapter.groups[group][i]);
 						}
 					}
 				} else {
@@ -137,6 +151,7 @@ function ReaderAPI(o) {
 				}
 			}
 		}
+		console.log(data);
 		return data;
 	}
 
