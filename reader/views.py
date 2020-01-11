@@ -102,7 +102,7 @@ def series_page_data(series_slug):
                 "synopsis": series.synopsis, 
                 "author": series.author.name,
                 "artist": series.artist.name,
-                "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.strftime("%y/%m/%d")],
+                "last_added": [latest_chapter.clean_chapter_number(), latest_chapter.uploaded_on.timestamp() * 1000],
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
                 "root_domain": CANONICAL_ROOT_DOMAIN,

@@ -8,17 +8,20 @@
    <meta name="author" content="{{ author }}">
    <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
    <script defer >
+      function zpad(n){
+         if(n < 10) return '0'+n;
+         return n;
+      }
       $(function () {
          if (localStorage.getItem("viewMode") === null) {
             window.localStorage.setItem("viewMode", 1)
          }
          listMode(window.localStorage.getItem("viewMode"));
+	 let latest_chap = "{{ last_added.0 }}";
+	 let latest_chap_date = new Date(parseInt({{ last_added.1 }}));
+	 $("#last_added").text(`Ch. ${latest_chap} - ${latest_chap_date.getFullYear()}-${zpad(latest_chap_date.getMonth()+1)}-${zpad(latest_chap_date.getDate())}`);
       });
       $(document).ready(function(){
-         function zpad(n){
-            if(n < 10) return '0'+n;
-            return n;
-         }
          let chapter_list = {{ chapter_list|safe }};
          var now = new Date();
          chapter_table = $("#chapterTable tr");
@@ -186,7 +189,7 @@
                            </tr>
                            <tr>
                               <th>Last Updated</th>
-                              <td class="text-sm" style="">Ch. {{ last_added.0 }} - {{ last_added.1 }}</td>
+                              <td id="last_added" class="text-sm" style=""></td>
                            </tr>
                         </tbody>
                      </table>
