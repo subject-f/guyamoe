@@ -81,14 +81,17 @@ function KeyListener(target, mode) {
 						if(!listener.rafer) {
 							listener.rafer = (function() {
 							this.RAF = requestAnimationFrame(this.rafer);
-							this.callback(e);
+							this.callback(e, this.frameCounter);
+							this.frameCounter++;
 							}).bind(listener);
+							listener.frameCounter = 0;
 						}
-						if(!listener.RAF) listener.rafer();
+						if(!listener.RAF) listener.RAF = requestAnimationFrame(listener.rafer);
 					}else if(e.type == 'keyup'){
 						if(listener.RAF) {
 							cancelAnimationFrame(listener.RAF);
 							listener.RAF = 0;
+							listener.frameCounter = 0;
 						}
 					}
 				}else{

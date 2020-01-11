@@ -20,7 +20,12 @@ function scroll(element, x, y, noshadow) {
 //	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
 	if(!noshadow) shadowScroll();
 	//console.log(element, 'scrolled to', x, y)
-	element.scroll(x, y)
+	if(element.scroll)
+		element.scroll(x, y)
+	else
+		element.scrollTop = y;
+		element.scrollLeft = x;
+
 }
 
 function LoadHandler(o) {
@@ -614,17 +619,6 @@ function UI_Reader(o) {
 		chapter: 1,
 		page: 0,
 	};
-	
-	// new KeyListener()
-	// 	.condition(() => Loda.$.classList.contains('hidden'))
-	// 	.condition(() => Settings.all.layout.get() != 'ttb')
-	// 	.pre(() => this._.image_viewer.querySelector('.is-active').focus())
-
-	// new KeyListener()
-	// 	.condition(() => Loda.$.classList.contains('hidden'))
-	// 	.condition(() => Settings.all.layout.get() == 'ttb')
-	// 	.pre(() => this._.image_container.focus())
-	
 
 	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
@@ -658,7 +652,6 @@ function UI_Reader(o) {
 		.attach('search', ['Ctrl+KeyF'], s => {
 			Loda.display('search')
 		})
-		
 
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -767,42 +760,40 @@ function UI_Reader(o) {
 
 	this.drawChapter = function(chapter, page) {
 		if(chapter) this.SCP.chapter = chapter;
-	var chapterObj = this.current.chapters[this.SCP.chapter];
-		this.SCP.volume = chapterObj.volume;
-		this.SCP.chapterName = chapterObj.title
-	var group = Settings.all.groupPreference.get();
-		if(group === undefined || chapterObj.groups[group] == undefined) {
-			if(this.current.preferred_sort && chapterObj.groups[this.current.preferred_sort[0]] != undefined){
+		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
+		this.SCP.volume = this.SCP.chapterObject.volume;
+		this.SCP.chapterName = this.SCP.chapterObject.title
+	let group = Settings.get('groupPreference');
+		if(group === undefined
+		|| this.SCP.chapterObject.groups[group] == undefined) {
+			if(this.current.preferred_sort
+			&& this.SCP.chapterObject.groups[this.current.preferred_sort[0]] != undefined){
 				group = this.current.preferred_sort[0]
 			}else{
-				group = Object.keys(chapterObj.groups)[0];
+				group = Object.keys(this.SCP.chapterObject.groups)[0];
 			}
 		}
 		this.SCP.group = group;
-		this.SCP.pageCount = chapterObj.groups[group].length;
+		this.SCP.pageCount = this.SCP.chapterObject.groups[group].length;
 		this.SCP.lastPage = this.SCP.pageCount - 1;
 
+		//Per-chapter plugins
 		this.shuffleRandomChapter();
 
-		this.groupList.clear();
-	var groupElements = {};
-		for(var grp in chapterObj.groups) {
-			groupElements[grp] = new UI_SimpleListItem({
-				html: '<div' + ((grp==group)?' class="is-active"':'') + '></div>',
-				text: this.current.groups[grp]
-			})
-		}
-		this.groupList.addMapped(groupElements);
+		this.drawGroups();
+		this.drawPreviews();
 
-		this.imageView.drawImages(chapterObj.images[group], chapterObj.wides[group]);
-		if(Settings.get('previews') == 'show') this.drawPreviews();
+		this.imageView.drawImages(this.SCP.chapterObject.images[group], this.SCP.chapterObject.wides[group]);
+
 		this.selector_chap.set(this.SCP.chapter, true);
-		this.selector_vol.set(chapterObj.volume, true);
+		this.selector_vol.set(this.SCP.volume, true);
 
 		if(this.SCP.chapter == this.SCP.lastChapter) {
 			this._.chap_next.classList.add('disabled');
+			this.$.classList.add('last-chapter');
 		}else{
 			this._.chap_next.classList.remove('disabled');
+			this.$.classList.remove('last-chapter');
 		}
 		if(this.SCP.chapter == this.SCP.firstChapter) {
 			this._.chap_prev.classList.add('disabled');
@@ -831,7 +822,19 @@ function UI_Reader(o) {
 		return this;
 	}
 
-	this.displayPage = function(page, dry) {
+	this.drawGroups = () => {
+		this.groupList.clear();
+	let groupElements = {};
+		for(let grp in this.SCP.chapterObject.groups) {
+			groupElements[grp] = new UI_SimpleListItem({
+				html: '<div' + ((grp==this.SCP.group)?' class="is-active"':'') + '></div>',
+				text: this.current.groups[grp]
+			})
+		}
+		this.groupList.addMapped(groupElements);
+	}
+
+	this.displayPage = (page, dry) => {
 		if(page == 'last')
 			this.SCP.page = this.SCP.lastPage;
 		else
@@ -841,30 +844,26 @@ function UI_Reader(o) {
 
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.SCP.visiblePages = this.imageView.visiblePages;
-		//this.messageBox.displayMessage(this.SCP.page + 1 + '/' + (this.current.chapters[this.SCP.chapter].images[this.SCP.group].length), 'none', 1000000)
 		this.S.out('SCP', this.SCP);
 	}
 
-	this.showPreviews = function(state) {
+	this.drawPreviews = (state) => {
+		state = state || Settings.query({previews:'show'});
 		if(state == 'show') {
 			this.$.classList.add('previews-open');
-			this.drawPreviews();
+			this.previews.clear();
+			this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
+				preview => {
+					this.previews.add(new UI_Dummy({
+						html: "<img src='"+preview+"' />"
+					}))
+				}
+			)
+			this.previews.select(this.SCP.page, undefined, undefined, true);
 		}else{
 			this.$.classList.remove('previews-open')
 		}
 
-	}
-
-	this.drawPreviews = function() {
-		this.previews.clear();
-		this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
-			preview => {
-				this.previews.add(new UI_Dummy({
-					html: "<img src='"+preview+"' />"
-				}))
-			}
-		)
-		this.previews.select(this.SCP.page, undefined, undefined, true);
 	}
 
 	this.selectVolume = function(vol) {
@@ -1055,7 +1054,7 @@ function UI_Reader(o) {
 			'selectorPinned': o => this.setSelectorPin(o),
 			'preload': o => this.setPreload(o),
 			'sidebar': o => this.setSidebar(o),
-			'previews': o => this.showPreviews(o),
+			'previews': o => this.drawPreviews(o),
 			'zoom': o => this.setZoom(o),
 			'spread': o => this.setSpread(o),
 			'spreadCount': o => this.drawChapter(),
@@ -1188,13 +1187,13 @@ function UI_ReaderImageView(o) {
 	}
 
 	new KeyListener(document.body, 'hold')
-		.attach('slideDown', ['ArrowDown'], e => {
+		.attach('slideDown', ['ArrowDown'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta'), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta')*Math.min(frame*2/Settings.get('scrollYDelta'),1), true)
 		})
-		.attach('slideUp', ['ArrowUp'], e => {
+		.attach('slideUp', ['ArrowUp'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta'), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta')*Math.min(frame*2/Settings.get('scrollYDelta'),1), true)
 		});
 
 	this.scroll = {
@@ -1376,8 +1375,8 @@ function UI_ReaderImageView(o) {
 			this.imageContainer.$.style.transform =
 				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
 			this.selectedWrapper.$.focus();
-			this.imageContainer.$.scroll(0,0);
-			this.$.scroll(0,0);
+			scroll(this.imageContainer.$, 0, 0);
+			scroll(this.$, 0, 0);
 		}
 	}
 

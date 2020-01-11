@@ -2052,6 +2052,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	pointer-events: none;
 }
 
+
 .nextCha {
 	opacity: 0.5;
 	color: white;
@@ -2078,6 +2079,9 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	margin-left: 1em;
 }
 
+.last-chapter .nextCha {
+	display: none;
+}
 
 .hidden, .is-hidden {
 	display: none !important;
