@@ -732,7 +732,7 @@ function UI_Reader(o) {
 		if(slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		this._.title.innerHTML = this.current.title;
+		this._.title.innerHTML = '<a href="/read/manga/'+this.current.slug+'">'+this.current.title+'</a>';
 	var chapterElements = [];
 	var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
@@ -757,7 +757,7 @@ function UI_Reader(o) {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
 		}, 3000);
-		this._.close.href = '/read/manga/' + this.SCP.series;
+		//this._.close.href = '/read/manga/' + this.SCP.series;
 	}
 
 	this.drawGroup = function(group) {

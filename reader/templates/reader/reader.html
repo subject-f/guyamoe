@@ -13,7 +13,7 @@
 	    <meta name="twitter:card" content="Everything Kaguya-sama">
 		<meta property="og:image" content="https://i.imgur.com/aQmSq90.jpg">
 	    <meta name="twitter:image" content="https://i.imgur.com/aQmSq90.jpg">
-		<meta property="og:url" content="/reader/series/{{ slug }}">
+		<meta property="og:url" content="/read/manga/{{ slug }}">
 	    <meta name="author" content="Akasaka Aka">
 		<meta name="viewport" content="width=device-width">
 		<!-- Google Tag Manager -->
@@ -48,8 +48,8 @@
 		<aside>
 			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual is-ico-button"></div></div>
 			<header>
-				<a data-bind='close' href="/reader/series/{{ slug }}" class="is-ico-button close"></a>
-				<h1 data-bind='title'>{{ series_name }}</h1>
+				<a href="/" class="is-ico-button guya"></a>
+				<h1 data-bind='title'><a href="/read/manga/{{ slug }}">{{ series_name }}</a></h1>
 				<button class="is-ico-button"></button>
 			</header>
 			<div class="rdr-aside-content" data-bind="rdr_aside_content">

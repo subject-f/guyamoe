@@ -182,12 +182,26 @@ header > h1 {
 	font-size: 1rem;
 	flex-grow: 1;
 }
-
-header > .close {
-	cursor: pointer;
+header > h1 a {
+	color: inherit;
+	text-decoration: none;
 }
+header > h1 a:hover {
+	text-decoration: underline;
+}
+
+aside header > .guya {
+	cursor: pointer;
+	background: url('/static/logo_small.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	box-sizing: border-box;
+	background-size: 50%;
+	background-position: 50% 50%;
+}
+
 .is-ico-button.close:before {
-	content: "\e907";
+	content:"\e907";
 }
 .is-ico-button.search {
 	cursor: pointer;
