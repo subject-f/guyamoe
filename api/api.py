@@ -68,8 +68,8 @@ def md_series_page_data(series_id):
         md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
         chapter_dict = {}
         headers = {
-            'User-Agent': 'My User Agent 1.0',
-            'From': 'google.com'
+            'Referer': 'https://mangadex.cc',
+            'User-Agent': 'My User Agent 1.0'
         }
         resp = requests.get(md_series_api, headers=headers)
         if resp.status_code == 200:
@@ -114,6 +114,7 @@ def md_series_data(series_id):
     if not data:
         md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
         headers = {
+            'Referer': 'https://mangadex.cc',
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
         resp = requests.get(md_series_api, headers=headers)
@@ -152,13 +153,14 @@ def md_chapter_pages(chapter_id):
         md_series_api = f"https://mangadex.cc/api/?id={chapter_id}&server=null&type=chapter"
         print(md_series_api)
         headers = {
+            'Referer': 'https://mangadex.cc',
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
         resp = requests.get(md_series_api, headers=headers)
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
-            chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
+            chapter_pages = [f"/api/md_image/{api_data['server'].replace('https://', '').replace('/data/', '')}/{api_data['hash']}/{page}" for page in api_data["page_array"]]
             cache.set(f"chapter_dt_{chapter_id}", chapter_pages, 60)
         else:
             return None
@@ -279,6 +281,7 @@ def nh_series_data(series_id):
     if not data:
         nh_series_api = f"https://nhentai.net/api/gallery/{series_id}"
         headers = {
+            'Referer': 'https://nhentai.net',
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
         resp = requests.get(nh_series_api, headers=headers)
@@ -299,7 +302,7 @@ def nh_series_data(series_id):
                 file_format = "jpg"
                 if t["t"] == "p":
                     file_format = "png"
-                chapters_dict["1"]["groups"]["1"].append(f"https://cdn.nhent.ai/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
+                chapters_dict["1"]["groups"]["1"].append(f"/api/nh_image/{api_data['media_id']}/{p + 1}.{file_format}")
 
             data = {
                 "slug": series_id, "title": api_data["title"]["english"], "description": "",
@@ -311,3 +314,14 @@ def nh_series_data(series_id):
         else:
             return None
     return data
+
+def get_image(referrer, url):
+    headers = {
+        'Referer': referrer,
+        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+    }
+    resp = requests.get(url, headers=headers, stream=True)
+    if resp.status_code == 200:
+        return resp.raw
+    else:
+        return None
