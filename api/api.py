@@ -273,3 +273,38 @@ def zip_chapter(series_slug, chapter):
     with open(os.path.join(chapter_dir, zip_filename), "rb") as fh:
         zip_file = fh.read()
     return zip_file, zip_filename, fname
+
+def nh_series_data(series_id):
+    data = cache.get(f"nh_series_dt_{series_id}")
+    if not data:
+        nh_series_api = f"https://nhentai.net/api/gallery/{series_id}"
+        headers = {
+            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+        }
+        resp = requests.get(nh_series_api, headers=headers)
+        if resp.status_code == 200:
+            data = resp.text
+            api_data = json.loads(data)
+            groups_dict = {"1": api_data["scanlator"]}
+            chapters_dict = {
+                "1" : {
+                    "volume": "1",
+                    "title": api_data["title"]["english"],
+                    "groups": {
+                        "1": []
+                    }
+                }
+            }
+            for page in range(1, int(api_data["num_pages"]) + 1):
+                chapters_dict["1"]["groups"]["1"].append(f"https://cdn.nhent.ai/galleries/{api_data['media_id']}/{page}.jpg")
+
+            data = {
+                "slug": series_id, "title": api_data["title"]["english"], "description": "",
+                "author": api_data["scanlator"], "artist": api_data["scanlator"], "groups": groups_dict,
+                "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.jpg", "preferred_sort": settings.PREFERRED_SORT,
+                "chapters": chapters_dict
+            }
+            cache.set(f"nh_series_dt_{series_id}", data, 60)
+        else:
+            return None
+    return data

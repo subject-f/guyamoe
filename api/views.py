@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
-from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_pages, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
+from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_pages, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -27,6 +27,10 @@ def get_md_series_data(request, series_id):
 def get_md_chapter_pages(request, chapter_id):
     chapter_pages = md_chapter_pages(chapter_id)
     return HttpResponse(json.dumps(chapter_pages), content_type="application/json")
+
+def get_nh_series_data(request, series_id):
+    series_api_data = nh_series_data(series_id)
+    return HttpResponse(json.dumps(series_api_data), content_type="application/json")
 
 @condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):

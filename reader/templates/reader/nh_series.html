@@ -1,0 +1,23 @@
+{% extends "layout.html" %} {% load static %} {% block head %}
+<title>Read {{ series }} :: Guya.moe</title>
+<meta name="author" content="{{ author }}" />
+<style>
+  .center {
+    text-align: center;
+  }
+  .button {
+    background-color: #064064;
+    color: white;
+    width: 70%;
+    padding: 20px 34px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 4px 2px;
+    cursor: pointer;
+  }
+</style>
+{% endblock %} {% block body %}
+<div class="center"><a href="1/1" class="button">Read here</a></div>
+{% endblock %}
