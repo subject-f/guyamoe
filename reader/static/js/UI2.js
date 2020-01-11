@@ -76,13 +76,36 @@ function KeyListener(target, mode) {
 					if(listener.conditions[i](e) === false) return;
 				}
 				e.preventDefault();
-				if(listener.callback) listener.callback(e);
+				if(this.mode == 'hold') {
+					if(e.type == 'keydown') {
+						if(!listener.rafer) {
+							listener.rafer = (function() {
+							this.RAF = requestAnimationFrame(this.rafer);
+							this.callback(e);
+							}).bind(listener);
+						}
+						if(!listener.RAF) listener.rafer();
+					}else if(e.type == 'keyup'){
+						if(listener.RAF) {
+							cancelAnimationFrame(listener.RAF);
+							listener.RAF = 0;
+						}
+					}
+				}else{
+					if(listener.callback) listener.callback(e);
+				}
 				if(listener.exclusiveness) e.stopImmediatePropagation();
 			}
 		}
 		if(this.exclusiveness) e.stopImmediatePropagation();
 	}
-	this.target.addEventListener(this.mode, this.handler, false);
+
+	if(this.mode == 'hold') {
+		this.target.addEventListener('keydown', this.handler, false);
+		this.target.addEventListener('keyup', this.handler, false);
+	}else{
+		this.target.addEventListener(this.mode, this.handler, false);
+	}
 }
 KeyListener.prototype = {
 	pre(f) {
@@ -871,7 +894,7 @@ function UI_Tab(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['Tab'].concat(o.kind || []),
-		html: o.html || '<div><span data-bind="text"></span><i data-bind="counter" class="hidden"></i></div>'
+		html: o.html || '<div><span data-bind="text"></span><i data-bind="counter"></i></div>'
 	})
 	Linkable.call(this)
 

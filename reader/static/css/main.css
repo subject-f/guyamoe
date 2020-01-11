@@ -126,7 +126,7 @@ aside > header {
 }
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0,0,0,0.5) #34393d;
+    scrollbar-color: rgba(255,255,255,0.2) #34393d;
 }
 
 *::-webkit-scrollbar {
@@ -142,7 +142,7 @@ aside > header {
 
 *::-webkit-scrollbar-thumb {
     border-radius: 4px;
-    background: rgba(0,0,0,0.8);
+    background: rgba(255,255,255,0.2);
 }
 
 .is-ico-button {
@@ -1570,10 +1570,11 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 }
 
 .rdr-aside-view .header {
-	text-align: center;
-	font-size: 0.8rem;
+	text-align: left;
+	padding: 0.5em 0;
+	font-size: 0.6em;
 	text-transform: uppercase;
-	margin-bottom: 1rem;
+	font-weight: bold;
 }
 
 .rdr-aside-view .StatefulButton {
@@ -1603,8 +1604,9 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 .t-tooltip {
 	display: flex;
 	flex-basis: 5em;
-	font-size: 13px;
+	font-size: 12px;
 	align-items: center !important;
+	padding-right: 0.4em;
 }
 
 
@@ -1614,7 +1616,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	display: inline-block;
 	padding: 0.4em 0.5em;
 	line-height: 1;
-	font-size: 0.65em;
+	font-size: 0.59em;
 	line-height: 1.2;
 	cursor: default;
 	user-select: none;
@@ -1708,9 +1710,6 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 
 
 @media (max-width: 700px) {
-	html, body {
-		overflow-anchor: none;
-	}
 
 	main {
 		flex-direction: column;
@@ -1721,7 +1720,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	}
 
 	aside {
-		min-width: 100vw;
+		min-width: 100%;
 		height: auto;
 		position: relative;
 		flex-shrink: 0;
@@ -2034,19 +2033,27 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 .nextCha {
 	opacity: 0.5;
 	color: white;
-	min-height: 6rem;
+	min-height: 5rem;
 	display: flex;
-	min-width: 100%;
+	min-width: 80%;
+	max-width: 80%;
+	margin: 0 auto;
 	justify-content: center;
 	align-items: center;
-	padding-bottom: 1rem;
 	margin-bottom: 1rem;
+	border: 2px dashed rgba(255,255,255,0.4);
+	box-sizing: border-box;
 }
 
 .nextCha:before {
 	content: "Next chapter";
-	padding: 1.5rem 6rem;
-	border: 2px dashed rgba(255,255,255,0.4)
+
+}
+
+.nextCha:after {
+	content: "⮠";
+	font-family: Guya;
+	margin-left: 1em;
 }
 
 
