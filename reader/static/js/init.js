@@ -1189,11 +1189,11 @@ function UI_ReaderImageView(o) {
 	new KeyListener(document.body, 'hold')
 		.attach('slideDown', ['ArrowDown'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta')*Math.min(frame*2/Settings.get('scrollYDelta'),1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		})
 		.attach('slideUp', ['ArrowUp'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta')*Math.min(frame*2/Settings.get('scrollYDelta'),1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		});
 
 	this.scroll = {
