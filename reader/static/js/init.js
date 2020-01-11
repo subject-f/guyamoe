@@ -1321,12 +1321,7 @@ function UI_ReaderImageView(o) {
 			Reader.enqueuePreload(this.imageList[index+1].url);
 		}
 
-		if(Settings.all.layout.get() != 'ttb') {
-			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
-			this.imageContainer.$.style.transform =
-				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
-			this.selectedWrapper.$.focus();
-		}else{
+		if(Settings.all.layout.get() == 'ttb') {
 			if (!dry){	
 				shadowScroll();
 				if(IS_MOBILE) {
@@ -1337,6 +1332,13 @@ function UI_ReaderImageView(o) {
 					this.imageContainer.$.focus();
 				}
 			}
+		}else{
+			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
+			this.imageContainer.$.style.transform =
+				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
+			this.selectedWrapper.$.focus();
+			this.imageContainer.$.scroll(0,0);
+			this.$.scroll(0,0);
 		}
 	}
 
