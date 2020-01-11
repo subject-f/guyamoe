@@ -57,6 +57,9 @@ def save_volume(sender, instance, **kwargs):
     if instance.volume_cover:
         save_dir = os.path.join(os.path.dirname(str(instance.volume_cover)))
         vol_cover = os.path.basename(str(instance.volume_cover))
+        for old_data in os.listdir(os.path.join(MEDIA_ROOT, save_dir)):
+            if old_data != vol_cover:
+                os.remove(os.path.join(MEDIA_ROOT, save_dir, old_data))
         filename, ext = vol_cover.rsplit(".", 1)
         image = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
         image.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}.webp"), lossless=False, quality=60, method=6)
@@ -64,5 +67,5 @@ def save_volume(sender, instance, **kwargs):
         blur = Image.open(os.path.join(MEDIA_ROOT, save_dir, vol_cover))
         blur = blur.convert("RGB")
         blur.thumbnail((blur.width/8, blur.height/8), Image.ANTIALIAS)
-        blur = blur.filter(ImageFilter.GaussianBlur(radius=2))
+        blur = blur.filter(ImageFilter.GaussianBlur(radius=4))
         blur.save(os.path.join(MEDIA_ROOT, save_dir, f"{filename}_blur.{ext}"), "JPEG", quality=100, optimize=True, progressive=True)
