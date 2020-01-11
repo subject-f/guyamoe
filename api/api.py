@@ -295,8 +295,11 @@ def nh_series_data(series_id):
                     }
                 }
             }
-            for page in range(1, int(api_data["num_pages"]) + 1):
-                chapters_dict["1"]["groups"]["1"].append(f"https://cdn.nhent.ai/galleries/{api_data['media_id']}/{page}.jpg")
+            for p, t in enumerate(api_data["images"]["pages"]):
+                file_format = "jpg"
+                if t["t"] == "p":
+                    file_format = "png"
+                chapters_dict["1"]["groups"]["1"].append(f"https://cdn.nhent.ai/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
 
             data = {
                 "slug": series_id, "title": api_data["title"]["english"], "description": "",
