@@ -19,7 +19,9 @@
          listMode(window.localStorage.getItem("viewMode"));
 	 let latest_chap = "{{ last_added.0 }}";
 	 let latest_chap_date = new Date(parseInt({{ last_added.1 }}));
-	 $("#last_added").text(`Ch. ${latest_chap} - ${latest_chap_date.getFullYear()}-${zpad(latest_chap_date.getMonth()+1)}-${zpad(latest_chap_date.getDate())}`);
+	     Array.prototype.slice.call(document.querySelectorAll('.last-added')).forEach(el => {
+         el.innerHTML = `Ch. ${latest_chap} - ${latest_chap_date.getFullYear()}-${zpad(latest_chap_date.getMonth()+1)}-${zpad(latest_chap_date.getDate())}`;
+        })
       });
       $(document).ready(function(){
          let chapter_list = {{ chapter_list|safe }};
@@ -189,7 +191,7 @@
                            </tr>
                            <tr>
                               <th>Last Updated</th>
-                              <td id="last_added" class="text-sm" style=""></td>
+                              <td id="last_added" class="last-added" class="text-sm" style=""></td>
                            </tr>
                         </tbody>
                      </table>
@@ -218,7 +220,7 @@
                         </tr>
                         <tr>
                            <th>Last Updated</th>
-                           <td class="text-sm" style="">Ch. {{ last_added.0 }} - {{ last_added.1 }}</td>
+                           <td class="text-sm last-added"></td>
                         </tr>
                      </tbody>
                   </table>

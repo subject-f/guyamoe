@@ -178,9 +178,12 @@ header > h1 {
 	display: flex;
 	justify-content: center;
 	text-align: center;
-	padding: 1rem 0.5rem;
+	padding: 0.5rem 0.5rem;
 	font-size: 1rem;
 	flex-grow: 1;
+	align-items: center;
+	min-height: 3rem;
+	box-sizing: border-box;
 }
 header > h1 a {
 	color: inherit;
@@ -189,7 +192,7 @@ header > h1 a {
 header > h1 a:hover {
 	text-decoration: underline;
 }
-
+/*
 aside header > .guya {
 	cursor: pointer;
 	background: url('/static/logo_small.png');
@@ -198,8 +201,13 @@ aside header > .guya {
 	box-sizing: border-box;
 	background-size: 50%;
 	background-position: 50% 50%;
-}
+	outline: none;
+}*/
 
+.is-ico-button.guya:before {
+	content:"\e907";
+	font-size: 1.2em;
+}
 .is-ico-button.close:before {
 	content:"\e907";
 }
