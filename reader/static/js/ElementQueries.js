@@ -187,13 +187,13 @@
          * @param {String} value
          */
         function queueQuery(selector, mode, property, value) {
-            if (typeof(allQueries[selector]) === 'undefined') {
+            if (typeof (allQueries[selector]) === 'undefined') {
                 allQueries[selector] = [];
                 // add animation to trigger animationstart event, so we know exactly when a element appears in the DOM
 
                 var id = idToSelectorMapping.length;
                 cssStyleElement.innerHTML += '\n' + selector + ' {animation: 0.1s element-queries;}';
-                cssStyleElement.innerHTML += '\n' + selector + ' > .resize-sensor {min-width: '+id+'px;}';
+                cssStyleElement.innerHTML += '\n' + selector + ' > .resize-sensor {min-width: ' + id + 'px;}';
                 idToSelectorMapping.push(selector);
             }
 
@@ -383,7 +383,7 @@
                     } else if (4 === rules[i].type) {
                         readRules(rules[i].cssRules || rules[i].rules);
                     } else if (3 === rules[i].type) {
-                        if(rules[i].styleSheet.hasOwnProperty("cssRules")) {
+                        if (rules[i].styleSheet.hasOwnProperty("cssRules")) {
                             readRules(rules[i].styleSheet.cssRules);
                         }
                     }

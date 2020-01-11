@@ -42,7 +42,7 @@
      * @param {HTMLElement|HTMLElement[]} elements
      * @param {Function}                  callback
      */
-    function forEachElement(elements, callback){
+    function forEachElement(elements, callback) {
         var elementsType = Object.prototype.toString.call(elements);
         var isCollectionTyped = ('[object Array]' === elementsType
             || ('[object NodeList]' === elementsType)
@@ -88,7 +88,7 @@
      * @param {Object} style
      */
     function setStyle(element, style) {
-        Object.keys(style).forEach(function(key) {
+        Object.keys(style).forEach(function (key) {
             element.style[key] = style[key];
         });
     }
@@ -101,35 +101,35 @@
      *
      * @constructor
      */
-    var ResizeSensor = function(element, callback) {
+    var ResizeSensor = function (element, callback) {
         var lastAnimationFrame = 0;
-        
+
         /**
          *
          * @constructor
          */
         function EventQueue() {
             var q = [];
-            this.add = function(ev) {
+            this.add = function (ev) {
                 q.push(ev);
             };
 
             var i, j;
-            this.call = function(sizeInfo) {
+            this.call = function (sizeInfo) {
                 for (i = 0, j = q.length; i < j; i++) {
                     q[i].call(this, sizeInfo);
                 }
             };
 
-            this.remove = function(ev) {
+            this.remove = function (ev) {
                 var newQueue = [];
-                for(i = 0, j = q.length; i < j; i++) {
-                    if(q[i] !== ev) newQueue.push(q[i]);
+                for (i = 0, j = q.length; i < j; i++) {
+                    if (q[i] !== ev) newQueue.push(q[i]);
                 }
                 q = newQueue;
             };
 
-            this.length = function() {
+            this.length = function () {
                 return q.length;
             }
         }
@@ -222,14 +222,14 @@
                 shrink.scrollTop = height + 10;
             };
 
-            var reset = function() {
+            var reset = function () {
                 // Check if element is hidden
                 if (initialHiddenCheck) {
                     var invisible = element.offsetWidth === 0 && element.offsetHeight === 0;
                     if (invisible) {
                         // Check in next frame
-                        if (!lastAnimationFrame){
-                            lastAnimationFrame = requestAnimationFrame(function(){
+                        if (!lastAnimationFrame) {
+                            lastAnimationFrame = requestAnimationFrame(function () {
                                 lastAnimationFrame = 0;
 
                                 reset();
@@ -247,7 +247,7 @@
             };
             element.resizeSensor.resetSensor = reset;
 
-            var onResized = function() {
+            var onResized = function () {
                 rafId = 0;
 
                 if (!dirty) return;
@@ -260,7 +260,7 @@
                 }
             };
 
-            var onScroll = function() {
+            var onScroll = function () {
                 size = getElementSize(element);
                 dirty = size.width !== lastWidth || size.height !== lastHeight;
 
@@ -272,7 +272,7 @@
                 reset();
             };
 
-            var addEvent = function(el, name, cb) {
+            var addEvent = function (el, name, cb) {
                 if (el.attachEvent) {
                     el.attachEvent('on' + name, cb);
                 } else {
@@ -287,11 +287,11 @@
             lastAnimationFrame = requestAnimationFrame(reset);
         }
 
-        forEachElement(element, function(elem){
+        forEachElement(element, function (elem) {
             attachResizeEvent(elem, callback);
         });
 
-        this.detach = function(ev) {
+        this.detach = function (ev) {
             // clean up the unfinished animation frame to prevent a potential endless requestAnimationFrame of reset
             if (!lastAnimationFrame) {
                 window.cancelAnimationFrame(lastAnimationFrame);
@@ -300,23 +300,23 @@
             ResizeSensor.detach(element, ev);
         };
 
-        this.reset = function() {
+        this.reset = function () {
             element.resizeSensor.resetSensor();
         };
     };
 
-    ResizeSensor.reset = function(element) {
-        forEachElement(element, function(elem){
+    ResizeSensor.reset = function (element) {
+        forEachElement(element, function (elem) {
             elem.resizeSensor.resetSensor();
         });
     };
 
-    ResizeSensor.detach = function(element, ev) {
-        forEachElement(element, function(elem){
+    ResizeSensor.detach = function (element, ev) {
+        forEachElement(element, function (elem) {
             if (!elem) return;
-            if(elem.resizedAttached && typeof ev === "function"){
+            if (elem.resizedAttached && typeof ev === "function") {
                 elem.resizedAttached.remove(ev);
-                if(elem.resizedAttached.length()) return;
+                if (elem.resizedAttached.length()) return;
             }
             if (elem.resizeSensor) {
                 if (elem.contains(elem.resizeSensor)) {

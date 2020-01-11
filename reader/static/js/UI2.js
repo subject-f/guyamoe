@@ -10,106 +10,106 @@ const TOGGLE = 2;
 function KeyListener(target, mode) {
 	this.target = target || document;
 	this.listeners = {};
-	this.pres = [];  
+	this.pres = [];
 	this.conditions = [];
 	this.exclusions = [];
 	this.mode = mode || 'keydown';
 	this.held = false;
 	this.exclusiveness = false;
 	this.stopper = false;
-	if(!this.target._keyListener) {
+	if (!this.target._keyListener) {
 		this.target._keyListener = {};
 		this.target._keyListener.list = [];
-		this.target._keyListener.hold = function(forwhat) {
-			if(forwhat instanceof Array) {
-				for(var i=0;i < this.list.length;i++) {
-					if(forwhat.indexOf(this.list[i]) > -1) continue;
+		this.target._keyListener.hold = function (forwhat) {
+			if (forwhat instanceof Array) {
+				for (var i = 0; i < this.list.length; i++) {
+					if (forwhat.indexOf(this.list[i]) > -1) continue;
 					this.list[i].hold();
-				}	
-			}else{
-				for(var i=0;i < this.list.length;i++) {
-					if(this.list[i] == forwhat) continue;
+				}
+			} else {
+				for (var i = 0; i < this.list.length; i++) {
+					if (this.list[i] == forwhat) continue;
 					this.list[i].hold();
 				}
 			}
-			
+
 		}
-		this.target._keyListener.release = function() {
-			for(var i=0;i < this.list.length;i++) {
+		this.target._keyListener.release = function () {
+			for (var i = 0; i < this.list.length; i++) {
 				this.list[i].release();
 			}
 		}
 	}
 	this.target._keyListener.list.push(this);
 	this.handler = e => {
-	var keyCode = e.code || e.key;
-		if(this.held) return;
-		if(this.stopper) e.stopPropagation();
-		if(this.conditions.length > 0) {
-			for(var i=0; i<this.conditions.length;i++) {
-				if(this.conditions[i](e) === false) return;
+		var keyCode = e.code || e.key;
+		if (this.held) return;
+		if (this.stopper) e.stopPropagation();
+		if (this.conditions.length > 0) {
+			for (var i = 0; i < this.conditions.length; i++) {
+				if (this.conditions[i](e) === false) return;
 			}
 		}
-		if(this.pres.length > 0) {
+		if (this.pres.length > 0) {
 			this.pres.forEach(item => item(e))
 		}
-		if(this.exclusions.length > 0) {
-			if(this.exclusions.indexOf(keyCode) > -1) return;
+		if (this.exclusions.length > 0) {
+			if (this.exclusions.indexOf(keyCode) > -1) return;
 		}
-		for(var id in this.listeners) {
-		var listener = this.listeners[id];
-		var listenerKeys = listener.keys.map(key => key.split('+')[1] || key.split('+')[0])
-			if(!listener.held
-			&& listenerKeys.indexOf(keyCode) > -1) {
-			var keyIndex = listenerKeys.indexOf(keyCode);
-				if(listener.keys[keyIndex].indexOf('Ctrl') < 0) {
-					if(e.ctrlKey || e.metaKey) continue;
-				}else{
-					if(!e.ctrlKey && !e.metaKey) continue;
+		for (var id in this.listeners) {
+			var listener = this.listeners[id];
+			var listenerKeys = listener.keys.map(key => key.split('+')[1] || key.split('+')[0])
+			if (!listener.held
+				&& listenerKeys.indexOf(keyCode) > -1) {
+				var keyIndex = listenerKeys.indexOf(keyCode);
+				if (listener.keys[keyIndex].indexOf('Ctrl') < 0) {
+					if (e.ctrlKey || e.metaKey) continue;
+				} else {
+					if (!e.ctrlKey && !e.metaKey) continue;
 				}
-				if(listener.keys[keyIndex].indexOf('Shift') < 0) {
-					if(e.shiftKey) continue;
-				}else{
-					if(!e.ctrlKey) continue;
+				if (listener.keys[keyIndex].indexOf('Shift') < 0) {
+					if (e.shiftKey) continue;
+				} else {
+					if (!e.ctrlKey) continue;
 				}
-				for(var i=0; i<listener.conditions.length;i++) {
-					if(listener.conditions[i](e) === false) return;
+				for (var i = 0; i < listener.conditions.length; i++) {
+					if (listener.conditions[i](e) === false) return;
 				}
 				e.preventDefault();
-				if(this.mode == 'hold') {
-					if(e.type == 'keydown') {
-						if(!listener.rafer) {
-							listener.rafer = (function() {
-							this.RAF = requestAnimationFrame(this.rafer);
-							this.callback(e);
+				if (this.mode == 'hold') {
+					if (e.type == 'keydown') {
+						if (!listener.rafer) {
+							listener.rafer = (function () {
+								this.RAF = requestAnimationFrame(this.rafer);
+								this.callback(e);
 							}).bind(listener);
 						}
-						if(!listener.RAF) listener.rafer();
-					}else if(e.type == 'keyup'){
-						if(listener.RAF) {
+						if (!listener.RAF) listener.rafer();
+					} else if (e.type == 'keyup') {
+						if (listener.RAF) {
 							cancelAnimationFrame(listener.RAF);
 							listener.RAF = 0;
 						}
 					}
-				}else{
-					if(listener.callback) listener.callback(e);
+				} else {
+					if (listener.callback) listener.callback(e);
 				}
-				if(listener.exclusiveness) e.stopImmediatePropagation();
+				if (listener.exclusiveness) e.stopImmediatePropagation();
 			}
 		}
-		if(this.exclusiveness) e.stopImmediatePropagation();
+		if (this.exclusiveness) e.stopImmediatePropagation();
 	}
 
-	if(this.mode == 'hold') {
+	if (this.mode == 'hold') {
 		this.target.addEventListener('keydown', this.handler, false);
 		this.target.addEventListener('keyup', this.handler, false);
-	}else{
+	} else {
 		this.target.addEventListener(this.mode, this.handler, false);
 	}
 }
 KeyListener.prototype = {
 	pre(f) {
-		if(f) {
+		if (f) {
 			this.pres.push(f);
 		}
 		return this;
@@ -119,34 +119,34 @@ KeyListener.prototype = {
 		return this;
 	},
 	condition(f, listenerID) {
-		if(listenerID) {
+		if (listenerID) {
 			this.listeners[listenerID].conditions.push(f);
 			return this;
 		}
-		if(f) {
+		if (f) {
 			this.conditions.push(f);
 		}
 		return this;
 	},
-	exclude(f){
-		if(f) {
-			if(f instanceof KeyListener) {
-				for(var id in f.listeners) {
-				var extLst = f.listeners[id];
+	exclude(f) {
+		if (f) {
+			if (f instanceof KeyListener) {
+				for (var id in f.listeners) {
+					var extLst = f.listeners[id];
 					this.exclude(extLst.keys)
 				}
-			}else if(f instanceof Array){
+			} else if (f instanceof Array) {
 				this.exclusions.push.apply(this.exclusions, f);
 			}
 		}
 		return this;
 	},
 	solo(state, listenerIDs) {
-		if(listenerIDs) {
-			if(typeof listenerIDs == 'string')
+		if (listenerIDs) {
+			if (typeof listenerIDs == 'string')
 				listenerIDs = [listenerIDs];
 			listenerIDs.forEach(listenerID => {
-				switch(state) {
+				switch (state) {
 					case true:
 					default:
 						this.listeners[listenerID].exclusiveness = true;
@@ -156,8 +156,8 @@ KeyListener.prototype = {
 						break;
 				}
 			});
-		}else{
-			switch(state) {
+		} else {
+			switch (state) {
 				case true:
 				default:
 					this.exclusiveness = true;
@@ -179,42 +179,42 @@ KeyListener.prototype = {
 		return this;
 	},
 	mirror(source, id) {
-		if(id === true) {
-			for(var id in source.listeners) {
-			var extLst = source.listeners[id];
+		if (id === true) {
+			for (var id in source.listeners) {
+				var extLst = source.listeners[id];
 				this.attach(id, extLst.keys, extLst.callback)
 			}
 			return this;
 		}
-	var extLst = source.listeners[id];
-		if(extLst) {
+		var extLst = source.listeners[id];
+		if (extLst) {
 			this.attach(id, extLst.keys, extLst.callback);
 		}
 		return this;
 	},
 	hold(listenerID) {
-		if(listenerID)
+		if (listenerID)
 			this.listeners[listenerID].held = true;
 		else
 			this.held = true;
 		return this;
 	},
 	release(listenerID) {
-		if(listenerID)
+		if (listenerID)
 			this.listeners[listenerID].held = false;
 		else
 			this.held = false;
 		return this;
 	},
 	detach(id) {
-	var listener = this.listeners[id];
+		var listener = this.listeners[id];
 		this.target.removeEventListener(this.mode, listener.handler);
 		delete this.listeners[id];
 		return this;
 	},
 	detachAll() {
-		for(var id in this.listeners) {
-		var listener = this.listeners[id];
+		for (var id in this.listeners) {
+			var listener = this.listeners[id];
 			this.target.removeEventListener(this.mode, listener.handler);
 			delete this.listeners[id];
 		}
@@ -225,7 +225,7 @@ KeyListener.prototype = {
 
 
 function UI(o) {
-	
+
 	/*
 	Initialises an UI element. Creates or inherits a DOM node if specified.
 	o {
@@ -237,25 +237,25 @@ function UI(o) {
 
 	this.consume = function consume() {
 		this._ = {};
-	var binds = this.$.querySelectorAll('[data-bind]');
+		var binds = this.$.querySelectorAll('[data-bind]');
 		binds.forEach(item => {
 			this._[item.getAttribute('data-bind')] = item;
 		})
-		if(DEBUG)
-			if(binds.length > 0)
+		if (DEBUG)
+			if (binds.length > 0)
 				console.log('Binds added: ', Object.keys(this._), ': ', this);
 	}
 
 	this.init = function init(o) {
-		o=be(o);
+		o = be(o);
 		this.me = {
 			kind: ['UI'].concat(o.kind || []),
 			node: o.node,
 			html: o.html
 		}
-		if(DEBUG) console.debug('Instancing UI_', this.me.kind, ': ', this);
+		if (DEBUG) console.debug('Instancing UI_', this.me.kind, ': ', this);
 
-		this.$ = this.me.node?this.me.node:this.conjure();
+		this.$ = this.me.node ? this.me.node : this.conjure();
 		this.$._struct = this;
 		this.$.classList.add.apply(this.$.classList, this.me.kind);
 		this.consume();
@@ -263,22 +263,22 @@ function UI(o) {
 	}
 	// Creates an element out of html template.
 	this.conjure = function conjure() {
-		if(!this.me.html) {
+		if (!this.me.html) {
 			throw 'CANNOT CONJURE: node and HTML is missing.'
 			return false;
 		}
-		if(DEBUG) console.debug('Node was not found. Creating an instance using embedded HTML tempate.')
-	var holder = crelm();
+		if (DEBUG) console.debug('Node was not found. Creating an instance using embedded HTML tempate.')
+		var holder = crelm();
 		holder.innerHTML = this.me.html;
 		return holder.firstElementChild;
 	}
 
 	this.destroy = () => {
 		alg.discardElement(this.$);
-		for(var key in this._) {
-			if(this._[key]._struct) this._[key]._struct.destroy();
+		for (var key in this._) {
+			if (this._[key]._struct) this._[key]._struct.destroy();
 		}
-		if(this.S) this.S.destroy();
+		if (this.S) this.S.destroy();
 	}
 
 
@@ -288,7 +288,7 @@ function UI(o) {
 	this.markers = {};
 }
 
-function dpraw(fn){
+function dpraw(fn) {
 	fn._raw = true;
 	return fn;
 }
@@ -300,20 +300,20 @@ function DataPacket(stream, payload, sourceStructure) {
 }
 
 function Linkable(o) {
-	o=be(o);
+	o = be(o);
 	this.S = {};
 	this.S.targets = [];
 	this.S.inStreams = {};
 
-	this.S.deadEnd = function(data) {console.log('Arrived at the dead end: ', data); return false};
+	this.S.deadEnd = function (data) { console.log('Arrived at the dead end: ', data); return false };
 
 
 	//Declare allowed input streams and their mappings to internal functions.
 	//streams: {string: function}
 	this.S.mapIn = streams => {
-		for(let id in streams) {
+		for (let id in streams) {
 			this.S.inStreams[id] = streams[id].bind(this) || this.S.deadEnd;
-			if(streams[id]._raw) this.S.inStreams[id]._raw = true;
+			if (streams[id]._raw) this.S.inStreams[id]._raw = true;
 		}
 		return this;
 	}
@@ -361,7 +361,7 @@ function Linkable(o) {
 	*/
 
 	this.S.link = targetStructure => {
-		if(!targetStructure.S) {
+		if (!targetStructure.S) {
 			throw 'AlgEx: Target does not have stream support';
 		}
 		this.S.targets.push(targetStructure);
@@ -375,12 +375,12 @@ function Linkable(o) {
 	}
 
 	this.S.linkAnonymous = (streamID, callback) => {
-		if(!streamID)
-			throw('AlgEx: must specify a stream for anonymous mapping.')
-	var inObj = {}
+		if (!streamID)
+			throw ('AlgEx: must specify a stream for anonymous mapping.')
+		var inObj = {}
 		inObj[streamID] = callback;
 		this.S.link(new Linkable().S.mapIn(inObj));
-	 	return this;
+		return this;
 	}
 
 	//{'source_stream_id': 'target_stream_id'}
@@ -403,23 +403,23 @@ function Linkable(o) {
 	// }
 
 	this.S.in = (dataPacket) => {
-		if(!this.S.inStreams[dataPacket.stream]) {
-			if(DEBUG) console.debug(dataPacket.stream,'does not exist in',this);
+		if (!this.S.inStreams[dataPacket.stream]) {
+			if (DEBUG) console.debug(dataPacket.stream, 'does not exist in', this);
 			return;
 		}
-		if(DEBUG) console.debug(this,': Received',dataPacket,'from',dataPacket.sourceStructure,'on',dataPacket.stream);
-		if(this.S.inStreams[dataPacket.stream]._raw) {
+		if (DEBUG) console.debug(this, ': Received', dataPacket, 'from', dataPacket.sourceStructure, 'on', dataPacket.stream);
+		if (this.S.inStreams[dataPacket.stream]._raw) {
 			this.S.inStreams[dataPacket.stream](dataPacket);
-		}else{
+		} else {
 			this.S.inStreams[dataPacket.stream](dataPacket.payload);
 		}
 	}
 
 	this.S.out = (streamID, data) => {
-		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
-	var dataPacket = new DataPacket(streamID, data, this)
+		if (DEBUG) console.debug('Sending', dataPacket, 'using stream ' + streamID, '...');
+		var dataPacket = new DataPacket(streamID, data, this)
 		for (var i = 0; i < this.S.targets.length; i++) {
-			if(!(streamID in this.S.targets[i].S.inStreams)) {
+			if (!(streamID in this.S.targets[i].S.inStreams)) {
 				continue;
 			}
 			this.S.targets[i].S.in(dataPacket);
@@ -434,13 +434,13 @@ function Linkable(o) {
 	}
 
 	this.S.outAsync = (streamID, dataPacket) => {
-		setTimeout((function() { this.S.out(streamID, dataPacket) }).bind(this), 1);
+		setTimeout((function () { this.S.out(streamID, dataPacket) }).bind(this), 1);
 		return this.S;
 	}
 
 	this.S.proxyOut = (streamID, targetStructure) => {
 		this.S.addIn(streamID, dataPacket => this.S.out(streamID, dataPacket));
-		if(targetStructure) {
+		if (targetStructure) {
 			targetStructure.S.link(this);
 		}
 	}
@@ -485,24 +485,24 @@ function Loadable(o) {
 	this.$.classList.add('Loadable');
 
 
-	this.L.loading = function() {
+	this.L.loading = function () {
 		this.$.classList.add('loading');
 	};
 
-	this.L.loaded = function() {
+	this.L.loaded = function () {
 		this.$.classList.remove('loading');
 	}
 
-	this.L.error = function(o) {
-		this.classList.add('l-'+o.type)
-		if(o.persist) {
+	this.L.error = function (o) {
+		this.classList.add('l-' + o.type)
+		if (o.persist) {
 			this.$.classList.add('load-error');
-		}else{
+		} else {
 			this.$.classList.add('load-error');
 			setTimeout(e => {
-					this.classList.remove('load-error');
-					this.classList.remove('l-'+o.type);
-				},
+				this.classList.remove('load-error');
+				this.classList.remove('l-' + o.type);
+			},
 				o.ms || 500
 			)
 		}
@@ -510,36 +510,36 @@ function Loadable(o) {
 }
 
 function UI_List(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['List'].concat(o.kind || []),
 		html: o.html || '<ul></ul>',
 	});
 	Linkable.call(this);
-	this.childrenConstructor =  o.childrenConstructor || UI_Dummy;
+	this.childrenConstructor = o.childrenConstructor || UI_Dummy;
 	this.lastAdded = [];
 
 	for (var i = 0; i < this.$.children.length; i++) {
-		if(!this.$.children[i]._struct) new this.childrenConstructor({node: this.$.children[i]})
+		if (!this.$.children[i]._struct) new this.childrenConstructor({ node: this.$.children[i] })
 		this.S.out('count', this.$.children.length);
 	}
 
-	this.get = function(index) {
+	this.get = function (index) {
 		if (is(index))//errhandle
-			if(is(this.$.children[index]))
+			if (is(this.$.children[index]))
 				return this.$.children[index]._struct
 			else {
-				if(DEBUG) console.warn('Index did not reference an item.')
+				if (DEBUG) console.warn('Index did not reference an item.')
 				return null;
 			}
 		else
 			return this.$.children.reduce((keep, item) => keep.concat(item._struct), []);
 	}
 
-	this.add = function(uiInstance) {
+	this.add = function (uiInstance) {
 		this.lastAdded = [];
-		if(!isList(uiInstance)){
+		if (!isList(uiInstance)) {
 			uiInstance = [uiInstance];
 		}
 		uiInstance.forEach(item => {
@@ -550,10 +550,10 @@ function UI_List(o) {
 		return this;
 	}
 
-	this.addMapped = function(map) {
+	this.addMapped = function (map) {
 		this.lastAdded = [];
-		for(var id in map) {
-		var item = map[id];
+		for (var id in map) {
+			var item = map[id];
 			item.$.setAttribute('data-list-id', id);
 			this.$.appendChild(item.$);
 			this.lastAdded.push(item);
@@ -562,10 +562,10 @@ function UI_List(o) {
 		return this;
 	}
 
-	this.insertAt = function(uiInstance, referenceInstance) {
+	this.insertAt = function (uiInstance, referenceInstance) {
 		//TD if child of $
-		if(referenceInstance) {
-		var re = insertAfter(uiInstance.$, referenceInstance.$);
+		if (referenceInstance) {
+			var re = insertAfter(uiInstance.$, referenceInstance.$);
 			this.S.out('count', this.$.children.length);
 			return re;
 		} else {
@@ -573,9 +573,9 @@ function UI_List(o) {
 		} //errhandle
 	}
 
-	this.clear = function() {
+	this.clear = function () {
 		this.$.children.slice().map(item => item._struct).forEach(item => {
-			if(item) item.destroy();
+			if (item) item.destroy();
 		})
 
 		this.lastAdded = [];
@@ -583,17 +583,17 @@ function UI_List(o) {
 		return this;
 	}
 
-	this.renderAll = function() {
+	this.renderAll = function () {
 		this.$.children.slice().forEach(item => item._struct.render());
 		return this;
 	}
 
-	this.consumeAll = function() {
+	this.consumeAll = function () {
 		this.add(this.$.children.map(item => item._struct));
 		return this;
 	}
 
-	this.reverse = function() {
+	this.reverse = function () {
 		this.$.reverseChildren();
 		return this;
 	}
@@ -602,18 +602,18 @@ function UI_List(o) {
 
 
 function UI_Dummy(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Dummy'].concat(o.kind || []),
 		html: o.html || '<div></div>'
 	});
 	this.text = o.text;
-	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
+	if (this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
 }
 
 function UI_Separator(o) {
-	o=be(o);
+	o = be(o);
 	UI_Dummy.call(this, {
 		node: o.node,
 		kind: ['Separator'].concat(o.kind || []),
@@ -624,15 +624,15 @@ function UI_Separator(o) {
 
 
 function UI_Selector(o) {
-	o=be(o);
+	o = be(o);
 	UI_List.call(this, {
 		node: o.node,
 		kind: ['Selector'].concat(o.kind || []),
 		html: o.html || '<div></div>',
 		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
-	this.singular = o.singular?true:false;
-	this.persistent = o.persistent?true:false;
+	this.singular = o.singular ? true : false;
+	this.persistent = o.persistent ? true : false;
 	this.toggleClass = o.toggleClass || 's';
 	this.selectedItems = [];
 	this.held = o.held || false;
@@ -640,62 +640,62 @@ function UI_Selector(o) {
 	this.refire = o.refire || false;
 	this.dynamicHide = o.dynamicHide || false;;
 
-	this.updateSelected = function()	{
-		if(this.inverse)
-			this.selectedItems = this.get().reduce((keep, item) => (item && !item.$.classList.contains(this.toggleClass))?keep.concat(item):keep, [])
+	this.updateSelected = function () {
+		if (this.inverse)
+			this.selectedItems = this.get().reduce((keep, item) => (item && !item.$.classList.contains(this.toggleClass)) ? keep.concat(item) : keep, [])
 		else
-			this.selectedItems = this.get().reduce((keep, item) => (item && item.$.classList.contains(this.toggleClass))?keep.concat(item):keep, [])
+			this.selectedItems = this.get().reduce((keep, item) => (item && item.$.classList.contains(this.toggleClass)) ? keep.concat(item) : keep, [])
 		return this;
 	}
 
-	this.select = function(what, state, force, silent) {
-	var result = this.selectAbstract(what, state, force, silent);
+	this.select = function (what, state, force, silent) {
+		var result = this.selectAbstract(what, state, force, silent);
 		return result;
 	}
 
-	this.selectAbstract = function(what, state, force, silent) {
-	var uiInstance;
+	this.selectAbstract = function (what, state, force, silent) {
+		var uiInstance;
 		state = state || true;
 		force = force || false;
 		silent = silent || false;
-		if(typeof what == 'number') {
+		if (typeof what == 'number') {
 			uiInstance = this.get(what)
-		}else{
+		} else {
 			uiInstance = what;
 		}
 
-		if((what == null || what < 0) && this.dynamicHide) {
+		if ((what == null || what < 0) && this.dynamicHide) {
 			this.$.classList.add('hidden')
-		}else{
+		} else {
 			this.$.classList.remove('hidden')
 		}
 
-		if(uiInstance == undefined) return;
+		if (uiInstance == undefined) return;
 
-		if(this.inverse) {
-			if(this.singular) {
-				switch(state) {
+		if (this.inverse) {
+			if (this.singular) {
+				switch (state) {
 					case ON:
 					default:
-						if(!uiInstance.$.classList.contains(this.toggleClass) && force !== true)
+						if (!uiInstance.$.classList.contains(this.toggleClass) && force !== true)
 							return;
 						this.selectedItems.forEach(item => item.$.classList.add(this.toggleClass));
 						uiInstance.$.classList.remove(this.toggleClass);
 						break;
 					case OFF:
-						if(this.selectedItems.length < this.$.children.length && !uiInstance.$.classList.contains(this.toggleClass))
+						if (this.selectedItems.length < this.$.children.length && !uiInstance.$.classList.contains(this.toggleClass))
 							return;
 						uiInstance.$.classList.add(this.toggleClass);
 						break;
 					case TOGGLE:
-						if(this.selectedItems.length < this.$.children.length && !uiInstance.$.classList.contains(this.toggleClass))
+						if (this.selectedItems.length < this.$.children.length && !uiInstance.$.classList.contains(this.toggleClass))
 							return;
 						this.selectedItems.forEach(item => item.$.classList.add(this.toggleClass));
 						uiInstance.$.classList.toggle(this.toggleClass);
 						break;
 				}
-			}else{
-				switch(state) {
+			} else {
+				switch (state) {
 					case ON:
 					default:
 						uiInstance.$.classList.remove(this.toggleClass);
@@ -709,30 +709,30 @@ function UI_Selector(o) {
 				}
 			}
 			this.updateSelected()
-		}else{
-			if(this.singular) {
-				switch(state) {
+		} else {
+			if (this.singular) {
+				switch (state) {
 					case ON:
 					default:
-						if(uiInstance.$.classList.contains(this.toggleClass) && force !== true)
+						if (uiInstance.$.classList.contains(this.toggleClass) && force !== true)
 							return;
 						this.selectedItems.forEach(item => item.$.classList.remove(this.toggleClass));
 						uiInstance.$.classList.add(this.toggleClass);
 						break;
 					case OFF:
-						if(this.selectedItems.length < 2 && uiInstance.$.classList.contains(this.toggleClass))
+						if (this.selectedItems.length < 2 && uiInstance.$.classList.contains(this.toggleClass))
 							return;
 						uiInstance.$.classList.remove(this.toggleClass);
 						break;
 					case TOGGLE:
-						if(this.selectedItems.length < 2 && uiInstance.$.classList.contains(this.toggleClass))
+						if (this.selectedItems.length < 2 && uiInstance.$.classList.contains(this.toggleClass))
 							return;
 						this.selectedItems.forEach(item => item.$.classList.remove(this.toggleClass));
 						uiInstance.$.classList.toggle(this.toggleClass);
 						break;
 				}
-			}else{
-				switch(state) {
+			} else {
+				switch (state) {
 					case ON:
 					default:
 						uiInstance.$.classList.add(this.toggleClass);
@@ -747,29 +747,29 @@ function UI_Selector(o) {
 			}
 			this.updateSelected()
 		}
-		if(!silent) {
-		this.S.out('elements', this.selectedItems)
-			.out('number', this.$.children.indexOf(uiInstance.$))
-			.out('id', uiInstance.$.getAttribute('data-list-id'));
+		if (!silent) {
+			this.S.out('elements', this.selectedItems)
+				.out('number', this.$.children.indexOf(uiInstance.$))
+				.out('id', uiInstance.$.getAttribute('data-list-id'));
 		}
 		return this.selectedItems;
 	}
-	
-	this.handler = function(event) {
-	var element;
-		if(this.held) return;
-		if(event.target !== this.$ && this.$.contains(event.target)) {
+
+	this.handler = function (event) {
+		var element;
+		if (this.held) return;
+		if (event.target !== this.$ && this.$.contains(event.target)) {
 			element = event.target;
-			do { 
-			    if (element.parentNode == this.$) break;
+			do {
+				if (element.parentNode == this.$) break;
 			} while (element = element.parentNode);
 			//errhandle if not a struct
 			this.select(element._struct, TOGGLE);
 		}
 	}
-	
-	this.hold = function(state) {
-		switch(state) {
+
+	this.hold = function (state) {
+		switch (state) {
 			case ON:
 			default:
 				this.held = true;
@@ -785,20 +785,20 @@ function UI_Selector(o) {
 
 	this.updateSelected();
 
-	if(this.inverse) {
-		for(var i=0;i < this.$.children.length;i++){
-			if(!this.$.children[i].classList.contains(this.toggleClass)) {
+	if (this.inverse) {
+		for (var i = 0; i < this.$.children.length; i++) {
+			if (!this.$.children[i].classList.contains(this.toggleClass)) {
 				this.select(this.$.children[i]._struct, ON, true, true);
-				if(this.singular) break;
-			}else{
+				if (this.singular) break;
+			} else {
 				this.select(this.$.children[i]._struct, OFF, true, true);
 			}
 		}
-	}else{
-		for(var i=0;i < this.$.children.length;i++){
-			if(this.$.children[i].classList.contains(this.toggleClass)) {
+	} else {
+		for (var i = 0; i < this.$.children.length; i++) {
+			if (this.$.children[i].classList.contains(this.toggleClass)) {
 				this.select(this.$.children[i]._struct, ON, true, true);
-				if(this.singular) break;
+				if (this.singular) break;
 			}
 		}
 	}
@@ -809,7 +809,7 @@ function UI_Selector(o) {
 }
 
 function UI_ContainerList(o) {
-	o=be(o);
+	o = be(o);
 	UI_Selector.call(this, Object.assign(o, {
 		kind: ['ContainerList'].concat(o.kind || []),
 		toggleClass: 'is-hidden',
@@ -818,13 +818,13 @@ function UI_ContainerList(o) {
 		singular: true,
 		inverse: true,
 	}));
-	
+
 	this.S.mapIn({
 		number: this.select,
 	})
 }
 function UI_WindowedContainerList(o) {
-	o=be(o);
+	o = be(o);
 	UI_ContainerList.call(this, Object.assign(o, {
 		kind: ['WindowedContainerList'].concat(o.kind || []),
 	}));
@@ -832,14 +832,14 @@ function UI_WindowedContainerList(o) {
 	this.select(-1);
 
 	this.$.onclick = (event) => {
-		if(event.target == this.$) {
+		if (event.target == this.$) {
 			this.select(-1);
 		}
 	}
 }
 
 function UI_ScrolledContainerList(o) {
-	o=be(o);
+	o = be(o);
 	UI_ContainerList.call(this, {
 		node: o.node,
 		kind: ['ScrolledContainerList'].concat(o.kind || []),
@@ -847,7 +847,7 @@ function UI_ScrolledContainerList(o) {
 		refire: true
 	});
 
-	this.scrollSelect = function() {
+	this.scrollSelect = function () {
 		window.scrollTo({
 			top: this.$.getBoundingClientRect().top + window.scrollY - 200,
 			left: 0,
@@ -862,8 +862,8 @@ function UI_ScrolledContainerList(o) {
 }
 
 
-function UI_Tabs(o){
-	o=be(o);
+function UI_Tabs(o) {
+	o = be(o);
 	UI_Selector.call(this, {
 		node: o.node,
 		kind: ['Tabs'].concat(o.kind || []),
@@ -872,7 +872,7 @@ function UI_Tabs(o){
 		persistent: true,
 		refire: true,
 		toggleClass: 'is-active',
-		held: o.held||false,
+		held: o.held || false,
 		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
 
@@ -880,7 +880,7 @@ function UI_Tabs(o){
 }
 
 function UI_IndicatorTabs(o) {
-	o=be(o);
+	o = be(o);
 	UI_Tabs.call(this, {
 		node: o.node,
 		kind: ['IndicatorTabs'].concat(o.kind || []),
@@ -890,7 +890,7 @@ function UI_IndicatorTabs(o) {
 }
 
 function UI_Tab(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Tab'].concat(o.kind || []),
@@ -899,7 +899,7 @@ function UI_Tab(o) {
 	Linkable.call(this)
 
 	this.counter = o.counter;
-	if(this.counter) {
+	if (this.counter) {
 		this._.counter.classList.remove('hidden');
 	}
 	this.counterText = o.counterText || '';
@@ -907,7 +907,7 @@ function UI_Tab(o) {
 	this._.text.innerHTML = o.text;
 	this._.counter.innerHTML = this.counterText;
 
-	this.update = function(value) {
+	this.update = function (value) {
 		this._.counter.innerHTML = value;
 	}
 
@@ -915,7 +915,7 @@ function UI_Tab(o) {
 }
 
 function UI_Input(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Input'].concat(o.kind || []),
@@ -923,8 +923,8 @@ function UI_Input(o) {
 	});
 	Linkable.call(this);
 
-	if(o.placeholder) this.$.placeholder = o.placeholder;
-	if(o.type) this.$.type = o.type;
+	if (o.placeholder) this.$.placeholder = o.placeholder;
+	if (o.type) this.$.type = o.type;
 
 	this.handler = function (e) {
 		this.value = this.$.value;
@@ -938,20 +938,20 @@ function UI_Input(o) {
 		this.value = this.$.value = '';
 		this.S.out('text', this.value);
 	}
-	this.set = function(value, silent) {
+	this.set = function (value, silent) {
 		this.value = this.$.value = value;
-		if(!silent) this.S.out('text', this.value);
+		if (!silent) this.S.out('text', this.value);
 	}
 
 	this.$.oninput = this.quickHandler.bind(this);
 
 	this.keyl = new KeyListener(this.$, 'keypress')
-			.attach('submit', ['Enter'], e => this.handler(e))
+		.attach('submit', ['Enter'], e => this.handler(e))
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
 }
 
 function UI_Button(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Button'].concat(o.kind || []),
@@ -961,18 +961,18 @@ function UI_Button(o) {
 	this.method = o.method || 'mousedown';
 	this.data = o.data;
 
-	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
+	if (this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
 
 	this.trigger = function trigger(event) {
 		this.S.out('click', this.data)
 		return this;
 	}
 
-	this.$['on'+this.method] = event => this.trigger(event);
+	this.$['on' + this.method] = event => this.trigger(event);
 }
 
 function UI_StatefulButton(o) {
-	o=be(o);
+	o = be(o);
 	UI_Button.call(this, Object.assign(o, {
 		kind: ['StatefulButton'].concat(o.kind || [])
 	}));
@@ -980,22 +980,22 @@ function UI_StatefulButton(o) {
 	this.state = o.state || false;
 
 
-	this.on = function() {
+	this.on = function () {
 		this.$.classList.add('s');
 		this.state = true;
-		this.S.out('on',this.data);
+		this.S.out('on', this.data);
 	}
 
-	this.off = function() {
+	this.off = function () {
 		this.$.classList.remove('s');
 		this.state = false;
-		this.S.out('off',this.data);
+		this.S.out('off', this.data);
 	}
 
-	this.toggle = function() {
-		if(this.state) {
+	this.toggle = function () {
+		if (this.state) {
 			this.off();
-		}else{
+		} else {
 			this.on();
 		}
 	}
@@ -1004,7 +1004,7 @@ function UI_StatefulButton(o) {
 
 
 function UI_ButtonGroup(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, Object.assign(o, {
 		kind: ['ButtonGroup'].concat(o.kind || []),
 	}));
@@ -1014,7 +1014,7 @@ function UI_ButtonGroup(o) {
 
 	this.refresh = () => {
 		this.buttons = this.$.getElementsByClassName('StatefulButton').filter(b => b._struct == undefined);
-		this.buttons = this.buttons.map(b => new UI_StatefulButton({node: b}).S.link(this));
+		this.buttons = this.buttons.map(b => new UI_StatefulButton({ node: b }).S.link(this));
 		this.buttonsMapping = {};
 		this.buttons.forEach(b => {
 			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
@@ -1022,28 +1022,28 @@ function UI_ButtonGroup(o) {
 		return this;
 	}
 
-	this.select = function(button, silent) {
-		if(typeof button == 'string') {
+	this.select = function (button, silent) {
+		if (typeof button == 'string') {
 			button = this.buttonsMapping[button];
 		}
 		for (var i = 0; i < this.buttons.length; i++) {
-			if(this.buttons[i] == button) {
+			if (this.buttons[i] == button) {
 				this.buttons[i].on();
-			}else{
+			} else {
 				this.buttons[i].off();
 			}
 		}
 
 		//NOTE: data-bind in child buttons doubles as a setting value. Might cause issues.
 		this.S.out('id', button.$.getAttribute('data-bind'));
-		if(this.linkedSetting) {
+		if (this.linkedSetting) {
 			this.S.out('settingsPacket',
 				new SettingsPacket(
 					'set',
 					this.linkedSetting,
 					button.$.getAttribute('data-bind')
 				)
-			);	
+			);
 		}
 	}
 
@@ -1051,7 +1051,7 @@ function UI_ButtonGroup(o) {
 		this.select(rawPacket.source);
 	}
 	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.linkedSetting)
+		if (settingsPacket.setting == this.linkedSetting)
 			this.select(settingsPacket.value, true);
 	}
 
@@ -1110,12 +1110,12 @@ function UI_ButtonGroup(o) {
 */
 
 function DataElement(o) {
-	o=be(o);
+	o = be(o);
 
-	this.setData = function(data) {
+	this.setData = function (data) {
 		this.data = data;
 	}
-	this.getData = function() {
+	this.getData = function () {
 		return this.data;
 	}
 
@@ -1124,8 +1124,8 @@ function DataElement(o) {
 
 
 function UI_Editable(o) {
-	o=be(o);
-	Object.assign(o,{
+	o = be(o);
+	Object.assign(o, {
 		node: o.node,
 		kind: ['Editable'].concat(o.kind || []),
 		html: o.html || '<div></div>',
@@ -1137,31 +1137,31 @@ function UI_Editable(o) {
 	this.$.onkeydown = (e) => this.filterNewlines(e);
 	this.$.oninput = (e) => this.filterTags(e);
 	this.keyl = new KeyListener(this.$)
-			.condition(e => {
-				return this.renaming;
-			})
-			.pre(e => this.filterNewlines(e))
-			.attach('submit', ['Enter'], e => this.confirm(e))
-			.attach('cancel', ['Escape'], e => this.exit());
+		.condition(e => {
+			return this.renaming;
+		})
+		.pre(e => this.filterNewlines(e))
+		.attach('submit', ['Enter'], e => this.confirm(e))
+		.attach('cancel', ['Escape'], e => this.exit());
 
 
 	this.filterNewlines = function filterNewlines(e) {
-	    if(e.which == 13) {
+		if (e.which == 13) {
 			e.preventDefault();
 			return false;
 		}
 		this.filterTags();
 	}
 	this.filterTags = function filterTags(e) {
-	    for(var i=0; i<this.$.children.length; i++) {
-    		this.$.children[0].parentNode.removeChild(this.$.children[0]);
-	    };
-	    if(this.$.innerHTML.length < 1)
-	    	this.$.innerHTML='<br>';
+		for (var i = 0; i < this.$.children.length; i++) {
+			this.$.children[0].parentNode.removeChild(this.$.children[0]);
+		};
+		if (this.$.innerHTML.length < 1)
+			this.$.innerHTML = '<br>';
 	}
 
 	this.edit = function edit(state) {
-		switch(state) {
+		switch (state) {
 			case ON:
 			default:
 				this.editing = true;
@@ -1173,10 +1173,10 @@ function UI_Editable(o) {
 				this.editing = !this.editing;
 				break;
 		}
-		if(this.editing) {
+		if (this.editing) {
 			this.$.classList.add('edit');
 			this.$.contentEditable = true;
-		}else{
+		} else {
 			this.$.classList.remove('edit');
 			this.$.contentEditable = false;
 		}
@@ -1188,17 +1188,17 @@ function UI_Editable(o) {
 
 	this.confirm = function confirm(e) {
 		this.edit(false);
-		this.trigger({struct:this, action:'confirm', text: this.getText()}, e)
+		this.trigger({ struct: this, action: 'confirm', text: this.getText() }, e)
 	}
 
 	this.cancel = function cancel(e) {
 		this.edit(false);
-		this.trigger({struct:this, action:'cancel'}, e)
+		this.trigger({ struct: this, action: 'cancel' }, e)
 	}
 }
 
 function UI_Waitable(o) {
-	o=be(o);
+	o = be(o);
 	this.startWait = function startWait() {
 		this.$.classList.add('w');
 	}
@@ -1208,7 +1208,7 @@ function UI_Waitable(o) {
 }
 
 function UI_Slider(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Slider'].concat(o.kind || []),
@@ -1222,15 +1222,15 @@ function UI_Slider(o) {
 		next: this.$.querySelector('.next')
 	}
 
-	this.items = new UI_Selector({node: this._.items, singular: true, persistent: true, toggleClass: 's', held: true});
+	this.items = new UI_Selector({ node: this._.items, singular: true, persistent: true, toggleClass: 's', held: true });
 
 	this.move = function move(direction) {
-		if(direction == 'left') {
+		if (direction == 'left') {
 			this._.items.insertBefore(this._.items.lastElementChild, this._.items.firstElementChild);
-			this.items.select(this._.items.children.indexOf(this.items.selectedItems[0].$)-1);
-		}else if(direction == 'right') {
+			this.items.select(this._.items.children.indexOf(this.items.selectedItems[0].$) - 1);
+		} else if (direction == 'right') {
 			this._.items.appendChild(this._.items.firstElementChild);
-			this.items.select(this._.items.children.indexOf(this.items.selectedItems[0].$)+1);
+			this.items.select(this._.items.children.indexOf(this.items.selectedItems[0].$) + 1);
 		}
 	}
 
@@ -1241,11 +1241,11 @@ function UI_Slider(o) {
 
 Util = {}
 
-Util.parseVKTags = function(text) {
-var matches = /\[([a-zA-Z0-9_]+)\|(.+)\]/g.exec(text);
-	if(matches != null) {
-		return text.replace(matches[0], '<a href="https://vk.com/'+matches[1]+'">'+matches[2]+'</a>')
-	}else{
+Util.parseVKTags = function (text) {
+	var matches = /\[([a-zA-Z0-9_]+)\|(.+)\]/g.exec(text);
+	if (matches != null) {
+		return text.replace(matches[0], '<a href="https://vk.com/' + matches[1] + '">' + matches[2] + '</a>')
+	} else {
 		return text;
 	}
 }
@@ -1253,11 +1253,11 @@ var matches = /\[([a-zA-Z0-9_]+)\|(.+)\]/g.exec(text);
 var UIs = document.querySelectorAll('*[data-ui]');
 var toUI = [];
 UIs.forEach(node => {
-	toUI.push({node: node, depth: alg.getDepth(node)})
+	toUI.push({ node: node, depth: alg.getDepth(node) })
 });
-toUI.sort((a,b) => {
-	return a.depth>b.depth?1:-1;
+toUI.sort((a, b) => {
+	return a.depth > b.depth ? 1 : -1;
 })
 toUI.forEach(item => {
-	new window[item.node.getAttribute('data-ui')]({node: item.node})
+	new window[item.node.getAttribute('data-ui')]({ node: item.node })
 });

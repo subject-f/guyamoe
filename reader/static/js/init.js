@@ -10,34 +10,34 @@ let SCROLL_TIMER = null;
 
 function shadowScroll() {
 	PROGRAMMATIC_SCROLL = true;
-	if(SCROLL_TIMER) clearTimeout(SCROLL_TIMER);
+	if (SCROLL_TIMER) clearTimeout(SCROLL_TIMER);
 	SCROLL_TIMER = setTimeout(() => {
 		PROGRAMMATIC_SCROLL = false;
 	}, 50)
-} 
+}
 
 function scroll(element, x, y, noshadow) {
-//	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
-	if(!noshadow) shadowScroll();
+	//	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
+	if (!noshadow) shadowScroll();
 	//console.log(element, 'scrolled to', x, y)
 	element.scroll(x, y)
 }
 
 function LoadHandler(o) {
-	o=be(o);
+	o = be(o);
 	Linkable.call(this);
 
-	this.parseSCP = function(url) {
+	this.parseSCP = function (url) {
 		url = url.split('/');
 		return {
 			series: url[url.length - 3],
-			chapter: url[url.length - 2].replace('-','.'),
+			chapter: url[url.length - 2].replace('-', '.'),
 			page: parseInt(url[url.length - 1] - 1),
 		}
 	}
 
 	this.onload = () => {
-	var SCP = this.parseSCP(document.location.pathname);
+		var SCP = this.parseSCP(document.location.pathname);
 		API.requestSeries(SCP.series)
 			.then(data => {
 				Reader.setSCP(SCP);
@@ -49,19 +49,19 @@ function LoadHandler(o) {
 }
 
 function ReaderAPI(o) {
-	o=be(o);
+	o = be(o);
 	Linkable.call(this);
 
 	this.url = o.url || '/api/';
-	this.seriesUrl =  this.url + 'series/';
+	this.seriesUrl = this.url + 'series/';
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
 	this.indexData = {};
 
-	this.infuseSeriesData = function(data) {
-		for(var num in data.chapters) {
-		var chapter = data.chapters[num];
+	this.infuseSeriesData = function (data) {
+		for (var num in data.chapters) {
+			var chapter = data.chapters[num];
 			chapter.images = {};
 			chapter.blurs = {};
 			chapter.previews = {};
@@ -69,7 +69,7 @@ function ReaderAPI(o) {
 			chapter.wides = {};
 
 			chapter.id = num;
-			for(var group in chapter.groups) {
+			for (var group in chapter.groups) {
 				chapter.images[group] = [];
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
@@ -77,37 +77,37 @@ function ReaderAPI(o) {
 				for (var i = 0; i < chapter.groups[group].length; i++) {
 					chapter.images[group].push(
 						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							+ group 
-							+ '/' 
-							+ chapter.groups[group][i]
+						+ data.slug
+						+ '/chapters/'
+						+ chapter.folder
+						+ '/'
+						+ group
+						+ '/'
+						+ chapter.groups[group][i]
 					)
 					chapter.blurs[group].push(
 						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_blur_"+ group
-							+ group+"_shrunk_blur" 
-							+ '/' 
-							+ chapter.groups[group][i]
+						+ data.slug
+						+ '/chapters/'
+						+ chapter.folder
+						+ '/'
+						// + "shrunk_blur_"+ group
+						+ group + "_shrunk_blur"
+						+ '/'
+						+ chapter.groups[group][i]
 					)
 					chapter.previews[group].push(
 						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_"+ group
-							+ group+"_shrunk" 
-							+ '/' 
-							+ chapter.groups[group][i]
+						+ data.slug
+						+ '/chapters/'
+						+ chapter.folder
+						+ '/'
+						// + "shrunk_"+ group
+						+ group + "_shrunk"
+						+ '/'
+						+ chapter.groups[group][i]
 					)
-					if(chapter.groups[group][i].indexOf('_w.') > -1) {
+					if (chapter.groups[group][i].indexOf('_w.') > -1) {
 						chapter.wides[group].push(i);
 					}
 				}
@@ -116,7 +116,7 @@ function ReaderAPI(o) {
 		return data;
 	}
 
-	this.requestSeries = function(slug) {
+	this.requestSeries = function (slug) {
 		this.seriesRequest = fetch(this.seriesUrl + slug + '/')
 			.then(response => response.json())
 			.then(seriesData => {
@@ -124,10 +124,10 @@ function ReaderAPI(o) {
 				seriesData.chaptersIndex =
 					Object.keys(
 						seriesData.chapters
-					).sort((a,b) => parseFloat(a) - parseFloat(b));
+					).sort((a, b) => parseFloat(a) - parseFloat(b));
 				seriesData.volMap = {};
 				for (var i = 0; i < seriesData.chaptersIndex.length; i++) {
-					if(!seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume])
+					if (!seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume])
 						seriesData.volMap[seriesData.chapters[seriesData.chaptersIndex[i]].volume] = seriesData.chaptersIndex[i];
 				}
 				this.data[slug] = seriesData;
@@ -136,18 +136,18 @@ function ReaderAPI(o) {
 		return this.seriesRequest;
 	}
 
-	this.requestIndex = function(o){
+	this.requestIndex = function (o) {
 		var formData = new FormData();
 		formData.append("searchQuery", o.query)
 		//formData.append("csrfmiddlewaretoken", CSRF_TOKEN)
-		return fetch('/api/search_index/'+ o.slug + '/', {
-				method: 'POST',
-				body: formData
-			})
+		return fetch('/api/search_index/' + o.slug + '/', {
+			method: 'POST',
+			body: formData
+		})
 			.then(response => response.json())
 			.then(searchData => {
 				this.S.out('indexUpdated', searchData);
-				return {result:searchData, query: o.query};
+				return { result: searchData, query: o.query };
 			})
 	}
 
@@ -157,7 +157,7 @@ function ReaderAPI(o) {
 	})
 }
 
-function SettingsHandler(){
+function SettingsHandler() {
 	Linkable.call(this);
 
 	this.all = {};
@@ -174,7 +174,7 @@ function SettingsHandler(){
 			'fit_width',
 			'fit_height'
 		],
-		(IS_MOBILE)?'fit_all_limit':'fit_width_limit',
+		(IS_MOBILE) ? 'fit_all_limit' : 'fit_width_limit',
 		{
 			'fit_none': 'Images are displayed in natural resolution.',
 			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
@@ -183,7 +183,7 @@ function SettingsHandler(){
 			'fit_all': 'Images expand to width or height.',
 			'fit_width': 'Images expand to max width.',
 			'fit_height': 'Images expand to max height.',
-		} 
+		}
 	)
 	this.all.layout = new Setting(
 		'layout',
@@ -255,19 +255,19 @@ function SettingsHandler(){
 	this.all.selectorPinned = new Setting(
 		'selectorPinned',
 		'Page selector',
-		(IS_MOBILE)?['selector-fade', 'selector-pinned']:['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
+		(IS_MOBILE) ? ['selector-fade', 'selector-pinned'] : ['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
 		'selector-fade',
 		{
-			'selector-pinned': (IS_MOBILE)?'':'Page selector pinned with number.',
+			'selector-pinned': (IS_MOBILE) ? '' : 'Page selector pinned with number.',
 			'selector-pinned-nonum': 'Page selector pinned without number.',
-			'selector-fade': (IS_MOBILE)?'':'Page selector is shown on hover.'
+			'selector-fade': (IS_MOBILE) ? '' : 'Page selector is shown on hover.'
 		}
 	)
 	this.all.preload = new Setting(
 		'preload',
 		'Preload amount',
-		[1,2,3,4,5,6,7,8,9,100],
-		(IS_MOBILE)?2:3,
+		[1, 2, 3, 4, 5, 6, 7, 8, 9, 100],
+		(IS_MOBILE) ? 2 : 3,
 		i => 'Reader will preload %i pages.'.replace('%i', i)
 			.replace('1 pages', '1 page')
 			.replace('100 pages', 'all pages')
@@ -307,15 +307,15 @@ function SettingsHandler(){
 		i => 'Scroll speed set to %i pixels.'.replace('%i', i)
 	)
 
-	this.sendInit = function() {
-		for(var setting in this.all) {
+	this.sendInit = function () {
+		for (var setting in this.all) {
 			this.S.out('settingsPacket', new SettingsPacket('change', setting, this.get(setting)))
 		}
 	}
 
-	this.serialize = function() {
-	var settings = {};
-		for(var setting in this.all) {
+	this.serialize = function () {
+		var settings = {};
+		for (var setting in this.all) {
 			settings[setting] = this.all[setting].get();
 		}
 		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
@@ -324,98 +324,98 @@ function SettingsHandler(){
 		return JSON.stringify(settings);
 	}
 
-	this.deserialize = function() {
-		if(!window.localStorage) return;
-	var settings = window.localStorage.getItem('settings');
-		if(!settings) return;
-		try{
+	this.deserialize = function () {
+		if (!window.localStorage) return;
+		var settings = window.localStorage.getItem('settings');
+		if (!settings) return;
+		try {
 			settings = JSON.parse(settings);
-			if(settings.VER && settings.VER != this.ver) {
+			if (settings.VER && settings.VER != this.ver) {
 				throw 'Settings ver changed';
 			}
-			for(var setting in settings) {
-				if(setting == 'VER') continue;
+			for (var setting in settings) {
+				if (setting == 'VER') continue;
 				this.set(setting, settings[setting], true);
 			}
-		}catch (e){
-			localStorage.setItem('settings','');
+		} catch (e) {
+			localStorage.setItem('settings', '');
 			console.warn('Settings were found to be corrupted and so were reset.')
 		}
 	}
 
-	this.query = function(qu, or) {
-		if(or) {
-			for(var key in qu) {
-			var setting = this.all[key];
-				if(qu[key][0] == '!') {
-					if(qu[key].substr(1) != setting.get()) return true;
-				}else{
-					if(qu[key] == setting.get()) return true;
+	this.query = function (qu, or) {
+		if (or) {
+			for (var key in qu) {
+				var setting = this.all[key];
+				if (qu[key][0] == '!') {
+					if (qu[key].substr(1) != setting.get()) return true;
+				} else {
+					if (qu[key] == setting.get()) return true;
 				}
 			}
 			return false;
-		}else{
-			for(var key in qu) {
-			var setting = this.all[key];
-				if(qu[key][0] == '!') {
-					if(qu[key].substr(1) == setting.get()) return false;
-				}else{
-					if(qu[key] != setting.get()) return false;
+		} else {
+			for (var key in qu) {
+				var setting = this.all[key];
+				if (qu[key][0] == '!') {
+					if (qu[key].substr(1) == setting.get()) return false;
+				} else {
+					if (qu[key] != setting.get()) return false;
 				}
 			}
 		}
 		return true;
 	}
 
-	this.get = function(settingID){
+	this.get = function (settingID) {
 		return this.all[settingID].get();
 	}
-	this.set = function(settingID, value, silent){
-	var setting = this.all[settingID];
-		if(setting.set(value) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
+	this.set = function (settingID, value, silent) {
+		var setting = this.all[settingID];
+		if (setting.set(value) == false) return;
+		if (setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
 
-	this.cycle = function(settingID, options, silent){
-	var setting = this.all[settingID];
-		if(setting.cycle(options) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
+	this.cycle = function (settingID, options, silent) {
+		var setting = this.all[settingID];
+		if (setting.cycle(options) == false) return;
+		if (setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
-	this.next = function(settingID, silent) {
-	var setting = this.all[settingID];
+	this.next = function (settingID, silent) {
+		var setting = this.all[settingID];
 		setting.next();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
+		if (setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
-	this.prev = function(settingID, silent) {
-	var setting = this.all[settingID];
+	this.prev = function (settingID, silent) {
+		var setting = this.all[settingID];
 		setting.prev();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
+		if (setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
 
-	this.refreshAll = function() {
-		for(var key in this.all) {
+	this.refreshAll = function () {
+		for (var key in this.all) {
 			this.all[key].refresh()
 		}
 	}
 
-	this.settingUpdated = function(setting, silent) {
+	this.settingUpdated = function (setting, silent) {
 		this.refreshAll();
-		if(window.localStorage)
+		if (window.localStorage)
 			window.localStorage.setItem('settings', this.serialize())
-		if(silent != true) {
+		if (silent != true) {
 			this.S.out('settingsPacket', new SettingsPacket('change', setting.name, setting.setting))
 			this.S.out('message', setting.getFormatted());
 		}
 	}
 
 	this.packetHandler = (packet) => {
-		switch(packet.type) {
+		switch (packet.type) {
 			case 'set':
-				this.set(packet.setting, packet.value, packet.silent); 
+				this.set(packet.setting, packet.value, packet.silent);
 				break;
 			case 'cycle':
 				this.cycle(packet.setting, packet.value, packet.silent);
@@ -450,80 +450,80 @@ function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 	this.strings = strings;
 	this.postUpdate = postUpdate;
 
-	this.refresh = function() {
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(this.get()) < 0)
+	this.refresh = function () {
+		if (this.options instanceof Function) {
+			if (this.options() instanceof Array) {
+				if (this.options().indexOf(this.get()) < 0)
 					this.set(this.default);
-			}else{
-				if(this.options(this.get()) == null) {
+			} else {
+				if (this.options(this.get()) == null) {
 					this.set(this.default);
 				}
 			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(this.get()) < 0)
+		} else if (this.options instanceof Array) {
+			if (this.options.length > 0 && this.options.indexOf(this.get()) < 0)
 				this.set(this.default);
-		}else{
+		} else {
 			// console.warn(this.name + ' has no valid options.')
 		}
 	}
 
-	this.cycle = function(options) {
-		if(this.options instanceof Function) {
-			if(!(options = this.options()) instanceof Array) {
+	this.cycle = function (options) {
+		if (this.options instanceof Function) {
+			if (!(options = this.options()) instanceof Array) {
 				console.log('Option', this, 'did not return an array to cycle on.')
 				return false;
 			}
-		}else if(!(options = this.options) instanceof Array) {
+		} else if (!(options = this.options) instanceof Array) {
 			console.log('Option', this, 'was not an array nor a function.')
 			return false;
 		}
-		if(options) {
-		var index = options.indexOf(this.setting);
+		if (options) {
+			var index = options.indexOf(this.setting);
 			return this.set(
-				(index+1 > options.length - 1)?options[0]:options[index+1]
+				(index + 1 > options.length - 1) ? options[0] : options[index + 1]
 			);
 		}
 		return false;
 	}
-	this.next = function() {
-		if(this.options.indexOf(this.setting) < this.options.length - 1) {
+	this.next = function () {
+		if (this.options.indexOf(this.setting) < this.options.length - 1) {
 			this.set(this.options[this.options.indexOf(this.setting) + 1])
 		}
 	}
-	this.prev = function() {
-		if(this.options.indexOf(this.setting) > 0) {
+	this.prev = function () {
+		if (this.options.indexOf(this.setting) > 0) {
 			this.set(this.options[this.options.indexOf(this.setting) - 1])
 		}
 	}
-	this.get = function() {
+	this.get = function () {
 		return this.setting;
 	}
-	this.getFormatted = function() {
-		if(this.strings) {
-			if(this.strings instanceof Function) {
+	this.getFormatted = function () {
+		if (this.strings) {
+			if (this.strings instanceof Function) {
 				return this.strings(this.setting);
 			}
 			return this.strings[this.setting];
-		}else{
+		} else {
 			return '';
 		}
 	}
-	this.set = function(value) {
-		if(value == this.setting) return false;
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(value) < 0)
+	this.set = function (value) {
+		if (value == this.setting) return false;
+		if (this.options instanceof Function) {
+			if (this.options() instanceof Array) {
+				if (this.options().indexOf(value) < 0)
 					throw new Error(this.name + ' must be one of: ' + this.options().join(', '))
-			}else{
-				if(this.options(value) == null) {
+			} else {
+				if (this.options(value) == null) {
 					throw new Error(this.name + ' did not satisfy option constraints.');
 				}
 			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(value) < 0)
+		} else if (this.options instanceof Array) {
+			if (this.options.length > 0 && this.options.indexOf(value) < 0)
 				throw new Error(this.name + ' must be one of: ' + this.options.join(', '))
-		}else{
+		} else {
 			throw new Error(this.name + ' has no valid options.')
 		}
 		this.setting = value;
@@ -531,35 +531,35 @@ function Setting(name, prettyName, options, dflt, strings, postUpdate) {
 }
 
 function UI_Tooltippy(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Tooltippy'].concat(o.kind || []),
 		html: o.html || '<div></div>',
 	});
-	
+
 	this.attached = false;
 
 	this.handler = e => {
-	var tip = e.target.getAttribute('data-tip');
-		if(tip) {
+		var tip = e.target.getAttribute('data-tip');
+		if (tip) {
 			this.attached = true;
-		var rect = e.target.getBoundingClientRect()
-		var bodyRect = document.body.getBoundingClientRect();
-		var align = e.target.getAttribute('data-tip-align')
+			var rect = e.target.getBoundingClientRect()
+			var bodyRect = document.body.getBoundingClientRect();
+			var align = e.target.getAttribute('data-tip-align')
 			this.set(tip);
 			this.$.style.display = 'block';
-			if(IS_MOBILE) return;
-			if(align == 'right')
+			if (IS_MOBILE) return;
+			if (align == 'right')
 				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) - rect.height + this.$.offsetHeight + 2 + 'px';
 			else
 				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + 2 + 'px';
-			if(e.pageX > window.innerWidth / 2) {
+			if (e.pageX > window.innerWidth / 2) {
 				this.$.style.left = 'unset';
 				this.$.style.right = window.innerWidth - rect.left - rect.width + 'px';
-			}else{
+			} else {
 				this.$.style.right = 'unset';
-				if(align == 'right')
+				if (align == 'right')
 					this.$.style.left = rect.left + rect.width + 4 + 'px';
 				else
 					this.$.style.left = rect.left + 'px';
@@ -567,15 +567,15 @@ function UI_Tooltippy(o) {
 		}
 	}
 
-	this.set = function(text) {
-		if(text.length < 1) return;
+	this.set = function (text) {
+		if (text.length < 1) return;
 		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
 		this.$.innerHTML = text;
-		if(!this.attached || IS_MOBILE) {
+		if (!this.attached || IS_MOBILE) {
 			this.$.style.display = 'block';
-			if(IS_MOBILE) {
+			if (IS_MOBILE) {
 				this.$.style.bottom = window.innerHeight * 0.20 + 'px';
-			}else{
+			} else {
 				this.$.style.bottom = window.innerHeight * 0.90 + 'px';
 			}
 			this.$.style.left = 'unset';
@@ -587,22 +587,22 @@ function UI_Tooltippy(o) {
 
 	}
 
-	this.reset = function (e) { 
+	this.reset = function (e) {
 		this.attached = false;
 		this.$.style.display = 'none';
 	}
 
-	this.attach = function(element, text, align) {
+	this.attach = function (element, text, align) {
 		element.onmouseover = e => this.handler(e);
 		element.onmouseleave = e => this.reset(e)
 		element.setAttribute('data-tip', text);
-		if(align) element.setAttribute('data-tip-align', align);
+		if (align) element.setAttribute('data-tip-align', align);
 		return this;
 	}
 }
 
 function UI_Reader(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Reader'].concat(o.kind || []),
@@ -614,7 +614,7 @@ function UI_Reader(o) {
 		chapter: 1,
 		page: 0,
 	};
-	
+
 	// new KeyListener()
 	// 	.condition(() => Loda.$.classList.contains('hidden'))
 	// 	.condition(() => Settings.all.layout.get() != 'ttb')
@@ -624,7 +624,7 @@ function UI_Reader(o) {
 	// 	.condition(() => Loda.$.classList.contains('hidden'))
 	// 	.condition(() => Settings.all.layout.get() == 'ttb')
 	// 	.pre(() => this._.image_container.focus())
-	
+
 
 	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
@@ -646,11 +646,11 @@ function UI_Reader(o) {
 			this.copyShortLink(s);
 		})
 		.attach('minus', ['Minus'], s => {
-			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
+			if (Settings.query({ fit: 'fit_width' }) || Settings.query({ fit: 'fit_width_limit' }))
 				Settings.prev('zoom')
 		})
 		.attach('enter', ['Enter'], s => {
-			if(this.SCP.page == this.SCP.lastPage)
+			if (this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
 		})
 
@@ -658,7 +658,7 @@ function UI_Reader(o) {
 		.attach('search', ['Ctrl+KeyF'], s => {
 			Loda.display('search')
 		})
-		
+
 
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'ltr')
@@ -713,38 +713,38 @@ function UI_Reader(o) {
 		linkedSetting: 'fit'
 	}).refresh().S.biLink(Settings);
 
-	this.updateData = function(data) {
+	this.updateData = function (data) {
 		this.current = data;
 	}
 
-	this.setSCP = function(SCP) {
-		if(SCP.series) this.SCP.series = SCP.series;
-		if(SCP.chapter) this.SCP.chapter = SCP.chapter;
-		if(SCP.page) this.SCP.page = SCP.page;
+	this.setSCP = function (SCP) {
+		if (SCP.series) this.SCP.series = SCP.series;
+		if (SCP.chapter) this.SCP.chapter = SCP.chapter;
+		if (SCP.page) this.SCP.page = SCP.page;
 	}
-	this.displaySCP = function(SCP) {
+	this.displaySCP = function (SCP) {
 		this.drawReader(SCP.series);
 		this.drawChapter(SCP.chapter, SCP.page);
 		this.S.out('init');
 	}
 
-	this.drawReader = function(slug) {
-		if(slug) this.SCP.series = slug;
+	this.drawReader = function (slug) {
+		if (slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		this._.title.innerHTML = '<a href="/read/manga/'+this.current.slug+'">'+this.current.title+'</a>';
-	var chapterElements = [];
-	var volElements = {};
+		this._.title.innerHTML = '<a href="/read/manga/' + this.current.slug + '">' + this.current.title + '</a>';
+		var chapterElements = [];
+		var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
-		var chapterNumber = this.current.chaptersIndex[i];
-		var chapter = this.current.chapters[chapterNumber];
+			var chapterNumber = this.current.chaptersIndex[i];
+			var chapter = this.current.chapters[chapterNumber];
 			chapterElements.push({
 				text: chapterNumber + ' - ' + chapter.title,
 				value: chapterNumber
 			});
 
 		}
-		volElements = Object.keys(this.current.volMap).sort((a,b) => parseFloat(b) - parseFloat(a)).map(item => {
+		volElements = Object.keys(this.current.volMap).sort((a, b) => parseFloat(b) - parseFloat(a)).map(item => {
 			return {
 				value: item,
 			}
@@ -760,21 +760,21 @@ function UI_Reader(o) {
 		//this._.close.href = '/read/manga/' + this.SCP.series;
 	}
 
-	this.drawGroup = function(group) {
-		Settings.set('groupPreference', group);	
+	this.drawGroup = function (group) {
+		Settings.set('groupPreference', group);
 		this.drawChapter();
 	}
 
-	this.drawChapter = function(chapter, page) {
-		if(chapter) this.SCP.chapter = chapter;
-	var chapterObj = this.current.chapters[this.SCP.chapter];
+	this.drawChapter = function (chapter, page) {
+		if (chapter) this.SCP.chapter = chapter;
+		var chapterObj = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = chapterObj.volume;
 		this.SCP.chapterName = chapterObj.title
-	var group = Settings.all.groupPreference.get();
-		if(group === undefined || chapterObj.groups[group] == undefined) {
-			if(this.current.preferred_sort && chapterObj.groups[this.current.preferred_sort[0]] != undefined){
+		var group = Settings.all.groupPreference.get();
+		if (group === undefined || chapterObj.groups[group] == undefined) {
+			if (this.current.preferred_sort && chapterObj.groups[this.current.preferred_sort[0]] != undefined) {
 				group = this.current.preferred_sort[0]
-			}else{
+			} else {
 				group = Object.keys(chapterObj.groups)[0];
 			}
 		}
@@ -785,38 +785,38 @@ function UI_Reader(o) {
 		this.shuffleRandomChapter();
 
 		this.groupList.clear();
-	var groupElements = {};
-		for(var grp in chapterObj.groups) {
+		var groupElements = {};
+		for (var grp in chapterObj.groups) {
 			groupElements[grp] = new UI_SimpleListItem({
-				html: '<div' + ((grp==group)?' class="is-active"':'') + '></div>',
+				html: '<div' + ((grp == group) ? ' class="is-active"' : '') + '></div>',
 				text: this.current.groups[grp]
 			})
 		}
 		this.groupList.addMapped(groupElements);
 
 		this.imageView.drawImages(chapterObj.images[group], chapterObj.wides[group]);
-		if(Settings.get('previews') == 'show') this.drawPreviews();
+		if (Settings.get('previews') == 'show') this.drawPreviews();
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(chapterObj.volume, true);
 
-		if(this.SCP.chapter == this.SCP.lastChapter) {
+		if (this.SCP.chapter == this.SCP.lastChapter) {
 			this._.chap_next.classList.add('disabled');
-		}else{
+		} else {
 			this._.chap_next.classList.remove('disabled');
 		}
-		if(this.SCP.chapter == this.SCP.firstChapter) {
+		if (this.SCP.chapter == this.SCP.firstChapter) {
 			this._.chap_prev.classList.add('disabled');
-		}else{
+		} else {
 			this._.chap_prev.classList.remove('disabled');
 		}
-		if(this.SCP.volume >= Math.max.apply(null, Object.keys(this.current.volMap))) {
+		if (this.SCP.volume >= Math.max.apply(null, Object.keys(this.current.volMap))) {
 			this._.vol_next.classList.add('disabled');
-		}else{
+		} else {
 			this._.vol_next.classList.remove('disabled');
 		}
-		if(this.SCP.volume <= Math.min.apply(null, Object.keys(this.current.volMap))) {
+		if (this.SCP.volume <= Math.min.apply(null, Object.keys(this.current.volMap))) {
 			this._.vol_prev.classList.add('disabled');
-		}else{
+		} else {
 			this._.vol_prev.classList.remove('disabled');
 		}
 
@@ -831,12 +831,12 @@ function UI_Reader(o) {
 		return this;
 	}
 
-	this.displayPage = function(page, dry) {
-		if(page == 'last')
+	this.displayPage = function (page, dry) {
+		if (page == 'last')
 			this.SCP.page = this.SCP.lastPage;
 		else
-			if(page !== undefined) this.SCP.page = page;
-		
+			if (page !== undefined) this.SCP.page = page;
+
 		this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
 
 		this.imageView.selectPage(this.SCP.page, dry);
@@ -845,37 +845,37 @@ function UI_Reader(o) {
 		this.S.out('SCP', this.SCP);
 	}
 
-	this.showPreviews = function(state) {
-		if(state == 'show') {
+	this.showPreviews = function (state) {
+		if (state == 'show') {
 			this.$.classList.add('previews-open');
 			this.drawPreviews();
-		}else{
+		} else {
 			this.$.classList.remove('previews-open')
 		}
 
 	}
 
-	this.drawPreviews = function() {
+	this.drawPreviews = function () {
 		this.previews.clear();
 		this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
 			preview => {
 				this.previews.add(new UI_Dummy({
-					html: "<img src='"+preview+"' />"
+					html: "<img src='" + preview + "' />"
 				}))
 			}
 		)
 		this.previews.select(this.SCP.page, undefined, undefined, true);
 	}
 
-	this.selectVolume = function(vol) {
-		if(this.current.volMap[vol])
+	this.selectVolume = function (vol) {
+		if (this.current.volMap[vol])
 			this.drawChapter(this.current.volMap[vol]);
 	}
 
-	this.plusOne = function() {
+	this.plusOne = function () {
 		clearTimeout(this.plusOneTimer);
 		this.plusOneTimer = setTimeout(i => {
-		var formData = new FormData();
+			var formData = new FormData();
 			formData.append("series", this.SCP.series)
 			formData.append("group", this.SCP.group)
 			formData.append("chapter", this.SCP.chapter)
@@ -883,24 +883,24 @@ function UI_Reader(o) {
 				method: 'POST',
 				body: formData
 			})
-		}, 20*1000)
+		}, 20 * 1000)
 	}
 
 
-	this.nextChapter = function(){
-		if(this.SCP.chapter != this.SCP.lastChapter) {
-		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
-			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
+	this.nextChapter = function () {
+		if (this.SCP.chapter != this.SCP.lastChapter) {
+			var index = this.current.chaptersIndex.indexOf('' + this.SCP.chapter);
+			if (index < 0) throw new Error('Chapter advance failed: invalid base index.')
 			this.drawChapter(
 				this.current.chaptersIndex[index + 1],
 				0
 			)
 		}
 	}
-	this.prevChapter = function(page) {
-		if(this.SCP.chapter != this.SCP.firstChapter) {
-		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
-			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
+	this.prevChapter = function (page) {
+		if (this.SCP.chapter != this.SCP.firstChapter) {
+			var index = this.current.chaptersIndex.indexOf('' + this.SCP.chapter);
+			if (index < 0) throw new Error('Chapter stepback failed: invalid base index.')
 			this.drawChapter(
 				this.current.chaptersIndex[index - 1],
 				page || 0
@@ -908,45 +908,45 @@ function UI_Reader(o) {
 		}
 	}
 
-	this.nextPage = function() {
-	var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
-		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
+	this.nextPage = function () {
+		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+		if (nextWrapper >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
 		} else {
 			this.displayPage(this.imageView.imageWrappersMask[nextWrapper][0])
 		}
 	}
 
-	this.prevPage = function(){
-		if(this.SCP.page > 0) 
+	this.prevPage = function () {
+		if (this.SCP.page > 0)
 			this.displayPage(this.SCP.page - 1)
 		else {
 			this.prevChapter('last');
 		}
 	}
-	this.nextVolume = function(){
-		this.selectVolume(+this.SCP.volume+1);
+	this.nextVolume = function () {
+		this.selectVolume(+this.SCP.volume + 1);
 	}
-	this.prevVolume = function(){
-		this.selectVolume(+this.SCP.volume-1)
+	this.prevVolume = function () {
+		this.selectVolume(+this.SCP.volume - 1)
 	}
 
-	this.copyShortLink = function() {
-	var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
+	this.copyShortLink = function () {
+		var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/' + (this.SCP.page + 1);
 		navigator.clipboard.writeText(url)
-		.then(function() {
-		  Tooltippy.set('Link copied to clipboard!');
-		}, function(err) {
-		  Tooltippy.set('Link copy failed ('+url+')');
-		});
+			.then(function () {
+				Tooltippy.set('Link copied to clipboard!');
+			}, function (err) {
+				Tooltippy.set('Link copy failed (' + url + ')');
+			});
 	}
 
-	this.openComments = function() {
-		if(this.SCP.series && this.SCP.chapter !== undefined)
+	this.openComments = function () {
+		if (this.SCP.series && this.SCP.chapter !== undefined)
 			window.location.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
-	this.setFit = function(fit) {
+	this.setFit = function (fit) {
 		Settings.all.fit.options.forEach(item => {
 			this.$.classList.remove(item);
 			this._.fit_button.classList.remove(item);
@@ -956,70 +956,70 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
-	this.setLayout = function(layout, silent) {
+	this.setLayout = function (layout, silent) {
 		Settings.all.layout.options.forEach(item => {
 			this.$.classList.remove(item);
 		});
 		this.$.classList.add(layout);
 		this.stickHeader();
 
-		if(!silent) {
+		if (!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
 		}
 	}
 
-	this.setSelectorPin = function(state) {
+	this.setSelectorPin = function (state) {
 		Settings.all.selectorPinned.options.forEach(item => {
 			this.$.classList.remove(item);
 			this.$.classList.remove('nonum');
 		});
-		if(state == 'selector-pinned-nonum') {
+		if (state == 'selector-pinned-nonum') {
 			this.$.classList.add('selector-pinned');
 			this.$.classList.add('nonum');
-		}else{
+		} else {
 			this.$.classList.add(state);
 		}
 		this.stickHeader();
 	}
 
-	this.setPreload = function(number){
+	this.setPreload = function (number) {
 		this.$.setAttribute('data-preload', number);
 	}
 
-	this.setZoom = function(zoom) {
+	this.setZoom = function (zoom) {
 		this.imageView.updateScrollPosition();
 		Settings.all.zoom.options.forEach(item => {
-			this.$.classList.remove('zl'+item);
+			this.$.classList.remove('zl' + item);
 		});
-		this.$.classList.add('zl'+zoom);
+		this.$.classList.add('zl' + zoom);
 		setTimeout(this.imageView.updateWides, 1);
 	}
-	this.setSpread = function(spread) {
+	this.setSpread = function (spread) {
 		Settings.all.spread.options.forEach(item => {
 			this.$.classList.remove(item);
 		});
 		this.$.classList.add(spread);
 	}
 
-	this.setSidebar = function(state) {
+	this.setSidebar = function (state) {
 		this.imageView.updateScrollPosition();
-		if(state == 'hide') {
+		if (state == 'hide') {
 			this.$.classList.add('sidebar-hidden');
-		}else{
+		} else {
 			this.$.classList.remove('sidebar-hidden');
 		}
 		this.imageView.updateWides();
 	}
 
 	this.stickHeader = () => {
-		if(IS_MOBILE) {
-			if(this._.rdr_aside_content.offsetTop <= window.scrollY && Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
+		if (IS_MOBILE) {
+			if (this._.rdr_aside_content.offsetTop <= window.scrollY && Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
 				this.$.classList.add('stick');
-			var prescroll = document.documentElement.scrollTop;
+				var prescroll = document.documentElement.scrollTop;
 				this._.rdr_aside_content.style.paddingTop = this._.rdr_selector.offsetHeight + 'px';
 				scroll(document.documentElement, 0, prescroll);
-			}else{
+			} else {
 				this.$.classList.remove('stick');
 				prescroll = document.documentElement.scrollTop;
 				this._.rdr_aside_content.style.paddingTop = '0px';
@@ -1029,29 +1029,29 @@ function UI_Reader(o) {
 	}
 
 	this.enqueuePreload = url => {
-	var newPreload = 'url("'+url+'")';
-	this._.preload_entity.style.background = newPreload;
-	// var preloads = this._.preload_entity.children.map(item => item.style.background);
-	// 	if(preloads.indexOf(newPreload) < 0) {
-	// 	var newElement = document.createElement('div');
-	// 		newElement.style.background = newPreload;
-	// 		this._.preload_entity.appendChild(newElement);
-	//	}
+		var newPreload = 'url("' + url + '")';
+		this._.preload_entity.style.background = newPreload;
+		// var preloads = this._.preload_entity.children.map(item => item.style.background);
+		// 	if(preloads.indexOf(newPreload) < 0) {
+		// 	var newElement = document.createElement('div');
+		// 		newElement.style.background = newPreload;
+		// 		this._.preload_entity.appendChild(newElement);
+		//	}
 	}
 
-	this.eventRouter = function(event){
+	this.eventRouter = function (event) {
 		({
 			'nextPage': () => this.nextPage(),
 			'prevPage': () => this.prevPage()
 		})[event.type](event.data)
 	}
 
-	this.settingsRouter = function(o) {
-		if(o.type != 'change') return;
-	var settings = {
+	this.settingsRouter = function (o) {
+		if (o.type != 'change') return;
+		var settings = {
 			'fit': o => this.setFit(o),
 			'layout': o => this.setLayout(o),
-			'groupPreference': o => {},
+			'groupPreference': o => { },
 			'selectorPinned': o => this.setSelectorPin(o),
 			'preload': o => this.setPreload(o),
 			'sidebar': o => this.setSidebar(o),
@@ -1061,18 +1061,18 @@ function UI_Reader(o) {
 			'spreadCount': o => this.drawChapter(),
 			'spreadOffset': o => this.drawChapter(),
 		};
-		if(settings[o.setting]) settings[o.setting](o.value);
+		if (settings[o.setting]) settings[o.setting](o.value);
 	}
 
-	this.shuffleRandomChapter = function() {
-		if(this.SCP.chapter == '46.5' && this.SCP.series == 'Kaguya-Wants-To-Be-Confessed-To') {
+	this.shuffleRandomChapter = function () {
+		if (this.SCP.chapter == '46.5' && this.SCP.series == 'Kaguya-Wants-To-Be-Confessed-To') {
 			this._.random_chapter.classList.remove('is-hidden');
 		} else {
 			this._.random_chapter.classList.add('is-hidden');
 			return;
 		}
 
-		if(!this.current.chapters[this.SCP.chapter].previewsBackup)
+		if (!this.current.chapters[this.SCP.chapter].previewsBackup)
 			this.current.chapters[this.SCP.chapter].previewsBackup = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].slice();
 		var previews = this.current.chapters[this.SCP.chapter].previewsBackup;
 		var pages = this.current.chapters[this.SCP.chapter].images[this.SCP.group];
@@ -1087,18 +1087,18 @@ function UI_Reader(o) {
 			}
 			return array;
 		}
-	var subarr = previews.slice(4,16);
+		var subarr = previews.slice(4, 16);
 		subarr.unshift(subarr.pop());
-	var uarr = [];
-		for(var i=0; i<subarr.length; i=i+2) {
-			uarr.push([subarr[i], subarr[i+1]])
-			shuffle(uarr[uarr.length-1]);
+		var uarr = [];
+		for (var i = 0; i < subarr.length; i = i + 2) {
+			uarr.push([subarr[i], subarr[i + 1]])
+			shuffle(uarr[uarr.length - 1]);
 		}
 		uarr = shuffle(uarr);
 		uarr = uarr.reduce((acc, val) => acc.concat(val), []);
 
-		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(uarr,previews.slice(-1));
-		this.current.chapters[this.SCP.chapter].images[this.SCP.group] = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].map(p => p.replace('_shrunk',''))
+		this.current.chapters[this.SCP.chapter].previews[this.SCP.group] = previews.slice(0, 4).concat(uarr, previews.slice(-1));
+		this.current.chapters[this.SCP.chapter].images[this.SCP.group] = this.current.chapters[this.SCP.chapter].previews[this.SCP.group].map(p => p.replace('_shrunk', ''))
 	}
 
 	this._.chap_prev.onmousedown = e => this.prevChapter();
@@ -1148,8 +1148,8 @@ function UI_Reader(o) {
 		.attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
 		.attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
 		.attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
-		// .attach(this._.zoom_level_plus, 'Increase zoom level')
-		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
+	// .attach(this._.zoom_level_plus, 'Increase zoom level')
+	// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
 
 	this.S.mapIn({
@@ -1166,35 +1166,35 @@ function UI_Reader(o) {
 }
 
 function UI_ReaderImageView(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['ReaderImageView'].concat(o.kind || []),
 	});
 	Linkable.call(this);
 	this.firstDraw = true;
-	this.imageContainer = new UI_Tabs({node: this._.image_container})
-	
-	this.getScrollElement = function() {
-		if(Settings.get('layout') == 'ttb') {
-			if(IS_MOBILE) {
+	this.imageContainer = new UI_Tabs({ node: this._.image_container })
+
+	this.getScrollElement = function () {
+		if (Settings.get('layout') == 'ttb') {
+			if (IS_MOBILE) {
 				return document.documentElement;
-			}else{
+			} else {
 				return this._.image_container;
 			}
-		}else{
+		} else {
 			return this.selectedWrapper.$;
 		}
 	}
 
 	new KeyListener(document.body, 'hold')
 		.attach('slideDown', ['ArrowDown'], e => {
-		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta'), true)
+			var scr = this.getScrollElement();
+			scroll(scr, scr.scrollLeft, scr.scrollTop + Settings.get('scrollYDelta'), true)
 		})
 		.attach('slideUp', ['ArrowUp'], e => {
-		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta'), true)
+			var scr = this.getScrollElement();
+			scroll(scr, scr.scrollLeft, scr.scrollTop - Settings.get('scrollYDelta'), true)
 		});
 
 	this.scroll = {
@@ -1207,30 +1207,30 @@ function UI_ReaderImageView(o) {
 	}
 
 	document.onscroll = this._.image_container.onscroll = e => {
-		if(PROGRAMMATIC_SCROLL) return;
-		if(!this.imageList) return;
-		if(Settings.all.layout.get() != 'ttb') return;
+		if (PROGRAMMATIC_SCROLL) return;
+		if (!this.imageList) return;
+		if (Settings.all.layout.get() != 'ttb') return;
 
 		Reader.stickHeader();
-	var scrollTop = (e.target.scrollingElement)?
-				e.target.scrollingElement.scrollTop:
-				undefined
+		var scrollTop = (e.target.scrollingElement) ?
+			e.target.scrollingElement.scrollTop :
+			undefined
 			|| e.target.scrollTop;
 		// console.log('wideUpdate fire')
-		if(!this.scroll.anchorRAF) {
+		if (!this.scroll.anchorRAF) {
 			this.updateScrollPosition();
 		}
-	this.scroll.direction = scrollTop > this.scroll.prevY?1:-1;
-	var st = scrollTop + document.documentElement.clientHeight * (this.scroll.direction > 0?0.70:0.30);
-	if(window.test_element) window.test_element.style.top = st + 'px'; 
-	this.scroll.prevY = scrollTop;
-	var offsets = this.imageList.map(item => item.$.offsetTop + item.$.parentNode.offsetTop);
+		this.scroll.direction = scrollTop > this.scroll.prevY ? 1 : -1;
+		var st = scrollTop + document.documentElement.clientHeight * (this.scroll.direction > 0 ? 0.70 : 0.30);
+		if (window.test_element) window.test_element.style.top = st + 'px';
+		this.scroll.prevY = scrollTop;
+		var offsets = this.imageList.map(item => item.$.offsetTop + item.$.parentNode.offsetTop);
 		offsets.push(st);
 		offsets = offsets.sort((a, b) => a - b);
-	var index = offsets.indexOf(st) - 1;
-		if(index + 1 == offsets.length) return;
-		if(Reader.SCP.page == index) return;
-		for(var i=0; i<index; i++) {
+		var index = offsets.indexOf(st) - 1;
+		if (index + 1 == offsets.length) return;
+		if (Reader.SCP.page == index) return;
+		for (var i = 0; i < index; i++) {
 			this.imageList[i].load();
 		}
 		Reader.displayPage(index, true);
@@ -1239,69 +1239,69 @@ function UI_ReaderImageView(o) {
 	this.scrollAnchor = () => {
 		this.scroll.anchorRAF = requestAnimationFrame(this.scrollAnchor);
 		shadowScroll();
-		scroll(this.imageContainer.$, 0, this.scroll.anchorObject.offsetTop + (this.scroll.anchorOffset>0?this.scroll.anchorOffset*-1:this.scroll.anchorObject.offsetHeight * this.scroll.anchorPoint))
+		scroll(this.imageContainer.$, 0, this.scroll.anchorObject.offsetTop + (this.scroll.anchorOffset > 0 ? this.scroll.anchorOffset * -1 : this.scroll.anchorObject.offsetHeight * this.scroll.anchorPoint))
 	}
 
 	this.updateScrollPosition = () => {
-		if(!this.selectedWrapper) return;
+		if (!this.selectedWrapper) return;
 		this.scroll.anchorObject = this.selectedWrapper.$;
 		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
 		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
 	}
 
 	this.updateWides = () => {
-		if(Settings.get('layout') == 'ttb' && this.selectedWrapper ) {
+		if (Settings.get('layout') == 'ttb' && this.selectedWrapper) {
 			// console.log('wideUpdate fire')
-			if(!this.scroll.anchorRAF && this.scroll.anchorObject) {
+			if (!this.scroll.anchorRAF && this.scroll.anchorObject) {
 				this.scrollAnchor();
 			}
 
-			if(this.scroll.anchorTimeout) clearTimeout(this.scroll.anchorTimeout);
+			if (this.scroll.anchorTimeout) clearTimeout(this.scroll.anchorTimeout);
 			this.scroll.anchorTimeout = setTimeout(() => {
 				cancelAnimationFrame(this.scroll.anchorRAF);
 				this.scroll.anchorRAF = 0;
 				this.updateScrollPosition();
 			}, 60)
 		}
-		if(!this.imageWrappers) return;
-		for(var i=0; i < this.imageWrappers.length; i++) {
-			if(this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
+		if (!this.imageWrappers) return;
+		for (var i = 0; i < this.imageWrappers.length; i++) {
+			if (this.imageWrappers[i].$.scrollWidth > this.imageWrappers[i].$.clientWidth) {
 				this.imageWrappers[i].$.classList.add('too-wide');
-			}else{
+			} else {
 				this.imageWrappers[i].$.classList.remove('too-wide');
 			}
 		}
 	}
 
-	this.drawImages = function(images, wides) {
+	this.drawImages = function (images, wides) {
 		this.imageContainer.$.style.transition = '';
 		this.imageContainer.clear();
 		this.imageWrappers = [];
 		this.imageWrappersMask = [];
 		this.imageWrappersMap = {};
-	var spreadCount = Settings.all.spreadCount.get();
-	var	spreadOffset = Settings.all.spreadOffset.get();
-	var imageIndices = [];
-		for(var i=0; i < images.length; i++) {
+		var spreadCount = Settings.all.spreadCount.get();
+		var spreadOffset = Settings.all.spreadOffset.get();
+		var imageIndices = [];
+		for (var i = 0; i < images.length; i++) {
 			imageIndices.push(i);
 			this.imageWrappersMap[i] = this.imageWrappersMask.length;
-			if(wides.indexOf(i) > -1 || wides.indexOf(i+1) > -1){
+			if (wides.indexOf(i) > -1 || wides.indexOf(i + 1) > -1) {
 				spreadOffset++;
 
 			}
-			if(spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
-				if(wides.indexOf(i) > -1)
+			if (spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
+				if (wides.indexOf(i) > -1)
 					spreadOffset = Settings.all.spreadOffset.get();
 				else
 					spreadOffset = 0;
 				this.imageWrappersMask.push(imageIndices);
 				imageIndices = [];
-			}else{
+			} else {
 				spreadOffset++;
 			}
 		}
 
-		this.imageWrappers = this.imageWrappersMask.map(wrapper => 
+		this.imageWrappers = this.imageWrappersMask.map(wrapper =>
 			new UI_ReaderImageWrapper({
 				imageObjects: wrapper.map(index => ({
 					url: images[index],
@@ -1316,18 +1316,18 @@ function UI_ReaderImageView(o) {
 			wrapper.S.link(Reader.selector_page);
 			this.imageList = this.imageList.concat(wrapper.get());
 		})
-		if(Settings.all.layout.get() == 'rtl') {
+		if (Settings.all.layout.get() == 'rtl') {
 			this.imageWrappers.reverse();
 			this.imageWrappers.forEach(i => i.reverse());
 		}
 		this.imageContainer.add(this.imageWrappers);
 
 		shadowScroll();
-		scroll(this.imageContainer.$, 0,0);
-		
-		
-		if(Settings.all.layout.get() == 'ttb') {
-		var butt = new UI_Dummy();
+		scroll(this.imageContainer.$, 0, 0);
+
+
+		if (Settings.all.layout.get() == 'ttb') {
+			var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
 			butt.$.onmousedown = e => {
 				e.preventDefault();
@@ -1337,61 +1337,61 @@ function UI_ReaderImageView(o) {
 		}
 	}
 
-	this.selectPage = function(index, dry) {
-		if(index < 0 || index >= this.imageList.length)
+	this.selectPage = function (index, dry) {
+		if (index < 0 || index >= this.imageList.length)
 			return;
 
 		this.selectedPage = this.imageList[index];
 		this.selectedWrapper = this.selectedPage.parentWrapper;
 		this.visiblePages = this.selectedWrapper.getIndices();
 
-	var toPreload = Settings.all.preload.get();
-		if(toPreload == 100) {
+		var toPreload = Settings.all.preload.get();
+		if (toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
 		toPreload = toPreload * Settings.get('spreadCount');
 		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('spreadCount')); i++) {
-			if(this.imageList[i]) {
+			if (this.imageList[i]) {
 				this.imageList[i].load();
-			//	Reader.enqueuePreload(this.imageList[i].url);
+				//	Reader.enqueuePreload(this.imageList[i].url);
 			}
 		}
-		if(this.imageList[index+1]) {
-			Reader.enqueuePreload(this.imageList[index+1].url);
+		if (this.imageList[index + 1]) {
+			Reader.enqueuePreload(this.imageList[index + 1].url);
 		}
 
-		if(Settings.all.layout.get() == 'ttb') {
-			if (!dry){	
+		if (Settings.all.layout.get() == 'ttb') {
+			if (!dry) {
 				shadowScroll();
-				if(IS_MOBILE) {
+				if (IS_MOBILE) {
 					this.getScrollElement().focus();
 					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
-				}else{
+				} else {
 					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
+					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.offsetTop);
 				}
 			}
-		}else{
-			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
+		} else {
+			this.imageContainer.$._translateX = (-100 * this.imageWrappers.indexOf(this.selectedWrapper))
 			this.imageContainer.$.style.transform =
 				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
 			this.selectedWrapper.$.focus();
-			this.imageContainer.$.scroll(0,0);
-			this.$.scroll(0,0);
+			this.imageContainer.$.scroll(0, 0);
+			this.$.scroll(0, 0);
 		}
 	}
 
-	this.prev = function() {
-		this.S.out('event', {type: 'prevPage'});
+	this.prev = function () {
+		this.S.out('event', { type: 'prevPage' });
 
 	}
-	this.next = function() {
-		this.S.out('event', {type: 'nextPage'})
+	this.next = function () {
+		this.S.out('event', { type: 'nextPage' })
 	}
 
-const SCROLL = 1;
-const SWIPE = 2;
-const SCROLL_X = 3;
+	const SCROLL = 1;
+	const SWIPE = 2;
+	const SCROLL_X = 3;
 
 	this.touch = {
 		start: 0,
@@ -1409,10 +1409,10 @@ const SCROLL_X = 3;
 		imagePosition: 0,
 		a: null
 	};
-	
+
 	this._.image_container.ontouchstart = e => {
-		if(Settings.all.layout.get() == 'ttb') return;
-		if(e.touches.length > 1) return;
+		if (Settings.all.layout.get() == 'ttb') return;
+		if (e.touches.length > 1) return;
 		this.touch.initialX = this._.image_container._translateX;
 		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
 		this.touch.startY = e.touches[0].pageY;
@@ -1422,119 +1422,118 @@ const SCROLL_X = 3;
 		this.touch.deltaY = 0;
 		this.touch.scrollY = window.scrollY;
 		this.touch.time = Date.now();
-	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
-		if(maxScroll <= 0){
+		var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
+		if (maxScroll <= 0) {
 			this.touch.imagePosition = null;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
+		} else if (Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll - 2) {
 			this.touch.imagePosition = 1;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
+		} else if (Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
 			this.touch.imagePosition = -1;
-		}else{
+		} else {
 			this.touch.imagePosition = 0;
 		}
 		this.touch.pageX = e.touches[0].pageX;
 		this.touch.pageY = e.touches[0].pageY;
 		this.touch.a = requestAnimationFrame(this.touch.anim);
 	}
-	
+
 	this.touch.anim = () => {
 		this.touch.a = requestAnimationFrame(this.touch.anim);
-		if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
-		if(Settings.all.layout.get() == 'ttb') return cancelAnimationFrame(this.touch.a);
+		if (this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
+		if (Settings.all.layout.get() == 'ttb') return cancelAnimationFrame(this.touch.a);
 		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
-		if(this.touch.imagePosition == 0
-		|| this.touch.imagePosition == 1 && this.touch.delta > 0
-		|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
+		if (this.touch.imagePosition == 0
+			|| this.touch.imagePosition == 1 && this.touch.delta > 0
+			|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
 			this.touch.gesture = SCROLL_X;
 			return cancelAnimationFrame(this.touch.a);
 		}
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
 		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
-		if(this.touch.gesture == SWIPE) return;
-		if(Math.abs(this.touch.delta) > 5) {
+		if (this.touch.gesture == SWIPE) return;
+		if (Math.abs(this.touch.delta) > 5) {
 			//document.body.style.touchAction = 'none';
 			this.touch.gesture = SWIPE;
 			return;
 		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
+		if (Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
 			this.touch.gesture = SCROLL;
 			this._.image_container._translateX = this.touch.initialX;
 			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
 			cancelAnimationFrame(this.touch.a);
 		}
 	}
-	
+
 	this._.image_container.ontouchmove = e => {
 		this.touch.pageX = e.touches[0].pageX;
 		this.touch.pageY = e.touches[0].pageY;
-		if(this.touch.gesture == SWIPE)
-			{ e.preventDefault(); e.stopPropagation(); }
+		if (this.touch.gesture == SWIPE) { e.preventDefault(); e.stopPropagation(); }
 	}
 
 	this._.image_container.ontouchend = e => {
-		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
-		if(Settings.all.layout.get() == 'ttb') return;
+		if (this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
+		if (Settings.all.layout.get() == 'ttb') return;
 		clearTimeout(this.touch.transitionTimer);
 		cancelAnimationFrame(this.touch.a);
 		//this._.image_container.style.touchAction = 'unset';
 		this._.image_container.style.transition = 'transform 0.25s ease-out';
-	var ms = Date.now() - this.touch.time;
-	var velocity = this.touch.delta / ms;
-		
-		if(velocity < this.touch.escapeVelocity * -1
-		|| this.touch.delta <this.touch.escapeDelta * -1) {
+		var ms = Date.now() - this.touch.time;
+		var velocity = this.touch.delta / ms;
+
+		if (velocity < this.touch.escapeVelocity * -1
+			|| this.touch.delta < this.touch.escapeDelta * -1) {
 			setTimeout(() => {
-				Settings.all.layout.get() == 'rtl'?
-					this.prev():
+				Settings.all.layout.get() == 'rtl' ?
+					this.prev() :
 					this.next();
 			}, 1)
-		}else{
-			if(velocity > this.touch.escapeVelocity
-			|| this.touch.delta > this.touch.escapeDelta) {
+		} else {
+			if (velocity > this.touch.escapeVelocity
+				|| this.touch.delta > this.touch.escapeDelta) {
 				setTimeout(() => {
-					Settings.all.layout.get() == 'rtl'?
-					this.next():
-					this.prev();
+					Settings.all.layout.get() == 'rtl' ?
+						this.next() :
+						this.prev();
 				}, 1)
-			}else{
+			} else {
 				this._.image_container._translateX = this.touch.initialX;
 				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
 			}
 		}
-	var startPage = (function(that) {return that.selectedWrapper})(this);
+		var startPage = (function (that) { return that.selectedWrapper })(this);
 		this.touch.transitionTimer = setTimeout(() => {
 			this._.image_container.style.transition = ''
 			shadowScroll();
-			scroll(startPage.$, startPage.$.scrollWidth,0)
+			scroll(startPage.$, startPage.$.scrollWidth, 0)
 		}, 250)
 	}
 
-	this.mouseHandler = function(e) {
-		if(e.type == 'mousedown') {
+	this.mouseHandler = function (e) {
+		if (e.type == 'mousedown') {
 			this.mouseHandler.dead = false;
 			this.mouseHandler.active = true;
-			this.mouseHandler.initPos = {x: e.pageX, y: e.pageY};
+			this.mouseHandler.initPos = { x: e.pageX, y: e.pageY };
 			return;
 		}
-		if(e.type == 'mousemove') {
-			if(this.mouseHandler.dead || !this.mouseHandler.active) {
+		if (e.type == 'mousemove') {
+			if (this.mouseHandler.dead || !this.mouseHandler.active) {
 				this.mouseHandler.justHover = true;
-			}else{
-				if(Math.abs(this.mouseHandler.initPos.x - e.pageX) > 20 ||
-				Math.abs(this.mouseHandler.initPos.y - e.pageY) > 20) {
+			} else {
+				if (Math.abs(this.mouseHandler.initPos.x - e.pageX) > 20 ||
+					Math.abs(this.mouseHandler.initPos.y - e.pageY) > 20) {
 					this.mouseHandler.dead = true;
 				}
 				return;
 			}
 		}
-		if(e.type == 'click') {
+		if (e.type == 'click') {
 			this.mouseHandler.active = false;
-			if(this.mouseHandler.dead) {
+			if (this.mouseHandler.dead) {
 				return;
 			}
 		}
-		if(e.type == 'mouseleave') {
+		if (e.type == 'mouseleave') {
 			this._.hover_prev.classList.add('nodelay');
 			this._.hover_next.classList.add('nodelay');
 			this._.hover_prev.classList.remove('viz');
@@ -1547,9 +1546,9 @@ const SCROLL_X = 3;
 			clearTimeout(this.mouseHandler.arrowTimeout);
 			return;
 		}
-		if(e.button != 0) return;
-	var box = this.$.getBoundingClientRect();
-	var areas = [
+		if (e.button != 0) return;
+		var box = this.$.getBoundingClientRect();
+		var areas = [
 			0,
 			box.width * 0.35 + box.left,
 			box.width * 0.5 + box.left,
@@ -1557,16 +1556,16 @@ const SCROLL_X = 3;
 			box.width + box.left
 		];
 		areas.push(e.pageX);
-		areas.sort((a,b) => a - b);
-		if(e.type == 'click') {
+		areas.sort((a, b) => a - b);
+		if (e.type == 'click') {
 			switch (areas.indexOf(e.pageX)) {
 				case 1:
-					(Settings.all.layout.get() == 'rtl')?
-						this.next(e):
+					(Settings.all.layout.get() == 'rtl') ?
+						this.next(e) :
 						this.prev(e);
 					break;
 				case 2:
-					if(IS_MOBILE)
+					if (IS_MOBILE)
 						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
 					// else
 					// 	if(Settings.all.layout.get() != 'ttb')
@@ -1575,7 +1574,7 @@ const SCROLL_X = 3;
 					// 			this.next(e);
 					break;
 				case 3:
-					if(IS_MOBILE)
+					if (IS_MOBILE)
 						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
 					// else
 					// 	if(Settings.all.layout.get() != 'ttb')
@@ -1584,21 +1583,21 @@ const SCROLL_X = 3;
 					// 			this.prev(e);
 					break;
 				case 4:
-					(Settings.all.layout.get() == 'rtl')?
-						this.prev(e):
+					(Settings.all.layout.get() == 'rtl') ?
+						this.prev(e) :
 						this.next(e);
 					break;
 				default:
 					break;
 			}
-		}else{
-			if(this.mouseHandler.previousArea == areas.indexOf(e.pageX))
+		} else {
+			if (this.mouseHandler.previousArea == areas.indexOf(e.pageX))
 				return;
 			this.mouseHandler.previousArea = areas.indexOf(e.pageX);
 			clearTimeout(this.mouseHandler.arrowTimeout);
 			switch (this.mouseHandler.previousArea) {
 				case 1:
-					if(!IS_MOBILE) {
+					if (!IS_MOBILE) {
 						this._.hover_prev.classList.add('viz');
 						this._.hover_next.classList.remove('viz');
 						this.mouseHandler.arrowTimeout = setTimeout(t => {
@@ -1609,11 +1608,11 @@ const SCROLL_X = 3;
 					break;
 				case 2:
 				case 3:
-						this._.hover_prev.classList.remove('viz');
-						this._.hover_next.classList.remove('viz');
+					this._.hover_prev.classList.remove('viz');
+					this._.hover_next.classList.remove('viz');
 					break;
 				case 4:
-					if(!IS_MOBILE) {
+					if (!IS_MOBILE) {
 						this._.hover_next.classList.add('viz');
 						this._.hover_prev.classList.remove('viz');
 						this.mouseHandler.arrowTimeout = setTimeout(t => {
@@ -1639,7 +1638,7 @@ const SCROLL_X = 3;
 
 
 function UI_ReaderImageWrapper(o) {
-	o=be(o);
+	o = be(o);
 	UI_List.call(this, {
 		node: o.node,
 		kind: ['ReaderImageWrapper'].concat(o.kind || []),
@@ -1650,9 +1649,9 @@ function UI_ReaderImageWrapper(o) {
 	this.imageInstances = [];
 	this.totalWidth = 0;
 	//imageObject = {url, index}
-	if(o.imageObjects) {
+	if (o.imageObjects) {
 		o.imageObjects.forEach(img => {
-		let image = new UI_ReaderImage({
+			let image = new UI_ReaderImage({
 				url: img.url,
 				index: img.index,
 				parentWrapper: this
@@ -1660,39 +1659,39 @@ function UI_ReaderImageWrapper(o) {
 			image.S.link(this);
 			this.imageInstances.push(image);
 		})
-	}else{
+	} else {
 		console.error(this, 'No images supplied!')
 	}
 	this.add(this.imageInstances);
 
-	if(this.imageInstances.length > 1) {
+	if (this.imageInstances.length > 1) {
 		this.$.classList.add('two-page');
 	}
 
-	this.load = function() {
+	this.load = function () {
 		this.imageInstances.forEach(img => img.load());
 	}
-	this.getIndices = function() {
+	this.getIndices = function () {
 		return this.get().map(img => img.index)
 	}
 	this.checkTooWide = width => {
 		this.totalWidth += width;
-		if(this.totalWidth > this.$.clientWidth) {
+		if (this.totalWidth > this.$.clientWidth) {
 			this.$.classList.add('too-wide');
 		}
-		if(Settings.get('layout') == 'rtl') {
+		if (Settings.get('layout') == 'rtl') {
 			shadowScroll();
-			scroll(this.$, this.totalWidth,0)
+			scroll(this.$, this.totalWidth, 0)
 		}
 	}
 
 	this.destroy = () => {
 		var children = this.$.children.slice()
-		for(var i=0; i<children.length; i++) {
-			if(children[i]._struct) children[i]._struct.destroy();
+		for (var i = 0; i < children.length; i++) {
+			if (children[i]._struct) children[i]._struct.destroy();
 		}
 		alg.discardElement(this.$);
-		if(this.S) this.S.destroy();
+		if (this.S) this.S.destroy();
 	}
 
 	this.S.mapIn({
@@ -1702,7 +1701,7 @@ function UI_ReaderImageWrapper(o) {
 }
 
 function UI_ReaderImage(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['ReaderImage'].concat(o.kind || []),
@@ -1714,8 +1713,8 @@ function UI_ReaderImage(o) {
 	this.url = o.url;
 	this.parentWrapper = o.parentWrapper;
 
-	this.onloadHandler = function(e) {
-		if(e.type == 'load') {
+	this.onloadHandler = function (e) {
+		if (e.type == 'load') {
 			this.S.out('loaded', this.index);
 			return;
 		}
@@ -1725,7 +1724,7 @@ function UI_ReaderImage(o) {
 
 	this.watchImageWidth = () => {
 		this.RAF = requestAnimationFrame(this.watchImageWidth);
-		if(this.$.naturalWidth > 0) {
+		if (this.$.naturalWidth > 0) {
 			this.S.out('imageWidth', this.$.offsetWidth);
 			cancelAnimationFrame(this.RAF);
 			this.RAF = null;
@@ -1733,8 +1732,8 @@ function UI_ReaderImage(o) {
 		}
 	}
 
-	this.load = function() {
-		if(this.loaded) return;
+	this.load = function () {
+		if (this.loaded) return;
 		this.RAF = requestAnimationFrame(this.watchImageWidth);
 		this.$.loading = 'eager';
 		this.$.src = this.url;
@@ -1745,14 +1744,14 @@ function UI_ReaderImage(o) {
 	this.destroy = () => {
 		this.$.src = 'data:image/gif;base64, R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=';
 		alg.discardElement(this.$);
-		if(this.S) this.S.destroy();
-		this.load = () => {}
+		if (this.S) this.S.destroy();
+		this.load = () => { }
 	}
 
 }
 
 function UI_PageSelector(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['PageSelector'].concat(o.kind || []),
@@ -1763,36 +1762,36 @@ function UI_PageSelector(o) {
 		node: this._.page_keys
 	});
 
-	this.render = function(SCP) {
-		if(SCP.pageCount != this.keys.$.children.length) {
-		var keys = [];
+	this.render = function (SCP) {
+		if (SCP.pageCount != this.keys.$.children.length) {
+			var keys = [];
 			for (var i = 0; i < SCP.pageCount; i++) {
-			var key = new UI_Dummy();
+				var key = new UI_Dummy();
 				// key.$.onmouseover = e => this.hoverChange(e);
-				key.$.innerHTML = i+1;
+				key.$.innerHTML = i + 1;
 				keys.push(key);
 			}
 			this.keys.clear().add(keys)
 		}
 		this.keys.select(SCP.page, undefined, undefined, true)
-	var keys = this.keys.get();
+		var keys = this.keys.get();
 		keys.forEach((key, i) => {
-			if(SCP.visiblePages.indexOf(i) > -1) {
+			if (SCP.visiblePages.indexOf(i) > -1) {
 				key.$.classList.add('shown');
-			}else{
+			} else {
 				key.$.classList.remove('shown');
 			}
 		})
 		this._.page_keys_count.innerHTML = SCP.page + 1 + '/' + (SCP.pageCount);
 	}
-	this.proxy = function(i) {
+	this.proxy = function (i) {
 		this.S.out('page', i);
 	}
 
-	this.displayPreload = function(index) {
+	this.displayPreload = function (index) {
 		this.keys.$.children[+index].classList.add('preloaded');
 	}
-	this.clearPreload = function() {
+	this.clearPreload = function () {
 		this.keys.$.children.forEach(key => key.classList.remove('preloaded'));
 	}
 	// this.hoverChange = function(e){
@@ -1814,35 +1813,35 @@ function UI_PageSelector(o) {
 }
 
 function URLChanger(o) {
-	o=be(o);
+	o = be(o);
 	Linkable.call(this);
 
-	this.updateURL = function(SCP) {
-		setTimeout((function(){
+	this.updateURL = function (SCP) {
+		setTimeout((function () {
 			window.history.replaceState(
 				{},
 				SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ', Page '
-					+ (SCP.page + 1)
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya',
+				+ ' - '
+				+ SCP.chapterName
+				+ ', Page '
+				+ (SCP.page + 1)
+				+ ' - '
+				+ Reader.current.title
+				+ ' :: Guya',
 				"/reader/series/"
-					+ SCP.series
-					+ '/'
-					+ SCP.chapter.replace('.', '-')
-					+ '/'
-					+ (SCP.page + 1)
+				+ SCP.series
+				+ '/'
+				+ SCP.chapter.replace('.', '-')
+				+ '/'
+				+ (SCP.page + 1)
 			);
-		var newtitle = SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya';
-			if(newtitle != document.title) document.title = newtitle;
+			var newtitle = SCP.chapter
+				+ ' - '
+				+ SCP.chapterName
+				+ ' - '
+				+ Reader.current.title
+				+ ' :: Guya';
+			if (newtitle != document.title) document.title = newtitle;
 		}).bind(this), 1)
 	}
 
@@ -1852,7 +1851,7 @@ function URLChanger(o) {
 }
 
 function UI_MessageBox(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['MessageBox'].concat(o.kind || []),
@@ -1864,11 +1863,11 @@ function UI_MessageBox(o) {
 
 	this.timers = [];
 
-	this.displayMessage = function(text, style, time) {
+	this.displayMessage = function (text, style, time) {
 		time = time || 2000;
 		style = style || 'flash';
 		this.timers.forEach(timer => window.clearTimeout(timer));
-		if(this.allowedStyles.indexOf(style) > -1) {
+		if (this.allowedStyles.indexOf(style) > -1) {
 			this.allowedStyles.forEach(style => this.$.classList.remove(style));
 			setTimeout(() => {
 				this.$.classList.add(style);
@@ -1890,7 +1889,7 @@ function UI_MessageBox(o) {
 
 
 function UI_FauxDrop(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['FauxDrop'].concat(o.kind || []),
@@ -1923,7 +1922,7 @@ function UI_FauxDrop(o) {
 }
 
 function UI_SimpleList(o) {
-	o=be(o);
+	o = be(o);
 	UI_List.call(this, {
 		node: o.node,
 		kind: ['SimpleList'].concat(o.kind || []),
@@ -1937,14 +1936,14 @@ function UI_SimpleList(o) {
 
 	this.set = function (value, dry) {
 		this.$.value = value;
-		if(!dry)
+		if (!dry)
 			this.S.out('value', this.$.value);
 	}
 
-	this.add = function(pairs) {
+	this.add = function (pairs) {
 		this.lastAdded = [];
 		pairs.forEach(pair => {
-		var item = new UI_SimpleListItem(pair);
+			var item = new UI_SimpleListItem(pair);
 			this.$.appendChild(item.$);
 			this.lastAdded.push(item);
 		});
@@ -1957,7 +1956,7 @@ function UI_SimpleList(o) {
 }
 
 function UI_SimpleListItem(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['SimpleListItem'].concat(o.kind || []),
@@ -1965,13 +1964,13 @@ function UI_SimpleListItem(o) {
 	});
 	this.value = o.value;
 	this.$.value = o.value;
-	if(this.$.innerHTML.length < 1)
+	if (this.$.innerHTML.length < 1)
 		this.$.innerHTML = o.text || o.value || 'List Element';
 }
 
 
 function UI_LodaManager(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['LodaManager'].concat(o.kind || []),
@@ -1984,7 +1983,7 @@ function UI_LodaManager(o) {
 		search: new UI_Loda_Search().S.link(this)
 	}
 
-	this.display = function(loda) {
+	this.display = function (loda) {
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
@@ -1992,7 +1991,7 @@ function UI_LodaManager(o) {
 		this.library[loda].focus();
 	}
 
-	this.close = function() {
+	this.close = function () {
 		this.$.classList.add('hidden');
 		this.$.innerHTML = '';
 		Reader.$.focus();
@@ -2008,7 +2007,7 @@ function UI_LodaManager(o) {
 }
 
 function UI_Loda(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['Loda'].concat(o.kind || []),
@@ -2016,13 +2015,13 @@ function UI_Loda(o) {
 	});
 	Linkable.call(this);
 	this.manager = o.manager;
-	if(o.name) this._.header.innerHTML = o.name;
+	if (o.name) this._.header.innerHTML = o.name;
 
-	this.close = function() {
+	this.close = function () {
 		this.S.out('close');
 	}
 
-	this.focus = function() {
+	this.focus = function () {
 		this.focusElement.focus();
 		this.focusElement.select();
 	}
@@ -2031,7 +2030,7 @@ function UI_Loda(o) {
 }
 
 function UI_Loda_Search(o) {
-	o=be(o);
+	o = be(o);
 	UI_Loda.call(this, {
 		node: o.node,
 		kind: ['Loda_Search'].concat(o.kind || []),
@@ -2061,8 +2060,8 @@ function UI_Loda_Search(o) {
 	})
 
 	this.tabs = new UI_Tabs({
-			node: this._.tabs
-		})
+		node: this._.tabs
+	})
 		.add(new UI_Tab({
 			text: 'Title search'
 		}))
@@ -2083,7 +2082,7 @@ function UI_Loda_Search(o) {
 	this.indexer.S.link(this.tabs.get(1));
 	this.input = new UI_Input({
 		node: this._.input
-		})
+	})
 		.S.link(this.lookup)
 		.S.link(this.indexer)
 		.S.linkAnonymous('text', text => {
@@ -2095,7 +2094,7 @@ function UI_Loda_Search(o) {
 
 
 function UI_IndexSearch(o) {
-	o=be(o);
+	o = be(o);
 	UI_Tabs.call(this, {
 		node: o.node,
 		kind: ['IndexSearch'].concat(o.kind || []),
@@ -2103,27 +2102,27 @@ function UI_IndexSearch(o) {
 	});
 	Loadable.call(this);
 
-	this.search = function(query) {
-		if(query.length < 3) {
+	this.search = function (query) {
+		if (query.length < 3) {
 			return this.clear();
 		}
 		API.requestIndex({
 			query: query,
 			slug: Reader.SCP.series
 		}).then(data => {
-			for(var searchWord in data.result) {
-			var searchResult = data.result[searchWord];
-				if(!searchResult._merged) searchResult._merged = {};
-				for(var wordVariant in searchResult) {
-				var chapters = searchResult[wordVariant];
-					if(wordVariant[0] == '_') continue;
-					for(var chapter in chapters) {
-					var pageList = chapters[chapter];
-						if(!searchResult._merged[chapter])
+			for (var searchWord in data.result) {
+				var searchResult = data.result[searchWord];
+				if (!searchResult._merged) searchResult._merged = {};
+				for (var wordVariant in searchResult) {
+					var chapters = searchResult[wordVariant];
+					if (wordVariant[0] == '_') continue;
+					for (var chapter in chapters) {
+						var pageList = chapters[chapter];
+						if (!searchResult._merged[chapter])
 							searchResult._merged[chapter] = pageList || [];
 						else {
 							pageList.forEach(page => {
-								if(searchResult._merged[chapter].indexOf(page) < 0)
+								if (searchResult._merged[chapter].indexOf(page) < 0)
 									searchResult._merged[chapter].push(page);
 							})
 						}
@@ -2131,29 +2130,29 @@ function UI_IndexSearch(o) {
 				}
 			}
 
-		var wordAddrMap = {};
-			if(Object.keys(data.result).length > 1) {
-				for(var word in data.result) {
-				var chapters = data.result[word]._merged;
-					for(var chapter in chapters) {
-					var pageArray = chapters[chapter];
+			var wordAddrMap = {};
+			if (Object.keys(data.result).length > 1) {
+				for (var word in data.result) {
+					var chapters = data.result[word]._merged;
+					for (var chapter in chapters) {
+						var pageArray = chapters[chapter];
 						pageArray.forEach(page => {
-						var id = '' + chapter + '/' + page;
-							if(!wordAddrMap[id]) wordAddrMap[id] = 0;
+							var id = '' + chapter + '/' + page;
+							if (!wordAddrMap[id]) wordAddrMap[id] = 0;
 							wordAddrMap[id] += 1;
 						})
 					}
 				}
-			var wordAddrMap = Object.filter(wordAddrMap, id => {
+				var wordAddrMap = Object.filter(wordAddrMap, id => {
 					return id == Object.keys(data.result).length;
 				})
-			var chapters = {};
-				for(var key in wordAddrMap) {
-				var id = key.split('/')
-					if(!chapters[id[0]]) chapters[id[0]] = [];
+				var chapters = {};
+				for (var key in wordAddrMap) {
+					var id = key.split('/')
+					if (!chapters[id[0]]) chapters[id[0]] = [];
 					chapters[id[0]].push(id[1]);
 				}
-			}else{
+			} else {
 				chapters = data.result[Object.keys(data.result)[0]]._merged;
 			}
 
@@ -2172,25 +2171,25 @@ function UI_IndexSearch(o) {
 			// 	var chapters = Object.keys(data.result[firstWord]._merged);
 			// }
 
-		var chapterElements = [];
-		var chapKeys = Object.keys(chapters).sort((a,b) => parseFloat(a) - parseFloat(b));
-			for(var i=0;i<chapKeys.length;i++) {
-			var key = chapKeys[i];
-			var item = chapters[key];
-				try{
-				chapterElements.push(new UI_ChapterUnit({
-					chapter: Reader.current.chapters[key.replace('-', '.')],
-				//	substring: Object.keys(data.result)[0],
-					pages: item.sort((a,b) => a-b)
-				}))	
-				}catch(e){
+			var chapterElements = [];
+			var chapKeys = Object.keys(chapters).sort((a, b) => parseFloat(a) - parseFloat(b));
+			for (var i = 0; i < chapKeys.length; i++) {
+				var key = chapKeys[i];
+				var item = chapters[key];
+				try {
+					chapterElements.push(new UI_ChapterUnit({
+						chapter: Reader.current.chapters[key.replace('-', '.')],
+						//	substring: Object.keys(data.result)[0],
+						pages: item.sort((a, b) => a - b)
+					}))
+				} catch (e) {
 					console.warn('Chapter', key, 'wasn\'t found?')
-				}	
+				}
 			};
 
 			this.clear().add(chapterElements);
 
-		}).catch(err => {throw new Error(err)})
+		}).catch(err => { throw new Error(err) })
 
 	}
 
@@ -2200,19 +2199,19 @@ function UI_IndexSearch(o) {
 	})
 }
 function UI_MangaSearch(o) {
-	o=be(o);
+	o = be(o);
 	UI_Tabs.call(this, {
 		node: o.node,
 		kind: ['MangaSearch'].concat(o.kind || []),
 		html: o.html || `<div></div>`
 	});
 
-	this.search = function(query, force) {
-	this.query = query;
-		if(query.length < 1) {
+	this.search = function (query, force) {
+		this.query = query;
+		if (query.length < 1) {
 			this.clear(); return;
 		}
-		if(this.debounce) {
+		if (this.debounce) {
 			clearTimeout(this.debouncer);
 			this.debouncer = setTimeout(e => {
 				this.debounce = false;
@@ -2220,35 +2219,35 @@ function UI_MangaSearch(o) {
 			}, 200);
 			return;
 		}
-		if(!force) this.debounce = true;
+		if (!force) this.debounce = true;
 
-	var chapters = {};
-		if(isNaN(this.query) == false) {
+		var chapters = {};
+		if (isNaN(this.query) == false) {
 			Reader.current.chaptersIndex.filter(id => {
-				return (''+id).indexOf(this.query) > -1;
+				return ('' + id).indexOf(this.query) > -1;
 			}).map(id => {
 				return Reader.current.chapters[id];
 			}).forEach(chapter => {
 				chapters[chapter.id] = chapter;
 			})
-		}else{
-			if(this.query.length < 3) return;
+		} else {
+			if (this.query.length < 3) return;
 		}
-		for(var id in Reader.current.chapters) {
-		var chapter = Reader.current.chapters[id];
-			if(chapter.title.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
+		for (var id in Reader.current.chapters) {
+			var chapter = Reader.current.chapters[id];
+			if (chapter.title.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
 				chapters[id] = chapter;
 			}
 		}
-	var chapterElements = [];
-		for(var id in chapters) {
-		var chapter = chapters[id];
+		var chapterElements = [];
+		for (var id in chapters) {
+			var chapter = chapters[id];
 			chapterElements.push(new UI_ChapterUnit({
 				chapter: chapter,
 				substring: query
 			}))
 		}
-		
+
 		this.clear().add(chapterElements);
 	}
 
@@ -2260,7 +2259,7 @@ function UI_MangaSearch(o) {
 
 
 function UI_ChapterUnit(o) {
-	o=be(o);
+	o = be(o);
 	UI.call(this, {
 		node: o.node,
 		kind: ['ChapterUnit'].concat(o.kind || []),
@@ -2274,18 +2273,18 @@ function UI_ChapterUnit(o) {
 	this.pageList = new UI_Tabs({
 		node: this._.pages
 	})
-	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
-	for(var group in o.chapter.images) {
-		this._.figure.style.backgroundImage = 'url('+(this.pages?o.chapter.previews[group][+this.pages[0]-1]:o.chapter.previews[group][0])+')';
+	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('(' + o.substring + ')', 'gi'), '<i>$1</i>');
+	for (var group in o.chapter.images) {
+		this._.figure.style.backgroundImage = 'url(' + (this.pages ? o.chapter.previews[group][+this.pages[0] - 1] : o.chapter.previews[group][0]) + ')';
 		break;
 	}
-	if(this.pages) {
+	if (this.pages) {
 		this.pages.forEach(page => {
-		var pageButton = new UI_Dummy({text: page});
+			var pageButton = new UI_Dummy({ text: page });
 			pageButton.$.onclick = e => {
 				e.stopPropagation();
 				e.preventDefault();
-				Reader.drawChapter(this.chapter.id, +e.target.innerHTML-1);
+				Reader.drawChapter(this.chapter.id, +e.target.innerHTML - 1);
 				Loda.close();
 				return false;
 			}
@@ -2324,8 +2323,8 @@ Settings.S.link(Reader);
 Reader.S.link(URL)
 Reader.S.link(Settings)
 Reader.$.focus()
-if(window.location.hash == '#s') Loda.display('search');
-document.body.ontouchstart = e=>{}
+if (window.location.hash == '#s') Loda.display('search');
+document.body.ontouchstart = e => { }
 function debug() {
 	var el = document.createElement('div');
 	el.id = 'test_element';
