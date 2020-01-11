@@ -3,7 +3,7 @@ from django.shortcuts import reverse
 from reader.models import Series, Chapter
 
 class StaticViewSitemap(Sitemap):
-    changefreq = 'monthly'
+    changefreq = 'daily'
     priority = 0.7
     protocol = 'https'
 
