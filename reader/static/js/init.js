@@ -151,7 +151,7 @@ function ReaderAPI(o) {
 				}
 			}
 		}
-		console.log(data);
+
 		return data;
 	}
 
@@ -1783,12 +1783,20 @@ function UI_ReaderImage(o) {
 		if(this.loaded) return;
 		this.RAF = requestAnimationFrame(this.watchImageWidth);
 		this.$.loading = 'eager';
-		this.$.src = this.url;
+		fetch(this.url, {referrerPolicy: 'no-referrer'})
+			.then(resp => resp.blob())
+			.then(image => {
+				this.$.src = (window.URL || window.webkitURL).createObjectURL(image);
+			})
+			.catch(e => {
+				this.$.src = this.url;
+			})
 		this.$.onload = e => this.onloadHandler(e);
 		this.loaded = true;
 	}
 
 	this.destroy = () => {
+		(window.URL || window.webkitURL).revokeObjectURL(this.$.src);
 		this.$.src = 'data:image/gif;base64, R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=';
 		alg.discardElement(this.$);
 		if(this.S) this.S.destroy();
@@ -2361,14 +2369,14 @@ Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
 });
 Loader = new LoadHandler();
-URL = new URLChanger();
+URLChanger = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
 
 API.S.link(Reader);
 Settings.S.link(Reader);
-Reader.S.link(URL)
+Reader.S.link(URLChanger)
 Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
