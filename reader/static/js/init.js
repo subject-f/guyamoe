@@ -1235,6 +1235,10 @@ function UI_ReaderImageView(o) {
 		Reader.displayPage(index, true);
 	}
 
+	this.$.onscroll = () => {
+		scroll(this.$, 0, 0);
+	}
+
 	this.scrollAnchor = () => {
 		this.scroll.anchorRAF = requestAnimationFrame(this.scrollAnchor);
 		shadowScroll();
@@ -1376,7 +1380,7 @@ function UI_ReaderImageView(o) {
 				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
 			this.selectedWrapper.$.focus();
 			scroll(this.imageContainer.$, 0, 0);
-			scroll(this.$, 0, 0);
+			requestAnimationFrame(e => scroll(this.$, 0, 0));
 		}
 	}
 
