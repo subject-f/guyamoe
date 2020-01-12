@@ -809,12 +809,12 @@ function UI_Reader(o) {
 		}
 		this.SCP.group = group;
 		
-		if (chapterObj.fetch[this.SCP.group] && chapterObj.images[this.SCP.group].length === 0) {
-			let fun = chapterObj.fetch[this.SCP.group];
-			chapterObj.fetch[this.SCP.group] = undefined;
+		if (this.SCP.chapterObject.fetch[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
+			let fun = this.SCP.chapterObject.fetch[this.SCP.group];
+			this.SCP.chapterObject.fetch[this.SCP.group] = undefined;
 			this.SCP.pageCount = await fun();
 		} else {
-			this.SCP.pageCount = chapterObj.images[group].length;
+			this.SCP.pageCount = this.SCP.chapterObject.images[group].length;
 		}
 		this.SCP.lastPage = this.SCP.pageCount - 1;
 
