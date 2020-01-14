@@ -34,11 +34,17 @@ def get_nh_series_data(request, series_id):
 
 def get_nh_image(request, media_id, page):
     image = get_image("https://nhentai.net", f"https://i.nhentai.net/galleries/{media_id}/{page}")
-    return HttpResponse(image, content_type="image")
+    if image:
+        return HttpResponse(image, content_type="image")
+    else:
+        return HttpResponse(status=503)
 
 def get_md_image(request, server, data_hash, page):
     image = get_image("https://mangadex.org", f"https://{server}/data/{data_hash}/{page}")
-    return HttpResponse(image, content_type="image")
+    if image:
+        return HttpResponse(image, content_type="image")
+    else:
+        return HttpResponse(status=503)
 
 @condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):
