@@ -125,17 +125,18 @@ def md_series_data(series_id):
             chapters_dict = {}
             for chapter in api_data["chapter"]:
                 groups_dict[api_data["chapter"][chapter]["group_id"]] = api_data["chapter"][chapter]["group_name"]
-                if api_data["chapter"][chapter]["chapter"] in chapters_dict:
-                    chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
-                else:
-                    chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
-                        # "chapter_id": chapter,
-                        "volume": api_data["chapter"][chapter]["volume"],
-                        "title": api_data["chapter"][chapter]["title"],
-                        "groups": {
-                            api_data["chapter"][chapter]["group_id"]: chapter
+                if api_data["chapter"][chapter]["lang_code"] == "gb":
+                    if api_data["chapter"][chapter]["chapter"] in chapters_dict:
+                        chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
+                    else:
+                        chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
+                            # "chapter_id": chapter,
+                            "volume": api_data["chapter"][chapter]["volume"],
+                            "title": api_data["chapter"][chapter]["title"],
+                            "groups": {
+                                api_data["chapter"][chapter]["group_id"]: chapter
+                            }
                         }
-                    }
 
             data = {
                 "slug": series_id, "title": api_data["manga"]["title"], "description": api_data["manga"]["description"], 
