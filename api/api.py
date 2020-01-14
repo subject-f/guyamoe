@@ -65,10 +65,10 @@ def series_data(series_slug):
 def md_series_page_data(series_id):
     series_page_dt = cache.get(f"series_page_dt_{series_id}")
     if not series_page_dt:
-        md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
+        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
         chapter_dict = {}
         headers = {
-            'Referer': 'https://mangadex.cc',
+            'Referer': 'https://mangadex.org',
             'User-Agent': 'My User Agent 1.0'
         }
         resp = requests.get(md_series_api, headers=headers)
@@ -96,7 +96,7 @@ def md_series_page_data(series_id):
                 "series": api_data["manga"]["title"],
                 "series_id": api_data["manga"]["description"],
                 "slug": series_id,
-                "cover_vol_url": "https://mangadex.cc" + api_data["manga"]["cover_url"],
+                "cover_vol_url": "https://mangadex.org" + api_data["manga"]["cover_url"],
                 "synopsis": api_data["manga"]["description"], 
                 "author": api_data["manga"]["author"],
                 "artist": api_data["manga"]["artist"],
@@ -112,9 +112,9 @@ def md_series_page_data(series_id):
 def md_series_data(series_id):
     data = cache.get(f"series_dt_{series_id}")
     if not data:
-        md_series_api = f"https://mangadex.cc/api/?id={series_id}&type=manga"
+        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
         headers = {
-            'Referer': 'https://mangadex.cc',
+            'Referer': 'https://mangadex.org',
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
         resp = requests.get(md_series_api, headers=headers)
@@ -155,10 +155,10 @@ def md_series_data(series_id):
 def md_chapter_pages(chapter_id):
     chapter_pages = cache.get(f"chapter_dt_{chapter_id}")
     if not chapter_pages:
-        md_series_api = f"https://mangadex.cc/api/?id={chapter_id}&server=null&type=chapter"
+        md_series_api = f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
         print(md_series_api)
         headers = {
-            'Referer': 'https://mangadex.cc',
+            'Referer': 'https://mangadex.org',
             'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
         }
         resp = requests.get(md_series_api, headers=headers)
