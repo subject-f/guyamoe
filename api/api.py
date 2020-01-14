@@ -127,6 +127,10 @@ def md_series_data(series_id):
                 groups_dict[api_data["chapter"][chapter]["group_id"]] = api_data["chapter"][chapter]["group_name"]
                 if api_data["chapter"][chapter]["lang_code"] == "gb":
                     if api_data["chapter"][chapter]["chapter"] in chapters_dict:
+                        if not chapters_dict[api_data["chapter"][chapter]["chapter"]]["volume"]:
+                            chapters_dict[api_data["chapter"][chapter]["chapter"]]["volume"] = api_data["chapter"][chapter]["volume"]
+                        if not chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"]:
+                            chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"] = api_data["chapter"][chapter]["title"]
                         chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
                     else:
                         chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
