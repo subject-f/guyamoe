@@ -151,8 +151,6 @@ def reader(request, series_slug, chapter, page):
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
-    # if chapter in metadata:
-    # return HttpResponse(json.dumps(metadata), content_type="application/json")
     if metadata:
         metadata["relative_url"] = f"md_proxy/{md_series_id}"
         return render(request, 'reader/md_series.html', metadata)
@@ -162,9 +160,7 @@ def md_proxy(request, md_series_id):
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
-    # if chapter in metadata:
-    # return HttpResponse(json.dumps(metadata), content_type="application/json")
-    if data and chapter in data["chapters"]:
+    if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
         return render(request, 'reader/reader.html', data)
     else:
@@ -180,9 +176,7 @@ def nh_proxy(request, nh_series_id):
 
 def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
-    # if chapter in metadata:
-    # return HttpResponse(json.dumps(metadata), content_type="application/json")
-    if data and chapter in data["chapters"]:
+    if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
         return render(request, 'reader/reader.html', data)
     else:
