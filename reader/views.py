@@ -65,6 +65,7 @@ def series_page_data(series_slug):
         latest_chapter = chapters.latest('uploaded_on')
         vols = Volume.objects.filter(series=series).order_by('-volume_number')
         cover_vol_url = ""
+        cover_vol_url_webp = ""
         for vol in vols:
             if vol.volume_cover:
                 cover_vol_url = f"/media/{vol.volume_cover}"
