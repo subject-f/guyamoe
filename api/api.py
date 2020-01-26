@@ -36,6 +36,7 @@ def series_data(series_slug):
         query_string = "" if not chapter.version else f"?v{chapter.version}"
         if ch_clean in chapters_dict:
             chapters_dict[ch_clean]["groups"][str(chapter.group.id)] = sorted([u + query_string for u in os.listdir(os.path.join(chapter_media_path, str(chapter.group.id)))])
+            chapters_dict[ch_clean]["release_date"][str(chapter.group.id)] = int(chapter.uploaded_on.timestamp())
         else:
             chapters_dict[ch_clean] = {
                 "volume": str(chapter.volume),
@@ -43,6 +44,9 @@ def series_data(series_slug):
                 "folder": chapter.folder,
                 "groups": {
                     str(chapter.group.id): sorted([u + query_string for u in os.listdir(os.path.join(chapter_media_path, str(chapter.group.id)))])
+                },
+                "release_date": {
+                    str(chapter.group.id): int(chapter.uploaded_on.timestamp())
                 }
             }
             if chapter.preferred_sort:
