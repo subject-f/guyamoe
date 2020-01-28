@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.utils.decorators import decorator_from_middleware
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page, cache_control
 from django.views.decorators.http import condition
 from django.core.cache import cache
 
 from api.api import all_chapter_data_etag
+from reader.middleware import OnlineNowMiddleware
 from reader.models import Series, Volume, Chapter
 from reader.views import series_page_data
 
@@ -15,6 +17,7 @@ def admin_home(request):
 
 @cache_control(max_age=60)
 @condition(etag_func=all_chapter_data_etag)
+@decorator_from_middleware(OnlineNowMiddleware)
 def home(request):
     home_screen_series = {"Kaguya-Wants-To-Be-Confessed-To": "", "We-Want-To-Talk-About-Kaguya": "", "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": ""}
     for series in home_screen_series:
@@ -44,6 +47,7 @@ def home(request):
         })
 
 @cache_page(3600 * 48)
+@decorator_from_middleware(OnlineNowMiddleware)
 def about(request):
     return render(request, 'homepage/about.html', {"relative_url": "about/"})
 

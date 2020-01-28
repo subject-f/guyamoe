@@ -60,7 +60,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'reader.middleware.OnlineNowMiddleware',
 ]
 
 ROOT_URLCONF = 'guyamoe.urls'
@@ -132,6 +131,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
+STATIC_VERSION = "?v=1.00"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"), 
 ]

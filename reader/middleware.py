@@ -1,12 +1,12 @@
 from django.core.cache import cache
 from .users_cache_lib import get_user_ip
+from django.utils.deprecation import MiddlewareMixin
 
-class OnlineNowMiddleware(object):
-    def __init__(self, get_response):
-        self.get_response = get_response
+class OnlineNowMiddleware(MiddlewareMixin):
+    # def __init__(self, get_response):
+    #     self.get_response = get_response
 
-    def __call__(self, request):
-        ### Install and test with memcache first
+    def process_response(self, request, response):
         user_ip = get_user_ip(request)
         online = cache.get("online_now")
         peak_traffic = cache.get("peak_traffic")
@@ -24,5 +24,6 @@ class OnlineNowMiddleware(object):
         cache.set("online_now", online, 600)
         request.online_now = len(online)
         request.peak_traffic = peak_traffic
-        response = self.get_response(request)
+        # response = self.get_response(request)
+        print("-------------------------bleh")
         return response

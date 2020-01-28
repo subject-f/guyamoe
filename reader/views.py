@@ -11,6 +11,8 @@ from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import condition
+from django.utils.decorators import decorator_from_middleware
+from .middleware import OnlineNowMiddleware
 from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
@@ -24,6 +26,7 @@ import requests
 
 
 @csrf_exempt
+@decorator_from_middleware(OnlineNowMiddleware)
 def hit_count(request):
     if request.POST:
         user_ip = get_user_ip(request)
@@ -113,11 +116,13 @@ def series_page_data(series_slug):
 
 @cache_control(max_age=60)
 @condition(etag_func=chapter_data_etag)
+@decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info.html', data)
 
 @staff_member_required
+@decorator_from_middleware(OnlineNowMiddleware)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     return render(request, 'reader/series_info_admin.html', data)
@@ -134,6 +139,7 @@ def get_all_metadata(series_slug):
     return series_metadata
 
 @cache_control(max_age=120)
+@decorator_from_middleware(OnlineNowMiddleware)
 def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
@@ -142,6 +148,7 @@ def reader(request, series_slug, chapter, page):
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
 
+@decorator_from_middleware(OnlineNowMiddleware)
 def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
     # if chapter in metadata:
@@ -152,6 +159,7 @@ def md_proxy(request, md_series_id):
     else:
         return render(request, 'reader/md_down.html', metadata)
 
+@decorator_from_middleware(OnlineNowMiddleware)
 def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
     # if chapter in metadata:
