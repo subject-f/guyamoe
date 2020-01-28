@@ -167,6 +167,7 @@ def md_chapter(request, md_series_id, chapter, page):
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
 
+@decorator_from_middleware(OnlineNowMiddleware)
 def nh_proxy(request, nh_series_id):
     metadata = nh_series_data(nh_series_id)
     if metadata:
@@ -175,6 +176,7 @@ def nh_proxy(request, nh_series_id):
     else:
         return render(request, 'reader/how_cute_404.html', status=404)
 
+@decorator_from_middleware(OnlineNowMiddleware)
 def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
