@@ -72,7 +72,7 @@ def md_series(request, md_series_id):
 
 def md_chapter(request, md_chapter_id, page=1):
     chapter_info = md_chapter_info(md_chapter_id)
-    return redirect('reader-md-chapter', chapter_info["series_id"], chapter_info["chapter"], page)
+    return redirect('reader-md-chapter', chapter_info["series_id"], str(chapter_info["chapter"]).replace(".", "-"), page)
 
 def nh_series(request, nh_series_id, page=None):
     if page:
