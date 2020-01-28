@@ -65,13 +65,7 @@ def series_data(series_slug):
 def md_series_page_data(series_id):
     series_page_dt = cache.get(f"series_page_dt_{series_id}")
     if not series_page_dt:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
-        chapter_dict = {}
-        headers = {
-            'Referer': 'https://mangadex.org',
-            'User-Agent': 'My User Agent 1.0'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
@@ -112,12 +106,7 @@ def md_series_page_data(series_id):
 def md_series_data(series_id):
     data = cache.get(f"series_dt_{series_id}")
     if not data:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
-        headers = {
-            'Referer': 'https://mangadex.org',
-            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
@@ -154,24 +143,19 @@ def md_series_data(series_id):
             return None
     return data
 
-def md_chapter_pages(chapter_id):
-    chapter_pages = cache.get(f"chapter_dt_{chapter_id}")
-    if not chapter_pages:
-        md_series_api = f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
-        print(md_series_api)
-        headers = {
-            'Referer': 'https://mangadex.org',
-            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+def md_chapter_info(chapter_id):
+    chapter_info = cache.get(f"chapter_dt_{chapter_id}")
+    if not chapter_info:
+        resp = get_md_data(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
             chapter_pages = [f"/api/md_image/{api_data['server'].replace('https://', '').replace('/data/', '')}/{api_data['hash']}/{page}" for page in api_data["page_array"]]
-            cache.set(f"chapter_dt_{chapter_id}", chapter_pages, 60)
+            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"]}
+            cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
         else:
             return None
-    return chapter_pages
+    return chapter_info
 
 def series_data_cache(series_slug):
     series_api_data = series_data(series_slug)
@@ -321,6 +305,13 @@ def nh_series_data(series_id):
         else:
             return None
     return data
+
+def get_md_data(url):
+    headers = {
+        'Referer': 'https://mangadex.org',
+        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+    }
+    return requests.get(url, headers=headers)
 
 def get_image(referrer, url):
     headers = {
