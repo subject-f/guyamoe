@@ -1,5 +1,10 @@
 {% extends "layout.html" %} {% load static %} {% block head %}
-<title>Read {{ series }} :: Guya.moe</title>
+<title>Read {{ title }} :: Guya.moe</title>
+<meta name="twitter:description" content="A place to read the {{ title }} manga. No ads. No bad reader. All guya." />
+<meta property="og:description" content="A place to read the {{ title }} manga. No ads. No bad reader. All guya.">
+<meta name="description" content="Read {{ title }} manga. No ads. No bad reader. All guya.">
+<meta name="author" content="{{ author }}">
+
 <meta name="author" content="{{ author }}" />
 <style>
   .center {
