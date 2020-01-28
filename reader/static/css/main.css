@@ -984,7 +984,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	text-align: left;
 	color: transparent;
 	font-size: 2vh;
-	line-height: 2vh;
+	line-height: 0;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
