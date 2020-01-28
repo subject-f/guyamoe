@@ -327,6 +327,6 @@ def get_image(referrer, url):
     }
     resp = requests.get(url, headers=headers, stream=True)
     if resp.status_code == 200:
-        return resp.raw
+        return resp.iter_content(chunk_size=1024)
     else:
         return None

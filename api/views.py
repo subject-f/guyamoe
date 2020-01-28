@@ -3,7 +3,7 @@ import json
 import time
 import zipfile
 from datetime import datetime, timezone
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -35,14 +35,14 @@ def get_nh_series_data(request, series_id):
 def get_nh_image(request, media_id, page):
     image = get_image("https://nhentai.net", f"https://i.nhentai.net/galleries/{media_id}/{page}")
     if image:
-        return HttpResponse(image, content_type="image")
+        return StreamingHttpResponse(image, content_type=f"image/{page.split('.')[1].replace('jpg', 'jpeg')}")
     else:
         return HttpResponse(status=503)
 
 def get_md_image(request, server, data_hash, page):
     image = get_image("https://mangadex.org", f"https://{server}/data/{data_hash}/{page}")
     if image:
-        return HttpResponse(image, content_type="image")
+        return StreamingHttpResponse(image, content_type=f"image/{page.split('.')[1].replace('jpg', 'jpeg')}")
     else:
         return HttpResponse(status=503)
 
