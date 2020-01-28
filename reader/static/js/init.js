@@ -64,8 +64,7 @@ function ReaderAPI(o) {
 	if (window.location.pathname.includes("proxy")) {
 		this.seriesUrl = this.url + window.location.pathname.split("/")
 			.filter((e) => e.includes("proxy"))[0].replace("proxy", "series") + "/";
-		firstParty = false;
-		document.querySelector("[data-bind='search']").style.display = 'none';
+		this.firstParty = false;
 	} else {
 		this.seriesUrl = `${this.url}series/`;
 	}
@@ -74,7 +73,6 @@ function ReaderAPI(o) {
 
 	this.data = {};
 	this.indexData = {};
-
 
 	this.infuseSeriesData = function(data) {
 		for(var num in data.chapters) {
@@ -92,7 +90,7 @@ function ReaderAPI(o) {
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
-				if (firstParty) {
+				if (this.firstParty) {
 					firstPartySeriesHandler(this.mediaURL, chapter, group, data.slug);
 				} else {
 					thirdPartySeriesHandler(chapter, group);
@@ -118,6 +116,7 @@ function ReaderAPI(o) {
 				}
 				this.data[slug] = seriesData;
 				this.S.out('seriesUpdated', this.data[slug]);
+				this.S.out('isFirstParty', this.firstParty);
 			})
 		return this.seriesRequest;
 	}
@@ -601,9 +600,6 @@ function UI_Reader(o) {
 		page: 0,
 	};
 
-	console.log(this);
-	// console.log(this.isFirstParty());
-
 	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
@@ -615,11 +611,9 @@ function UI_Reader(o) {
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
-		.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
 		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
 		.attach('spreadCount', ['Ctrl+Digit1'], s => Settings.cycle('spreadCount'))
 		.attach('spreadOffset', ['Ctrl+Digit2'], s => Settings.cycle('spreadOffset'))
-		//.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
@@ -632,16 +626,12 @@ function UI_Reader(o) {
 				this.nextChapter();
 		})
 
-	new KeyListener(document.body)
-		.attach('search', ['Ctrl+KeyF'], s => {
-			Loda.display('search')
-		})
-
+		
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'ltr')
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
-
+		
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'rtl')
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
@@ -692,6 +682,19 @@ function UI_Reader(o) {
 
 	this.updateData = function(data) {
 		this.current = data;
+	}
+
+	this.controlFeatures = function(isFirstParty) {
+		if (isFirstParty) {
+			new KeyListener(document.body)
+				.attach('search', ['Ctrl+KeyF'], s => {
+					Loda.display('search')
+				})
+				.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
+		} else {
+			document.querySelector("[data-bind='search']").style.display = 'none';
+			document.querySelector("[class='rdr-previews']").style.display = 'none';
+		}
 	}
 
 	this.setSCP = function(SCP) {
@@ -937,7 +940,8 @@ function UI_Reader(o) {
 		this.selectVolume(+this.SCP.volume-1)
 	}
 
-	this.copyShortLink = function() {
+	this.copyShortLink = function() { 
+		// TODO
 	var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
 		navigator.clipboard.writeText(url)
 		.then(function() {
@@ -1160,6 +1164,7 @@ function UI_Reader(o) {
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
+		isFirstParty: this.controlFeatures,
 		event: this.eventRouter,
 		settingsPacket: this.settingsRouter,
 		message: message => {
@@ -2378,11 +2383,6 @@ function thirdPartySeriesHandler(chapter, group) {
 		}
 	}
 }
-
-// function disableFirstPartyFeatures() {
-// 	document.querySelector("[data-bind=")
-// }
-
 
 
 alg.createBin();
