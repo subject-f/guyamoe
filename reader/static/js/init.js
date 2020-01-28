@@ -941,8 +941,11 @@ function UI_Reader(o) {
 	}
 
 	this.copyShortLink = function() { 
-		// TODO
-	var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
+		// TODO: hard-coded values is meh
+		let url = document.location.href;
+		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To")) {
+			url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);	
+		}
 		navigator.clipboard.writeText(url)
 		.then(function() {
 		  Tooltippy.set('Link copied to clipboard!');
