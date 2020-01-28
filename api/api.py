@@ -141,7 +141,9 @@ def md_series_data(series_id):
                                 api_data["chapter"][chapter]["group_id"]: chapter
                             }
                         }
-
+            for chapter in chapters_dict:
+                if not chapters_dict[chapter]["volume"]:
+                    chapters_dict[chapter]["volume"] = "Uncategorized"
             data = {
                 "slug": series_id, "title": api_data["manga"]["title"], "description": api_data["manga"]["description"], 
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
@@ -293,7 +295,7 @@ def nh_series_data(series_id):
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
-            groups_dict = {"1": api_data["scanlator"]}
+            groups_dict = {"1": api_data["scanlator"] or "N-Hentai"}
             chapters_dict = {
                 "1" : {
                     "volume": "1",
