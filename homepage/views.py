@@ -74,6 +74,12 @@ def md_chapter(request, md_chapter_id, page=1):
     chapter_info = md_chapter_info(md_chapter_id)
     return redirect('reader-md-chapter', chapter_info["series_id"], chapter_info["chapter"], page)
 
+def nh_series(request, nh_series_id, page=None):
+    if page:
+        return redirect('reader-nh-chapter', nh_series_id, 1, page)
+    else:
+        return redirect('reader-nh-proxy', nh_series_id)
+
 # def latest_releases(request):
 #     latest_releases = cache.get("latest_releases")
 #     if not latest_releases:
