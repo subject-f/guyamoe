@@ -181,12 +181,19 @@ def random_chars():
 
 def create_preview_pages(chapter_folder, group_folder, page_file):
     shrunk = Image.open(os.path.join(chapter_folder, group_folder, page_file))
-    if shrunk.width > shrunk.height:
-        page_name, ext = page_file.rsplit(".", 1)
-        page_file = page_name + "_w." + ext
+    page_name, ext = page_file.rsplit(".", 1)
+    def width_file_update(chapter_folder, group_folder, page_file, page_name, ext):
         shrunk.save(os.path.join(chapter_folder, group_folder, page_file))
         os.remove(os.path.join(chapter_folder, group_folder, page_name + "." + ext))
         shrunk = Image.open(os.path.join(chapter_folder, group_folder, page_file))
+    if shrunk.width > shrunk.height:
+        if "_w." not in page_file:
+            page_file = page_name + "_w." + ext
+            width_file_update(chapter_folder, group_folder, page_file, page_name, ext)
+    else:
+        if "_w." in page_file:
+            page_file = page_file.replace("_w", "")
+            width_file_update(chapter_folder, group_folder, page_file, page_name, ext)
     blur = Image.open(os.path.join(chapter_folder, group_folder, page_file))
     shrunk = shrunk.convert("RGB")
     blur = blur.convert("RGB")
