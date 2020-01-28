@@ -59,12 +59,13 @@ function ReaderAPI(o) {
 	
 	this.url = o.url || '/api/';
 	
-	let previews = true;
+	this.firstParty = true;
 
 	if (window.location.pathname.includes("proxy")) {
 		this.seriesUrl = this.url + window.location.pathname.split("/")
 			.filter((e) => e.includes("proxy"))[0].replace("proxy", "series") + "/";
-		previews = false;
+		firstParty = false;
+		document.querySelector("[data-bind='search']").style.display = 'none';
 	} else {
 		this.seriesUrl = `${this.url}series/`;
 	}
@@ -74,11 +75,12 @@ function ReaderAPI(o) {
 	this.data = {};
 	this.indexData = {};
 
+
 	this.infuseSeriesData = function(data) {
 		for(var num in data.chapters) {
 		let chapter = data.chapters[num];
 			chapter.images = {};
-			chapter.fetch = {};
+			chapter.loaded = {};
 			chapter.blurs = {};
 			chapter.previews = {};
 			chapter.hasWide = {};
@@ -90,68 +92,13 @@ function ReaderAPI(o) {
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
-				if (Array.isArray(chapter.groups[group])) {
-					for (var i = 0; i < chapter.groups[group].length; i++) {
-						if (previews) {
-							chapter.images[group].push(
-								this.mediaURL
-									+ data.slug 
-									+ '/chapters/' 
-									+ chapter.folder 
-									+ '/' 
-									+ group 
-									+ '/' 
-									+ chapter.groups[group][i]
-							)
-							chapter.blurs[group].push(
-								this.mediaURL
-									+ data.slug 
-									+ '/chapters/' 
-									+ chapter.folder 
-									+ '/' 
-									// + "shrunk_blur_"+ group
-									+ group+"_shrunk_blur" 
-									+ '/' 
-									+ chapter.groups[group][i]
-							)
-							chapter.previews[group].push(
-								this.mediaURL
-									+ data.slug 
-									+ '/chapters/' 
-									+ chapter.folder 
-									+ '/' 
-									// + "shrunk_"+ group
-									+ group+"_shrunk" 
-									+ '/' 
-									+ chapter.groups[group][i]
-							)
-							if(chapter.groups[group][i].indexOf('_w.') > -1) {
-								chapter.wides[group].push(i);
-							}
-						} else {
-							chapter.images[group].push(chapter.groups[group][i]);
-						}
-					}
+				if (firstParty) {
+					firstPartySeriesHandler(this.mediaURL, chapter, group, data.slug);
 				} else {
-					chapter.fetch[group] = async function () {
-						let images = chapter.images[group];
-						try {
-							// Each group/chapter pair has a unique ID, returned by API
-							let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
-											.then(r => r.json());
-							pages.forEach(p => {
-								images.push(p);
-							});
-							return pages.length;
-						} catch (e) {
-							console.log(e);
-							return 0;
-						}
-					}
+					thirdPartySeriesHandler(chapter, group);
 				}
 			}
 		}
-		console.log(data);
 		return data;
 	}
 
@@ -654,6 +601,9 @@ function UI_Reader(o) {
 		page: 0,
 	};
 
+	console.log(this);
+	// console.log(this.isFirstParty());
+
 	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
@@ -702,7 +652,7 @@ function UI_Reader(o) {
 		node: this._.selector_chap
 	})
 	this.selector_chap.S.linkAnonymous('value', value => {
-		this.drawChapter(value, 0);
+		this.initChapter(value, 0);
 	});
 
 	this.selector_vol = new UI_FauxDrop({
@@ -751,7 +701,7 @@ function UI_Reader(o) {
 	}
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
-		this.drawChapter(SCP.chapter, SCP.page);
+		this.initChapter(SCP.chapter, SCP.page);
 		this.S.out('init');
 	}
 
@@ -789,41 +739,55 @@ function UI_Reader(o) {
 
 	this.drawGroup = function(group) {
 		Settings.set('groupPreference', group);	
-		this.drawChapter();
+		this.initChapter();
 	}
 
-	this.drawChapter = async function(chapter, page) {
-		if(chapter) this.SCP.chapter = chapter;
+	this.initChapter = function(chapter, page) {
+		if (chapter) this.SCP.chapter = chapter;
 		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = this.SCP.chapterObject.volume;
-		this.SCP.chapterName = this.SCP.chapterObject.title
-	let group = Settings.get('groupPreference');
-		if(group === undefined
-		|| this.SCP.chapterObject.groups[group] == undefined) {
-			if(this.current.preferred_sort
-			&& this.SCP.chapterObject.groups[this.current.preferred_sort[0]] != undefined){
-				group = this.current.preferred_sort[0]
-			}else{
-				group = Object.keys(this.SCP.chapterObject.groups)[0];
+		this.SCP.chapterName = this.SCP.chapterObject.title;
+		this.SCP.group = this.getGroup(chapter);
+
+		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
+			this.SCP.chapterObject.MD_request[this.SCP.group]().then((count) => {
+				delete this.SCP.chapterObject.MD_request[this.SCP.group]; // Save some memory, :kaguyaSmug:
+				this.SCP.chapterObject.loaded[this.SCP.group] = true;
+				this.SCP.pageCount = count;
+				this.SCP.lastPage = count - 1;
+				this.bootstrapChapter(page);
+			});
+		} else if (this.SCP.chapterObject.loaded[this.SCP.group]) {
+			this.SCP.pageCount = this.SCP.chapterObject.images[this.SCP.group].length;
+			this.SCP.lastPage = this.SCP.pageCount - 1;
+			this.bootstrapChapter(page);
+		}
+	}
+
+	this.getGroup = function(chapter) {
+		let group = Settings.get('groupPreference');
+
+		let chapterObj = this.current.chapters[chapter || this.SCP.chapter];
+
+		if (group === undefined || chapterObj.groups[group] === undefined) {
+			if (this.current.preferred_sort 
+				&& chapterObj.groups[this.current.preferred_sort[0]] !== undefined) {
+				group = this.current.preferred_sort[0];
+			} else {
+				group = Object.keys(chapterObj.groups)[0];
 			}
 		}
-		this.SCP.group = group;
-		
-		if (this.SCP.chapterObject.fetch[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
-			let fun = this.SCP.chapterObject.fetch[this.SCP.group];
-			this.SCP.chapterObject.fetch[this.SCP.group] = undefined;
-			this.SCP.pageCount = await fun();
-		} else {
-			this.SCP.pageCount = this.SCP.chapterObject.images[group].length;
-		}
-		this.SCP.lastPage = this.SCP.pageCount - 1;
 
+		return group;
+	}
+
+	this.bootstrapChapter = function(page) {
 		this.shuffleRandomChapter();
 
 		this.drawGroups();
 		this.drawPreviews();
 
-		this.imageView.drawImages(this.SCP.chapterObject.images[group], this.SCP.chapterObject.wides[group]);
+		this.imageView.drawImages(this.SCP.chapterObject.images[this.SCP.group], this.SCP.chapterObject.wides[this.SCP.group]);
 
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(this.SCP.volume, true);
@@ -911,7 +875,7 @@ function UI_Reader(o) {
 
 	this.selectVolume = function(vol) {
 		if(this.current.volMap[vol])
-			this.drawChapter(this.current.volMap[vol]);
+			this.initChapter(this.current.volMap[vol]);
 	}
 
 	this.plusOne = function() {
@@ -933,7 +897,7 @@ function UI_Reader(o) {
 		if(this.SCP.chapter != this.SCP.lastChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
-			this.drawChapter(
+			this.initChapter(
 				this.current.chaptersIndex[index + 1],
 				0
 			)
@@ -943,7 +907,7 @@ function UI_Reader(o) {
 		if(this.SCP.chapter != this.SCP.firstChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
-			this.drawChapter(
+			this.initChapter(
 				this.current.chaptersIndex[index - 1],
 				page || 0
 			)
@@ -1100,8 +1064,8 @@ function UI_Reader(o) {
 			'previews': o => this.drawPreviews(o),
 			'zoom': o => this.setZoom(o),
 			'spread': o => this.setSpread(o),
-			'spreadCount': o => this.drawChapter(),
-			'spreadOffset': o => this.drawChapter(),
+			'spreadCount': o => this.bootstrapChapter(),
+			'spreadOffset': o => this.bootstrapChapter(),
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
 	}
@@ -1163,7 +1127,7 @@ function UI_Reader(o) {
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
-		this.drawChapter(this.SCP.chapter, 2)
+		this.initChapter(this.SCP.chapter, 2);
 		return false;
 	}, false)
 
@@ -2332,7 +2296,7 @@ function UI_ChapterUnit(o) {
 			pageButton.$.onclick = e => {
 				e.stopPropagation();
 				e.preventDefault();
-				Reader.drawChapter(this.chapter.id, +e.target.innerHTML-1);
+				Reader.initChapter(this.chapter.id, +e.target.innerHTML-1);
 				Loda.close();
 				return false;
 			}
@@ -2341,12 +2305,83 @@ function UI_ChapterUnit(o) {
 	}
 
 	this.$.onclick = e => {
-		Reader.drawChapter(this.chapter.id, 0);
+		Reader.initChapter(this.chapter.id, 0);
 		Loda.close();
 	}
 }
 
+function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
+	for (let i = 0; i < chapter.groups[group].length; i++) {
+		chapter.images[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				+ group 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		chapter.blurs[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				// + "shrunk_blur_"+ group
+				+ group+"_shrunk_blur" 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		chapter.previews[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				// + "shrunk_"+ group
+				+ group+"_shrunk" 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		if (chapter.groups[group][i].indexOf('_w.') > -1) {
+			chapter.wides[group].push(i);
+		}
+	}
+	chapter.loaded[group] = true;
+}
 
+// NH API response returns an array, whereas MD returns a chapter ID
+function thirdPartySeriesHandler(chapter, group) {
+	if (Array.isArray(chapter.groups[group])) {
+		for (let image of chapter.groups[group]) {
+			chapter.images[group].push(image);
+		}
+		chapter.loaded[group] = true;
+	} else {
+		if (!chapter.MD_request) chapter.MD_request = {};
+		chapter.loaded[group] = false;
+		chapter.MD_request[group] = async () => {
+			let images = chapter.images[group];
+			try {
+				// Each group/chapter pair has a unique ID, returned by API
+				let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
+								.then(r => r.json());
+				pages.forEach(p => {
+					images.push(p);
+				});
+				return pages.length;
+			} catch (e) {
+				console.log(e);
+				return 0;
+			}
+		}
+	}
+}
+
+// function disableFirstPartyFeatures() {
+// 	document.querySelector("[data-bind=")
+// }
 
 
 
