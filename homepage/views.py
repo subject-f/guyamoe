@@ -13,7 +13,9 @@ from reader.views import series_page_data
 
 @staff_member_required
 def admin_home(request):
-    return render(request, 'homepage/admin_home.html')
+    online = cache.get("online_now")
+    peak_traffic = cache.get("peak_traffic")
+    return render(request, 'homepage/admin_home.html', {"online": len(online), "peak_traffic": peak_traffic})
 
 @cache_control(max_age=60)
 @condition(etag_func=all_chapter_data_etag)
