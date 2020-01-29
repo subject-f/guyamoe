@@ -1374,9 +1374,9 @@ function UI_ReaderImageView(o) {
 			//	Reader.enqueuePreload(this.imageList[i].url);
 			}
 		}
-		if(this.imageList[index+1]) {
-			Reader.enqueuePreload(this.imageList[index+1].url);
-		}
+		// if(this.imageList[index+1]) {
+		// 	Reader.enqueuePreload(this.imageList[index+1].url);
+		// }
 
 		if(Settings.all.layout.get() == 'ttb') {
 			if (!dry){	
