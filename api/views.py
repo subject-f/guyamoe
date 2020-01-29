@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
-from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_info, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data, get_image
+from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_info, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -34,20 +34,6 @@ def get_md_chapter_pages(request, chapter_id):
 def get_nh_series_data(request, series_id):
     series_api_data = nh_series_data(series_id)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
-
-def get_nh_image(request, media_id, page):
-    image = get_image("https://nhentai.net", f"https://i.nhentai.net/galleries/{media_id}/{page}")
-    if image:
-        return StreamingHttpResponse(image, content_type=f"image/{page.split('.')[1].replace('jpg', 'jpeg')}")
-    else:
-        return HttpResponse(status=503)
-
-def get_md_image(request, server, data_hash, page):
-    image = get_image("https://mangadex.org", f"https://{server}/data/{data_hash}/{page}")
-    if image:
-        return StreamingHttpResponse(image, content_type=f"image/{page.split('.')[1].replace('jpg', 'jpeg')}")
-    else:
-        return HttpResponse(status=503)
 
 @condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):

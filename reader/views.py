@@ -163,6 +163,7 @@ def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
+        data["hide_referrer"] = True
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
@@ -181,6 +182,7 @@ def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
+        data["hide_referrer"] = True
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)

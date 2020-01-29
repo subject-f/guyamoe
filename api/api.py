@@ -150,7 +150,7 @@ def md_chapter_info(chapter_id):
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
-            chapter_pages = [f"/api/md_image/{api_data['server'].replace('https://', '').replace('/data/', '')}/{api_data['hash']}/{page}" for page in api_data["page_array"]]
+            chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
             chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"]}
             cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
         else:
@@ -293,7 +293,7 @@ def nh_series_data(series_id):
                 file_format = "jpg"
                 if t["t"] == "p":
                     file_format = "png"
-                chapters_dict["1"]["groups"]["1"].append(f"/api/nh_image/{api_data['media_id']}/{p + 1}.{file_format}")
+                chapters_dict["1"]["groups"]["1"].append(f"http://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
 
             data = {
                 "slug": series_id, "title": api_data["title"]["english"], "description": "",
@@ -312,14 +312,3 @@ def get_md_data(url):
         'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
     }
     return requests.get(url, headers=headers)
-
-def get_image(referrer, url):
-    headers = {
-        'Referer': referrer,
-        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-    }
-    resp = requests.get(url, headers=headers, stream=True)
-    if resp.status_code == 200:
-        return resp.iter_content(chunk_size=1024)
-    else:
-        return None
