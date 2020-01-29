@@ -694,6 +694,7 @@ function UI_Reader(o) {
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
 			document.querySelector("[class='rdr-previews']").style.display = 'none';
+			this.plusOne = () => {};
 		}
 	}
 
