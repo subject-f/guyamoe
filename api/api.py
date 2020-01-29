@@ -293,7 +293,7 @@ def nh_series_data(series_id):
                 file_format = "jpg"
                 if t["t"] == "p":
                     file_format = "png"
-                chapters_dict["1"]["groups"]["1"].append(f"http://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
+                chapters_dict["1"]["groups"]["1"].append(f"https://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
 
             data = {
                 "slug": series_id, "title": api_data["title"]["english"], "description": "",
