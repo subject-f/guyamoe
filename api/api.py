@@ -279,27 +279,43 @@ def nh_series_data(series_id):
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
-            groups_dict = {"1": api_data["scanlator"] or "N-Hentai"}
-            chapters_dict = {
-                "1" : {
-                    "volume": "1",
-                    "title": api_data["title"]["english"],
-                    "groups": {
-                        "1": []
-                    }
-                }
-            }
+
+            artist = api_data["scanlator"]
+            group = api_data["scanlator"]
+            lang_list = []
+            tag_list = []
+            for tag in api_data["tags"]:
+                if tag["type"] == "artist":
+                    artist = tag["name"]
+                elif tag["type"] == "group":
+                    group = tag["name"]
+                elif tag["type"] == "language":
+                    lang_list.append(tag["name"])
+                elif tag["type"] == "tag":
+                    tag_list.append(tag["name"])
+
+            pages_list = []
             for p, t in enumerate(api_data["images"]["pages"]):
                 file_format = "jpg"
                 if t["t"] == "p":
                     file_format = "png"
-                chapters_dict["1"]["groups"]["1"].append(f"https://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
+                pages_list.append(f"https://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
+
+            groups_dict = {"1": group or "N-Hentai"}
+            chapters_dict = {
+                "1" : {
+                    "volume": "1", "title": api_data["title"]["pretty"] or api_data["title"]["english"],
+                    "groups": {
+                        "1": pages_list
+                    }
+                }
+            }
 
             data = {
-                "slug": series_id, "title": api_data["title"]["english"], "description": "",
-                "author": api_data["scanlator"], "artist": api_data["scanlator"], "groups": groups_dict,
-                "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.jpg", "preferred_sort": settings.PREFERRED_SORT,
-                "chapters": chapters_dict
+                "slug": series_id, "title": api_data["title"]["pretty"] or api_data["title"]["english"],
+                "description": api_data["title"]["english"], "group": group, "artist": artist, "groups": groups_dict,
+                "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
+                "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.jpg",
             }
             cache.set(f"nh_series_dt_{series_id}", data, 60)
         else:
