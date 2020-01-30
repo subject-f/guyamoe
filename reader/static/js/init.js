@@ -1043,14 +1043,13 @@ function UI_Reader(o) {
 	}
 
 	this.enqueuePreload = url => {
-	var newPreload = 'url("'+url+'")';
-	this._.preload_entity.style.background = newPreload;
-	// var preloads = this._.preload_entity.children.map(item => item.style.background);
-	// 	if(preloads.indexOf(newPreload) < 0) {
-	// 	var newElement = document.createElement('div');
-	// 		newElement.style.background = newPreload;
-	// 		this._.preload_entity.appendChild(newElement);
-	//	}
+		let newElement = document.createElement("img");
+		newElement.src = url;
+		newElement.setAttribute("style", "opacity: 0");
+		while (this._.preload_entity.firstChild) {
+			this._.preload_entity.removeChild(this._.preload_entity.firstChild);
+		}
+		this._.preload_entity.appendChild(newElement);
 	}
 
 	this.eventRouter = function(event){
@@ -1375,9 +1374,9 @@ function UI_ReaderImageView(o) {
 			//	Reader.enqueuePreload(this.imageList[i].url);
 			}
 		}
-		// if(this.imageList[index+1]) {
-		// 	Reader.enqueuePreload(this.imageList[index+1].url);
-		// }
+		if(this.imageList[index+1]) {
+			Reader.enqueuePreload(this.imageList[index+1].url);
+		}
 
 		if(Settings.all.layout.get() == 'ttb') {
 			if (!dry){	
