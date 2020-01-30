@@ -299,6 +299,8 @@ def nh_series_data(series_id):
                 file_format = "jpg"
                 if t["t"] == "p":
                     file_format = "png"
+                if t["t"] == "g":
+                    file_format = "gif"
                 pages_list.append(f"https://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
 
             groups_dict = {"1": group or "N-Hentai"}
