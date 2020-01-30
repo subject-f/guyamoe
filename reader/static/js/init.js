@@ -1043,13 +1043,7 @@ function UI_Reader(o) {
 	}
 
 	this.enqueuePreload = url => {
-		let newElement = document.createElement("img");
-		newElement.src = url;
-		newElement.setAttribute("style", "opacity: 0");
-		while (this._.preload_entity.firstChild) {
-			this._.preload_entity.removeChild(this._.preload_entity.firstChild);
-		}
-		this._.preload_entity.appendChild(newElement);
+		this._.preload_entity.src = url;
 	}
 
 	this.eventRouter = function(event){
