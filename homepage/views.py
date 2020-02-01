@@ -15,7 +15,7 @@ from reader.views import series_page_data
 def admin_home(request):
     online = cache.get("online_now")
     peak_traffic = cache.get("peak_traffic")
-    return render(request, 'homepage/admin_home.html', {"online": len(online), "peak_traffic": peak_traffic})
+    return render(request, 'homepage/admin_home.html', {"online": len(online), "peak_traffic": peak_traffic, "template": "home"})
 
 @cache_control(max_age=60)
 @condition(etag_func=all_chapter_data_etag)
@@ -45,13 +45,14 @@ def home(request):
             "doujin_cover": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][0],
             "doujin_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][1],
             "doujin_cover_blur": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][2],
-            "relative_url": ""
+            "relative_url": "",
+            "template": "home"
         })
 
 @cache_page(3600 * 48)
 @decorator_from_middleware(OnlineNowMiddleware)
 def about(request):
-    return render(request, 'homepage/about.html', {"relative_url": "about/"})
+    return render(request, 'homepage/about.html', {"relative_url": "about/", "template": "about"})
 
 
 def main_series_chapter(request, chapter):
