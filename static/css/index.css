@@ -10,6 +10,68 @@ body {
 	background-color:black;
 }
 
+.navbar {
+	text-shadow: none;
+	height: 4rem;
+	align-items: stretch;
+	padding: 0;
+}
+
+.navbar-nav {
+	flex-grow: 1;
+}
+
+.navbar .container-fluid {
+	align-items: stretch;
+	justify-content: center;
+	padding: 0 !important;
+}
+
+.navbar .navbar-collapse {
+	padding-left: 0;
+}
+
+.navbar-brand-logo {
+	align-self: center;
+	text-align: center;
+}
+
+.navbar-brand-logo img {
+	max-height: 2.6rem;
+	max-width: 100%;
+}
+
+.pusher {
+	flex-grow: 99999;
+}
+
+.navbar .nav-item {
+	display: inline-flex;
+	align-items: stretch;
+}
+
+.navbar .nav-link {
+	border: none;
+	padding: 0 1em !important;
+	display: inline-flex;
+	align-items: center;
+}
+.navbar .nav-link:hover, .navbar .nav-link:focus {
+	background: rgba(255,255,255,0.1);
+	border: none;
+}
+.navbar .nav-link.s {
+	cursor: default;
+	background: none !important;
+	border-bottom: 1px solid #bbb !important;
+	box-shadow: 0px -34px 20px -40px #bbb inset !important;
+	color: white;
+}
+
+.navbar-collapse {
+	align-items: stretch;
+}
+
 main {
 	display: flex;
 	flex-wrap: wrap;
@@ -478,7 +540,7 @@ main .manga-card.full {
         background-attachment: fixed;
      background-position: 50% 10%;
       background-size: 1500px;
-      background-image: url('/static/img/bg_box_blur_smol.jpg');
+      background-image: url('/static/img/bg_box_blur_smol.png');
   padding: 0;
 }
 
@@ -487,7 +549,7 @@ main .manga-card.full {
         background-attachment: fixed;
      background-position: 50% 10%;
       background-size: 1500px;
-      background-image: url('/static/img/bg_box_blur_smol.jpg');
+      background-image: url('/static/img/bg_box_blur_smol.png');
 
 }
 
@@ -694,7 +756,7 @@ main .manga-card.full {
     font-style: italic;
 }
 
-@media (max-width: 799px) {
+@media (max-width: 768px) {
 	main .manga-card {
 		
 		flex-direction: column;

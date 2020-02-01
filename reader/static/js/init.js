@@ -643,6 +643,10 @@ function UI_Reader(o) {
 			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
 				Settings.prev('zoom')
 		})
+		.attach('plus', ['Equal'], s => {
+			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
+				Settings.next('zoom')
+		})
 		.attach('enter', ['Enter'], s => {
 			if(this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
@@ -965,6 +969,7 @@ function UI_Reader(o) {
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
+			this.imageView.setTouchHandlers(Settings.get('layout') != 'ttb');
 		}
 	}
 
@@ -1015,12 +1020,12 @@ function UI_Reader(o) {
 		if(IS_MOBILE) {
 			if(this._.rdr_aside_content.offsetTop <= window.scrollY && Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
 				this.$.classList.add('stick');
-			var prescroll = document.documentElement.scrollTop;
+			var prescroll = window.pageYOffset;
 				this._.rdr_aside_content.style.paddingTop = this._.rdr_selector.offsetHeight + 'px';
 				scroll(document.documentElement, 0, prescroll);
 			}else{
 				this.$.classList.remove('stick');
-				prescroll = document.documentElement.scrollTop;
+				prescroll = window.pageYOffset;
 				this._.rdr_aside_content.style.paddingTop = '0px';
 				scroll(document.documentElement, 0, prescroll);
 			}
@@ -1205,16 +1210,19 @@ function UI_ReaderImageView(o) {
 		anchorTimeout: 0
 	}
 
-	document.onscroll = this._.image_container.onscroll = e => {
-		if(PROGRAMMATIC_SCROLL) return;
-		if(!this.imageList) return;
-		if(Settings.all.layout.get() != 'ttb') return;
+	this.scrollHandler = e => {
+		if(PROGRAMMATIC_SCROLL) return true;
+		if(!this.imageList) return true;
+		if(Settings.all.layout.get() != 'ttb') return true;
 
 		Reader.stickHeader();
-	var scrollTop = (e.target.scrollingElement)?
-				e.target.scrollingElement.scrollTop:
-				undefined
-			|| e.target.scrollTop;
+	// var scrollTop = (e.target.scrollingElement)?
+	// 			e.target.scrollingElement.scrollTop:
+	// 			undefined
+	// 		|| e.target.scrollTop;
+	// var scrollElement = e.target.scrollingElement || e.target;
+		var scrollTop = window.pageYOffset;
+		var scrollElement = window;
 		// console.log('wideUpdate fire')
 		if(!this.scroll.anchorRAF) {
 			this.updateScrollPosition();
@@ -1227,16 +1235,19 @@ function UI_ReaderImageView(o) {
 		offsets.push(st);
 		offsets = offsets.sort((a, b) => a - b);
 	var index = offsets.indexOf(st) - 1;
-		if(index + 1 == offsets.length) return;
-		if(Reader.SCP.page == index) return;
+		if(index + 1 == offsets.length) return true;
+		if(Reader.SCP.page == index) return true;
 		for(var i=0; i<index; i++) {
 			this.imageList[i].load();
 		}
 		Reader.displayPage(index, true);
+		return true;
 	}
 
+	window.onscroll = this.scrollHandler;
+
 	this.$.onscroll = () => {
-		scroll(this.$, 0, 0);
+		scroll(this.$, 0, 0, true);
 	}
 
 	this.scrollAnchor = () => {
@@ -1249,7 +1260,7 @@ function UI_ReaderImageView(o) {
 		if(!this.selectedWrapper) return;
 		this.scroll.anchorObject = this.selectedWrapper.$;
 		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
-		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
+		this.scroll.anchorPoint = (this.imageContainer.$.pageYOffset - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
 	}
 
 	this.updateWides = () => {
@@ -1347,7 +1358,25 @@ function UI_ReaderImageView(o) {
 		this.selectedPage = this.imageList[index];
 		this.selectedWrapper = this.selectedPage.parentWrapper;
 		this.visiblePages = this.selectedWrapper.getIndices();
-
+		if(Settings.all.layout.get() == 'ttb') {
+			if (!dry){	
+				shadowScroll();
+				if(IS_MOBILE) {
+					this.getScrollElement().focus();
+					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().pageYOffset);
+				}else{
+					this.getScrollElement().focus();
+					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
+				}
+			}
+		}else{
+			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
+			this.imageContainer.$.style.transform =
+				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
+			// this.selectedWrapper.$.focus();
+			// scroll(this.imageContainer.$, 0, 0);
+			// requestAnimationFrame(e => scroll(this.$, 0, 0));
+		}
 	var toPreload = Settings.all.preload.get();
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
@@ -1362,26 +1391,6 @@ function UI_ReaderImageView(o) {
 		if(this.imageList[index+1]) {
 			Reader.enqueuePreload(this.imageList[index+1].url);
 		}
-
-		if(Settings.all.layout.get() == 'ttb') {
-			if (!dry){	
-				shadowScroll();
-				if(IS_MOBILE) {
-					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
-				}else{
-					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
-				}
-			}
-		}else{
-			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
-			this.imageContainer.$.style.transform =
-				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
-			this.selectedWrapper.$.focus();
-			scroll(this.imageContainer.$, 0, 0);
-			requestAnimationFrame(e => scroll(this.$, 0, 0));
-		}
 	}
 
 	this.prev = function() {
@@ -1395,6 +1404,18 @@ function UI_ReaderImageView(o) {
 const SCROLL = 1;
 const SWIPE = 2;
 const SCROLL_X = 3;
+
+	this.setTouchHandlers = (state) => {
+		if(state) {
+			this._.image_container.ontouchstart = this.touch.startHandler;
+			this._.image_container.ontouchmove = this.touch.moveHandler;
+			this._.image_container.ontouchend = this.touch.endHandler;
+		}else{
+			this._.image_container.ontouchstart = undefined;
+			this._.image_container.ontouchmove = undefined;
+			this._.image_container.ontouchend = undefined;
+		}
+	}
 
 	this.touch = {
 		start: 0,
@@ -1413,7 +1434,7 @@ const SCROLL_X = 3;
 		a: null
 	};
 	
-	this._.image_container.ontouchstart = e => {
+	this.touch.startHandler = e => {
 		if(Settings.all.layout.get() == 'ttb') return;
 		if(e.touches.length > 1) return;
 		this.touch.initialX = this._.image_container._translateX;
@@ -1453,7 +1474,7 @@ const SCROLL_X = 3;
 		}
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
-		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX * this._.image_container.offsetWidth / 100 + 'px,0,0) rotate(0.0001deg)';
+		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
 		if(this.touch.gesture == SWIPE) return;
 		if(Math.abs(this.touch.delta) > 5) {
 			//document.body.style.touchAction = 'none';
@@ -1468,25 +1489,26 @@ const SCROLL_X = 3;
 		}
 	}
 	
-	this._.image_container.ontouchmove = e => {
+	this.touch.moveHandler = e => {
 		this.touch.pageX = e.touches[0].pageX;
 		this.touch.pageY = e.touches[0].pageY;
 		if(this.touch.gesture == SWIPE)
 			{ e.preventDefault(); e.stopPropagation(); }
 	}
 
-	this._.image_container.ontouchend = e => {
+	this.touch.endHandler = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
 		if(Settings.all.layout.get() == 'ttb') return;
 		clearTimeout(this.touch.transitionTimer);
 		cancelAnimationFrame(this.touch.a);
 		//this._.image_container.style.touchAction = 'unset';
-		this._.image_container.style.transition = 'transform 0.25s ease-out';
 	var ms = Date.now() - this.touch.time;
 	var velocity = this.touch.delta / ms;
+	var transitionTime = 0.30 - Math.abs(velocity)/3;
+		this._.image_container.style.transition = 'transform '+ transitionTime +'s ease-out';
 		
 		if(velocity < this.touch.escapeVelocity * -1
-		|| this.touch.delta <this.touch.escapeDelta * -1) {
+		|| this.touch.delta < this.touch.escapeDelta * -1) {
 			setTimeout(() => {
 				Settings.all.layout.get() == 'rtl'?
 					this.prev():
@@ -1510,7 +1532,7 @@ const SCROLL_X = 3;
 			this._.image_container.style.transition = ''
 			shadowScroll();
 			scroll(startPage.$, startPage.$.scrollWidth,0)
-		}, 250)
+		}, Math.round(transitionTime*1000))
 	}
 
 	this.mouseHandler = function(e) {
@@ -1720,6 +1742,7 @@ function UI_ReaderImage(o) {
 	this.onloadHandler = function(e) {
 		if(e.type == 'load') {
 			this.S.out('loaded', this.index);
+			cancelAnimationFrame(this.RAF);
 			return;
 		}
 		//if(!IS_MOBILE) dragscroll.reset([this.$])
@@ -1747,6 +1770,7 @@ function UI_ReaderImage(o) {
 
 	this.destroy = () => {
 		this.$.src = 'data:image/gif;base64, R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=';
+		if(this.RAF) cancelAnimationFrame(this.RAF);
 		alg.discardElement(this.$);
 		if(this.S) this.S.destroy();
 		this.load = () => {}
@@ -2328,7 +2352,7 @@ Reader.S.link(URL)
 Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
-document.body.ontouchstart = e=>{}
+
 function debug() {
 	var el = document.createElement('div');
 	el.id = 'test_element';
