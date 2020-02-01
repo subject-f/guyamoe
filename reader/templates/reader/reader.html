@@ -16,6 +16,9 @@
 		<meta property="og:url" content="/read/manga/{{ slug }}">
 	    <meta name="author" content="Akasaka Aka">
 		<meta name="viewport" content="width=device-width">
+		{% if hide_referrer %}
+			<meta name="referrer" content="no-referrer">
+		{% endif %}
 		<!-- Google Tag Manager -->
 		<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -44,7 +47,7 @@
 	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 	<!-- End Google Tag Manager (noscript) -->
 	<main id="rdr-main" class="" tabindex="-1">
-		<div class="preload-entity" id="scan_line" data-bind="preload_entity"></div>
+		<img class="preload-entity" id="scan_line" data-bind="preload_entity"></img>
 		<aside>
 			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual is-ico-button"></div></div>
 			<header>

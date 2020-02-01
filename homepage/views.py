@@ -6,7 +6,7 @@ from django.views.decorators.cache import cache_page, cache_control
 from django.views.decorators.http import condition
 from django.core.cache import cache
 
-from api.api import all_chapter_data_etag
+from api.api import all_chapter_data_etag, md_chapter_info
 from reader.middleware import OnlineNowMiddleware
 from reader.models import Series, Volume, Chapter
 from reader.views import series_page_data
@@ -67,6 +67,19 @@ def latest(request):
         latest_chap = Chapter.objects.order_by('-chapter_number').filter(series__slug="Kaguya-Wants-To-Be-Confessed-To")[0].slug_chapter_number()
         cache.set("latest_chap", latest_chap, 3600 * 96)
     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
+
+def md_series(request, md_series_id):
+    return redirect('reader-md-proxy', md_series_id)
+
+def md_chapter(request, md_chapter_id, page=1):
+    chapter_info = md_chapter_info(md_chapter_id)
+    return redirect('reader-md-chapter', chapter_info["series_id"], str(chapter_info["chapter"]).replace(".", "-"), page)
+
+def nh_series(request, nh_series_id, page=None):
+    if page:
+        return redirect('reader-nh-chapter', nh_series_id, 1, page)
+    else:
+        return redirect('reader-nh-proxy', nh_series_id)
 
 # def latest_releases(request):
 #     latest_releases = cache.get("latest_releases")

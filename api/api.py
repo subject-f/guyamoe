@@ -65,13 +65,7 @@ def series_data(series_slug):
 def md_series_page_data(series_id):
     series_page_dt = cache.get(f"series_page_dt_{series_id}")
     if not series_page_dt:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
-        chapter_dict = {}
-        headers = {
-            'User-Agent': 'My User Agent 1.0',
-            'From': 'google.com'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
@@ -112,11 +106,7 @@ def md_series_page_data(series_id):
 def md_series_data(series_id):
     data = cache.get(f"series_dt_{series_id}")
     if not data:
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
-        headers = {
-            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
@@ -124,18 +114,25 @@ def md_series_data(series_id):
             chapters_dict = {}
             for chapter in api_data["chapter"]:
                 groups_dict[api_data["chapter"][chapter]["group_id"]] = api_data["chapter"][chapter]["group_name"]
-                if api_data["chapter"][chapter]["chapter"] in chapters_dict:
-                    chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = []
-                else:
-                    chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
-                        "chapter_id": chapter,
-                        "volume": api_data["chapter"][chapter]["volume"],
-                        "title": api_data["chapter"][chapter]["title"],
-                        "groups": {
-                            api_data["chapter"][chapter]["group_id"]: []
+                if api_data["chapter"][chapter]["lang_code"] == "gb":
+                    if api_data["chapter"][chapter]["chapter"] in chapters_dict:
+                        if not chapters_dict[api_data["chapter"][chapter]["chapter"]]["volume"]:
+                            chapters_dict[api_data["chapter"][chapter]["chapter"]]["volume"] = api_data["chapter"][chapter]["volume"]
+                        if not chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"]:
+                            chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"] = api_data["chapter"][chapter]["title"]
+                        chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
+                    else:
+                        chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
+                            # "chapter_id": chapter,
+                            "volume": api_data["chapter"][chapter]["volume"],
+                            "title": api_data["chapter"][chapter]["title"],
+                            "groups": {
+                                api_data["chapter"][chapter]["group_id"]: chapter
+                            }
                         }
-                    }
-
+            for chapter in chapters_dict:
+                if not chapters_dict[chapter]["volume"]:
+                    chapters_dict[chapter]["volume"] = "Uncategorized"
             data = {
                 "slug": series_id, "title": api_data["manga"]["title"], "description": api_data["manga"]["description"], 
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
@@ -146,23 +143,19 @@ def md_series_data(series_id):
             return None
     return data
 
-def md_chapter_pages(chapter_id):
-    chapter_pages = cache.get(f"chapter_dt_{chapter_id}")
-    if not chapter_pages:
-        md_series_api = f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
-        print(md_series_api)
-        headers = {
-            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-        }
-        resp = requests.get(md_series_api, headers=headers)
+def md_chapter_info(chapter_id):
+    chapter_info = cache.get(f"chapter_dt_{chapter_id}")
+    if not chapter_info:
+        resp = get_md_data(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter")
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
             chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
-            cache.set(f"chapter_dt_{chapter_id}", chapter_pages, 60)
+            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"]}
+            cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
         else:
             return None
-    return chapter_pages
+    return chapter_info
 
 def series_data_cache(series_slug):
     series_api_data = series_data(series_slug)
@@ -273,3 +266,67 @@ def zip_chapter(series_slug, chapter):
     with open(os.path.join(chapter_dir, zip_filename), "rb") as fh:
         zip_file = fh.read()
     return zip_file, zip_filename, fname
+
+def nh_series_data(series_id):
+    data = cache.get(f"nh_series_dt_{series_id}")
+    if not data:
+        nh_series_api = f"https://nhentai.net/api/gallery/{series_id}"
+        headers = {
+            'Referer': 'https://nhentai.net',
+            'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+        }
+        resp = requests.get(nh_series_api, headers=headers)
+        if resp.status_code == 200:
+            data = resp.text
+            api_data = json.loads(data)
+
+            artist = api_data["scanlator"]
+            group = api_data["scanlator"]
+            lang_list = []
+            tag_list = []
+            for tag in api_data["tags"]:
+                if tag["type"] == "artist":
+                    artist = tag["name"]
+                elif tag["type"] == "group":
+                    group = tag["name"]
+                elif tag["type"] == "language":
+                    lang_list.append(tag["name"])
+                elif tag["type"] == "tag":
+                    tag_list.append(tag["name"])
+
+            pages_list = []
+            for p, t in enumerate(api_data["images"]["pages"]):
+                file_format = "jpg"
+                if t["t"] == "p":
+                    file_format = "png"
+                if t["t"] == "g":
+                    file_format = "gif"
+                pages_list.append(f"https://i.nhentai.net/galleries/{api_data['media_id']}/{p + 1}.{file_format}")
+
+            groups_dict = {"1": group or "N-Hentai"}
+            chapters_dict = {
+                "1" : {
+                    "volume": "1", "title": api_data["title"]["pretty"] or api_data["title"]["english"],
+                    "groups": {
+                        "1": pages_list
+                    }
+                }
+            }
+
+            data = {
+                "slug": series_id, "title": api_data["title"]["pretty"] or api_data["title"]["english"],
+                "description": api_data["title"]["english"], "group": group, "artist": artist, "groups": groups_dict,
+                "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
+                "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.{'jpg' if api_data['images']['cover']['t'] == 'j' else 'png'}",
+            }
+            cache.set(f"nh_series_dt_{series_id}", data, 60)
+        else:
+            return None
+    return data
+
+def get_md_data(url):
+    headers = {
+        'Referer': 'https://mangadex.org',
+        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+    }
+    return requests.get(url, headers=headers)

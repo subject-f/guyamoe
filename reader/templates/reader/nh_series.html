@@ -1,0 +1,145 @@
+{% extends "layout.html" %} {% load static %} {% block head %}
+<title>Read {{ title }} :: Guya.moe</title>
+<meta
+  name="twitter:description"
+  content="A place to read the {{ title }} manga. No ads. No bad reader. All guya."
+/>
+<meta
+  property="og:description"
+  content="A place to read the {{ title }} manga. No ads. No bad reader. All guya."
+/>
+<meta
+  name="description"
+  content="Read {{ title }} manga. No ads. No bad reader. All guya."
+/>
+<meta name="author" content="{{ author }}" />
+<meta name="referrer" content="no-referrer" />
+{% endblock %} {% block body %}
+<style>
+  html,
+  html.h-100 {
+    background-attachment: fixed;
+    background-position: 50% 10%;
+    background-size: 1500px;
+    background-image: url("/static/img/bg_box.png");
+    background-color: black !important;
+  }
+
+  body {
+    background: none !important;
+    background-color: none !important;
+  }
+  .center {
+    text-align: center;
+    padding-top: 15%;
+  }
+  .button {
+    background-color: #064064;
+    color: white;
+    max-width: 768px;
+    width: 100%;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .button:hover {
+    background-color: #0b3652;
+    text-decoration: none;
+    transition: all 0.5s;
+  }
+  .tag {
+    margin: 5px;
+    display: inline-block;
+    font-size: 15px;
+  }
+  article {
+    word-wrap: break-word;
+  }
+</style>
+<div class="container-fluid page-series">
+  <div class="bs-docs-section clearfix mt-3">
+    <div class="row justify-content-center">
+      <div class="side-cover col-lg-2 col-md-3 col-sm-12 col-xs-12 mb-4">
+        <div class="list-item">
+          <div class="list-content">
+            <div class="list-body d-flex justify-content-center">
+              <span class="text-white text-white font-weight-bold"> </span>
+            </div>
+          </div>
+          <div class="media media-3x4 justify-content-center py-2">
+            <img src="{{ cover }}" class="img-fluid" />
+          </div>
+        </div>
+        <div class="card sidecard">
+          <div class="card-body">
+            <table class="table table-borderless table-sm small">
+              <tbody>
+                <tr>
+                  <th>Artist</th>
+                  <td class="text-muted text-sm">{{ artist }}</td>
+                </tr>
+                {% if group %}
+                <tr>
+                  <th>Group</th>
+                  <td class="text-muted text-sm">{{ group }}</td>
+                </tr>
+                {% endif %} {% if lang %}
+                <tr>
+                  <th>Language</th>
+                  <td class="text-muted text-sm">{{ lang }}</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8 col-md-9 col-sm-11 col-xs-11 series-content">
+        <article>
+          <picture>
+            <img src="{{ cover }}" class="img-fluid" alt="{{ series }} manga" />
+          </picture>
+          <table
+            class="table table-borderless table-sm small"
+            style="display: none"
+          >
+            <tbody>
+              <tr>
+                <th>Artist</th>
+                <td class="text-sm">{{ artist }}</td>
+              </tr>
+              {% if group %}
+              <tr>
+                <th>Group</th>
+                <td class="text-muted text-sm">{{ group }}</td>
+              </tr>
+              {% endif %} {% if lang %}
+              <tr>
+                <th>Language</th>
+                <td class="text-muted text-sm">{{ lang }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+          <h1>{{ title }}</h1>
+          {{ description }}
+        </article>
+        <article>
+          {% for tag in tags %}
+          <div class="tag">{{ tag }}</div>
+          {% endfor %}
+        </article>
+        <article>
+          <div class="center"><a href="1/1" class="button">Read</a></div>
+        </article>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

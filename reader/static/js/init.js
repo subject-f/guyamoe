@@ -56,9 +56,19 @@ function LoadHandler(o) {
 function ReaderAPI(o) {
 	o=be(o);
 	Linkable.call(this);
-
+	
 	this.url = o.url || '/api/';
-	this.seriesUrl =  this.url + 'series/';
+	
+	this.firstParty = true;
+
+	if (window.location.pathname.includes("proxy")) {
+		this.seriesUrl = this.url + window.location.pathname.split("/")
+			.filter((e) => e.includes("proxy"))[0].replace("proxy", "series") + "/";
+		this.firstParty = false;
+	} else {
+		this.seriesUrl = `${this.url}series/`;
+	}
+	
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
@@ -66,55 +76,24 @@ function ReaderAPI(o) {
 
 	this.infuseSeriesData = function(data) {
 		for(var num in data.chapters) {
-		var chapter = data.chapters[num];
+		let chapter = data.chapters[num];
 			chapter.images = {};
+			chapter.loaded = {};
 			chapter.blurs = {};
 			chapter.previews = {};
 			chapter.hasWide = {};
 			chapter.wides = {};
 
 			chapter.id = num;
-			for(var group in chapter.groups) {
+			for(let group in chapter.groups) {
 				chapter.images[group] = [];
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
-				for (var i = 0; i < chapter.groups[group].length; i++) {
-					chapter.images[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							+ group 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					chapter.blurs[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_blur_"+ group
-							+ group+"_shrunk_blur" 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					chapter.previews[group].push(
-						this.mediaURL
-							+ data.slug 
-							+ '/chapters/' 
-							+ chapter.folder 
-							+ '/' 
-							// + "shrunk_"+ group
-							+ group+"_shrunk" 
-							+ '/' 
-							+ chapter.groups[group][i]
-					)
-					if(chapter.groups[group][i].indexOf('_w.') > -1) {
-						chapter.wides[group].push(i);
-					}
+				if (this.firstParty) {
+					firstPartySeriesHandler(this.mediaURL, chapter, group, data.slug);
+				} else {
+					thirdPartySeriesHandler(chapter, group);
 				}
 			}
 		}
@@ -137,6 +116,7 @@ function ReaderAPI(o) {
 				}
 				this.data[slug] = seriesData;
 				this.S.out('seriesUpdated', this.data[slug]);
+				this.S.out('isFirstParty', this.firstParty);
 			})
 		return this.seriesRequest;
 	}
@@ -631,11 +611,9 @@ function UI_Reader(o) {
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
-		.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
 		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
 		.attach('spreadCount', ['Ctrl+Digit1'], s => Settings.cycle('spreadCount'))
 		.attach('spreadOffset', ['Ctrl+Digit2'], s => Settings.cycle('spreadOffset'))
-		//.attach('comments', ['KeyC'], s => this.openComments())
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
@@ -648,16 +626,12 @@ function UI_Reader(o) {
 				this.nextChapter();
 		})
 
-	new KeyListener(document.body)
-		.attach('search', ['Ctrl+KeyF'], s => {
-			Loda.display('search')
-		})
-
+		
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'ltr')
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
-
+		
 	new KeyListener(document.body)
 		.condition(() => Settings.all.layout.get() == 'rtl')
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
@@ -668,7 +642,7 @@ function UI_Reader(o) {
 		node: this._.selector_chap
 	})
 	this.selector_chap.S.linkAnonymous('value', value => {
-		this.drawChapter(value, 0);
+		this.initChapter(value, 0);
 	});
 
 	this.selector_vol = new UI_FauxDrop({
@@ -710,6 +684,20 @@ function UI_Reader(o) {
 		this.current = data;
 	}
 
+	this.controlFeatures = function(isFirstParty) {
+		if (isFirstParty) {
+			new KeyListener(document.body)
+				.attach('search', ['Ctrl+KeyF'], s => {
+					Loda.display('search')
+				})
+				.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
+		} else {
+			document.querySelector("[data-bind='search']").style.display = 'none';
+			document.querySelector("[class='rdr-previews']").style.display = 'none';
+			this.plusOne = () => {};
+		}
+	}
+
 	this.setSCP = function(SCP) {
 		if(SCP.series) this.SCP.series = SCP.series;
 		if(SCP.chapter) this.SCP.chapter = SCP.chapter;
@@ -717,7 +705,7 @@ function UI_Reader(o) {
 	}
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
-		this.drawChapter(SCP.chapter, SCP.page);
+		this.initChapter(SCP.chapter, SCP.page);
 		this.S.out('init');
 	}
 
@@ -725,7 +713,7 @@ function UI_Reader(o) {
 		if(slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		this._.title.innerHTML = '<a href="/read/manga/'+this.current.slug+'">'+this.current.title+'</a>';
+		this._.title.innerHTML = `<a href="${window.location.pathname.split("/").splice(0, 3).join("/")}/${this.current.slug}">${this.current.title}</a>`;
 	var chapterElements = [];
 	var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
@@ -750,40 +738,60 @@ function UI_Reader(o) {
 			this._.page_selector.classList.remove('vis')
 			this._.zoom_level.classList.remove('vis')
 		}, 3000);
-		//this._.close.href = '/read/manga/' + this.SCP.series;
+		// this._.close.href = `/read/${window.location.pathname.split('/')[2]}/${this.SCP.series}`;
 	}
 
 	this.drawGroup = function(group) {
 		Settings.set('groupPreference', group);	
-		this.drawChapter();
+		this.initChapter();
 	}
 
-	this.drawChapter = function(chapter, page) {
-		if(chapter) this.SCP.chapter = chapter;
+	this.initChapter = function(chapter, page) {
+		if (chapter) this.SCP.chapter = chapter;
 		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = this.SCP.chapterObject.volume;
-		this.SCP.chapterName = this.SCP.chapterObject.title
-	let group = Settings.get('groupPreference');
-		if(group === undefined
-		|| this.SCP.chapterObject.groups[group] == undefined) {
-			if(this.current.preferred_sort
-			&& this.SCP.chapterObject.groups[this.current.preferred_sort[0]] != undefined){
-				group = this.current.preferred_sort[0]
-			}else{
-				group = Object.keys(this.SCP.chapterObject.groups)[0];
+		this.SCP.chapterName = this.SCP.chapterObject.title;
+		this.SCP.group = this.getGroup(chapter);
+
+		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
+			this.SCP.chapterObject.MD_request[this.SCP.group]().then((count) => {
+				delete this.SCP.chapterObject.MD_request[this.SCP.group]; // Save some memory, :kaguyaSmug:
+				this.SCP.chapterObject.loaded[this.SCP.group] = true;
+				this.SCP.pageCount = count;
+				this.SCP.lastPage = count - 1;
+				this.bootstrapChapter(page);
+			});
+		} else if (this.SCP.chapterObject.loaded[this.SCP.group]) {
+			this.SCP.pageCount = this.SCP.chapterObject.images[this.SCP.group].length;
+			this.SCP.lastPage = this.SCP.pageCount - 1;
+			this.bootstrapChapter(page);
+		}
+	}
+
+	this.getGroup = function(chapter) {
+		let group = Settings.get('groupPreference');
+
+		let chapterObj = this.current.chapters[chapter || this.SCP.chapter];
+
+		if (group === undefined || chapterObj.groups[group] === undefined) {
+			if (this.current.preferred_sort 
+				&& chapterObj.groups[this.current.preferred_sort[0]] !== undefined) {
+				group = this.current.preferred_sort[0];
+			} else {
+				group = Object.keys(chapterObj.groups)[0];
 			}
 		}
-		this.SCP.group = group;
-		this.SCP.pageCount = this.SCP.chapterObject.groups[group].length;
-		this.SCP.lastPage = this.SCP.pageCount - 1;
 
-		//Per-chapter plugins
+		return group;
+	}
+
+	this.bootstrapChapter = function(page) {
 		this.shuffleRandomChapter();
 
 		this.drawGroups();
 		this.drawPreviews();
 
-		this.imageView.drawImages(this.SCP.chapterObject.images[group], this.SCP.chapterObject.wides[group]);
+		this.imageView.drawImages(this.SCP.chapterObject.images[this.SCP.group], this.SCP.chapterObject.wides[this.SCP.group]);
 
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(this.SCP.volume, true);
@@ -839,8 +847,11 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.lastPage;
 		else
 			if(page !== undefined) this.SCP.page = page;
-		
-		this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
+		try {
+			this.SCP.page = this.imageView.imageWrappersMask[this.imageView.imageWrappersMap[this.SCP.page]][0]
+		} catch (e) {
+			this.SCP.page = this.SCP.page;
+		}
 
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.SCP.visiblePages = this.imageView.visiblePages;
@@ -868,7 +879,7 @@ function UI_Reader(o) {
 
 	this.selectVolume = function(vol) {
 		if(this.current.volMap[vol])
-			this.drawChapter(this.current.volMap[vol]);
+			this.initChapter(this.current.volMap[vol]);
 	}
 
 	this.plusOne = function() {
@@ -890,7 +901,7 @@ function UI_Reader(o) {
 		if(this.SCP.chapter != this.SCP.lastChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
-			this.drawChapter(
+			this.initChapter(
 				this.current.chaptersIndex[index + 1],
 				0
 			)
@@ -900,7 +911,7 @@ function UI_Reader(o) {
 		if(this.SCP.chapter != this.SCP.firstChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
-			this.drawChapter(
+			this.initChapter(
 				this.current.chaptersIndex[index - 1],
 				page || 0
 			)
@@ -930,8 +941,12 @@ function UI_Reader(o) {
 		this.selectVolume(+this.SCP.volume-1)
 	}
 
-	this.copyShortLink = function() {
-	var url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);
+	this.copyShortLink = function() { 
+		// TODO: hard-coded values is meh
+		let url = document.location.href;
+		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To")) {
+			url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);	
+		}
 		navigator.clipboard.writeText(url)
 		.then(function() {
 		  Tooltippy.set('Link copied to clipboard!');
@@ -1028,14 +1043,7 @@ function UI_Reader(o) {
 	}
 
 	this.enqueuePreload = url => {
-	var newPreload = 'url("'+url+'")';
-	this._.preload_entity.style.background = newPreload;
-	// var preloads = this._.preload_entity.children.map(item => item.style.background);
-	// 	if(preloads.indexOf(newPreload) < 0) {
-	// 	var newElement = document.createElement('div');
-	// 		newElement.style.background = newPreload;
-	// 		this._.preload_entity.appendChild(newElement);
-	//	}
+		this._.preload_entity.src = url;
 	}
 
 	this.eventRouter = function(event){
@@ -1057,8 +1065,8 @@ function UI_Reader(o) {
 			'previews': o => this.drawPreviews(o),
 			'zoom': o => this.setZoom(o),
 			'spread': o => this.setSpread(o),
-			'spreadCount': o => this.drawChapter(),
-			'spreadOffset': o => this.drawChapter(),
+			'spreadCount': o => this.bootstrapChapter(),
+			'spreadOffset': o => this.bootstrapChapter(),
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
 	}
@@ -1120,7 +1128,7 @@ function UI_Reader(o) {
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
-		this.drawChapter(this.SCP.chapter, 2)
+		this.initChapter(this.SCP.chapter, 2);
 		return false;
 	}, false)
 
@@ -1153,6 +1161,7 @@ function UI_Reader(o) {
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
+		isFirstParty: this.controlFeatures,
 		event: this.eventRouter,
 		settingsPacket: this.settingsRouter,
 		message: message => {
@@ -1832,7 +1841,8 @@ function URLChanger(o) {
 					+ ' - '
 					+ Reader.current.title
 					+ ' :: Guya',
-				"/reader/series/"
+				window.location.pathname.split('/').slice(0, 3).join('/') // "/reader/series/"
+					+ '/'
 					+ SCP.series
 					+ '/'
 					+ SCP.chapter.replace('.', '-')
@@ -2288,7 +2298,7 @@ function UI_ChapterUnit(o) {
 			pageButton.$.onclick = e => {
 				e.stopPropagation();
 				e.preventDefault();
-				Reader.drawChapter(this.chapter.id, +e.target.innerHTML-1);
+				Reader.initChapter(this.chapter.id, +e.target.innerHTML-1);
 				Loda.close();
 				return false;
 			}
@@ -2297,13 +2307,79 @@ function UI_ChapterUnit(o) {
 	}
 
 	this.$.onclick = e => {
-		Reader.drawChapter(this.chapter.id, 0);
+		Reader.initChapter(this.chapter.id, 0);
 		Loda.close();
 	}
 }
 
+function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
+	for (let i = 0; i < chapter.groups[group].length; i++) {
+		chapter.images[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				+ group 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		chapter.blurs[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				// + "shrunk_blur_"+ group
+				+ group+"_shrunk_blur" 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		chapter.previews[group].push(
+			mediaURL
+				+ slug 
+				+ '/chapters/' 
+				+ chapter.folder 
+				+ '/' 
+				// + "shrunk_"+ group
+				+ group+"_shrunk" 
+				+ '/' 
+				+ chapter.groups[group][i]
+		)
+		if (chapter.groups[group][i].indexOf('_w.') > -1) {
+			chapter.wides[group].push(i);
+		}
+	}
+	chapter.loaded[group] = true;
+}
 
-
+// NH API response returns an array, whereas MD returns a chapter ID
+function thirdPartySeriesHandler(chapter, group) {
+	if (Array.isArray(chapter.groups[group])) {
+		for (let image of chapter.groups[group]) {
+			chapter.images[group].push(image);
+		}
+		chapter.loaded[group] = true;
+	} else {
+		if (!chapter.MD_request) chapter.MD_request = {};
+		chapter.loaded[group] = false;
+		chapter.MD_request[group] = async () => {
+			let images = chapter.images[group];
+			try {
+				// Each group/chapter pair has a unique ID, returned by API
+				let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
+								.then(r => r.json());
+				pages.forEach(p => {
+					images.push(p);
+				});
+				return pages.length;
+			} catch (e) {
+				console.log(e);
+				return 0;
+			}
+		}
+	}
+}
 
 
 alg.createBin();

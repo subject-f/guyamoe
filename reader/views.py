@@ -17,7 +17,7 @@ from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
-from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data
+from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data, nh_series_data
 from guyamoe.settings import CANONICAL_ROOT_DOMAIN
 
 import os
@@ -65,6 +65,7 @@ def series_page_data(series_slug):
         latest_chapter = chapters.latest('uploaded_on')
         vols = Volume.objects.filter(series=series).order_by('-volume_number')
         cover_vol_url = ""
+        cover_vol_url_webp = ""
         for vol in vols:
             if vol.volume_cover:
                 cover_vol_url = f"/media/{vol.volume_cover}"
@@ -152,8 +153,6 @@ def reader(request, series_slug, chapter, page):
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
-    # if chapter in metadata:
-    # return HttpResponse(json.dumps(metadata), content_type="application/json")
     if metadata:
         metadata["relative_url"] = f"md_proxy/{md_series_id}"
         return render(request, 'reader/md_series.html', metadata)
@@ -163,10 +162,28 @@ def md_proxy(request, md_series_id):
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
-    # if chapter in metadata:
-    # return HttpResponse(json.dumps(metadata), content_type="application/json")
-    if data and chapter in data["chapters"]:
+    if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
+        data["hide_referrer"] = True
+        return render(request, 'reader/reader.html', data)
+    else:
+        return render(request, 'homepage/how_cute_404.html', status=404)
+
+@decorator_from_middleware(OnlineNowMiddleware)
+def nh_proxy(request, nh_series_id):
+    metadata = nh_series_data(nh_series_id)
+    if metadata:
+        metadata["relative_url"] = f"nh_proxy/{nh_series_id}"
+        return render(request, 'reader/nh_series.html', metadata)
+    else:
+        return render(request, 'reader/how_cute_404.html', status=404)
+
+@decorator_from_middleware(OnlineNowMiddleware)
+def nh_chapter(request, nh_series_id, chapter, page):
+    data = nh_series_data(nh_series_id)
+    if data and chapter.replace("-", ".") in data["chapters"]:
+        data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
+        data["hide_referrer"] = True
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
