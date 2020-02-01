@@ -600,6 +600,8 @@ function UI_Reader(o) {
 		page: 0,
 	};
 
+	this.loadingChapter = false;
+
 	new KeyListener(document.body)
 		.attach('prevCh', ['BracketLeft'], e => this.prevChapter())
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
@@ -748,6 +750,7 @@ function UI_Reader(o) {
 
 	this.initChapter = function(chapter, page) {
 		if (chapter) this.SCP.chapter = chapter;
+		this.loadingChapter = true;
 		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = this.SCP.chapterObject.volume;
 		this.SCP.chapterName = this.SCP.chapterObject.title;
@@ -759,11 +762,13 @@ function UI_Reader(o) {
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
 				this.SCP.pageCount = count;
 				this.SCP.lastPage = count - 1;
+				this.loadingChapter = false;
 				this.bootstrapChapter(page);
 			});
 		} else if (this.SCP.chapterObject.loaded[this.SCP.group]) {
 			this.SCP.pageCount = this.SCP.chapterObject.images[this.SCP.group].length;
 			this.SCP.lastPage = this.SCP.pageCount - 1;
+			this.loadingChapter = false;
 			this.bootstrapChapter(page);
 		}
 	}
@@ -898,6 +903,7 @@ function UI_Reader(o) {
 
 
 	this.nextChapter = function(){
+		if (this.loadingChapter) return;
 		if(this.SCP.chapter != this.SCP.lastChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter advance failed: invalid base index.')
@@ -908,6 +914,7 @@ function UI_Reader(o) {
 		}
 	}
 	this.prevChapter = function(page) {
+		if (this.loadingChapter) return;
 		if(this.SCP.chapter != this.SCP.firstChapter) {
 		var index = this.current.chaptersIndex.indexOf(''+this.SCP.chapter);
 			if(index < 0) throw new Error('Chapter stepback failed: invalid base index.')
@@ -919,6 +926,7 @@ function UI_Reader(o) {
 	}
 
 	this.nextPage = function() {
+		if (this.loadingChapter) return;
 	var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
 		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
@@ -928,6 +936,7 @@ function UI_Reader(o) {
 	}
 
 	this.prevPage = function(){
+		if (this.loadingChapter) return;
 		if(this.SCP.page > 0) 
 			this.displayPage(this.SCP.page - 1)
 		else {
@@ -935,9 +944,11 @@ function UI_Reader(o) {
 		}
 	}
 	this.nextVolume = function(){
+		if (this.loadingChapter) return;
 		this.selectVolume(+this.SCP.volume+1);
 	}
 	this.prevVolume = function(){
+		if (this.loadingChapter) return;
 		this.selectVolume(+this.SCP.volume-1)
 	}
 
