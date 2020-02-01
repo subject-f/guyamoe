@@ -23,5 +23,4 @@ class OnlineNowMiddleware(MiddlewareMixin):
             cache.set("peak_traffic", peak_traffic, 3600 * 8)
         cache.set("online_now", online, 600)
         # response = self.get_response(request)
-        print("-------------------------bleh")
         return response

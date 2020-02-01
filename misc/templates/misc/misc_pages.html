@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+<div>
+    {% for misc_page in pages %}
+        <a href="{{ misc_page.1 }}"><p>{{ misc_page.0 }}</p></a>
+    {% endfor %}
+</div>
+
+{% endblock %}

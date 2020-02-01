@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% load page_tags %}
+{% load static %}
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+{{ content | convert_to_markdown | safe }}
+
+{% endblock %}

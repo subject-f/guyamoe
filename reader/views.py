@@ -109,7 +109,8 @@ def series_page_data(series_slug):
                 "chapter_list": chapter_list,
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
                 "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url":f"read/manga/{series.slug}/"
+                "relative_url":f"read/manga/{series.slug}/",
+                "template": "series_info"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
