@@ -133,9 +133,9 @@
 		blackbox.nextElementSibling.style.top = Math.min(blackbox.scrollHeight, 500) + "px";
         blackbox.addEventListener('keydown', autosize);
         blackbox.addEventListener('blur',  e => e.target.placeholder = '');
-        blackbox.addEventListener('focus', e => e.target.placeholder = 'Send feedback	!');
-        blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
-        blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
+        blackbox.addEventListener('focus', e => e.target.placeholder = 'Send feedback!');
+        // blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
+        // blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
 
 		             
 		function autosize(){
@@ -148,16 +148,17 @@
 		}
 
 		blackbox_submit.onclick = function (e) {
-			fetch('/api/black_hole_mail', {
-			  method: 'POST',
-			  body: blackbox.value,
+			blackbox.focus();
+			fetch('/api/black_hole_mail/', {
+				method: 'POST',
+				body: blackbox.value,
 			})
 			.then((response) => response.json())
 			.then((data) => {
-			  blackbox.placeholder = 'Sent!'
+				blackbox.placeholder = 'Sent!'
 			})
 			.catch((error) => {
-			  blackbox.placeholder = 'Send failed.'
+				blackbox.placeholder = 'Send failed.'
 			});
 			console.log(blackbox.value);
 			blackbox.value = '';

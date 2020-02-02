@@ -1367,7 +1367,7 @@ function UI_ReaderImageView(o) {
 				shadowScroll();
 				if(IS_MOBILE) {
 					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().pageYOffset);
+					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
 				}else{
 					this.getScrollElement().focus();
 					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
