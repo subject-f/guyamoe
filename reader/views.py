@@ -28,7 +28,7 @@ import requests
 @csrf_exempt
 @decorator_from_middleware(OnlineNowMiddleware)
 def hit_count(request):
-    if request.POST:
+    if request.method == "POST":
         user_ip = get_user_ip(request)
         page_id = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}{user_ip}"
         page_hits_cache = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}"

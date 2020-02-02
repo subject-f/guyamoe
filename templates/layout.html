@@ -149,9 +149,11 @@
 
 		blackbox_submit.onclick = function (e) {
 			blackbox.focus();
+			var formData = new FormData();
+			formData.append("text", blackbox.value)
 			fetch('/api/black_hole_mail/', {
 				method: 'POST',
-				body: JSON.stringify({text: blackbox.value}),
+				body: formData
 			})
 			.then((response) => response.json())
 			.then((data) => {

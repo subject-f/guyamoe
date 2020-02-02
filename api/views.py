@@ -95,7 +95,7 @@ def download_chapter(request, series_slug, chapter):
     return resp
 
 def upload_new_chapter(request, series_slug):
-    if request.POST and request.user and request.user.is_staff:
+    if request.method == "POST" and request.user and request.user.is_staff:
         group = Group.objects.get(name=request.POST["scanGroup"])
         series = Series.objects.get(slug=series_slug)
         chapter_number = float(request.POST["chapterNumber"])
@@ -133,7 +133,7 @@ def upload_new_chapter(request, series_slug):
         return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
 
 def get_volume_covers(request, series_slug):
-    if request.POST:
+    if request.method == "POST":
         covers = cache.get(f"vol_covers_{series_slug}")
         if not covers:
             series = Series.objects.get(slug=series_slug)
@@ -147,7 +147,7 @@ def get_volume_covers(request, series_slug):
 
 @csrf_exempt
 def search_index(request, series_slug):
-    if request.POST:
+    if request.method == "POST":
         series = Series.objects.get(slug=series_slug)
         search_query = request.POST["searchQuery"]
         search_results = {}
@@ -162,7 +162,7 @@ def search_index(request, series_slug):
         return HttpResponse(json.dumps({}), content_type="application/json")
 
 def clear_cache(request):
-    if request.POST and request.user and request.user.is_staff:
+    if request.method == "POST" and request.user and request.user.is_staff:
         if request.POST["clear_type"] == "all":
             clear_pages_cache()
             response = "Cleared all cache"
@@ -178,7 +178,8 @@ def clear_cache(request):
 
 @csrf_exempt
 def black_hole_mail(request):
-    if request.POST:
+    if request.method == "POST":
+        text = request.POST["text"]
         user_ip = get_user_ip(request)
         user_sent_count = cache.get(f"mail_user_ip_{user_ip}")
         if not user_sent_count:
@@ -189,7 +190,6 @@ def black_hole_mail(request):
                 return HttpResponse(json.dumps({"error": "sending mail too frequently."}), content_type="application/json")
             else:
                 cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 3600)
-        text = request.body.decode('utf-8')
         if len(text) > 2000:
             return HttpResponse(json.dumps({"error": "message too long. can only send 2000 characters."}), content_type="application/json")
         try:
