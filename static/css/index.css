@@ -280,9 +280,14 @@ header {
 .navbar .nav-item textarea:hover,
 .navbar .nav-item textarea:focus,
 .navbar .nav-item textarea:not(:invalid) {
-	max-width: 20rem !important;
+	max-width: 35rem !important;
 	text-align: left;
 }
+
+.navbar .nav-item textarea:focus::placeholder {
+    font-family: inherit;
+}
+
 .navbar .nav-item textarea:hover::placeholder,
 .navbar .nav-item textarea:focus::placeholder,
 .navbar .nav-item textarea:not(:invalid)::placeholder {

@@ -1,4 +1,5 @@
 import os
+import hashlib
 import json
 import time
 import zipfile
@@ -183,18 +184,19 @@ def black_hole_mail(request):
         user_ip = get_user_ip(request)
         user_sent_count = cache.get(f"mail_user_ip_{user_ip}")
         if not user_sent_count:
-            cache.set(f"mail_user_ip_{user_ip}", 1, 3600)
+            cache.set(f"mail_user_ip_{user_ip}", 1, 30)
         else:
             user_sent_count += 1
             if user_sent_count > 4:
                 return HttpResponse(json.dumps({"error": "sending mail too frequently."}), content_type="application/json")
             else:
-                cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 3600)
+                cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 30)
         if len(text) > 2000:
             return HttpResponse(json.dumps({"error": "message too long. can only send 2000 characters."}), content_type="application/json")
         try:
             webhook = Webhook.partial(settings.MAIL_DISCORD_WEBHOOK_ID, settings.MAIL_DISCORD_WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
             em = Embed(color=0x000000, title="Black Hole", description=f"⚫ You've got guyamail! 📬\n\n{text}", timestamp=datetime.utcnow())
+            em.set_footer(text=f"IP hash: {hashlib.md5(user_ip.encode()).hexdigest()[:32]}")
             webhook.send(content=None, embed=em, username="Guya.moe")
         except (AttributeError, NameError) as e:
             feedback_folder = os.path.join(settings.MEDIA_ROOT, "feedback")

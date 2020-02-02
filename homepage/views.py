@@ -7,6 +7,7 @@ from django.views.decorators.http import condition
 from django.core.cache import cache
 
 from api.api import all_chapter_data_etag, md_chapter_info
+from guyamoe.settings import STATIC_VERSION
 from reader.middleware import OnlineNowMiddleware
 from reader.models import Series, Volume, Chapter
 from reader.views import series_page_data
@@ -15,7 +16,7 @@ from reader.views import series_page_data
 def admin_home(request):
     online = cache.get("online_now")
     peak_traffic = cache.get("peak_traffic")
-    return render(request, 'homepage/admin_home.html', {"online": len(online), "peak_traffic": peak_traffic, "template": "home"})
+    return render(request, 'homepage/admin_home.html', {"online": len(online), "peak_traffic": peak_traffic, "template": "home", "version_query": STATIC_VERSION})
 
 @cache_control(max_age=60)
 @condition(etag_func=all_chapter_data_etag)
@@ -46,13 +47,14 @@ def home(request):
             "doujin_cover_webp": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][1],
             "doujin_cover_blur": home_screen_series["Kaguya-Wants-To-Be-Confessed-To-Official-Doujin"][2],
             "relative_url": "",
-            "template": "home"
+            "template": "home",
+            "version_query": STATIC_VERSION
         })
 
 @cache_page(3600 * 48)
 @decorator_from_middleware(OnlineNowMiddleware)
 def about(request):
-    return render(request, 'homepage/about.html', {"relative_url": "about/", "template": "about"})
+    return render(request, 'homepage/about.html', {"relative_url": "about/", "template": "about", "version_query": STATIC_VERSION})
 
 
 def main_series_chapter(request, chapter):

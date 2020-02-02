@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
 from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data, nh_series_data
-from guyamoe.settings import CANONICAL_ROOT_DOMAIN
+from guyamoe.settings import CANONICAL_ROOT_DOMAIN, STATIC_VERSION
 
 import os
 import json
@@ -111,7 +111,8 @@ def series_page_data(series_slug):
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
                 "root_domain": CANONICAL_ROOT_DOMAIN,
                 "relative_url":f"read/manga/{series.slug}/",
-                "template": "series_info"
+                "template": "series_info",
+                "version_query": STATIC_VERSION
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
