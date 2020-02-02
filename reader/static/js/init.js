@@ -6,7 +6,7 @@ let IS_MOBILE = window.matchMedia("(max-width: 700px)").matches;
 
 let PROGRAMMATIC_SCROLL = false;
 let SCROLL_TIMER = null;
-//let DBG_VAL = NaN;
+let DBG_VAL = NaN;
 
 function shadowScroll() {
 	PROGRAMMATIC_SCROLL = true;
@@ -17,9 +17,9 @@ function shadowScroll() {
 } 
 
 function scroll(element, x, y, noshadow) {
-//	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
+	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
 	if(!noshadow) shadowScroll();
-	//console.log(element, 'scrolled to', x, y)
+	console.log(element, 'scrolled to', x, y)
 	if(element.scroll)
 		element.scroll(x, y)
 	else
@@ -1219,19 +1219,16 @@ function UI_ReaderImageView(o) {
 		anchorTimeout: 0
 	}
 
-	this.scrollHandler = e => {
+	document.onscroll = this._.image_container.onscroll = e => {
 		if(PROGRAMMATIC_SCROLL) return true;
 		if(!this.imageList) return true;
 		if(Settings.all.layout.get() != 'ttb') return true;
 
 		Reader.stickHeader();
-	// var scrollTop = (e.target.scrollingElement)?
-	// 			e.target.scrollingElement.scrollTop:
-	// 			undefined
-	// 		|| e.target.scrollTop;
-	// var scrollElement = e.target.scrollingElement || e.target;
-		var scrollTop = window.pageYOffset;
-		var scrollElement = window;
+	var scrollTop = (e.target.scrollingElement)?
+				e.target.scrollingElement.scrollTop:
+				undefined
+			|| e.target.scrollTop;
 		// console.log('wideUpdate fire')
 		if(!this.scroll.anchorRAF) {
 			this.updateScrollPosition();
@@ -1253,8 +1250,6 @@ function UI_ReaderImageView(o) {
 		return true;
 	}
 
-	window.onscroll = this.scrollHandler;
-
 	this.$.onscroll = () => {
 		scroll(this.$, 0, 0, true);
 	}
@@ -1269,7 +1264,7 @@ function UI_ReaderImageView(o) {
 		if(!this.selectedWrapper) return;
 		this.scroll.anchorObject = this.selectedWrapper.$;
 		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
-		this.scroll.anchorPoint = (this.imageContainer.$.pageYOffset - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
+		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
 	}
 
 	this.updateWides = () => {

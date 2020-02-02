@@ -10,11 +10,25 @@ body {
 	background-color:black;
 }
 
+body {
+	padding-top: 5rem;
+}
+
+header {
+	background: linear-gradient(0deg,rgba(0,0,0,0.7) 0%, rgb(0, 0, 0) 100%);
+	position: fixed;
+	top: 0;
+	z-index: 300;
+	width: 100%;
+
+}
+
 .navbar {
 	text-shadow: none;
-	height: 4rem;
+	height: 4.5rem;
 	align-items: stretch;
-	padding: 0;
+	padding: 0.3rem 0;
+	border: none;
 }
 
 .navbar-nav {
@@ -25,29 +39,255 @@ body {
 	align-items: stretch;
 	justify-content: center;
 	padding: 0 !important;
+	max-width: 100%;
 }
 
 .navbar .navbar-collapse {
 	padding-left: 0;
+	padding-right: 0;
+	align-items: stretch;
+	font-size: 0.85em;
 }
 
 .navbar-brand-logo {
 	align-self: center;
 	text-align: center;
+	outline: none;
 }
 
 .navbar-brand-logo img {
-	max-height: 2.6rem;
+	max-height: 2.3rem;
 	max-width: 100%;
 }
 
+
+.navbar-toggler {
+	outline: none !important;
+}
+
+.navbar-toggler-icon {
+	background-image: url(/static/img/dots-vertical.svg)
+}
+
+.dropdown-menu {
+	font-size: unset;
+}
+@media (max-width: 992px) {
+	html:not(.home) .navbar .container-fluid {
+		max-width: 83.222222%;
+	}
+
+	.home .navbar {
+		padding-right: 2.6% !important;
+		padding-left: 2.6% !important;
+	}
+
+	.navbar-brand-logo {
+		width: auto;
+		margin: 0 auto !important;
+		padding-left: 4rem !important;
+	}
+
+	.navbar-toggler {
+		width: 4rem;	
+	}
+	.navbar .navbar-toggler {
+		position: relative;
+	}
+
+	.navbar .nav-link.s {
+		box-shadow: none !important;
+	}
+	
+	.collasping {
+		 transition: height 0.3s ease-out;
+	}
+	
+	.navbar-collapse {
+	}
+
+	.navbar-collapse.collapsing,
+	.navbar-collapse.collapse.show {
+		top: 4rem;
+		right: 17px;
+		position: fixed;
+		max-height: calc(90vh - 5rem);
+		z-index: 200;
+		width: auto;
+		min-width: 10rem;
+		background: #1e1e1e;
+		box-shadow: 0px 7px 17px -5px black;
+		border-radius: 3px;
+		overflow: auto;
+		padding-right: 0;
+	}
+
+	.navbar-collapse.collapsing > ul > li a,
+	.navbar-collapse.collapse.show > ul > li a {
+		padding: 0.65em 1em !important;
+		flex-grow: 1;
+	}
+
+	.navbar-collapse.collapsing > ul > li a.s,
+	.navbar-collapse.collapse.show > ul > li a.s {
+		display: none;
+	}
+
+	.navbar-collapse.collapsing > ul > li a,
+	.navbar-collapse.collapse.show > ul > li a {
+		box-shadow: none !important;
+	}
+
+	.navbar-collapse.collapsing .dropdown-toggle,
+	.navbar-collapse.collapse.show .dropdown-toggle {
+		display: none;
+	}
+	.navbar-collapse.collapsing .dropdown-menu,
+	.navbar-collapse.collapse.show .dropdown-menu {
+		display: block;
+		box-shadow: none;
+		width: 100%;
+		background: none;
+	}
+
+	.navbar-collapse.collapsing .dropdown-divider,
+	.navbar-collapse.collapse.show .dropdown-divider {
+		display: none;
+	}
+
+	.navbar-collapse.collapsing .dropdown-menu a,
+	.navbar-collapse.collapse.show .dropdown-menu a {
+		color: white;
+	}
+
+	.navbar-collapse.collapsing .dropdown-menu,
+	.navbar-collapse.collapse.show .dropdown-menu {
+		padding: 0;
+		border: 0;
+	}
+
+	.blackbox-host {
+		padding-right: 0 !important;
+		order: 999;
+	}
+	
+	#blackbox {
+		max-width: 100%;
+	}
+
+
+	.enter-key {
+		top: -0.8rem !important;
+	}
+
+}
+@media (max-width: 768px) {
+	html:not(.home) .navbar .container-fluid {
+		max-width: 91.66666%;
+	}
+}
+@media (max-width: 576px) {
+	.navbar .container-fluid {
+		max-width: 100% !important;
+	}
+}
+
 .pusher {
-	flex-grow: 99999;
+	flex-grow: 1;
+}
+
+.blackbox-host {
+	padding-right: 1rem;
+	flex-grow: 0;
+	flex-basis: 50%;
+	justify-content: flex-end;
 }
 
 .navbar .nav-item {
 	display: inline-flex;
 	align-items: stretch;
+	position: relative;
+	white-space: nowrap;
+}
+.navbar .nav-item textarea {
+	background: black;
+	background: none;
+	border-radius: 2px;
+	border: 1px solid rgba(255,255,255,0.1);
+	box-shadow: 0px 0px 27px inset rgba(255,255,255,0.12), 0px 7px 17px -5px black;
+	box-sizing: border-box;
+	color: #ddd;
+	font-size: 1.1em;
+	min-height: 2.3rem;
+	height: 0;
+	margin-top: 0.8rem;
+	overflow: hidden;
+	padding: 0.5rem 0.75rem 0.5rem 0.75rem;
+	position: relative;
+	resize: none;
+	transition: max-width 0.2s ease;
+	max-width: 3rem;
+	flex-grow: 5;
+	z-index: 20;
+	background: black;
+	text-align: center;
+}
+
+.home .nav-item textarea {
+	margin-top: 0.5rem;
+}
+
+.navbar .nav-item textarea::placeholder {
+	font-family: 'guya', BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+.enter-key {
+	display: inline-block;
+	font-size: 0.9em;
+	text-align: center;
+	position: absolute;
+	z-index: 21;
+	align-self: center;
+	cursor: pointer;
+	border-radius: 2px;
+	padding: 0.3em 0.9em;
+	border: 1px solid #222;
+	background: black;
+	right: 20px;
+	top: 0px;
+}
+
+.enter-key:hover {
+	color: white;
+	border-color: white;
+}
+
+.navbar .nav-item textarea:invalid + .enter-key {
+	display: none;
+}
+
+
+.enter-key:before {
+	content:"";
+	background: url(../img/send.svg) no-repeat;
+	background-size: 70%;
+	background-position: center center;
+	width: 1.4rem;
+	height: 1.2rem;
+	display: block;
+}
+
+.navbar .nav-item textarea:hover,
+.navbar .nav-item textarea:focus,
+.navbar .nav-item textarea:not(:invalid) {
+	max-width: 20rem !important;
+	text-align: left;
+}
+.navbar .nav-item textarea:hover::placeholder,
+.navbar .nav-item textarea:focus::placeholder,
+.navbar .nav-item textarea:not(:invalid)::placeholder {
+	font-size: 0.85em;
+	line-height: 1.8;
 }
 
 .navbar .nav-link {
@@ -56,20 +296,96 @@ body {
 	display: inline-flex;
 	align-items: center;
 }
-.navbar .nav-link:hover, .navbar .nav-link:focus {
-	background: rgba(255,255,255,0.1);
+
+.navbar .nav-link:hover, .navbar .nav-link:focus  {
+	background: none !important;
 	border: none;
+	color: white;
+	box-shadow: 0px -39px 20px -40px #666 inset;
+	border-bottom: 1px solid #666;
+	transition: box-shadow 0.1s ease;
 }
-.navbar .nav-link.s {
+.navbar .nav-link.s, .navbar .nav-item.show .nav-link {
 	cursor: default;
 	background: none !important;
-	border-bottom: 1px solid #bbb !important;
-	box-shadow: 0px -34px 20px -40px #bbb inset !important;
+	border-bottom: 1px solid #bbb;
+	box-shadow: 0px -38px 20px -40px #bbb inset;
 	color: white;
 }
 
-.navbar-collapse {
-	align-items: stretch;
+.navbar a {
+	outline: none;
+}
+
+.dropdown-toggle {
+	cursor: default;
+}
+
+.dropdown-toggle:after {
+	content: "";
+	display: inline-block;
+	width: 0.5em;
+	height: 0.5em;
+	border: none;
+	border-bottom: 1px solid white;
+	border-right: 1px solid white;
+	vertical-align: middle;
+	line-height: 0;
+	position: relative;
+	bottom: 0px;
+	margin-left: 1.5ch;
+	transform: scaleY(1) rotate(45deg);
+	transition: top 0.1s ease;
+}
+
+/*.dropdown-toggle:after {
+	transform: translateY(4px) scaleY(-1) rotate(45deg);
+}*/
+
+.navbar .dropdown-menu {
+	background: #1e1e1e;
+	box-shadow: 0px 7px 17px -5px black;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	margin-top: 0;
+	padding: 0.5em 0;
+	overflow: hidden;
+}
+
+.navbar .dropdown-divider {
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+.navbar .dropdown-item {
+	padding: 0.45rem 1rem;
+}
+
+
+.home header {
+	display: flex;
+	justify-content: center;
+}
+
+.home .navbar-brand-logo {
+	margin-right: 2rem;
+	padding-left: 1rem;
+}
+
+.home .navbar-brand-logo img {
+	max-height: 2.7rem;
+}
+
+.home .navbar-collapse {
+	flex: 1 0 0;
+	max-width: 100%;
+	padding-right: 1rem;
+}
+.home .navbar.navbar-expand-lg {
+	height: 5em;
+	max-width: 85em;
+	flex-basis: 85em;
+	padding: 0.7rem 0;
 }
 
 main {
@@ -94,7 +410,7 @@ main .manga-card {
 	background: #191919;
 	box-shadow: 0px 2px 10px rgba(0,0,0,0.5);
 	overflow: hidden;
-	margin: 2rem 0;
+	margin: 0rem 0 1rem 0;
 	color: #eee;
 	background-size: cover;
 	background-repeat: no-repeat;
@@ -170,6 +486,11 @@ main .manga-card article {
 main .manga-card article h1 {
 	font-size: 1.7em;
 	line-height: 1.5;
+	display: inline;
+	margin-right: auto;
+}
+main .manga-card article > a:hover h1 {
+	text-decoration: underline;
 }
 main .manga-card article h2 {
 	font-size: 0.9em;
@@ -203,7 +524,7 @@ main .manga-card:first-child .manga-links.shill {
 	color: #ddd;
 }
 main .manga-card:first-child:before {
-	content: unset;s
+	content: unset;
 }
 
 .manga-link {
@@ -551,6 +872,12 @@ main .manga-card.full {
       background-size: 1500px;
       background-image: url('/static/img/bg_box_blur_smol.png');
 
+}
+
+.page-series .side-cover .media {
+	border-top-left-radius: 3px;
+    overflow: hidden;
+    border-top-right-radius: 3px;
 }
 
 .page-series article {

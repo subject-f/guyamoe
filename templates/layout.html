@@ -55,23 +55,39 @@
 	<nav class="navbar navbar-expand-lg">
 		<div class="container-fluid">
 			<a class="navbar-brand-logo col-lg-2" href="/" rel="home">
-				<img src="//kagu.algoinde.ru/static/img/Guya-moe.png?123" alt="Guya.moe" class="mr-1">
+				<img src="//kagu.algoinde.ru/static/img/Guya-moe.png?123" alt="Guya.moe">
 			</a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse col-lg-8" id="navbarSupportedContent">
 				<ul class="navbar-nav">
-					<li class="nav-item">
-						<a class="nav-link" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama</a>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							Read
+						</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama: Love is War</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="/read/manga/We-Want-To-Talk-About-Kaguya">We Want To Talk About Kaguya</a>
+							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Official Doujin</a>
+							<a class="dropdown-item" href="//skythewood.blogspot.com/p/kaguya.html">Novel: Seven Mysteries of Shuchiin</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="https://tachiyomi.org/extensions/#Guya">Tachiyomi Plugin</a>
+						</div>
 					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/read/manga/We-Want-To-Talk-About-Kaguya">4-koma</a>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							Fan-content
+						</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/Fancomic">Fancomics</a>
+							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/fandub">Fandub</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" target="_blank" href="//kaguyasama-wa-kokurasetai.fandom.com/wiki/Kaguya-sama_wa_Kokurasetai_Wikia">Wiki</a>
+							<a class="dropdown-item" target="_blank" href="//kaguya-archive.tumblr.com/">Archive</a>
+						</div>
 					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Doujin</a>
-					</li>
-					<div class="pusher"></div>
 					<!-- <li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Read Manga
@@ -84,23 +100,22 @@
 							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Kaguya Wants to be Confessed to Official Doujin</a>
 						</div>
 					</li> -->
-					<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						Other
-					</a>
-					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<a class="dropdown-item" href="//skythewood.blogspot.com/p/kaguya.html">Novel</a>
-						<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/Fancomic">Fancomics</a>
-						<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/fandub">Fandub</a>
-						<div class="dropdown-divider"></div>
-						<a class="dropdown-item" target="_blank" href="//www.reddit.com/r/Kaguya_sama/">Subreddit</a>
-						<a class="dropdown-item" target="_blank" href="//discord.gg/gAUAkzr">Discord</a>
-						<a class="dropdown-item" target="_blank" href="//kaguyasama-wa-kokurasetai.fandom.com/wiki/Kaguya-sama_wa_Kokurasetai_Wikia">Wiki</a>
-						<a class="dropdown-item" target="_blank" href="//kaguya-archive.tumblr.com/">Archive</a>
-					</div>
+					<!-- <li class="nav-item">
+						<a class="nav-link" href="/about">Kaguya News</a>
+					</li> -->
+					<div class="pusher"></div>
+					<li class="nav-item blackbox-host">
+						<textarea id="blackbox" required="true" placeholder=""></textarea>
+						<span id="blackbox_submit" class="enter-key"></span>
 					</li>
 					<li class="nav-item">
-					<a class="nav-link" href="/about">About</a>
+						<a class="nav-link" href="/about">About</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="//www.reddit.com/r/Kaguya_sama/"><img alt="/r/Kaguya_sama" src="/static/img/reddit.svg"></img></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="//discord.gg/gAUAkzr"><img alt="Discord" src="/static/img/discord.svg"></img></a>
 					</li>
 				</ul>
 			</div>
@@ -113,6 +128,42 @@
             if(link.href == document.location.href || link.href + '/' == document.location.href || link.href == document.location.href + '/')
                 link.classList.add('s')
             });
+        blackbox.style.height = "";
+        blackbox.style.height = Math.min(blackbox.scrollHeight, 500) + "px";
+		blackbox.nextElementSibling.style.top = Math.min(blackbox.scrollHeight, 500) + "px";
+        blackbox.addEventListener('keydown', autosize);
+        blackbox.addEventListener('blur',  e => e.target.placeholder = '');
+        blackbox.addEventListener('focus', e => e.target.placeholder = 'Send feedback	!');
+        blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
+        blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
+
+		             
+		function autosize(){
+		  var el = this;
+		  setTimeout(function(){
+		      el.style.height = "";
+  			  el.style.height = Math.min(el.scrollHeight, 500) + "px";
+  			  el.nextElementSibling.style.top = Math.min(el.scrollHeight, 500) + "px";
+		  },0);
+		}
+
+		blackbox_submit.onclick = function (e) {
+			fetch('/api/black_hole_mail', {
+			  method: 'POST',
+			  body: blackbox.value,
+			})
+			.then((response) => response.json())
+			.then((data) => {
+			  blackbox.placeholder = 'Sent!'
+			})
+			.catch((error) => {
+			  blackbox.placeholder = 'Send failed.'
+			});
+			console.log(blackbox.value);
+			blackbox.value = '';
+			autosize.call(blackbox)
+		}
+
 	</script>
 	{% endcache %}
 	{% block body %}
