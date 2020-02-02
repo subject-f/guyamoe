@@ -151,7 +151,7 @@
 			blackbox.focus();
 			fetch('/api/black_hole_mail/', {
 				method: 'POST',
-				body: blackbox.value,
+				body: JSON.stringify({text: blackbox.value}),
 			})
 			.then((response) => response.json())
 			.then((data) => {
