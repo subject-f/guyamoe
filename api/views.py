@@ -3,15 +3,18 @@ import json
 import time
 import zipfile
 from datetime import datetime, timezone
+
+from discord import Embed, Webhook, RequestsWebhookAdapter
 from django.http import HttpResponse, StreamingHttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
+from reader.users_cache_lib import get_user_ip
 from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_info, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data
 from django.views.decorators.csrf import csrf_exempt
-
+import requests
 
 @condition(etag_func=chapter_data_etag)
 def get_series_data(request, series_slug):
@@ -129,7 +132,6 @@ def upload_new_chapter(request, series_slug):
     else:
         return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
 
-
 def get_volume_covers(request, series_slug):
     if request.POST:
         covers = cache.get(f"vol_covers_{series_slug}")
@@ -173,3 +175,31 @@ def clear_cache(request):
         return HttpResponse(json.dumps({"response": response}), content_type="application/json")
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
+
+@csrf_exempt
+def black_hole_mail(request):
+    if request.POST:
+        user_ip = get_user_ip(request)
+        user_sent_count = cache.get(f"mail_user_ip_{user_ip}")
+        if not user_sent_count:
+            cache.set(f"mail_user_ip_{user_ip}", 1, 3600)
+        else:
+            user_sent_count += 1
+            if user_sent_count > 4:
+                return HttpResponse(json.dumps({"error": "sending mail too frequently."}), content_type="application/json")
+            else:
+                cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 3600)
+        text = request.body.decode('utf-8')
+        if len(text) > 2000:
+            return HttpResponse(json.dumps({"error": "message too long. can only send 2000 characters."}), content_type="application/json")
+        try:
+            webhook = Webhook.partial(settings.MAIL_DISCORD_WEBHOOK_ID, settings.MAIL_DISCORD_WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
+            em = Embed(color=0x000000, title="Black Hole", description=f"⚫ You've got guyamail! 📬\n\n{text}", timestamp=datetime.utcnow())
+            webhook.send(content=None, embed=em, username="Guya.moe")
+        except (AttributeError, NameError) as e:
+            feedback_folder = os.path.join(settings.MEDIA_ROOT, "feedback")
+            os.makedirs(feedback_folder, exist_ok=True)
+            feedback_file = str(int(datetime.utcnow().timestamp()))
+            with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
+                f.write(text)
+        return HttpResponse(json.dumps({"success": "mail successfully crossed the event horizon"}), content_type="application/json")
