@@ -1,4 +1,5 @@
 aiohttp==3.5.4
+discord.py==1.2.5
 Django==2.2.3
 django-extensions==2.1.9
 django-ratelimit==2.0.0
