@@ -188,11 +188,11 @@ def black_hole_mail(request):
         else:
             user_sent_count += 1
             if user_sent_count > 4:
-                return HttpResponse(json.dumps({"error": "sending mail too frequently."}), content_type="application/json")
+                return HttpResponse(json.dumps({"error": "Error: sending mail too frequently."}), content_type="application/json")
             else:
                 cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 30)
         if len(text) > 2000:
-            return HttpResponse(json.dumps({"error": "message too long. can only send 2000 characters."}), content_type="application/json")
+            return HttpResponse(json.dumps({"error": "Error: message too long. can only send 2000 characters."}), content_type="application/json")
         try:
             webhook = Webhook.partial(settings.MAIL_DISCORD_WEBHOOK_ID, settings.MAIL_DISCORD_WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
             em = Embed(color=0x000000, title="Black Hole", description=f"⚫ You've got guyamail! 📬\n\n{text}", timestamp=datetime.utcnow())
@@ -204,4 +204,4 @@ def black_hole_mail(request):
             feedback_file = str(int(datetime.utcnow().timestamp()))
             with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
                 f.write(text)
-        return HttpResponse(json.dumps({"success": "mail successfully crossed the event horizon"}), content_type="application/json")
+        return HttpResponse(json.dumps({"success": "Mail successfully crossed the event horizon"}), content_type="application/json")

@@ -157,7 +157,12 @@
 			})
 			.then((response) => response.json())
 			.then((data) => {
-				blackbox.placeholder = 'Sent!'
+				if(data.success){
+					blackbox.placeholder = 'Sent!'
+				}
+				else{
+					blackbox.placeholder = data.error
+				}
 			})
 			.catch((error) => {
 				blackbox.placeholder = 'Send failed.'
