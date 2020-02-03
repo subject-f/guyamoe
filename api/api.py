@@ -75,16 +75,17 @@ def md_series_page_data(series_id):
             last_updated = (api_data["chapter"][latest_chap_id]["chapter"], datetime.utcfromtimestamp(api_data["chapter"][latest_chap_id]["timestamp"]).strftime("%y/%m/%d"))
             chapter_dict = {}
             for ch in api_data["chapter"]:
-                try:
-                    float(api_data["chapter"][ch]["chapter"])
-                except ValueError:
-                    continue
                 if api_data["chapter"][ch]["lang_code"] == "gb":
+                    chapter_id = api_data["chapter"][ch]["chapter"]
+                    try:
+                        float(api_data["chapter"][ch]["chapter"])
+                    except ValueError:
+                        chapter_id = str(api_data["chapter"][ch]["timestamp"])
                     date = datetime.utcfromtimestamp(api_data["chapter"][ch]["timestamp"])
                     if api_data["chapter"][ch]["chapter"] in chapter_dict:
-                        chapter_dict[api_data["chapter"][ch]["chapter"]] = [api_data["chapter"][ch]["chapter"], api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-"), "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
+                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
                     else:
-                        chapter_dict[api_data["chapter"][ch]["chapter"]] = [api_data["chapter"][ch]["chapter"], api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-"), api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
+                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
             chapter_list = [x[1] for x in sorted(chapter_dict.items(), key=lambda m: float(m[0]), reverse=True)]
             series_page_dt = {
                 "series": api_data["manga"]["title"],
@@ -122,8 +123,7 @@ def md_series_data(series_id):
                             chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"] = api_data["chapter"][chapter]["title"]
                         chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
                     else:
-                        chapters_dict[api_data["chapter"][chapter]["chapter"]] = {
-                            # "chapter_id": chapter,
+                        chapters_dict[api_data["chapter"][chapter]["chapter"] if api_data["chapter"][chapter]["chapter"] else str(api_data["chapter"][chapter]["timestamp"])] = {
                             "volume": api_data["chapter"][chapter]["volume"],
                             "title": api_data["chapter"][chapter]["title"],
                             "groups": {
@@ -151,7 +151,7 @@ def md_chapter_info(chapter_id):
             data = resp.text
             api_data = json.loads(data)
             chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
-            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"]}
+            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"] or str(api_data["timestamp"])}
             cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
         else:
             return None
