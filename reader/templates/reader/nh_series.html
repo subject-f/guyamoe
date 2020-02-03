@@ -127,7 +127,8 @@
             </tbody>
           </table>
           <h1>{{ title }}</h1>
-          {{ description }}
+          <a href="https://nhentai.net/g/{{ slug }}">View on NHentai</a>
+          {{ description|linebreaks }}
         </article>
         <article>
           {% for tag in tags %}
