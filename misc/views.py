@@ -23,6 +23,6 @@ def content(request, page_url):
 def misc_pages(request):
     pages = cache.get("misc_pages")
     if not pages:
-        pages = Page.objects.all().order_by('-date').values_list('page_title', 'page_url')
+        pages = Page.objects.all().order_by('-date')
         cache.set("misc_pages", pages, 3600 * 8)
     return render(request, 'misc/misc_pages.html', {'pages': pages, 'template': 'misc_page', "version_query": STATIC_VERSION})

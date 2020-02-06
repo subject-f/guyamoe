@@ -412,7 +412,7 @@ main a {
 	outline: none;
 }
 
-main .manga-card {
+.manga-card {
 	display: block;
 	border-radius: 5px;
 	background: #191919;
@@ -427,24 +427,24 @@ main .manga-card {
 	flex-grow: 1;
 }
 
-main .manga-card:first-child {
+.manga-card:first-child {
 	min-height: 30em;
 	background-attachment: fixed;
   	background-position: 50% 0;
   	background-size: 1500px;
   	background-position: 50% 10%;
 }
-main .manga-card:first-child picture img { 
+.manga-card:first-child picture img { 
 	height: 30em;
 }
-main .manga-card {
+.manga-card {
 	min-height: 9em;
 }
-main .manga-card picture img { 
+.manga-card picture img { 
 	height: 9em;
 }
 
-main .manga-card:before {
+.manga-card:before {
 	content:"";
 	display: block;
 	position: absolute;
@@ -460,20 +460,20 @@ main .manga-card:before {
 	background-clip: padding-box;
 }
 
-main .manga-card > * {
+.manga-card > * {
 	z-index: 2;
 	position: relative;
 }
 
-main .manga-card > a.picture,
-main .manga-card > picture {
+.manga-card > a.picture,
+.manga-card > picture {
 	display: inline-block;
 	float: left;
 	margin-right: 2em;
 	z-index: 4;
 }
 
-main .manga-card picture:after {
+.manga-card picture:after {
 	content: "";
 	position: absolute;
 	top: 0;
@@ -483,7 +483,7 @@ main .manga-card picture:after {
 	box-shadow: 3em 3em 3em -3em rgba(10,10,10,0.7) inset;
 }
 
-main .manga-card article {
+.manga-card article {
 	padding-top: 1em;
 	padding-right: 2em;
 	padding-left: 1em;
@@ -491,47 +491,47 @@ main .manga-card article {
 	flex-direction: column;
 }
 
-main .manga-card article h1 {
+.manga-card article h1 {
 	font-size: 1.7em;
 	line-height: 1.5;
 	display: inline;
 	margin-right: auto;
 }
-main .manga-card article > a:hover h1 {
+.manga-card article > a:hover h1 {
 	text-decoration: underline;
 }
-main .manga-card article h2 {
+.manga-card article h2 {
 	font-size: 0.9em;
 	color: #aaa;
 	font-weight: normal;
 	line-height: 1.5;
 	margin-top: 0.5em;
 }
-main .manga-card article p {
+.manga-card article p {
 	margin: 0.4em 0 0 0;
 	color: #ddd;
 	font-size: 0.9em;
 }
 
-main .manga-card .manga-links {
+.manga-card .manga-links {
 	margin: 0.5em 0 1em 0;
 	display: inline-flex;
 	flex-direction: column;
 	max-width: 100%;
 	min-width: 19em;
 }
-main .manga-card .manga-links span {
+.manga-card .manga-links span {
 	margin-left: -12px;
 	display: flex;
 }
-main .manga-card .manga-links span a:last-child {
+.manga-card .manga-links span a:last-child {
 	margin-right: 0;
 }
 
-main .manga-card:first-child .manga-links.shill {
+.manga-card:first-child .manga-links.shill {
 	color: #ddd;
 }
-main .manga-card:first-child:before {
+.manga-card:first-child:before {
 	content: unset;
 }
 
@@ -791,7 +791,7 @@ main .manga-card:first-child:before {
 }
 
 
-main .manga-card.smol {
+.manga-card.smol {
 	flex-grow: 1;
 	flex-basis: 45%;
 	flex-shrink: 0;
@@ -801,7 +801,7 @@ main .manga-card.smol {
 	background-position: 50% 30%;
 }
 
-main .manga-card.smol:before {
+.manga-card.smol:before {
 	top: -10px;
 	left: -10px;
 	right: -10px;
@@ -811,32 +811,32 @@ main .manga-card.smol:before {
 	box-shadow: none !important;
 
 }
-main .manga-card.smol:hover {
+.manga-card.smol:hover {
 	transform: scale(1.02);
 }
 
-main .manga-card.smol h2 {
+.manga-card.smol h2 {
 	font-size: 1.3em;
 	color: white;
 	line-height: 1.5;
 	margin-top: 0;
 }
-main .manga-card.smol h3 {
+.manga-card.smol h3 {
 	font-size: 1em;
 }
-main .manga-card.smol p {
+.manga-card.smol p {
 	color: #ccc;
 }
 
-main .manga-card.smol picture {
+.manga-card.smol picture {
 	margin-right: 1em;
 }
-main .manga-card.smol article {
+.manga-card.smol article {
 	padding-top: 0.5em;
 	padding-right: 1em;
 }
 
-main .manga-card.full {
+.manga-card.full {
 	flex-basis: 100%;
 	flex-shrink: 1;
 	max-width: 100%;
@@ -1092,26 +1092,26 @@ main .manga-card.full {
 }
 
 @media (max-width: 768px) {
-	main .manga-card {
+	.manga-card {
 		
 		flex-direction: column;
 	}
-	main .manga-card:first-child picture img {
+	.manga-card:first-child picture img {
 		height: 11em;
 		border-bottom-right-radius: 0.5em;
 	}
-	main .manga-card:first-child .manga-links {
+	.manga-card:first-child .manga-links {
 		min-width: 100%;	
 	}
-	main .manga-card:first-child .manga-links.shill span {
+	.manga-card:first-child .manga-links.shill span {
 			display: flex;
 			flex-wrap: wrap;
 	}
-	main .manga-card:first-child .manga-links.shill span * {
+	.manga-card:first-child .manga-links.shill span * {
 			flex-grow: 1;
 	}
 
-	main .manga-card.smol {
+	.manga-card.smol {
 		min-width: 100%;
 	}
 	.manga-link.tachiyom,
@@ -1141,7 +1141,7 @@ main .manga-card.full {
 }
 
 @media (min-width: 1000px) {
-	main .manga-card .manga-links {
+	.manga-card .manga-links {
 		min-width: 37em;
 	}
 }
