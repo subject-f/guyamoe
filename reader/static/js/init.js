@@ -614,8 +614,8 @@ function UI_Reader(o) {
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
 		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
-		.attach('spreadCount', ['Ctrl+Digit1'], s => Settings.cycle('spreadCount'))
-		.attach('spreadOffset', ['Ctrl+Digit2'], s => Settings.cycle('spreadOffset'))
+		.attach('spreadCount', ['KeyU'], s => Settings.cycle('spreadCount'))
+		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('spreadOffset'))
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})

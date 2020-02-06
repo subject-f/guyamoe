@@ -5,7 +5,28 @@
 {% endblock %}
 
 {% block body %}
+<div class="cover-image-wrap" style="background-image: url({{cover_image_url}})">
+	<img class="cover-image" src="{{cover_image_url}}" alt="{{page_title}}" />
+</div>
+<content class="text-article">
+	<h1>{{page_title}}</h1>
+	{{ content | convert_to_markdown | safe }}
+</content>
 
-{{ content | convert_to_markdown | safe }}
+<a href="#" onclick="localStorage.setItem('reload', '1'); localStorage.setItem('scroll', 0);">reload stop</a><a href="#" onclick="localStorage.setItem('reload', '0')">| start</a>
 
+<script type="text/javascript">
+setTimeout(function() {
+	if(localStorage.getItem('scroll')) {
+		scroll(0,localStorage.getItem('scroll'));
+	}
+}, 300);
+setInterval(
+	function () {
+		if(localStorage.getItem('reload') != 1) {
+			localStorage.setItem('scroll', window.pageYOffset);
+			location.reload(1);
+		}
+	}, 4000)
+</script>
 {% endblock %}

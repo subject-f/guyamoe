@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i|Vollkorn:400,400i,600&display=swap&subset=latin-ext');
+
+
 html {
   scroll-behavior: smooth;
 }
@@ -1147,3 +1150,125 @@ main .manga-card.full {
 		font-size: 1.1em;
 	}
 }
+
+.misc_pages_list body {
+	display: block !important;
+}
+
+.text-article {
+	padding: 0 2em;
+	width: 100%;
+	max-width: 70rem;
+	box-sizing: border-box;
+	margin: 0rem auto 1rem;
+	display: flex;
+	flex-direction: column;
+	line-height: 1.6;
+	font-size: 1.3em;
+	background: #111;
+	color: #ddd;
+	font-family: "Open Sans"
+}
+
+.text-article h1,
+.text-article h2,
+.text-article h3,
+.text-article h4,
+.text-article h5 {
+	font-family: "Vollkorn";
+	color: white;
+	margin-top: 0.5em;
+	font-weight: 400;
+	margin-bottom: 0.2em;
+	line-height: 1.3;
+}
+
+.text-article h1 {
+	font-size: 2.5em;
+}
+.text-article h2 {
+	font-size: 1.8em;
+	text-align: center;
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+	padding: 0.3em 0;
+	margin-bottom: 1em;
+}
+
+.text-article * {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+}
+
+.cover-image-wrap {
+	width: 100%;
+	text-align: center;
+	position: relative;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+.cover-image-wrap:before {
+	content: "";
+	position: absolute;
+	width: 100%;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: rgba(0,0,0,0.8);
+}
+
+.cover-image {
+	max-width: 1350px;
+	max-height: 70vh;
+	position: relative;
+}
+
+.text-article figure img {
+	max-width: 1450px;
+	align-self: center;
+	max-height: 80vh;
+}
+
+
+@media (max-width: 1450px) {
+	.cover-image {
+		max-width: 100%;
+	}
+	.text-article figure img {
+		max-width: 100vw;
+	}
+}
+
+.text-article blockquote {
+	padding-left: 1em;
+	border-left: 2px solid gray;
+}
+
+.text-article figure {
+	padding-top: 1em;
+}
+
+.text-article figcaption {
+	text-align: center;
+	font-size: 0.9em;
+	padding: 0 2em;
+	padding-top: 1em;
+}
+
+.text-article dt,
+.text-article dd {
+	display: block;
+}
+
+.text-article dt {
+	margin-bottom: 0.5rem; 
+}
+
+.text-article dt:before {
+	content: "――";
+	letter-spacing: -0.4em;
+	margin-right: 1em;
+}
+
