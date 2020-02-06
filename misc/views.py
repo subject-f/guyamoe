@@ -7,7 +7,10 @@ import re
 
 def content(request, page_url):
     page = Page.objects.get(page_url=page_url)
-    return render(request, 'misc/misc.html', {'content': page.content, 'template': 'misc_pages_list', "version_query": STATIC_VERSION})
+    content = page.content
+    for var in page.variable.all():
+        content = content.replace("{{%s}}" % var.key, var.value)
+    return render(request, 'misc/misc.html', {'content': content, 'template': 'misc_pages_list', "version_query": STATIC_VERSION})
 
 def misc_pages(request):
     pages = cache.get("misc_pages")

@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Page
+from .models import Page, Variable
 
 # Register your models here.
-admin.site.register(Page)
+class PageAdmin(admin.ModelAdmin):
+    ordering = ('date',)
+    list_display = ('content', 'page_title', 'page_url', 'date',)
+    filter_horizontal = ('variable',)
+
+admin.site.register(Page, PageAdmin)
+admin.site.register(Variable)
