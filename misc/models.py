@@ -13,8 +13,9 @@ class Page(models.Model):
     content = models.TextField(blank=True, null=True)
     page_title = models.CharField(max_length=300, blank=False, null=False, unique=True)
     page_url = models.CharField(max_length=300, blank=False, null=False, unique=True)
+    cover_image_url = models.CharField(max_length=300)
     date = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
-    variable = models.ManyToManyField(Variable, blank=True, null=True)
+    variable = models.ManyToManyField(Variable, blank=True)
 
     def __str__(self):
         return self.page_title
