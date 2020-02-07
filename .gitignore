@@ -26,6 +26,5 @@ migrations/
 
 #django collectstatic location
 static/
-
 #media root
 media/manga/*
