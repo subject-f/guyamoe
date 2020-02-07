@@ -34,7 +34,7 @@ urlpatterns = [
     path('read/', include('reader.urls')),
     path('reader/', include('reader.urls')),
     path('api/', include('api.urls')),
-    path('misc/', include('misc.urls')),
+    path('pages/', include('misc.urls')),
 ]
 
 handler404 = 'homepage.views.handle404'
