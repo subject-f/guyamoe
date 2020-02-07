@@ -3,6 +3,9 @@ Disallow: /admin/*
 Disallow: /admin_home/
 Disallow: /reader/update_view_count/
 Disallow: /reader/md_proxy/*
+Disallow: /reader/nh_proxy/*
+Disallow: /read/md_proxy/*
+Disallow: /read/nh_proxy/*
 Disallow: /api/download_chapter/*
 Disallow: /api/upload_new_chapter/*
 
