@@ -31,15 +31,8 @@ def hit_count(request):
     if request.method == "POST":
         user_ip = get_user_ip(request)
         page_id = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}{user_ip}"
-        page_hits_cache = f"url_{request.POST['series']}/{request.POST['chapter'] if 'chapter' in request.POST else ''}"
-        cache.set(page_id, page_id, 60)
-        page_cached_users = cache.get(page_hits_cache)
-        if page_cached_users:
-            page_cached_users = [ip for ip in page_cached_users if cache.get(ip)]
-        else:
-            page_cached_users = []
-        if user_ip not in page_cached_users:
-            page_cached_users.append(user_ip)
+        if not cache.get(page_id):
+            cache.set(page_id, page_id, 60)
             series_slug = request.POST["series"]
             series_id = Series.objects.get(slug=series_slug).id
             series = ContentType.objects.get(app_label='reader', model='series')
@@ -54,7 +47,6 @@ def hit_count(request):
                 hit.hits = F('hits') + 1
                 hit.save()
         
-        cache.set(page_hits_cache, page_cached_users)
     return HttpResponse(json.dumps({}), content_type='application/json')
 
 def series_page_data(series_slug):
@@ -111,8 +103,7 @@ def series_page_data(series_slug):
                 "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
                 "root_domain": CANONICAL_ROOT_DOMAIN,
                 "relative_url":f"read/manga/{series.slug}/",
-                "template": "series_info",
-                "version_query": STATIC_VERSION
+                "template": "series_info"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
@@ -122,12 +113,14 @@ def series_page_data(series_slug):
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
+    data["version_query"] = STATIC_VERSION
     return render(request, 'reader/series_info.html', data)
 
 @staff_member_required
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
+    data["version_query"] = STATIC_VERSION
     return render(request, 'reader/series_info_admin.html', data)
 
 def get_all_metadata(series_slug):
@@ -137,7 +130,7 @@ def get_all_metadata(series_slug):
         chapters = Chapter.objects.filter(series=series).select_related('series')
         series_metadata = {}
         for chapter in chapters:
-            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title, "version_query": settings.STATIC_VERSION}
+            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title}
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
@@ -147,6 +140,7 @@ def reader(request, series_slug, chapter, page):
     metadata = get_all_metadata(series_slug)
     if chapter in metadata:
         metadata[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
+        metadata[chapter]["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', metadata[chapter])
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
