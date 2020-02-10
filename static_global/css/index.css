@@ -1113,6 +1113,8 @@ main a {
 
 	.manga-card.smol {
 		min-width: 100%;
+		margin-right: 0;
+		margin-left: 0;
 	}
 	.manga-link.tachiyom,
 	.manga-link.after-anime {
