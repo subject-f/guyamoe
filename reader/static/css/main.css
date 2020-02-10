@@ -1728,6 +1728,25 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	.fit_width_limit.zl80 .ReaderImageWrapper img {max-width: 80%}
 	.fit_width.zl90 .ReaderImageWrapper img {max-width: 90%; min-height: 0}
 	.fit_width_limit.zl90 .ReaderImageWrapper img {max-width: 90%}
+
+	.fit_width.zl10 .two-page.ReaderImageWrapper img {max-width: 25% !important; min-height: 0}
+	.fit_width_limit.zl10 .two-page.ReaderImageWrapper img {max-width: 25% !important}
+	.fit_width.zl20 .two-page.ReaderImageWrapper img {max-width: 25% !important; min-height: 0}
+	.fit_width_limit.zl20 .two-page.ReaderImageWrapper img {max-width: 25% !important}
+	.fit_width.zl30 .two-page.ReaderImageWrapper img {max-width: 25% !important; min-height: 0}
+	.fit_width_limit.zl30 .two-page.ReaderImageWrapper img {max-width: 25% !important}
+	.fit_width.zl40 .two-page.ReaderImageWrapper img {max-width: 25% !important; min-height: 0}
+	.fit_width_limit.zl40 .two-page.ReaderImageWrapper img {max-width: 25% !important}
+	.fit_width.zl50 .two-page.ReaderImageWrapper img {max-width: 25% !important; min-height: 0}
+	.fit_width_limit.zl50 .two-page.ReaderImageWrapper img {max-width: 25% !important}
+	.fit_width.zl60 .two-page.ReaderImageWrapper img {max-width: 30% !important; min-height: 0}
+	.fit_width_limit.zl60 .two-page.ReaderImageWrapper img {max-width: 30% !important}
+	.fit_width.zl70 .two-page.ReaderImageWrapper img {max-width: 35% !important; min-height: 0}
+	.fit_width_limit.zl70 .two-page.ReaderImageWrapper img {max-width: 35% !important}
+	.fit_width.zl80 .two-page.ReaderImageWrapper img {max-width: 40% !important; min-height: 0}
+	.fit_width_limit.zl80 .two-page.ReaderImageWrapper img {max-width: 40% !important}
+	.fit_width.zl90 .two-page.ReaderImageWrapper img {max-width: 45% !important; min-height: 0}
+	.fit_width_limit.zl90 .two-page.ReaderImageWrapper img {max-width: 45% !important}
 }
 
 
