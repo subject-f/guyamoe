@@ -346,11 +346,13 @@ def parse_bbcode_description(description):
         (r'\[sup\](.*?)\[\/sup\]', r'<sup>\1</sup>'),
         (r'\[code\](.*?)\[\/code\]', r'<code>\1</code>'),
         (r'\[quote\](.*?)\[\/quote\]', r'<em>\1</em>'),
+        (r'\[hr\]', r'<hr>'),
         (r'\[h(\d+?)\](.*?)\[\/h(\d+?)\]', r'<h\1>\2</h\3>'),
         (r'\[(img|left|center|right|justify)\](.*?)\[\/(img|left|center|right)\]', r'\2'),
         (r'\[\*\]', r'• '),
         (r'\[spoiler\](.*?)\[\/spoiler\]', r'<span class="spoiler">\1</span>'),
-        (r'\[url=(.*?)\](.*?)\[\/url\]', r'<a href="\1">\2</a>')
+        (r'\[url=(.*?)\](.*?)\[\/url\]', r'<a href="\1">\2</a>'),
+        (r'\[\/?(b|i|u|s|h|sub|sup|code|quote)\]', r'') # Clean incomplete tags
     ]
 
     for bbcode in supported_bbcodes:
