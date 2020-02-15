@@ -3,6 +3,8 @@ import os
 import json
 import zipfile
 import requests
+import html.parser
+import re
 from datetime import datetime
 from io import BytesIO;
 from PIL import ImageFilter, Image
@@ -92,7 +94,7 @@ def md_series_page_data(series_id):
                 "series_id": api_data["manga"]["description"],
                 "slug": series_id,
                 "cover_vol_url": "https://mangadex.org" + api_data["manga"]["cover_url"],
-                "synopsis": api_data["manga"]["description"], 
+                "synopsis": parse_bbcode_description(api_data["manga"]["description"]), 
                 "author": api_data["manga"]["author"],
                 "artist": api_data["manga"]["artist"],
                 "last_added": last_updated,
@@ -330,3 +332,28 @@ def get_md_data(url):
         'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
     }
     return requests.get(url, headers=headers)
+
+def parse_bbcode_description(description):
+    unescaped_description = html.parser.HTMLParser().unescape(description)
+
+    supported_bbcodes = [
+        (r'\[b\](.*?)\[\/b\]', r'<b>\1</b>'),
+        (r'\[i\](.*?)\[\/i\]', r'<i>\1</i>'),
+        (r'\[u\](.*?)\[\/u\]', r'<u>\1</u>'),
+        (r'\[s\](.*?)\[\/s\]', r'<s>\1</s>'),
+        (r'\[h\](.*?)\[\/h\]', r'<mark>\1</mark>'),
+        (r'\[sub\](.*?)\[\/sub\]', r'<sub>\1</sub>'),
+        (r'\[sup\](.*?)\[\/sup\]', r'<sup>\1</sup>'),
+        (r'\[code\](.*?)\[\/code\]', r'<code>\1</code>'),
+        (r'\[quote\](.*?)\[\/quote\]', r'<em>\1</em>'),
+        (r'\[h(\d+?)\](.*?)\[\/h(\d+?)\]', r'<h\1>\2</h\3>'),
+        (r'\[(img|left|center|right|justify)\](.*?)\[\/(img|left|center|right)\]', r'\2'),
+        (r'\[\*\]', r'• '),
+        (r'\[spoiler\](.*?)\[\/spoiler\]', r'<span class="spoiler">\1</span>'),
+        (r'\[url=(.*?)\](.*?)\[\/url\]', r'<a href="\1">\2</a>')
+    ]
+
+    for bbcode in supported_bbcodes:
+        unescaped_description = re.sub(bbcode[0], bbcode[1], unescaped_description)
+
+    return unescaped_description
