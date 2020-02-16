@@ -1461,6 +1461,9 @@ main a {
 		right: 0;
 		z-index: 11000;
 	}
+	.text-article h1 {
+		font-size: 2.0em;
+	}
 	.text-article h2 {
 		padding-left: 0;
 		padding-right: 0;
