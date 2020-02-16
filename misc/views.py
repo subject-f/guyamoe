@@ -33,6 +33,8 @@ def hit_count(request):
         
     return HttpResponse(json.dumps({}), content_type='application/json')
 
+
+@decorator_from_middleware(OnlineNowMiddleware)
 def content(request, page_url):
     try:
         page = Page.objects.get(page_url=page_url)
@@ -51,6 +53,8 @@ def content(request, page_url):
         "version_query": STATIC_VERSION
     })
 
+
+@decorator_from_middleware(OnlineNowMiddleware)
 def misc_pages(request):
     pages = cache.get("misc_pages")
     if not pages:
