@@ -19,12 +19,14 @@ from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from homepage.sitemaps import StaticViewSitemap, SeriesViewSitemap, ChapterViewSitemap
+from homepage.sitemaps import StaticViewSitemap, SeriesViewSitemap, ChapterViewSitemap, PagesListViewSitemap, PageViewSitemap
 
 sitemaps = {
     'static': StaticViewSitemap,
     'series': SeriesViewSitemap,
-    'chapter': ChapterViewSitemap
+    'chapter': ChapterViewSitemap,
+    'pageslist': PagesListViewSitemap,
+    'page': PageViewSitemap
 }
 
 urlpatterns = [
