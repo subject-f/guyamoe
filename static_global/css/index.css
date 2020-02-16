@@ -1462,11 +1462,12 @@ main a {
 		z-index: 11000;
 	}
 	.text-article h1 {
-		font-size: 2.0em;
+		font-size: 1.8em;
 	}
 	.text-article h2 {
 		padding-left: 0;
 		padding-right: 0;
+		font-size: 1.4em;
 	}
 
 	.pages-listing .manga-card.smol picture {
