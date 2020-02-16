@@ -1401,8 +1401,8 @@ main a {
 	margin-left: 1em;
 }
 
-.pages-listing .manga-card .embed-container, 
-.pages-listing .manga-card img {
+.pages-listing .manga-card article .embed-container, 
+.pages-listing .manga-card article img {
 	display: none;
 }
 
