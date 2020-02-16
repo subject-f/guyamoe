@@ -1420,6 +1420,9 @@ main a {
 	cursor: pointer;
 	border: 1px solid #444;
 }
+.light-mode-toggle svg {
+	vertical-align: unset;
+}
 .light-mode-toggle:hover {
 	margin-top: -1px;
 	background: #222;
