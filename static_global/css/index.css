@@ -1401,6 +1401,11 @@ main a {
 	margin-left: 1em;
 }
 
+.pages-listing .manga-card .embed-container, 
+.pages-listing .manga-card img {
+	display: none;
+}
+
 .light-mode-toggle {
 	display: block;
 	width: 3rem;
