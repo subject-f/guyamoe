@@ -1462,7 +1462,7 @@ main a {
 		overflow: hidden;
 	}
 
-	.manga-card picture img {
+	.pages-listing .manga-card picture img {
 		width: 100%;
 		height: auto;
 	}
