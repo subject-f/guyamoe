@@ -36,7 +36,7 @@ class PagesListViewSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        return Page.objects.all().order_by('-date')
+        return [Page.objects.all()[0]]
 
     def location(self, item):
         return '/pages'
