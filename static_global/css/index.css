@@ -816,8 +816,8 @@ main a {
 	box-shadow: none !important;
 
 }
-.manga-card.smol:hover {
-	top: -2px;
+.manga-card.smol:hover:before {
+	opacity: 0.80;	
 }
 
 .manga-card.smol h2 {
@@ -1354,6 +1354,10 @@ main a {
 	cursor: default;
 }
 
+.pages-listing {
+	max-width: 1450px;
+}
+
 .pages-listing h1 {
 	font-family: Vollkorn;
 	color: white;
@@ -1375,6 +1379,9 @@ main a {
 
 .pages-listing .manga-card:before {
 	opacity: 0.97;
+}
+.pages-listing .manga-card:hover:before {
+	opacity: 0.95;
 }
 .pages-listing .spoiler-warning {
 	font-size: 11px;
