@@ -1267,7 +1267,7 @@ main a {
 		max-width: 100%;
 	}
 	.text-article figure img {
-		max-width: 100vw;
+		max-width: 94vw !important;
 	}
 }
 

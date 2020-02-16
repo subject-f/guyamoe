@@ -38,6 +38,15 @@
 	}
 	if(localStorage.getItem('light') == 1) {
 		setLightMode();
-	} 
+	}
+	function plusOne() {
+		var formData = new FormData();
+			formData.append("page_url", "{{page_url}}")
+			fetch('/pages/api/update_view_count/', {
+				method: 'POST',
+				body: formData
+			})
+	}
+	setTimeout(plusOne, 10*1000)
 </script>
 {% endblock %}
