@@ -2,6 +2,15 @@
 {% load page_tags %}
 {% load static %}
 {% block head %}
+<title>{{ page_title }} | Guya.moe</title>
+<meta name="twitter:description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}" />
+<meta property="og:description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}" />
+<meta name="description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}">
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{page_title}}" />
+<meta name="twitter:image" content="https://{{ request.get_host }}{{cover_image_url}}" />
+<meta property="og:image" content="https://{{ request.get_host }}{{cover_image_url}}">
+<meta property="og:url" content="{{ misc_page.page_url }}">
 {% endblock %}
 
 {% block body %}
@@ -9,24 +18,26 @@
 	<img class="cover-image" src="{{cover_image_url}}" alt="{{page_title}}" />
 </div>
 <content class="text-article">
+	<div class="light-mode-toggle" onclick="setLightMode()"><svg viewBox="0 0 24 24">
+    <path fill="gray" d="M7.5,2C5.71,3.15 4.5,5.18 4.5,7.5C4.5,9.82 5.71,11.85 7.53,13C4.46,13 2,10.54 2,7.5A5.5,5.5 0 0,1 7.5,2M19.07,3.5L20.5,4.93L4.93,20.5L3.5,19.07L19.07,3.5M12.89,5.93L11.41,5L9.97,6L10.39,4.3L9,3.24L10.75,3.12L11.33,1.47L12,3.1L13.73,3.13L12.38,4.26L12.89,5.93M9.59,9.54L8.43,8.81L7.31,9.59L7.65,8.27L6.56,7.44L7.92,7.35L8.37,6.06L8.88,7.33L10.24,7.36L9.19,8.23L9.59,9.54M19,13.5A5.5,5.5 0 0,1 13.5,19C12.28,19 11.15,18.6 10.24,17.93L17.93,10.24C18.6,11.15 19,12.28 19,13.5M14.6,20.08L17.37,18.93L17.13,22.28L14.6,20.08M18.93,17.38L20.08,14.61L22.28,17.15L18.93,17.38M20.08,12.42L18.94,9.64L22.28,9.88L20.08,12.42M9.63,18.93L12.4,20.08L9.87,22.27L9.63,18.93Z"></path>
+</svg></div>
 	<h1>{{page_title}}</h1>
+	<script type="text/javascript" style="display: none">
+		document.write('<time datetime="'+new Date({{ date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ date }}*1000).toLocaleDateString("en-US") + '</time>')
+	</script>
 	{{ content | convert_to_markdown | safe }}
 </content>
-
-<a href="#" onclick="localStorage.setItem('reload', '1'); localStorage.setItem('scroll', 0);">reload stop</a><a href="#" onclick="localStorage.setItem('reload', '0')">| start</a>
-
 <script type="text/javascript">
-setTimeout(function() {
-	if(localStorage.getItem('scroll')) {
-		scroll(0,localStorage.getItem('scroll'));
-	}
-}, 300);
-setInterval(
-	function () {
-		if(localStorage.getItem('reload') != 1) {
-			localStorage.setItem('scroll', window.pageYOffset);
-			location.reload(1);
+	function setLightMode(){
+		document.body.classList.toggle('light-mode');
+		if(document.body.classList.contains('light-mode')) {
+			localStorage.setItem('light', 1);
+		}else{
+			localStorage.setItem('light', 0);
 		}
-	}, 4000)
+	}
+	if(localStorage.getItem('light') == 1) {
+		setLightMode();
+	} 
 </script>
 {% endblock %}

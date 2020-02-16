@@ -2,20 +2,29 @@
 {% load static %}
 {% load page_tags %}
 {% block head %}
+<title>Kaguya-sama news and articles | Guya.moe</title>
+<meta name="twitter:description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka." />
+<meta property="og:description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka." />
+<meta name="description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka.">
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Kaguya-sama news and articles | Guya.moe" />
+<meta property="og:url" content="/pages">
 {% endblock %}
 
 {% block body %}
 
-<div>
-    	<h1>Articles</h1>
+<div class="container-fluid pages-listing col-lg-11 col-md-11 col-sm-10 col-xs-12 mt-3">
+	<h1>Articles</h1>
     {% for misc_page in pages %}
         <a href="{{ misc_page.page_url }}" class="manga-card smol" style="background-image: url({{ misc_page.cover_image_url }})">
 		<picture>
   			<img src="{{ misc_page.cover_image_url }}" class="" alt="We Want to Talk About Kaguya">
 		</picture>
 		<article>
-			<h2>{{ misc_page.page_title }}</h2>
-			<p>{{ misc_page.content | convert_to_markdown | striptags | truncatewords:40 }}</p>
+			<h2>{{ misc_page.page_title }}<script type="text/javascript" style="display: none">
+		document.write('<time datetime="'+new Date({{ misc_page.date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ misc_page.date }}*1000).toLocaleDateString("en-US") + '</time>')
+			</script></h2>
+			{{ misc_page.content | convert_to_markdown | safe | truncatewords:60 }}
 		</article>
 	</a>
     {% endfor %}

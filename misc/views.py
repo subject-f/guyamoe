@@ -56,4 +56,6 @@ def misc_pages(request):
     if not pages:
         pages = Page.objects.all().order_by('-date')
         cache.set("misc_pages", pages, 3600 * 8)
+    for page in pages:
+        page.date = int(page.date.timestamp()) if page.date else ""
     return render(request, 'misc/misc_pages.html', {'pages': pages, 'template': 'misc_page', "version_query": STATIC_VERSION})

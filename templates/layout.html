@@ -3,12 +3,9 @@
 <html class="{{ template }} h-100" lang="en" class="bg-dark h-100">
    <head>
     <meta charset="utf-8">
-    <meta name="twitter:card" content="Everything Kaguya-sama" />
-    <meta name="twitter:title" content="Guya" />
-    <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png" />
-    <meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
-    <meta property="og:url" content="/">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
+	<meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
        <!-- Google Tag Manager -->
       <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
       new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -63,10 +60,10 @@
 			<div class="collapse navbar-collapse col-lg-8" id="navbarSupportedContent">
 				<ul class="navbar-nav">
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<a class="nav-link dropdown-toggle" href="#" id="readManga" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Read
 						</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<div class="dropdown-menu" aria-labelledby="readManga">
 							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama: Love is War</a>
 							<div class="dropdown-divider"></div>
 							<a class="dropdown-item" href="/read/manga/We-Want-To-Talk-About-Kaguya">We Want To Talk About Kaguya</a>
@@ -77,10 +74,10 @@
 						</div>
 					</li>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<a class="nav-link dropdown-toggle" href="#" id="fanContent" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Fan-content
 						</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<div class="dropdown-menu" aria-labelledby="fanContent">
 							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/Fancomic">Fancomics</a>
 							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/fandub">Fandub</a>
 							<div class="dropdown-divider"></div>
@@ -88,21 +85,9 @@
 							<a class="dropdown-item" target="_blank" href="//kaguya-archive.tumblr.com/">Archive</a>
 						</div>
 					</li>
-					<!-- <li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							Read Manga
-						</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-							<a class="dropdown-item" href="https://tachiyomi.org/extensions/#Guya">Tachiyomi Extension</a>
-							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama: Love is War (main series)</a>
-							<a class="dropdown-item" href="/read/manga/We-Want-To-Talk-About-Kaguya">We Want to Talk About Kaguya</a>
-							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Kaguya Wants to be Confessed to Official Doujin</a>
-						</div>
-					</li> -->
-					<!-- <li class="nav-item">
-						<a class="nav-link" href="/about">Kaguya News</a>
-					</li> -->
+					<li class="nav-item">
+						<a class="nav-link" href="/pages">Kaguya Articles</a>
+					</li>
 					<div class="pusher"></div>
 					<li class="nav-item blackbox-host">
 						<textarea id="blackbox" required="true" placeholder=""></textarea>
@@ -125,9 +110,22 @@
 	<script>
 	var links = document.querySelectorAll('header .nav-link');
         [].forEach.call(links, link => {
-            if(link.href == document.location.href || link.href + '/' == document.location.href || link.href == document.location.href + '/')
-                link.classList.add('s')
-            });
+            if(link.classList.contains('dropdown-toggle')) {
+        	var items;
+        		if(link.nextElementSibling)
+        			items = link.nextElementSibling.children;
+        		else
+        			return;
+        		for(var i=0; i<items.length; i++) {
+        			if(document.location.href.indexOf(items[i].href) > -1) {
+						link.classList.add('s')
+        			}
+        		}
+        	}else{
+            	if(document.location.href.indexOf(link.href) > -1)
+                	link.classList.add('s')
+        	}
+        });
         blackbox.style.height = "";
         blackbox.style.height = Math.min(blackbox.scrollHeight, 500) + "px";
 		blackbox.nextElementSibling.style.top = Math.min(blackbox.scrollHeight, 500) + "px";
