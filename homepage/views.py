@@ -100,8 +100,8 @@ def referral(request):
         ip = get_user_ip(request)
         referral_metadata = cache.get(f"referral_{ip}")
         if referral_metadata and not referral_metadata["consumed"]:
-            cache.set(f"referral_{ip}", {"consumed": True}, 1800)
             if request.POST["rid"] == referral_metadata["rid"]:
+                cache.set(f"referral_{ip}", {"consumed": True}, 1800)
                 try:
                     requests.post(settings.REFERRAL_SERVICE, referral_metadata)
                 except:
