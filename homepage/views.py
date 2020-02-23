@@ -103,7 +103,7 @@ def referral(request):
             cache.set(f"referral_{ip}", {"consumed": True}, 1800)
             if request.POST["rid"] == referral_metadata["rid"]:
                 try:
-                    requests.get(settings.REFERRAL_SERVICE)
+                    requests.post(settings.REFERRAL_SERVICE, referral_metadata)
                 except:
                     pass
         return HttpResponse(status=200)
