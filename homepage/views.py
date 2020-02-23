@@ -5,12 +5,17 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page, cache_control
 from django.views.decorators.http import condition
 from django.core.cache import cache
+from django.conf import settings
 
 from api.api import all_chapter_data_etag, md_chapter_info
 from guyamoe.settings import STATIC_VERSION
 from reader.middleware import OnlineNowMiddleware
+from reader.users_cache_lib import get_user_ip
+from homepage.middleware import ForwardParametersMiddleware
 from reader.models import Series, Volume, Chapter
 from reader.views import series_page_data
+
+import requests
 
 @staff_member_required
 def admin_home(request):
@@ -56,13 +61,15 @@ def home(request):
 def about(request):
     return render(request, 'homepage/about.html', {"relative_url": "about/", "template": "about", "version_query": STATIC_VERSION})
 
-
+@decorator_from_middleware(ForwardParametersMiddleware)
 def main_series_chapter(request, chapter):
     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, "1")
 
+@decorator_from_middleware(ForwardParametersMiddleware)
 def main_series_page(request, chapter, page):
     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", chapter, page)
 
+@decorator_from_middleware(ForwardParametersMiddleware)
 def latest(request):
     latest_chap = cache.get("latest_chap")
     if not latest_chap:
@@ -70,18 +77,36 @@ def latest(request):
         cache.set("latest_chap", latest_chap, 3600 * 96)
     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
 
+@decorator_from_middleware(ForwardParametersMiddleware)
 def md_series(request, md_series_id):
     return redirect('reader-md-proxy', md_series_id)
 
+@decorator_from_middleware(ForwardParametersMiddleware)
 def md_chapter(request, md_chapter_id, page=1):
     chapter_info = md_chapter_info(md_chapter_id)
     return redirect('reader-md-chapter', chapter_info["series_id"], str(chapter_info["chapter"]).replace(".", "-"), page)
 
+@decorator_from_middleware(ForwardParametersMiddleware)
 def nh_series(request, nh_series_id, page=None):
     if page:
         return redirect('reader-nh-chapter', nh_series_id, 1, page)
     else:
         return redirect('reader-nh-proxy', nh_series_id)
+
+def referral(request):
+    if request.method == "POST":
+        ip = get_user_ip(request)
+        referral_metadata = cache.get(f"referral_{ip}")
+        if referral_metadata and not referral_metadata["consumed"]:
+            if request.POST["rid"] == referral_metadata["rid"]:
+                cache.set(f"referral_{ip}", {"consumed": True}, 1800)
+                try:
+                    requests.post(settings.REFERRAL_SERVICE, referral_metadata)
+                except:
+                    pass
+        return HttpResponse(status=200)
+    else:
+        return handle404(request, "")
 
 # def latest_releases(request):
 #     latest_releases = cache.get("latest_releases")

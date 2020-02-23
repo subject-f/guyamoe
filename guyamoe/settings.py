@@ -61,7 +61,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'homepage.middleware.ReferralMiddleware',
 ]
+
+REFERRAL_SERVICE = 'http://127.0.0.1:8080' # Change this to where-ever Ai is hosted
 
 ROOT_URLCONF = 'guyamoe.urls'
 
