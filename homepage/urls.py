@@ -18,4 +18,5 @@ urlpatterns = [
     re_path(r'^(?P<chapter>[\d-]*)/$', views.main_series_chapter, name='site-main-series-chapter'),
     re_path(r'^(?P<chapter>[\d-]*)/(?P<page>\d*)/$', views.main_series_page, name='site-main-series-page'),
     path('latest/', views.latest, name='site-main-series-latest'),
+    path('ref/', views.referral, name='site-referral')
 ]
