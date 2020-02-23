@@ -1,10 +1,10 @@
 <script>
   if ("{{ request|safe }}".includes("?rid=")) {
     setTimeout(() => {
-      console.log("Timeout referral");
       let rid = "{{ request|safe }}".match(/\'(\S+)\'/)[1].split("?rid=")[1];
       let formData = new FormData();
       formData.append("rid", rid);
+      formData.append("csrfmiddlewaretoken", "{{ csrf_token }}")
       fetch("/ref/", {
         method: "POST",
         body: formData

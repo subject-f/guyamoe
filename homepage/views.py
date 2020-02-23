@@ -4,7 +4,6 @@ from django.utils.decorators import decorator_from_middleware
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import cache_page, cache_control
 from django.views.decorators.http import condition
-from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.conf import settings
 
@@ -94,7 +93,6 @@ def nh_series(request, nh_series_id, page=None):
     else:
         return redirect('reader-nh-proxy', nh_series_id)
 
-@csrf_exempt
 def referral(request):
     if request.method == "POST":
         ip = get_user_ip(request)
