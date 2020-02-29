@@ -1425,10 +1425,12 @@ const SCROLL_X = 3;
 			this._.image_container.ontouchstart = this.touch.startHandler;
 			this._.image_container.ontouchmove = this.touch.moveHandler;
 			this._.image_container.ontouchend = this.touch.endHandler;
+			this._.image_container.ontouchcancel = this.touch.endHandler;
 		}else{
 			this._.image_container.ontouchstart = undefined;
 			this._.image_container.ontouchmove = undefined;
 			this._.image_container.ontouchend = undefined;
+			this._.image_container.ontouchcancel = undefined;
 		}
 	}
 
