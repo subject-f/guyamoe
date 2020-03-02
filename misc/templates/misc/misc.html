@@ -23,7 +23,10 @@
 </svg></div>
 	<h1>{{page_title}}</h1>
 	<script type="text/javascript" style="display: none">
-		document.write('<time datetime="'+new Date({{ date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ date }}*1000).toLocaleDateString("en-US") + '</time>')
+		var scripts = document.getElementsByTagName( 'script' );
+		var me = scripts[ scripts.length - 1 ];
+		var outer = '<time datetime="'+new Date({{ date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ date }}*1000).toLocaleDateString("en-US") + '</time>'
+			me.outerHTML = outer;
 	</script>
 	{{ content | convert_to_markdown | safe }}
 </content>

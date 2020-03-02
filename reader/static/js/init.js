@@ -17,9 +17,9 @@ function shadowScroll() {
 } 
 
 function scroll(element, x, y, noshadow) {
-	if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
+	//if(x == DBG_VAL || y == DBG_VAL || element == DBG_VAL || (isNaN(DBG_VAL) && (isNaN(x) || isNaN(y)))) debugger;
 	if(!noshadow) shadowScroll();
-	console.log(element, 'scrolled to', x, y)
+	//console.log(element, 'scrolled to', x, y)
 	if(element.scroll)
 		element.scroll(x, y)
 	else

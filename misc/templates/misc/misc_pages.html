@@ -22,7 +22,10 @@
 		</picture>
 		<article>
 			<h2>{{ misc_page.page_title }}<script type="text/javascript" style="display: none">
-		document.write('<time datetime="'+new Date({{ misc_page.date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ misc_page.date }}*1000).toLocaleDateString("en-US") + '</time>')
+				var scripts = document.getElementsByTagName( 'script' );
+				var me = scripts[ scripts.length - 1 ];
+				var outer = '<time datetime="'+new Date({{ misc_page.date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ misc_page.date }}*1000).toLocaleDateString("en-US") + '</time>'
+				me.outerHTML = outer;
 			</script></h2>
 			{{ misc_page.content | convert_to_markdown | safe | truncatewords:60 }}
 		</article>

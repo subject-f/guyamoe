@@ -14,7 +14,7 @@ html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, sub, sup, tt, var, center,
+small, strike, sub, sup, tt, var, center,d3200
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
@@ -2084,9 +2084,15 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	margin: 0 auto;
 	justify-content: center;
 	align-items: center;
-	margin-bottom: 1rem;
+	margin-top: 2rem;
+	margin-bottom: 4rem;
 	border: 2px dashed rgba(255,255,255,0.4);
 	box-sizing: border-box;
+}
+
+.nextCha:hover {
+	opacity: 0.7;
+	background: rgba(255,255,255,0.1)
 }
 
 .nextCha:before {
@@ -2098,6 +2104,11 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	content: "⮠";
 	font-family: Guya;
 	margin-left: 1em;
+	border: 1px solid gray;
+	border-radius: 3px;
+	padding: 0.1rem 0.4rem;
+	position: relative;
+	top: 1px;
 }
 
 .last-chapter .nextCha {
