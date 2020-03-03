@@ -21,6 +21,9 @@ class AllChaptersFeed(Feed):
     def item_title(self, item):
         return f"{item.series.name} - Chapter {Chapter.clean_chapter_number(item)}"
 
+    def item_link(self, item):
+        return f"https://guya.moe/read/manga/{item.series.slug}/{Chapter.slug_chapter_number(item)}/1"
+
     def item_description(self, item):
         return f"Group: {item.group.name} - Title {item.title}"
 
@@ -37,7 +40,7 @@ class SeriesChaptersFeed(Feed):
         return obj.name
 
     def link(self, obj):
-        return obj.get_absolute_url()
+        return f"https://guya.moe/read/manga/{obj.slug}/"
 
     def description(self, obj):
         return obj.synopsis
@@ -46,18 +49,11 @@ class SeriesChaptersFeed(Feed):
         return f"{obj.series.name} - Chapter {Chapter.clean_chapter_number(obj)}"
 
     def item_link(self, obj):
-        return obj.get_absolute_url()
+        return f"https://guya.moe/read/manga/{obj.series.slug}/{Chapter.slug_chapter_number(obj)}/1"
 
     def item_description(self, obj):
         return f"Group: {obj.group.name} - Title {obj.title}"
 
     def items(self, obj):
         return Chapter.objects.filter(series=obj).order_by('-uploaded_on')
-    # def item_chapter_number(self, item):
-    #     return item.chapter_number
-    
-    # def item_group(self, item):
-    #     return item.group
 
-    # def item_uploaded_on(self, item):
-    #     return item.uploaded_on

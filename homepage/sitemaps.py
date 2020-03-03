@@ -31,7 +31,7 @@ class ChapterViewSitemap(Sitemap):
         return Chapter.objects.filter(series__isnull=False).order_by('series__id', '-chapter_number')
 
 class PagesListViewSitemap(Sitemap):
-    changefreq = 'weekly'
+    changefreq = 'daily'
     priority = 0.5
     protocol = 'https'
 
@@ -42,7 +42,7 @@ class PagesListViewSitemap(Sitemap):
         return '/pages'
 
 class PageViewSitemap(Sitemap):
-    changefreq = 'weekly'
+    changefreq = 'daily'
     priority = 0.5
     protocol = 'https'
 
