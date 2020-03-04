@@ -105,7 +105,7 @@
 				data: formData,
 				success: function (data) {
 					data["covers"].forEach((cover) => {
-						$("#volumeCoversView").append(`<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[2]}"></a>`);
+						$("#volumeCoversView").append(`<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[2]}" onerror='if (this.src != &quot;${cover[1]}&quot;) this.src=&quot;${cover[1]}&quot;'></a>`);
 				});
 			}
 			});
