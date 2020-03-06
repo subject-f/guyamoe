@@ -1900,12 +1900,20 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		
 	}
 
-	.stick.selector-pinned.ttb .rdr-selector {
+	.stick.selector-pinned.ttb header {
 		width: 100%;
 		position: fixed;
 		z-index: 100;
 		background: #3a3f44;
 		top: 0;
+	}
+
+	.stick.selector-pinned.ttb .rdr-selector {
+		width: 100%;
+		position: fixed;
+		z-index: 100;
+		background: #3a3f44;
+		top: 3rem;
 	}
 
 	.rdr-image-wrap {
