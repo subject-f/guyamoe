@@ -1044,16 +1044,21 @@ function UI_Reader(o) {
 
 	this.stickHeader = () => {
 		if(IS_MOBILE) {
-			if(this._.rdr_aside_content.offsetTop <= window.scrollY && Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
+			if(Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
 				this.$.classList.add('stick');
-			var prescroll = window.pageYOffset;
-				this._.rdr_aside_content.style.paddingTop = this._.rdr_selector.offsetHeight + 'px';
-				scroll(document.documentElement, 0, prescroll);
+				let padding = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
+				if (this._.rdr_aside_content.style.paddingTop !== padding) {
+					this._.rdr_aside_content.style.paddingTop = padding;
+				}
 			}else{
 				this.$.classList.remove('stick');
-				prescroll = window.pageYOffset;
+				if (this._.rdr_aside_content.style.paddingTop !== '0px') {
+					this._.rdr_aside_content.style.paddingTop = '0px';
+				}
+			}
+		} else {
+			if (this._.rdr_aside_content.style.paddingTop !== '0px') {
 				this._.rdr_aside_content.style.paddingTop = '0px';
-				scroll(document.documentElement, 0, prescroll);
 			}
 		}
 	}
@@ -1452,7 +1457,6 @@ const SCROLL_X = 3;
 	};
 	
 	this.touch.startHandler = e => {
-		if(Settings.all.layout.get() == 'ttb') return;
 		if(e.touches.length > 1) return;
 		this.touch.initialX = this._.image_container._translateX;
 		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
@@ -1515,7 +1519,6 @@ const SCROLL_X = 3;
 
 	this.touch.endHandler = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
-		if(Settings.all.layout.get() == 'ttb') return;
 		clearTimeout(this.touch.transitionTimer);
 		cancelAnimationFrame(this.touch.a);
 		//this._.image_container.style.touchAction = 'unset';
