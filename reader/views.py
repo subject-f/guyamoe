@@ -150,6 +150,7 @@ def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
     if metadata:
         metadata["relative_url"] = f"md_proxy/{md_series_id}"
+        metadata["version_query"] = STATIC_VERSION
         return render(request, 'reader/md_series.html', metadata)
     else:
         return render(request, 'reader/md_down.html', metadata)
@@ -160,6 +161,7 @@ def md_chapter(request, md_series_id, chapter, page):
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
+        data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
@@ -169,6 +171,7 @@ def nh_proxy(request, nh_series_id):
     metadata = nh_series_data(nh_series_id)
     if metadata:
         metadata["relative_url"] = f"nh_proxy/{nh_series_id}"
+        data["version_query"] = STATIC_VERSION
         return render(request, 'reader/nh_series.html', metadata)
     else:
         return render(request, 'reader/how_cute_404.html', status=404)
@@ -179,6 +182,7 @@ def nh_chapter(request, nh_series_id, chapter, page):
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
+        data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
