@@ -1,7 +1,8 @@
-let IS_MOBILE = window.matchMedia("(max-width: 700px)").matches;
+let mediaMatcher = window.matchMedia("(max-width: 700px)");
+let IS_MOBILE = mediaMatcher.matches;
 
 window.addEventListener('resize', () =>{
-	IS_MOBILE = window.matchMedia("(max-width: 700px)").matches;
+	IS_MOBILE = mediaMatcher.matches;
 });
 
 //  {
