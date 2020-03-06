@@ -1007,18 +1007,10 @@ function UI_Reader(o) {
 	this.setSelectorPin = function(state) {
 		if (IS_MOBILE) {
 			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
-				let padding = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
-				if (this._.rdr_aside_content.style.paddingTop !== padding) {
-					this._.rdr_aside_content.style.paddingTop = padding;
-				}
+				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
+				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
 			} else {
-				if (this._.rdr_aside_content.style.paddingTop !== '0px') {
-					this._.rdr_aside_content.style.paddingTop = '0px';
-				}
-			}
-		} else {
-			if (this._.rdr_aside_content.style.paddingTop !== '0px') {
-				this._.rdr_aside_content.style.paddingTop = '0px';
+				this._.rdr_aside_buffer.style.height = '0px';
 			}
 		}
 		Settings.all.selectorPinned.options.forEach(item => {
