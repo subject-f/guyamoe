@@ -2,12 +2,13 @@
 
 
 html {
-  scroll-behavior: smooth;
+	scroll-behavior: smooth;
+	color: red;
 }
 
 body {
 	background-attachment: fixed;
-  background-position: 50% 10%;
+	background-position: 50% 10%;
   	background-size: 1500px;
   	background-image: url('/static/img/bg_box.png');
 	background-color:black;
@@ -24,6 +25,10 @@ header {
 	z-index: 300;
 	width: 100%;
 
+}
+
+#navbarSupportedContent{
+	width: 250px;
 }
 
 .navbar {
@@ -361,10 +366,19 @@ header {
 	overflow: hidden;
 }
 
+/*
 .navbar .dropdown-divider {
 	border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
+}*/
 
+hr {
+	display: block;
+	height: 1px;
+	border: 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.2);
+	margin: 0.3em 0;
+	padding: 0;
+}
 
 .navbar .dropdown-item {
 	padding: 0.45rem 1rem;
