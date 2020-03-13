@@ -353,7 +353,11 @@ def fs_series_page_data(encoded_url):
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
             groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
-            cover = soup.find("div", class_="thumbnail").find("img")["src"]
+            cover_div = soup.find("div", class_="thumbnail")
+            if cover_div and cover_div.find("img")["src"]:
+                cover = cover_div.find("img")["src"]
+            else:
+                cover = ""
 
             chapter_list = []
 
@@ -400,7 +404,11 @@ def fs_series_data(encoded_url):
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
             groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
-            cover = soup.find("div", class_="thumbnail").find("img")["src"]
+            cover_div = soup.find("div", class_="thumbnail")
+            if cover_div and cover_div.find("img")["src"]:
+                cover = cover_div.find("img")["src"]
+            else:
+                cover = ""
 
             chapters_dict = {}
 
