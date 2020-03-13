@@ -171,7 +171,7 @@ def nh_proxy(request, nh_series_id):
     metadata = nh_series_data(nh_series_id)
     if metadata:
         metadata["relative_url"] = f"nh_proxy/{nh_series_id}"
-        data["version_query"] = STATIC_VERSION
+        metadata["version_query"] = STATIC_VERSION
         return render(request, 'reader/nh_series.html', metadata)
     else:
         return render(request, 'reader/how_cute_404.html', status=404)

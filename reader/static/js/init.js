@@ -613,7 +613,7 @@ function UI_Reader(o) {
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
-		.attach('layout', ['KeyD'], e => Settings.cycle('layout'))
+		.attach('layout', ['KeyD'], e => this.cycleLayout())
 		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
@@ -1005,14 +1005,6 @@ function UI_Reader(o) {
 	}
 
 	this.setSelectorPin = function(state) {
-		if (IS_MOBILE) {
-			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
-				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
-				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
-			} else {
-				this._.rdr_aside_buffer.style.height = '0px';
-			}
-		}
 		Settings.all.selectorPinned.options.forEach(item => {
 			this.$.classList.remove(item);
 			this.$.classList.remove('nonum');
@@ -1023,7 +1015,27 @@ function UI_Reader(o) {
 		}else{
 			this.$.classList.add(state);
 		}
+		this.recalculateBuffer();
 		this.stickHeader();
+	}
+
+	this.cycleLayout = function() {
+		Settings.cycle('layout');
+		this.recalculateBuffer();
+	}
+
+	this.recalculateBuffer = function() {
+		if (IS_MOBILE) {
+			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
+				// Order of these statements seem to matter for Chrome's scroll shifting behaviour; if height is
+				// set before top, the scroll bug occurs. Thus, it might break in future updates.
+				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
+				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
+				// console.log(window.scrollY); // This statement also reintroduces the scroll bug regardless of order
+			} else {
+				this._.rdr_aside_buffer.style.height = '0px';
+			}
+		}
 	}
 
 	this.setPreload = function(number){
@@ -1136,7 +1148,7 @@ function UI_Reader(o) {
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.preload_button.onmousedown = e => Settings.cycle('preload');
-	this._.layout_button.onmousedown = e => Settings.cycle('layout');
+	this._.layout_button.onmousedown = e => this.cycleLayout();
 	this._.fit_button.onmousedown = e => {
 		this.asideViews.S.call('number', 0);
 	}
