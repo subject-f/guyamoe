@@ -811,7 +811,7 @@ main a {
 	left: -10px;
 	right: -10px;
 	bottom: -10px;
-	background:	rgba(10,10,10,1);
+	background:	rgba(15,15,15,1);
 	opacity: 0.83;
 	box-shadow: none !important;
 
@@ -1362,7 +1362,7 @@ main a {
 	font-family: Vollkorn;
 	color: white;
 	text-align: center;
-	margin-bottom: 1em;
+	margin-bottom: 0.7em;
 }
 
 .pages-listing .manga-card {
@@ -1371,14 +1371,18 @@ main a {
 }
 
 .pages-listing .manga-card.smol picture {
-	margin-right: 0.2em;
-}
-.pages-listing .manga-card.smol picture img {
-	border-bottom-right-radius: 6px;
+	background-position: center center;
+	background-size: cover;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	min-width: 15rem;
+	max-width: 15rem;
 }
 
 .pages-listing .manga-card:before {
-	opacity: 0.97;
+	opacity: 0.98;
 }
 .pages-listing .manga-card:hover:before {
 	opacity: 0.95;
@@ -1391,6 +1395,17 @@ main a {
 	margin: 0;
 	padding: 0.6em 1em;
 }
+
+.manga-card picture::after {
+	box-shadow: 0em 0em 4em 1em rgba(10,10,10,0.7) inset;
+	background: rgba(0,0,0,0.7);
+	z-index: -1;
+}
+.pages-listing .manga-card picture img {
+	width: 100%;
+	height: auto;
+}
+
 .pages-listing .manga-card blockquote {
 	margin: 0;
 }
@@ -1405,23 +1420,30 @@ main a {
 .pages-listing .manga-card article img {
 	display: none;
 }
-.pages-listing .manga-card h1,
-.pages-listing .manga-card h2,
-.pages-listing .manga-card h3,
-.pages-listing .manga-card h4,
-.pages-listing .manga-card h5,
-.pages-listing .manga-card h6,
-.pages-listing .manga-card b,
-.pages-listing .manga-card strong {
+.pages-listing .manga-card article h1,
+.pages-listing .manga-card article h2,
+.pages-listing .manga-card article h3,
+.pages-listing .manga-card article h4,
+.pages-listing .manga-card article h5,
+.pages-listing .manga-card article h6,
+.pages-listing .manga-card article b,
+.pages-listing .manga-card article strong {
 	font-size: 0.9em;
 	font-weight: normal;
 	color: inherit;
+}
+.pages-listing .manga-card article h2:first-child {
+	font-size: 1.6em;
+	font-weight: normal;
+	font-family: Vollkorn, serif;
+	color: white;
 }
 
 .light-mode-toggle {
 	display: block;
 	width: 3rem;
-	height: 3rem;
+	height: 3rem !important;
+	overflow: hidden;
 	float: right;
 	position: absolute;
 	right: 0;
@@ -1464,15 +1486,7 @@ main a {
 	border-top: 1px solid #333;
 	border-bottom: 1px solid #333;
 }
-
-@media (max-width: 992px) {
-	.light-mode-toggle {
-		position: fixed;
-		top: 0.8rem;
-		left: 1rem;
-		right: 0;
-		z-index: 11000;
-	}
+@media (max-width: 768px) {
 	.text-article h1 {
 		font-size: 1.8em;
 	}
@@ -1483,12 +1497,20 @@ main a {
 	}
 
 	.pages-listing .manga-card.smol picture {
-		max-height: 28em;
+		max-height: 50vw;
 		overflow: hidden;
-	}
-
-	.pages-listing .manga-card picture img {
-		width: 100%;
+		max-width: 100%;
 		height: auto;
+		margin-bottom: 0.75rem;
+		border-top-right-radius: 6px;
+	}
+}
+@media (max-width: 992px) {
+	.light-mode-toggle {
+		position: fixed;
+		top: 0.8rem;
+		left: 1rem;
+		right: 0;
+		z-index: 11000;
 	}
 }

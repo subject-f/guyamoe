@@ -17,7 +17,7 @@
 	<h1>Articles</h1>
     {% for misc_page in pages %}
         <a href="{{ misc_page.page_url }}" class="manga-card smol" style="background-image: url({{ misc_page.cover_image_url }})">
-		<picture>
+		<picture style="background-image: url({{ misc_page.cover_image_url }})">
   			<img src="{{ misc_page.cover_image_url }}" class="" alt="We Want to Talk About Kaguya">
 		</picture>
 		<article>
@@ -27,7 +27,7 @@
 				var outer = '<time datetime="'+new Date({{ misc_page.date }}*1000).toISOString().split('T')[0]+'" class="article-date">' + new Date({{ misc_page.date }}*1000).toLocaleDateString("en-US") + '</time>'
 				me.outerHTML = outer;
 			</script></h2>
-			{{ misc_page.content | convert_to_markdown | safe | truncatewords:60 }}
+			{{ misc_page.content | convert_to_markdown | safe  | truncatewords:60 }}
 		</article>
 	</a>
     {% endfor %}
