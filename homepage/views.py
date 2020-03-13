@@ -99,15 +99,13 @@ def fs_gateway(request, raw_url):
         raw_url = raw_url[:-1]
     if "/read/" in raw_url:
         params = raw_url.split("/")
-        page_idx = params.index("page")
-        page = None
-        chapter = params[page_idx - 1]
+        page = "1"
+        chapter = params[-1]
         if "/page/" in raw_url:
+            page_idx = params.index("page")
+            chapter = params[page_idx - 1]
             page = params[page_idx + 1]
-        if page:
-            return redirect('reader-fs-chapter', fs_encode_url(raw_url), chapter, page)
-        else:
-            return redirect('reader-fs-chapter', fs_encode_url(raw_url), chapter, "1")
+        return redirect('reader-fs-chapter', fs_encode_url(raw_url), chapter, page)
     elif "/series/" in raw_url:
         return redirect('reader-fs-proxy', fs_encode_url(raw_url))
     else:
