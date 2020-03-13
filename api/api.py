@@ -340,7 +340,10 @@ ENCODE_STR = "%FF-"
 def fs_series_page_data(encoded_url):
     data = cache.get(f"fs_series_page_dt_{encoded_url}")
     if not data:
-        resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
         if resp.status_code == 200:
             data = resp.text
             soup = BeautifulSoup(data, "html.parser")
@@ -384,7 +387,10 @@ def fs_series_page_data(encoded_url):
 def fs_series_data(encoded_url):
     data = cache.get(f"fs_series_dt_{encoded_url}")
     if not data:
-        resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
         if resp.status_code == 200:
             data = resp.text
             soup = BeautifulSoup(data, "html.parser")
@@ -426,7 +432,10 @@ def fs_series_data(encoded_url):
 def fs_chapter_data(encoded_url):
     chapter_pages = None
     if not chapter_pages:
-        resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
         if resp.status_code == 200:
             pages = []
             raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
