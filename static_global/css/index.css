@@ -1383,7 +1383,7 @@ main a {
 .pages-listing .manga-card:hover:before {
 	opacity: 0.95;
 }
-.pages-listing .spoiler-warning {
+.pages-listing .manga-card .spoiler-warning {
 	font-size: 11px;
 	border-width: 1px;
 	display: inline-block;
@@ -1391,10 +1391,10 @@ main a {
 	margin: 0;
 	padding: 0.6em 1em;
 }
-.pages-listing blockquote {
+.pages-listing .manga-card blockquote {
 	margin: 0;
 }
-.pages-listing time {
+.pages-listing .manga-card time {
 	opacity: 0.6;
 	font-size: 0.6em;
 	display: inline-block;
@@ -1404,6 +1404,18 @@ main a {
 .pages-listing .manga-card article .embed-container, 
 .pages-listing .manga-card article img {
 	display: none;
+}
+.pages-listing .manga-card h1,
+.pages-listing .manga-card h2,
+.pages-listing .manga-card h3,
+.pages-listing .manga-card h4,
+.pages-listing .manga-card h5,
+.pages-listing .manga-card h6,
+.pages-listing .manga-card b,
+.pages-listing .manga-card strong {
+	font-size: 0.9em;
+	font-weight: normal;
+	color: inherit;
 }
 
 .light-mode-toggle {
