@@ -66,7 +66,7 @@ def series_data(series_slug):
     return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict}
 
 def md_series_page_data(series_id):
-    series_page_dt = cache.get(f"series_page_dt_{series_id}")
+    series_page_dt = cache.get(f"md_series_page_dt_{series_id}")
     if not series_page_dt:
         resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
@@ -102,13 +102,13 @@ def md_series_page_data(series_id):
                 "chapter_list": chapter_list,
                 "volume_list": sorted([], key=lambda m: m[0], reverse=True)
             }
-            cache.set(f"series_page_dt_{series_id}", series_page_dt, 60)
+            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 3600 * 24)
         else:
             return None
     return series_page_dt
 
 def md_series_data(series_id):
-    data = cache.get(f"series_dt_{series_id}")
+    data = cache.get(f"md_series_dt_{series_id}")
     if not data:
         resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
@@ -141,13 +141,13 @@ def md_series_data(series_id):
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
                 "cover": api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"series_dt_{series_id}", data, 60)
+            cache.set(f"md_series_dt_{series_id}", data, 3600 * 24)
         else:
             return None
     return data
 
 def md_chapter_info(chapter_id):
-    chapter_info = cache.get(f"chapter_dt_{chapter_id}")
+    chapter_info = cache.get(f"md_chapter_dt_{chapter_id}")
     if not chapter_info:
         resp = get_md_data(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter")
         if resp.status_code == 200:
@@ -155,7 +155,7 @@ def md_chapter_info(chapter_id):
             api_data = json.loads(data)
             chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
             chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"] or str(api_data["timestamp"])}
-            cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
+            cache.set(f"md_chapter_dt_{chapter_id}", chapter_info, 3600 * 24)
         else:
             return None
     return chapter_info
@@ -322,7 +322,7 @@ def nh_series_data(series_id):
                 "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
                 "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.{'jpg' if api_data['images']['cover']['t'] == 'j' else 'png'}",
             }
-            cache.set(f"nh_series_dt_{series_id}", data, 60)
+            cache.set(f"nh_series_dt_{series_id}", data, 3600 * 24)
         else:
             return None
     return data
