@@ -98,7 +98,7 @@ function ReaderAPI(o) {
 				if (this.firstParty) {
 					firstPartySeriesHandler(this.mediaURL, chapter, group, data.slug);
 				} else {
-					thirdPartySeriesHandler(chapter, group);
+					thirdPartySeriesHandler(this.seriesUrl, chapter, group);
 				}
 			}
 		}
@@ -766,8 +766,8 @@ function UI_Reader(o) {
 		this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
-			this.SCP.chapterObject.MD_request[this.SCP.group]().then((count) => {
-				delete this.SCP.chapterObject.MD_request[this.SCP.group]; // Save some memory, :kaguyaSmug:
+			this.SCP.chapterObject.pageRquest[this.SCP.group]().then((count) => {
+				delete this.SCP.chapterObject.pageRquest[this.SCP.group]; // Save some memory, :kaguyaSmug:
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
 				this.SCP.pageCount = count;
 				this.SCP.lastPage = count - 1;
@@ -2402,21 +2402,21 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 	chapter.loaded[group] = true;
 }
 
-// NH API response returns an array, whereas MD returns a chapter ID
-function thirdPartySeriesHandler(chapter, group) {
+// NH API response returns an array, whereas others returns a chapter ID
+function thirdPartySeriesHandler(url, chapter, group) {
 	if (Array.isArray(chapter.groups[group])) {
 		for (let image of chapter.groups[group]) {
 			chapter.images[group].push(image);
 		}
 		chapter.loaded[group] = true;
 	} else {
-		if (!chapter.MD_request) chapter.MD_request = {};
+		if (!chapter.pageRequest) chapter.pageRquest = {};
 		chapter.loaded[group] = false;
-		chapter.MD_request[group] = async () => {
+		chapter.pageRquest[group] = async () => {
 			let images = chapter.images[group];
 			try {
 				// Each group/chapter pair has a unique ID, returned by API
-				let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
+				let pages = await fetch(`${url.replace("series", "chapter_pages")}${chapter.groups[group]}/`)
 								.then(r => r.json());
 				pages.forEach(p => {
 					images.push(p);
