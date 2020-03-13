@@ -334,7 +334,8 @@ def get_md_data(url):
     }
     return requests.get(url, headers=headers)
 
-ENCODE_STR = "%-"
+# Must have valid hexadecimal after % many configurations
+ENCODE_STR = "%FF-"
 
 def fs_series_page_data(encoded_url):
     data = cache.get(f"fs_series_page_dt_{encoded_url}")
