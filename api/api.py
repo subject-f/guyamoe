@@ -337,8 +337,48 @@ def get_md_data(url):
 ENCODE_STR = "%-"
 
 def fs_series_page_data(encoded_url):
-    ## TODO for the page later
-    pass
+    data = cache.get(f"fs_series_page_dt_{encoded_url}")
+    if not data:
+        resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        if resp.status_code == 200:
+            data = resp.text
+            soup = BeautifulSoup(data, "html.parser")
+
+            comic_info = soup.find("div", class_="large comic")
+
+            title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
+            description = comic_info.find("div", class_="info").get_text().strip()
+            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            cover = soup.find("div", class_="thumbnail").find("img")["src"]
+
+            chapter_list = []
+
+            for a in soup.find_all("div", class_="element"):
+                link = a.find("div", class_="title").find("a")
+                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_number = "0"
+                if chapter_regex:
+                    chapter_number = chapter_regex.group(2)
+                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_number = "1"
+                if volume_regex:
+                    volume_number = volume_regex.group(2)
+                title = link.get_text()
+                upload_info = a.find("div", class_="meta_r").get_text()
+                chapter_list.append([chapter_number, title, link["href"], upload_info])
+
+            data = {
+                "series": title,
+                "slug": encoded_url,
+                "cover_vol_url": cover,
+                "synopsis": description, 
+                "chapter_list": chapter_list,
+                "original_url": f"https://{fs_decode_url(encoded_url)}"
+            }
+            cache.set(f"fs_series_page_dt_{encoded_url}", data, 3600 * 24)
+        else:
+            return None
+    return data
 
 def fs_series_data(encoded_url):
     data = cache.get(f"fs_series_dt_{encoded_url}")
