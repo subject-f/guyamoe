@@ -40,9 +40,9 @@ function LoadHandler(o) {
 	this.parseSCP = function(url) {
 		url = url.split('/');
 		return {
-			series: url[url.length - 3],
-			chapter: url[url.length - 2].replace('-','.'),
-			page: parseInt(url[url.length - 1] - 1),
+			series: url[url.length - 4],
+			chapter: url[url.length - 3].replace('-','.'),
+			page: parseInt(url[url.length - 2] - 1),
 		}
 	}
 
@@ -73,7 +73,7 @@ function ReaderAPI(o) {
 	} else {
 		this.seriesUrl = `${this.url}series/`;
 	}
-	
+
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
@@ -1897,6 +1897,7 @@ function URLChanger(o) {
 					+ SCP.chapter.replace('.', '-')
 					+ '/'
 					+ (SCP.page + 1)
+					+ '/'
 			);
 		var newtitle = SCP.chapter
 					+ ' - '
