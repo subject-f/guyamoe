@@ -964,7 +964,7 @@ function UI_Reader(o) {
 	this.copyShortLink = function() { 
 		// TODO: hard-coded values is meh
 		let url = document.location.href;
-		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To")) {
+		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To/")) {
 			url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);	
 		}
 		navigator.clipboard.writeText(url)
