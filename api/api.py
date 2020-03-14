@@ -3,7 +3,10 @@ import os
 import json
 import zipfile
 import requests
+import re
+import base64
 from datetime import datetime
+from bs4 import BeautifulSoup
 from io import BytesIO;
 from PIL import ImageFilter, Image
 from django.conf import settings
@@ -63,7 +66,7 @@ def series_data(series_slug):
     return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict}
 
 def md_series_page_data(series_id):
-    series_page_dt = cache.get(f"series_page_dt_{series_id}")
+    series_page_dt = cache.get(f"md_series_page_dt_{series_id}")
     if not series_page_dt:
         resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
@@ -99,13 +102,13 @@ def md_series_page_data(series_id):
                 "chapter_list": chapter_list,
                 "volume_list": sorted([], key=lambda m: m[0], reverse=True)
             }
-            cache.set(f"series_page_dt_{series_id}", series_page_dt, 60)
+            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 3600 * 24)
         else:
             return None
     return series_page_dt
 
 def md_series_data(series_id):
-    data = cache.get(f"series_dt_{series_id}")
+    data = cache.get(f"md_series_dt_{series_id}")
     if not data:
         resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
         if resp.status_code == 200:
@@ -138,13 +141,13 @@ def md_series_data(series_id):
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
                 "cover": api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"series_dt_{series_id}", data, 60)
+            cache.set(f"md_series_dt_{series_id}", data, 3600 * 24)
         else:
             return None
     return data
 
 def md_chapter_info(chapter_id):
-    chapter_info = cache.get(f"chapter_dt_{chapter_id}")
+    chapter_info = cache.get(f"md_chapter_dt_{chapter_id}")
     if not chapter_info:
         resp = get_md_data(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter")
         if resp.status_code == 200:
@@ -152,7 +155,7 @@ def md_chapter_info(chapter_id):
             api_data = json.loads(data)
             chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
             chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"] or str(api_data["timestamp"])}
-            cache.set(f"chapter_dt_{chapter_id}", chapter_info, 60)
+            cache.set(f"md_chapter_dt_{chapter_id}", chapter_info, 3600 * 24)
         else:
             return None
     return chapter_info
@@ -319,7 +322,7 @@ def nh_series_data(series_id):
                 "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
                 "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.{'jpg' if api_data['images']['cover']['t'] == 'j' else 'png'}",
             }
-            cache.set(f"nh_series_dt_{series_id}", data, 60)
+            cache.set(f"nh_series_dt_{series_id}", data, 3600 * 24)
         else:
             return None
     return data
@@ -330,3 +333,144 @@ def get_md_data(url):
         'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
     }
     return requests.get(url, headers=headers)
+
+# Must have valid hexadecimal after % many configurations
+ENCODE_STR = "%FF-"
+
+def fs_series_page_data(encoded_url):
+    data = cache.get(f"fs_series_page_dt_{encoded_url}")
+    if not data:
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        if resp.status_code == 200:
+            data = resp.text
+            soup = BeautifulSoup(data, "html.parser")
+
+            comic_info = soup.find("div", class_="large comic")
+
+            title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
+            description = comic_info.find("div", class_="info").get_text().strip()
+            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            cover_div = soup.find("div", class_="thumbnail")
+            if cover_div and cover_div.find("img")["src"]:
+                cover = cover_div.find("img")["src"]
+            else:
+                cover = ""
+
+            chapter_list = []
+
+            for a in soup.find_all("div", class_="element"):
+                link = a.find("div", class_="title").find("a")
+                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_number = "0"
+                if chapter_regex:
+                    chapter_number = chapter_regex.group(2)
+                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_number = "1"
+                if volume_regex:
+                    volume_number = volume_regex.group(2)
+                chapter_title = link.get_text()
+                upload_info = a.find("div", class_="meta_r").get_text()
+                chapter_list.append([chapter_number, chapter_title, link["href"], upload_info])
+
+            data = {
+                "series": title,
+                "slug": encoded_url,
+                "cover_vol_url": cover,
+                "synopsis": description, 
+                "chapter_list": chapter_list,
+                "original_url": f"https://{fs_decode_url(encoded_url)}"
+            }
+            cache.set(f"fs_series_page_dt_{encoded_url}", data, 3600 * 24)
+        else:
+            return None
+    return data
+
+def fs_series_data(encoded_url):
+    data = cache.get(f"fs_series_dt_{encoded_url}")
+    if not data:
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        if resp.status_code == 200:
+            data = resp.text
+            soup = BeautifulSoup(data, "html.parser")
+
+            comic_info = soup.find("div", class_="large comic")
+
+            title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
+            description = comic_info.find("div", class_="info").get_text().strip()
+            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            cover_div = soup.find("div", class_="thumbnail")
+            if cover_div and cover_div.find("img")["src"]:
+                cover = cover_div.find("img")["src"]
+            else:
+                cover = ""
+
+            chapters_dict = {}
+
+            for a in soup.find_all("div", class_="element"):
+                link = a.find("div", class_="title").find("a")
+                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_number = "0"
+                if chapter_regex:
+                    chapter_number = chapter_regex.group(2)
+                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_number = "1"
+                if volume_regex:
+                    volume_number = volume_regex.group(2)
+
+                chapter = {"volume": volume_number, "title": link.get_text(), "groups": {"1": None}}
+                chapter["groups"]["1"] = fs_encode_url(link["href"].replace("https://", "").replace("http://", ""))
+                chapters_dict[chapter_number] = chapter
+
+            data = {
+                "slug": encoded_url, "title": title, "description": description, 
+                "author": "", "artist": "", "groups": groups_dict,
+                "cover": cover, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
+            }
+            cache.set(f"fs_series_dt_{encoded_url}", data, 3600 * 24)
+        else:
+            return None
+    return data
+
+def fs_chapter_data(encoded_url):
+    chapter_pages = None
+    if not chapter_pages:
+        try:
+            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        except requests.exceptions.ConnectionError:
+            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        if resp.status_code == 200:
+            pages = []
+            raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
+            if not raw_data_regex:
+                return None
+            raw_data = raw_data_regex.group(2)
+            parser = lambda data: json.loads(data)
+            if raw_data.startswith("JSON.parse(atob("):
+                parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
+            for p in parser(raw_data):
+                pages.append(p["url"])
+            
+            cache.set(f"fs_chapter_dt_{encoded_url}", pages, 3600 * 24)
+            chapter_pages = pages
+        else:
+            return None
+    return chapter_pages
+
+def fs_encode_slug(url):
+    url = url.replace("/read/", "/series/").replace("https://", "").replace("http://", "")
+    split = url.split("/")
+    # Should it fail at this point if it's unrecognized? Probably
+    return ENCODE_STR.join(split[0:split.index("series") + 2])
+
+def fs_encode_url(url):
+    return url.replace("/", ENCODE_STR)
+
+def fs_decode_url(url):
+    return url.replace(ENCODE_STR, "/")
+

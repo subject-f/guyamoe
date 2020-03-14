@@ -17,7 +17,7 @@ from .models import HitCount, Series, Volume, Chapter
 from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
-from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data, nh_series_data
+from api.api import all_chapter_data_etag, chapter_data_etag, md_series_page_data, md_series_data, nh_series_data, fs_series_page_data, fs_series_data
 from guyamoe.settings import CANONICAL_ROOT_DOMAIN, STATIC_VERSION
 
 import os
@@ -181,6 +181,27 @@ def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
+        data["hide_referrer"] = True
+        data["version_query"] = STATIC_VERSION
+        return render(request, 'reader/reader.html', data)
+    else:
+        return render(request, 'homepage/how_cute_404.html', status=404)
+
+@decorator_from_middleware(OnlineNowMiddleware)
+def fs_proxy(request, encoded_url):
+    metadata = fs_series_page_data(encoded_url)
+    if metadata:
+        metadata["relative_url"] = f"fs_proxy/{encoded_url}"
+        metadata["version_query"] = STATIC_VERSION
+        return render(request, 'reader/fs_series.html', metadata)
+    else:
+        return HttpResponse(status=500)
+
+@decorator_from_middleware(OnlineNowMiddleware)
+def fs_chapter(request, encoded_url, chapter, page):
+    data = fs_series_data(encoded_url)
+    if data and chapter.replace("-", ".") in data["chapters"]:
+        data["relative_url"] = f"fs_proxy/{encoded_url}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)

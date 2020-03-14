@@ -1,0 +1,161 @@
+{% extends "layout.html" %} {% load static %} {% block head %}
+<title>Read {{ series }} :: Guya.moe</title>
+<meta
+  name="twitter:description"
+  content="A place to read the {{ series }} manga. No ads. No bad reader. All guya."
+/>
+<meta
+  property="og:description"
+  content="A place to read the {{ series }} manga. No ads. No bad reader. All guya."
+/>
+<meta
+  name="description"
+  content="Read {{ series }} manga. No ads. No bad reader. All guya."
+/>
+<meta name="referrer" content="no-referrer" />
+<script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $("#chapterTitleSearch").on("keyup", function() {
+      var value = $(this)
+        .val()
+        .toLowerCase();
+      $("#chapterTable tr").filter(function() {
+        $(this).toggle(
+          $(this)
+            .find("td")
+            .text()
+            .toLowerCase()
+            .indexOf(value) > -1
+        );
+      });
+    });
+  });
+</script>
+{% endblock %} {% block body %}
+<style>
+  .active {
+    background-color: red;
+    color: white;
+  }
+  h1 {
+    font-size: 1.4em;
+  }
+
+  p {
+    color: #dedede;
+  }
+
+  html,
+  html.h-100 {
+    background-attachment: fixed;
+    background-position: 50% 10%;
+    background-size: 1500px;
+    background-image: url("/static/img/bg_box.png");
+    background-color: black !important;
+  }
+
+  body {
+    background: none !important;
+    background-color: none !important;
+  }
+</style>
+<div
+  class="modal fade"
+  id="imagemodal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="myModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <img src="" id="imagepreview" style="width: 100%; height: 100%;" />
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-default"
+          data-dismiss="modal"
+          id="openOriginal"
+        >
+          Open original
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid page-series">
+  <div class="bs-docs-section clearfix mt-1">
+    <div class="row justify-content-center">
+      <div class="side-cover col-lg-2 col-md-3 col-sm-11 col-xs-12 mb-4">
+        <div class="list-item">
+          <div class="list-content">
+            <div class="list-body d-flex justify-content-center">
+              <span class="text-white text-white font-weight-bold"> </span>
+            </div>
+          </div>
+          <div class="media media-3x4 justify-content-center py-2">
+            <img src="{{ cover_vol_url }}" class="img-fluid" />
+          </div>
+        </div>
+        <div class="card sidecard">
+          <div class="card-body">
+            <table class="table table-borderless table-sm small">
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8 col-md-7 col-sm-11 col-xs-12 series-content">
+        <article>
+          <picture>
+            <img
+              src="{{ cover_vol_url }}"
+              class="img-fluid"
+              alt="{{ series }} manga"
+            />
+          </picture>
+          <h1>{{ series }}</h1>
+          <a href="{{ original_url|safe }}">View Original</a>
+          {{ synopsis|linebreaks }}
+        </article>
+
+        <div id="view" class="table-responsive">
+          <table id="chapters" class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">
+                  Title&nbsp;&nbsp;&nbsp;&nbsp;<input
+                    class="form-control-sm"
+                    id="chapterTitleSearch"
+                    type="text"
+                    placeholder="⌕ Search"
+                  />
+                </th>
+                <th scope="col">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody id="chapterTable">
+              {% for chapter, title, link, upload_info in chapter_list %}
+              <tr class="table-default">
+                <td scope="row">
+                  <a href="/fs/{{ link }}">{{ chapter }} - {{ title }}</a>
+                </td>
+                <td scope="row" class="detailed-chapter-upload-date">
+                  {{ upload_info }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
