@@ -334,7 +334,7 @@ def get_md_data(url):
     }
     return requests.get(url, headers=headers)
 
-# Must have valid hexadecimal after % many configurations
+# Must have valid hexadecimal after % for many configurations
 ENCODE_STR = "%FF-"
 
 def fs_series_page_data(encoded_url):
@@ -438,14 +438,13 @@ def fs_series_data(encoded_url):
     return data
 
 def fs_chapter_data(encoded_url):
-    chapter_pages = None
+    chapter_pages = cache.get(f"fs_chapter_dt_{encoded_url}")
     if not chapter_pages:
         try:
             resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
         except requests.exceptions.ConnectionError:
             resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
         if resp.status_code == 200:
-            pages = []
             raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
             if not raw_data_regex:
                 return None
@@ -453,11 +452,9 @@ def fs_chapter_data(encoded_url):
             parser = lambda data: json.loads(data)
             if raw_data.startswith("JSON.parse(atob("):
                 parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
-            for p in parser(raw_data):
-                pages.append(p["url"])
             
-            cache.set(f"fs_chapter_dt_{encoded_url}", pages, 3600 * 24)
-            chapter_pages = pages
+            chapter_pages = [p["url"] for p in parser(raw_data)]
+            cache.set(f"fs_chapter_dt_{encoded_url}", chapter_pages, 3600 * 24)
         else:
             return None
     return chapter_pages
