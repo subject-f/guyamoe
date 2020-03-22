@@ -766,8 +766,8 @@ function UI_Reader(o) {
 		this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
-			this.SCP.chapterObject.pageRquest[this.SCP.group]().then((count) => {
-				delete this.SCP.chapterObject.pageRquest[this.SCP.group]; // Save some memory, :kaguyaSmug:
+			this.SCP.chapterObject.pageRequest[this.SCP.group]().then((count) => {
+				delete this.SCP.chapterObject.pageRequest[this.SCP.group]; // Save some memory, :kaguyaSmug:
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
 				this.SCP.pageCount = count;
 				this.SCP.lastPage = count - 1;
@@ -2411,9 +2411,9 @@ function thirdPartySeriesHandler(url, chapter, group) {
 		}
 		chapter.loaded[group] = true;
 	} else {
-		if (!chapter.pageRequest) chapter.pageRquest = {};
+		if (!chapter.pageRequest) chapter.pageRequest = {};
 		chapter.loaded[group] = false;
-		chapter.pageRquest[group] = async () => {
+		chapter.pageRequest[group] = async () => {
 			let images = chapter.images[group];
 			try {
 				// Each group/chapter pair has a unique ID, returned by API
