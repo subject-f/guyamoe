@@ -40,9 +40,9 @@ function LoadHandler(o) {
 	this.parseSCP = function(url) {
 		url = url.split('/');
 		return {
-			series: url[url.length - 3],
-			chapter: url[url.length - 2].replace('-','.'),
-			page: parseInt(url[url.length - 1] - 1),
+			series: url[url.length - 4],
+			chapter: url[url.length - 3].replace('-','.'),
+			page: parseInt(url[url.length - 2] - 1),
 		}
 	}
 
@@ -73,7 +73,7 @@ function ReaderAPI(o) {
 	} else {
 		this.seriesUrl = `${this.url}series/`;
 	}
-	
+
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
 	this.data = {};
@@ -98,7 +98,7 @@ function ReaderAPI(o) {
 				if (this.firstParty) {
 					firstPartySeriesHandler(this.mediaURL, chapter, group, data.slug);
 				} else {
-					thirdPartySeriesHandler(chapter, group);
+					thirdPartySeriesHandler(this.seriesUrl, chapter, group);
 				}
 			}
 		}
@@ -613,7 +613,7 @@ function UI_Reader(o) {
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
-		.attach('layout', ['KeyD'], e => Settings.cycle('layout'))
+		.attach('layout', ['KeyD'], e => this.cycleLayout())
 		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
@@ -766,8 +766,8 @@ function UI_Reader(o) {
 		this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
-			this.SCP.chapterObject.MD_request[this.SCP.group]().then((count) => {
-				delete this.SCP.chapterObject.MD_request[this.SCP.group]; // Save some memory, :kaguyaSmug:
+			this.SCP.chapterObject.pageRequest[this.SCP.group]().then((count) => {
+				delete this.SCP.chapterObject.pageRequest[this.SCP.group]; // Save some memory, :kaguyaSmug:
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
 				this.SCP.pageCount = count;
 				this.SCP.lastPage = count - 1;
@@ -964,7 +964,7 @@ function UI_Reader(o) {
 	this.copyShortLink = function() { 
 		// TODO: hard-coded values is meh
 		let url = document.location.href;
-		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To")) {
+		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To/")) {
 			url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);	
 		}
 		navigator.clipboard.writeText(url)
@@ -1005,14 +1005,6 @@ function UI_Reader(o) {
 	}
 
 	this.setSelectorPin = function(state) {
-		if (IS_MOBILE) {
-			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
-				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
-				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
-			} else {
-				this._.rdr_aside_buffer.style.height = '0px';
-			}
-		}
 		Settings.all.selectorPinned.options.forEach(item => {
 			this.$.classList.remove(item);
 			this.$.classList.remove('nonum');
@@ -1023,7 +1015,27 @@ function UI_Reader(o) {
 		}else{
 			this.$.classList.add(state);
 		}
+		this.recalculateBuffer();
 		this.stickHeader();
+	}
+
+	this.cycleLayout = function() {
+		Settings.cycle('layout');
+		this.recalculateBuffer();
+	}
+
+	this.recalculateBuffer = function() {
+		if (IS_MOBILE) {
+			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
+				// Order of these statements seem to matter for Chrome's scroll shifting behaviour; if height is
+				// set before top, the scroll bug occurs. Thus, it might break in future updates.
+				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
+				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
+				// console.log(window.scrollY); // This statement also reintroduces the scroll bug regardless of order
+			} else {
+				this._.rdr_aside_buffer.style.height = '0px';
+			}
+		}
 	}
 
 	this.setPreload = function(number){
@@ -1136,7 +1148,7 @@ function UI_Reader(o) {
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.preload_button.onmousedown = e => Settings.cycle('preload');
-	this._.layout_button.onmousedown = e => Settings.cycle('layout');
+	this._.layout_button.onmousedown = e => this.cycleLayout();
 	this._.fit_button.onmousedown = e => {
 		this.asideViews.S.call('number', 0);
 	}
@@ -1885,6 +1897,7 @@ function URLChanger(o) {
 					+ SCP.chapter.replace('.', '-')
 					+ '/'
 					+ (SCP.page + 1)
+					+ '/'
 			);
 		var newtitle = SCP.chapter
 					+ ' - '
@@ -2390,21 +2403,21 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 	chapter.loaded[group] = true;
 }
 
-// NH API response returns an array, whereas MD returns a chapter ID
-function thirdPartySeriesHandler(chapter, group) {
+// NH API response returns an array, whereas others returns a chapter ID
+function thirdPartySeriesHandler(url, chapter, group) {
 	if (Array.isArray(chapter.groups[group])) {
 		for (let image of chapter.groups[group]) {
 			chapter.images[group].push(image);
 		}
 		chapter.loaded[group] = true;
 	} else {
-		if (!chapter.MD_request) chapter.MD_request = {};
+		if (!chapter.pageRequest) chapter.pageRequest = {};
 		chapter.loaded[group] = false;
-		chapter.MD_request[group] = async () => {
+		chapter.pageRequest[group] = async () => {
 			let images = chapter.images[group];
 			try {
 				// Each group/chapter pair has a unique ID, returned by API
-				let pages = await fetch(`/api/md_chapter_pages/${chapter.groups[group]}/`)
+				let pages = await fetch(`${url.replace("series", "chapter_pages")}${chapter.groups[group]}/`)
 								.then(r => r.json());
 				pages.forEach(p => {
 					images.push(p);

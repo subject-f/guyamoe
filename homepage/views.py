@@ -7,7 +7,7 @@ from django.views.decorators.http import condition
 from django.core.cache import cache
 from django.conf import settings
 
-from api.api import all_chapter_data_etag, md_chapter_info
+from api.api import all_chapter_data_etag, md_chapter_info, fs_encode_slug
 from guyamoe.settings import STATIC_VERSION
 from reader.middleware import OnlineNowMiddleware
 from reader.users_cache_lib import get_user_ip
@@ -93,6 +93,24 @@ def nh_series(request, nh_series_id, page=None):
     else:
         return redirect('reader-nh-proxy', nh_series_id)
 
+@decorator_from_middleware(ForwardParametersMiddleware)
+def fs_gateway(request, raw_url):
+    if raw_url.endswith("/"):
+        raw_url = raw_url[:-1]
+    if "/read/" in raw_url:
+        params = raw_url.split("/")
+        page = "1"
+        chapter = params[-1]
+        if "/page/" in raw_url:
+            page_idx = params.index("page")
+            chapter = params[page_idx - 1]
+            page = params[page_idx + 1]
+        return redirect('reader-fs-chapter', fs_encode_slug(raw_url), chapter, page)
+    elif "/series/" in raw_url:
+        return redirect('reader-fs-proxy', fs_encode_slug(raw_url))
+    else:
+        return HttpResponse(status=400)
+
 def referral(request):
     if request.method == "POST":
         ip = get_user_ip(request)
@@ -120,3 +138,4 @@ def referral(request):
 
 def handle404(request, exception):
     return render(request, 'homepage/how_cute_404.html', status=404)
+

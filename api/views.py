@@ -13,7 +13,7 @@ from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from reader.users_cache_lib import get_user_ip
-from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_info, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data
+from .api import all_chapter_data_etag, chapter_data_etag, series_data, md_series_data, md_chapter_info, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data, fs_series_data, fs_chapter_data, fs_encode_url, fs_encode_slug, ENCODE_STR
 from django.views.decorators.csrf import csrf_exempt
 import requests
 
@@ -205,3 +205,23 @@ def black_hole_mail(request):
             with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
                 f.write(text)
         return HttpResponse(json.dumps({"success": "Mail successfully crossed the event horizon"}), content_type="application/json")
+
+def get_fs_series_data(request, encoded_url):
+    if ENCODE_STR in encoded_url:
+        series_api_data = fs_series_data(encoded_url)
+        return HttpResponse(json.dumps(series_api_data), content_type="application/json")
+    else:
+        return HttpResponse(status=400)
+
+def get_fs_chapter_pages(request, encoded_url):
+    if ENCODE_STR in encoded_url:
+        chapter_pages = fs_chapter_data(encoded_url)
+        if chapter_pages:
+            return HttpResponse(json.dumps(chapter_pages), content_type="application/json")
+        else:
+            return HttpResponse(status=503)
+    else:
+        return HttpResponse(status=400)
+
+def get_fs_encoded_url(request, raw_url):
+    return HttpResponse(json.dumps({"url": fs_encode_url(raw_url)}), content_type="application/json")
