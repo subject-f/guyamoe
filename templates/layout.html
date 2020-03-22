@@ -1,180 +1,208 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="{{ template }} h-100" lang="en" class="bg-dark h-100">
-   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-       <!-- Google Tag Manager -->
-      <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-WWRXZB4');</script>
-      <!-- End Google Tag Manager -->
-      <!-- Global site tag (gtag.js) - Google Analytics -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-153182310-1"></script>
-      <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!-- Google Tag Manager -->
+	<script>
+		(function(w, d, s, l, i) {
+			w[l] = w[l] || [];
+			w[l].push({
+				'gtm.start': new Date().getTime(),
+				event: 'gtm.js'
+			});
+			var f = d.getElementsByTagName(s)[0],
+				j = d.createElement(s),
+				dl = l != 'dataLayer' ? '&l=' + l : '';
+			j.async = true;
+			j.src =
+				'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+			f.parentNode.insertBefore(j, f);
+		})(window, document, 'script', 'dataLayer', 'GTM-WWRXZB4');
+	</script>
+	<!-- End Google Tag Manager -->
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-153182310-1"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() {
+			dataLayer.push(arguments);
+		}
+		gtag('js', new Date());
 		gtag('config', 'UA-153182310-1');
-		</script>
-		<link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
-		<link defer rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-		<link rel="stylesheet" href="{% static 'css/index.css' %}{{ version_query }}">
-		<link rel="stylesheet" href="{% static 'css/icons.css' %}{{ version_query }}">
-		<link defer rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-		<link defer rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
-		<script src="{% static 'js/jquery.min.js' %}"> </script>
-		<script src="{% static 'js/alg_lib.js' %}{{ version_query }}"> </script>
-		<script defer src="{% static 'js/bootstrap.min.js' %}"> </script>
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="black">
-		<meta name="format-detection" content="telephone=no">
-		<meta name="theme-color" content="#2b2f33" />
-		{% block head %}
-		{% endblock %}
-		<style type="text/css">
-			.site-title, .site-description {
-				position: absolute;
-				clip: rect(1px, 1px, 1px, 1px);
-			}
-		</style>
-		{% include "referral.html" %}
-	</head>
-	<body class="d-flex flex-column h-100">
+	</script>
+	<link rel="canonical" href="https://guya.moe/{{ relative_url }}" />
+	<link defer rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+	<link rel="stylesheet" href="{% static 'css/index.css' %}{{ version_query }}">
+	<link rel="stylesheet" href="{% static 'css/icons.css' %}{{ version_query }}">
+	<link defer rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link defer rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
+	<script src="{% static 'js/jquery.min.js' %}">
+	</script>
+	<script src="{% static 'js/alg_lib.js' %}{{ version_query }}">
+	</script>
+	<script defer src="{% static 'js/bootstrap.min.js' %}">
+	</script>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="theme-color" content="#2b2f33" /> {% block head %} {% endblock %}
+	<style type="text/css">
+		.site-title,
+		.site-description {
+			position: absolute;
+			clip: rect(1px, 1px, 1px, 1px);
+		}
+	</style>
+	{% include "referral.html" %}
+</head>
+
+<body class="d-flex flex-column h-100">
 	<!-- Google Tag Manager (noscript) -->
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWRXZB4"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<noscript>
+		<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWRXZB4" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+	</noscript>
 	<!-- End Google Tag Manager (noscript) -->
-	{% load cache %}
-	{% cache 500 sidebar %}
+	{% load cache %} {% cache 500 sidebar %}
 	<header>
-	<nav class="navbar navbar-expand-lg">
-		<div class="container-fluid">
-			<a class="navbar-brand-logo col-lg-2" href="/" rel="home">
-				<img src="{% static 'img/Guya-moe.png' %}" alt="Guya.moe">
-			</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse col-lg-8" id="navbarSupportedContent">
-				<ul class="navbar-nav">
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="readManga" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		<nav class="navbar navbar-expand-lg">
+			<div class="container-fluid">
+				<a class="navbar-brand-logo col-lg-2" href="/" rel="home">
+					<img src="{% static 'img/Guya-moe.png' %}" alt="Guya.moe">
+				</a>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse col-lg-8" id="navbarSupportedContent">
+					<ul class="navbar-nav">
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="readManga" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Read
 						</a>
-						<div class="dropdown-menu" aria-labelledby="readManga">
-							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama: Love is War</a>
-							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="/read/manga/We-Want-To-Talk-About-Kaguya">We Want To Talk About Kaguya</a>
-							<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Official Doujin</a>
-							<a class="dropdown-item" href="//skythewood.blogspot.com/p/kaguya.html">Novel: Seven Mysteries of Shuchiin</a>
-							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="https://tachiyomi.org/extensions/#Guya">Tachiyomi Plugin</a>
-						</div>
-					</li>
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="fanContent" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<div class="dropdown-menu" aria-labelledby="readManga">
+								<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To">Kaguya-sama: Love is War</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="/read/manga/We-Want-To-Talk-About-Kaguya">We Want To Talk About Kaguya</a>
+								<a class="dropdown-item" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin">Official Doujin</a>
+								<a class="dropdown-item" href="//skythewood.blogspot.com/p/kaguya.html">Novel: Seven Mysteries of Shuchiin</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="https://tachiyomi.org/extensions/#Guya">Tachiyomi Plugin</a>
+							</div>
+						</li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="fanContent" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Fan-content
 						</a>
-						<div class="dropdown-menu" aria-labelledby="fanContent">
-							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/Fancomic">Fancomics</a>
-							<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/fandub">Fandub</a>
-							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" target="_blank" href="//kaguyasama-wa-kokurasetai.fandom.com/wiki/Kaguya-sama_wa_Kokurasetai_Wikia">Wiki</a>
-							<a class="dropdown-item" target="_blank" href="//kaguya-archive.tumblr.com/">Archive</a>
-						</div>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/pages">Kaguya Articles</a>
-					</li>
-					<div class="pusher"></div>
-					<li class="nav-item blackbox-host">
-						<textarea id="blackbox" required="true" placeholder=""></textarea>
-						<span id="blackbox_submit" class="enter-key"></span>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/about">About</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="//www.reddit.com/r/Kaguya_sama/"><img alt="/r/Kaguya_sama" src="/static/img/reddit.svg"></img></a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="//discord.gg/gAUAkzr"><img alt="Discord" src="/static/img/discord.svg"></img></a>
-					</li>
-				</ul>
+							<div class="dropdown-menu" aria-labelledby="fanContent">
+								<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/Fancomic">Fancomics</a>
+								<a class="dropdown-item" href="//kaguya-archive.tumblr.com/tagged/fandub">Fandub</a>
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" target="_blank" href="//kaguyasama-wa-kokurasetai.fandom.com/wiki/Kaguya-sama_wa_Kokurasetai_Wikia">Wiki</a>
+								<a class="dropdown-item" target="_blank" href="//kaguya-archive.tumblr.com/">Archive</a>
+							</div>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="/pages">Kaguya Articles</a>
+						</li>
+						<div class="pusher"></div>
+						<li class="nav-item blackbox-host">
+							<textarea id="blackbox" required="true" placeholder=""></textarea>
+							<span id="blackbox_submit" class="enter-key"></span>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="/about">About</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="//www.reddit.com/r/Kaguya_sama/"><img alt="/r/Kaguya_sama" src="/static/img/reddit.svg"></img>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="//discord.gg/gAUAkzr"><img alt="Discord" src="/static/img/discord.svg"></img>
+							</a>
+						</li>
+					</ul>
+				</div>
 			</div>
-		</div>
-	</nav>
+		</nav>
 	</header>
 	<script>
-	var links = document.querySelectorAll('header .nav-link');
-        [].forEach.call(links, link => {
-            if(link.classList.contains('dropdown-toggle')) {
-        	var items;
-        		if(link.nextElementSibling)
-        			items = link.nextElementSibling.children;
-        		else
-        			return;
-        		for(var i=0; i<items.length; i++) {
-        			if(document.location.href.indexOf(items[i].href) > -1) {
+		var links = document.querySelectorAll('header .nav-link');
+		[].forEach.call(links, link => {
+			if (link.classList.contains('dropdown-toggle')) {
+				var items;
+				if (link.nextElementSibling)
+					items = link.nextElementSibling.children;
+				else
+					return;
+				for (var i = 0; i < items.length; i++) {
+					if (document.location.href.indexOf(items[i].href) > -1) {
 						link.classList.add('s')
-        			}
-        		}
-        	}else{
-            	if(document.location.href.indexOf(link.href) > -1)
-                	link.classList.add('s')
-        	}
-        });
-        blackbox.style.height = "";
-        blackbox.style.height = Math.min(blackbox.scrollHeight, 500) + "px";
+					}
+				}
+			} else {
+				if (document.location.href.indexOf(link.href) > -1)
+					link.classList.add('s')
+			}
+		});
+		blackbox.style.height = "";
+		blackbox.style.height = Math.min(blackbox.scrollHeight, 500) + "px";
 		blackbox.nextElementSibling.style.top = Math.min(blackbox.scrollHeight, 500) + "px";
-        blackbox.addEventListener('keydown', autosize);
-        blackbox.addEventListener('blur',  e => e.target.placeholder = '');
-        blackbox.addEventListener('focus', e => e.target.placeholder = 'Black hole mail. Send us your feedback!');
-        // blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
-        // blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
+		blackbox.addEventListener('keydown', autosize);
+		blackbox.addEventListener('blur', e => e.target.placeholder = '');
+		blackbox.addEventListener('focus', e => e.target.placeholder = 'Black hole mail. Send us your feedback!');
+		// blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
+		// blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
 
-		             
-		function autosize(){
-		  var el = this;
-		  setTimeout(function(){
-		      el.style.height = "";
-  			  el.style.height = Math.min(el.scrollHeight, 500) + "px";
-  			  el.nextElementSibling.style.top = Math.min(el.scrollHeight, 500) + "px";
-		  },0);
+		function autosize() {
+			var el = this;
+			setTimeout(function() {
+				el.style.height = "";
+				el.style.height = Math.min(el.scrollHeight, 500) + "px";
+				el.nextElementSibling.style.top = Math.min(el.scrollHeight, 500) + "px";
+			}, 0);
 		}
 
-		blackbox_submit.onclick = function (e) {
+		blackbox_submit.onclick = function(e) {
 			blackbox.focus();
 			var formData = new FormData();
 			formData.append("text", blackbox.value)
 			fetch('/api/black_hole_mail/', {
-				method: 'POST',
-				body: formData
-			})
-			.then((response) => response.json())
-			.then((data) => {
-				if(data.success){
-					blackbox.placeholder = 'Sent!'
-				}
-				else{
-					blackbox.placeholder = data.error
-				}
-			})
-			.catch((error) => {
-				blackbox.placeholder = 'Send failed.'
-			});
+					method: 'POST',
+					body: formData
+				})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.success) {
+						blackbox.placeholder = 'Sent!'
+					} else {
+						blackbox.placeholder = data.error
+					}
+				})
+				.catch((error) => {
+					blackbox.placeholder = 'Send failed.'
+				});
 			console.log(blackbox.value);
 			blackbox.value = '';
 			autosize.call(blackbox)
 		}
-
 	</script>
-	{% endcache %}
-	{% block body %}
-	{% endblock %}
-	</body>
+	{% endcache %} {% block body %} {% endblock %}
+	<script>
+		isiOSAux = (window.navigator.standalone == true);
+		if(isiOSAux) {
+			var aList = document.getElementsByTagName("a");
+			for(var i=0; i<aList.length; i++) {
+				if(!aList[i].onclick
+				&& aList[i].href.length > 0
+				&& aList[i].href.indexOf(document.location.origin) > -1) {
+					aList[i].onclick = function() {
+						window.location = this.getAttribute("href");
+						return false; 
+					}
+				}
+			}
+		}
+	</script>
+</body>
 </html>
