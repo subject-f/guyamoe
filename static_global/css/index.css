@@ -785,6 +785,17 @@ main a {
 	text-indent: 0;
 	line-height: 1.5;
 }
+.chapter-listing .s2.adapted .chapter-name span,
+.chapter-listing .s2.adapted:hover .chapter-name span {
+	color: #ddd;
+	border-color: #6bb5f7;
+	text-indent: 0px;
+	line-height: 1.5;
+}
+.chapter-listing .s2.adapted .chapter-name span:before,
+.chapter-listing .s2.adapted:hover .chapter-name span:before {
+	display: none !important;
+}
 .chapter-listing .chapter-date {
 	white-space: nowrap;
 	width: 0;

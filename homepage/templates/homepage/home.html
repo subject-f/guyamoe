@@ -342,9 +342,9 @@
 		</tbody>
 		<tbody>
 		((~it :value:index))
-		<tr class="chapter-row ((? window.adapted.indexOf(+value[2]) > -1 ))adapted((?))">
+		<tr class="chapter-row ((? window.adapted.indexOf(+value[2]) > -1 ))adapted((?))((? window.s2.indexOf(+value[2]) > -1 )) s2((?))">
 			<td class="chapter-n">((=value[0]))</td>
-			<td class="chapter-name"><a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[2]))/1">((=value[1]))</a>((? window.adapted.indexOf(+value[2]) > -1 ))<span data-anime="((=getAnimeString(value[2]) ))">Adapted</span>((?))</td>
+			<td class="chapter-name"><a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[2]))/1">((=value[1]))</a>((? window.adapted.indexOf(+value[2]) > -1 ))<span data-anime="((=getAnimeString(value[2]) ))">((? window.s2.indexOf(+value[2]) > -1 ))Season 2!((??))Adapted((?))</span>((?))</td>
 			<td class="chapter-date">((= value[4][0] ))-((= zpad(1+value[4][1]) ))-((= zpad(value[4][2]) ))</td>
 		</tr>
 		((~))
@@ -354,8 +354,11 @@
 var chaps_asc = msd.chapter_list.reverse();
 	adapted = [1,11,12,14,16,17,18,19,20,21,23,24,25,26,27,28,29,31,33,34,35,37,38,39,40,41,42,43,44,45,46,5,55,6,7,8,9];
 	anime_map = {1:[1,0],5:[1,2],6:[2,2],7:[2,1],8:[3,1],9:[3,2],11:[2,0],12:[1,1],14:[3,0],16:[5,0],17:[4,0],18:[4,1],19:[4,2],20:[4,3],21:[5,2],23:[5,1],24:[6,0],25:[6,2],26:[7,0],27:[7,2],28:[6,1],29:[7,1],31:[8,1],33:[9,0],34:[9,1],35:[9,2],37:[10,0],38:[10,1],39:[8,0],40:[10,2],41:[11,2],42:[11,0],43:[11,1],44:[12,0],45:[12,1],46:[12,2],55:[8,2]}
+	s2 = [30, 36, 48, 51, 54, 56, 57, 58, 59, 60, 61, 65, 81]
+	adapted = adapted.concat(s2);
 	chapter_listing.innerHTML = chapterList(chaps_asc);
 	function getAnimeString(num) {
+		if(s2.indexOf(+num) > -1) return "";
 		return 'Season 1, Episode '+anime_map[num][0] + ', part ' + (1+anime_map[num][1]) + '';
 	}
 	function zpad(n){
