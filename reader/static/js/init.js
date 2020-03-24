@@ -936,9 +936,22 @@ function UI_Reader(o) {
 
 	this.nextPage = function() {
 		if (this.loadingChapter) return;
-	var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+		
+		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+		
 		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
+			let data = JSON.parse(window.localStorage.getItem("read-"+this.SCP.series));
+			
+			if (data == null) data = []
+			
+			if (!data.includes(this.SCP.chapter)){
+				data.push(this.SCP.chapter);
+			}
+			
+			window.localStorage.setItem("read-"+this.SCP.series, JSON.stringify(data));
+			
 			this.nextChapter();
+			
 		} else {
 			this.displayPage(this.imageView.imageWrappersMask[nextWrapper][0])
 		}

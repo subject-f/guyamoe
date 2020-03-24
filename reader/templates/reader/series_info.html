@@ -78,6 +78,22 @@
 			$(this).toggle($(this).find("td").text().toLowerCase().indexOf(value) > -1)
 			});
 		});
+	   
+	   let read = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
+	   if (read == null) read = []
+	   
+	   console.log(read)
+	   
+	   
+	   document.getElementsByClassName("read-or-not").forEach(e => {
+		   if (read.includes(e.getAttribute("data-num")))
+			   e.innerHTML = '<i class="fa fa-check"></i>';
+	   });
+	   
+	   document.getElementsByClassName("chapter-box").forEach(e => {
+		   if (read.includes(e.getAttribute("data-num")))
+			   e.className = e.className + " hasread"
+	   });
 	});
 	
 	function listMode(mode) {
@@ -113,9 +129,28 @@
 			
 		}
 	}
+	   
 	function setImage(cover) {
 		$("#imagepreview").attr("src", cover);
 		$("#openOriginal").attr("onclick", `window.open('${cover}', '_blank')`);
+	}
+	   
+	function setRead(num, e){
+		let newdata = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
+		
+		if (newdata == null) newdata = [];
+		
+		if (newdata.includes(num)){
+			for( var i = 0; i < newdata.length; i++){
+				if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
+			}
+			e.innerHTML = '';
+		} else {
+			newdata.push(num);
+			e.innerHTML = '<i class="fa fa-check"></i>';
+		}
+		
+		window.localStorage.setItem("read-{{ slug }}", JSON.stringify(newdata));
 	}
    </script>
 {% endblock %}
@@ -144,6 +179,14 @@
 	background: none !important;
 	background-color: none !important;
    }
+	.read-or-not{
+		color: green;
+		text-align: center;
+	}
+	
+	.hasread{
+		opacity: 0.45;
+	}
 
 </style>
    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -255,7 +298,7 @@
 						<div class="row mb-0 pt-0">
 						{% for chapter in data %}
 						<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3">
-							<a href="/read/manga/{{ slug }}/{{ chapter.1 }}/1"><p class="text-center mb-1 chapter-number">{{ chapter.0 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p><p class="text-center text-muted small mb-1 chapter-group">{{ chapter.2 }}</p></a>
+							<a href="/read/manga/{{ slug }}/{{ chapter.1 }}/1" class="chapter-box" data-num="{{ chapter.0 }}"><p class="text-center mb-1 chapter-number">{{ chapter.0 }}</p><p class="text-center small mb-1 compact-chapter-upload-date"></p><p class="text-center text-muted small mb-1 chapter-group">{{ chapter.2 }}</p></a>
 						</div>
 						{% endfor %}
 						</div>
@@ -270,16 +313,18 @@
 							<th scope="col">Title&nbsp;&nbsp;&nbsp;&nbsp;<input class="form-control-sm" id="chapterTitleSearch" type="text" placeholder="⌕ Search"></th>
 							<th scope="col">Group</th>
 							<th scope="col">Last Updated</th>
-							<th scope="col"><i class="fa fa-download"></i></th>
+							<th scope="col">Read</th>
+							<th scope="col" style="padding-left:13px;"><i class="fa fa-download"></i></th>
 						</tr>
 						</thead>
 						<tbody id="chapterTable">
 						{% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
 							<tr class="table-default">                           
-									<td scope="row"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></td>
-									<td scope="row">{{ group }}</td>
-									<td scope="row" class="detailed-chapter-upload-date"></td>
-									<td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>     
+								<td scope="row"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></td>
+								<td scope="row">{{ group }}</td>
+								<td scope="row" class="detailed-chapter-upload-date"></td>
+								<td scope="row" class="read-or-not" onclick="setRead('{{ chapter }}', this)" data-num="{{ chapter }}"></td>
+								<td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>
 							</tr>
 						{% endfor %}
 						</tbody>
