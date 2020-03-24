@@ -79,21 +79,7 @@
 			});
 		});
 	   
-	   let read = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
-	   if (read == null) read = []
-	   
-	   console.log(read)
-	   
-	   
-	   document.getElementsByClassName("read-or-not").forEach(e => {
-		   if (read.includes(e.getAttribute("data-num")))
-			   e.innerHTML = '<i class="fa fa-check"></i>';
-	   });
-	   
-	   document.getElementsByClassName("chapter-box").forEach(e => {
-		   if (read.includes(e.getAttribute("data-num")))
-			   e.className = e.className + " hasread"
-	   });
+	   applyRead(1);
 	});
 	
 	function listMode(mode) {
@@ -133,6 +119,24 @@
 	function setImage(cover) {
 		$("#imagepreview").attr("src", cover);
 		$("#openOriginal").attr("onclick", `window.open('${cover}', '_blank')`);
+	}
+	   
+	function applyRead(mode){
+		let read = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
+	   	if (read == null) read = []
+		
+		switch(mode){
+			case 1:
+				document.getElementsByClassName("read-or-not").forEach(e => {
+					if (read.includes(e.getAttribute("data-num")))
+						e.innerHTML = '<i class="fa fa-check"></i>';
+					});
+			case 2:
+				document.getElementsByClassName("chapter-box").forEach(e => {
+				if (read.includes(e.getAttribute("data-num")))
+					e.className = e.className + " hasread";
+				});
+		}
 	}
 	   
 	function setRead(num, e){
@@ -282,8 +286,8 @@
 				{{ synopsis|linebreaks }}
 			</article>
 			<div class="btn-group"  role="group" >
-				<button type="button" id="detailedMode" class="tag-display-mode-toggle btn" onclick="listMode(1)">Detailed</button>
-				<button type="button" id="compactMode" class="tag-display-mode-toggle btn" onclick="listMode(2)">Compact</button>
+				<button type="button" id="detailedMode" class="tag-display-mode-toggle btn" onclick="listMode(1); applyRead(1)">Detailed</button>
+				<button type="button" id="compactMode" class="tag-display-mode-toggle btn" onclick="listMode(2); applyRead(2)">Compact</button>
 				<button type="button" id="volumeCoversMode" class="tag-display-mode-toggle btn" onclick="listMode(3)">Volume Covers</button>
 				<a href="http://{{ root_domain }}/read/other/rss/{{ slug }}" target="_blank"><i class="fa fa-rss"></i></a>
 			</div>
