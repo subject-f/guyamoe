@@ -122,7 +122,10 @@
 	}
 	   
 	function applyRead(mode){
-		let read = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
+		let data = JSON.parse(window.localStorage.getItem("guyaread"));
+		if (data == null) data = {};
+		
+		let read = data["{{ slug }}"];
 	   	if (read == null) read = []
 		
 		switch(mode){
@@ -140,8 +143,10 @@
 	}
 	   
 	function setRead(num, e){
-		let newdata = JSON.parse(window.localStorage.getItem("read-{{ slug }}"));
+		let data = JSON.parse(window.localStorage.getItem("guyaread"));
+		if (data == null) data = {};
 		
+		let newdata = data["{{ slug }}"];
 		if (newdata == null) newdata = [];
 		
 		if (newdata.includes(num)){
@@ -154,7 +159,10 @@
 			e.innerHTML = '<i class="fa fa-check"></i>';
 		}
 		
-		window.localStorage.setItem("read-{{ slug }}", JSON.stringify(newdata));
+		data["{{ slug }}"] = newdata;
+		
+		
+		window.localStorage.setItem("guyaread", JSON.stringify(data));
 	}
    </script>
 {% endblock %}

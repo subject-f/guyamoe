@@ -940,7 +940,11 @@ function UI_Reader(o) {
 		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
 		
 		if(nextWrapper == this.imageView.imageWrappersMask.length - 1){
-			let data = JSON.parse(window.localStorage.getItem("read-"+this.SCP.series));
+			let data = JSON.parse(window.localStorage.getItem("guyaread"));
+			if (data == null) data = {};
+			
+			let newdata = data["this.SCP.series"];
+			if (newdata == null) newdata = [];
 			
 			if (data == null) data = []
 			
@@ -948,7 +952,9 @@ function UI_Reader(o) {
 				data.push(this.SCP.chapter);
 			}
 			
-			window.localStorage.setItem("read-"+this.SCP.series, JSON.stringify(data));
+			data[this.SCP.series] = newdata;
+			
+			window.localStorage.setItem("guyaread", JSON.stringify(data));
 		}
 		
 		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
