@@ -940,7 +940,7 @@ function UI_Reader(o) {
 		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
 		
 		if(nextWrapper == this.imageView.imageWrappersMask.length - 1){
-			let data = JSON.parse(window.localStorage.getItem("guyaread"));
+			let data = JSON.parse(window.localStorage.getItem("readChapters"));
 			if (data == null) data = {};
 			
 			let newdata = data[this.SCP.series];
@@ -953,7 +953,7 @@ function UI_Reader(o) {
 			
 			data[this.SCP.series] = newdata;
 			
-			window.localStorage.setItem("guyaread", JSON.stringify(data));
+			window.localStorage.setItem("readChapters", JSON.stringify(data));
 		}
 		
 		if(nextWrapper >= this.imageView.imageWrappersMask.length) {

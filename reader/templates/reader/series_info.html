@@ -122,7 +122,7 @@
 	}
 	   
 	function applyRead(mode){
-		let data = JSON.parse(window.localStorage.getItem("guyaread"));
+		let data = JSON.parse(window.localStorage.getItem("readChapters"));
 		if (data == null) data = {};
 		
 		let read = data["{{ slug }}"];
@@ -131,19 +131,26 @@
 		switch(mode){
 			case 1:
 				document.getElementsByClassName("read-or-not").forEach(e => {
-					if (read.includes(e.getAttribute("data-num")))
-						e.innerHTML = '<i class="fa fa-check"></i>';
-					});
+					if (read.includes(e.getAttribute("data-num"))){
+						if(e.classList.contains("empty"))
+						   e.classList.remove("empty");
+						
+						e.classList.add("check");
+					}
+				});
+				break;
 			case 2:
 				document.getElementsByClassName("chapter-box").forEach(e => {
-				if (read.includes(e.getAttribute("data-num")))
-					e.className = e.className + " hasread";
+					if (read.includes(e.getAttribute("data-num")))
+						e.classList.add(" hasread");
 				});
+				break;
 		}
 	}
 	   
+	   
 	function setRead(num, e){
-		let data = JSON.parse(window.localStorage.getItem("guyaread"));
+		let data = JSON.parse(window.localStorage.getItem("readChapters"));
 		if (data == null) data = {};
 		
 		let newdata = data["{{ slug }}"];
@@ -153,17 +160,23 @@
 			for( var i = 0; i < newdata.length; i++){
 				if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
 			}
-			e.innerHTML = '';
+			
+			e.classList.remove("check");
+			e.classList.add("empty");
+			
 		} else {
 			newdata.push(num);
-			e.innerHTML = '<i class="fa fa-check"></i>';
+			
+			e.classList.remove("empty");
+			e.classList.add("check");
 		}
 		
 		data["{{ slug }}"] = newdata;
 		
 		
-		window.localStorage.setItem("guyaread", JSON.stringify(data));
+		window.localStorage.setItem("readChapters", JSON.stringify(data));
 	}
+	
    </script>
 {% endblock %}
 {% block body %}
@@ -192,7 +205,6 @@
 	background-color: none !important;
    }
 	.read-or-not{
-		color: green;
 		text-align: center;
 	}
 	
@@ -203,7 +215,15 @@
 	.read-or-not:hover{
 		cursor: pointer;
 	}
-
+	
+	.check::before{
+		content:"";
+	}
+	
+	.empty::before{
+		content:"";
+	}
+	
 </style>
    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
@@ -325,21 +345,22 @@
 			<div id="detailedView" class="d-none table-responsive">
 				<table id="chapters" class="table table-hover">
 						<thead>
-						<tr>                     
+						<tr>
+							<th scope="col">R</th>
 							<th scope="col">Title&nbsp;&nbsp;&nbsp;&nbsp;<input class="form-control-sm" id="chapterTitleSearch" type="text" placeholder="⌕ Search"></th>
 							<th scope="col">Group</th>
 							<th scope="col">Last Updated</th>
-							<th scope="col">Read</th>
+							
 							<th scope="col" style="padding-left:13px;"><i class="fa fa-download"></i></th>
 						</tr>
 						</thead>
 						<tbody id="chapterTable">
 						{% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
-							<tr class="table-default">                           
-								<td scope="row"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></td>
+							<tr class="table-default">
+								<td scope="row" class="read-or-not empty" data-num="{{ chapter }}" style="font-family:guya" onclick="setRead('{{ chapter }}', this)"></td>
+								<td scope="row" class="chapter-title"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></td>
 								<td scope="row">{{ group }}</td>
 								<td scope="row" class="detailed-chapter-upload-date"></td>
-								<td scope="row" class="read-or-not" onclick="setRead('{{ chapter }}', this)" data-num="{{ chapter }}"></td>
 								<td scope="row" class="detailed-chapter-download-chapter"><a class="text-muted" data-toggle="tooltip" data-placement="top" title="Download this chapter" href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i></a></td>
 							</tr>
 						{% endfor %}
