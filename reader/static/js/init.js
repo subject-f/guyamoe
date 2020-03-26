@@ -946,10 +946,9 @@ function UI_Reader(o) {
 			let newdata = data["this.SCP.series"];
 			if (newdata == null) newdata = [];
 			
-			if (data == null) data = []
 			
-			if (!data.includes(this.SCP.chapter)){
-				data.push(this.SCP.chapter);
+			if (!newdata.includes(this.SCP.chapter)){
+				newdata.push(this.SCP.chapter);
 			}
 			
 			data[this.SCP.series] = newdata;
