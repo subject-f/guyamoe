@@ -943,7 +943,7 @@ function UI_Reader(o) {
 			let data = JSON.parse(window.localStorage.getItem("guyaread"));
 			if (data == null) data = {};
 			
-			let newdata = data["this.SCP.series"];
+			let newdata = data[this.SCP.series];
 			if (newdata == null) newdata = [];
 			
 			
