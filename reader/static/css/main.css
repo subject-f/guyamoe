@@ -612,6 +612,7 @@ aside header > .guya {
 	padding-bottom: 1.5rem;
 	z-index: 1;
 	box-sizing: border-box;
+	will-change: transform;
 }
 
 .selector-fade .hover-prev,
@@ -989,6 +990,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	align-items: center;
 	justify-content: flex-start;
 	padding-left: 1em;
+	will-change: transform;
 }
 
 .rdr-page-selector-keys div:before {
@@ -1268,6 +1270,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	display: flex;
 	overflow: auto;
 	position: fixed;
+	will-change: transform;
 	background: rgba(0,0,0,0.6);
 	justify-content: center;
 	align-items: flex-start;
@@ -1563,10 +1566,11 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 }
 
 .zoom-level.refresh-chapter {
+	will-change: transform;
 	flex-direction: row;
 	display: flex;
 	bottom: 10px;
-	top: unset;
+	top: unset;	
 	right: 20px;
 	left: unset;
 	opacity: 1;
@@ -1780,6 +1784,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	.rdr-aside-overlay {
 		position: fixed;
 		justify-content: flex-start;
+		will-change: transform;
 	}
 	.rdr-aside-overlay:before {
 		align-self: flex-end;
@@ -1789,6 +1794,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		min-width: unset;
 		margin-right: unset;
 		position: fixed;
+		will-change: transform;
 		width: 100vw;
 		height: 1px;
 		min-height: 3rem;
@@ -1912,6 +1918,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	.stick.selector-pinned.ttb header {
 		width: 100%;
 		position: fixed;
+		will-change: transform;
 		z-index: 100;
 		background: #3a3f44;
 		top: 0;
@@ -1920,6 +1927,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	.stick.selector-pinned.ttb .rdr-selector {
 		width: 100%;
 		position: fixed;
+		will-change: transform;
 		z-index: 100;
 		background: #3a3f44;
 		top: 3rem;
@@ -1989,6 +1997,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 
 	.Tooltippy {
 		position: fixed;
+		will-change: transform;
 		bottom: 4rem;
 		top: unset;
 		font-size: 1rem;
@@ -2000,7 +2009,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	}
 
 
-	.rdr-image-wrap:before {
+	/*.rdr-image-wrap:before {
 		content: "\e909\00000A\00000A\00000A\e909\00000A\00000A\00000A\e909";
 		font-family: 'guya';
 		justify-content: flex-end;
@@ -2015,7 +2024,7 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 		left: -50%;
 		padding-right: 0.5em;
 		color: #111;
-	}
+	}*/
 /*
 	.rdr-image-wrap div:last-child:after {
 		content: "\e905\00000A\00000A\00000A\e905\00000A\00000A\00000A\e905";

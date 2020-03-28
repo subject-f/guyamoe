@@ -1322,7 +1322,6 @@ function UI_ReaderImageView(o) {
 	}
 
 	this.drawImages = function(images, wides) {
-		this.imageContainer.$.style.transition = '';
 		this.imageContainer.clear();
 		this.imageWrappers = [];
 		this.imageWrappersMask = [];
@@ -1404,12 +1403,19 @@ function UI_ReaderImageView(o) {
 				}
 			}
 		}else{
-			this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper))
-			this.imageContainer.$.style.transform =
-				'translate3d(' + this.imageContainer.$._translateX + '%,0,0)';
+		var wrapperIndex = this.imageWrappers.indexOf(this.selectedWrapper);
 			// this.selectedWrapper.$.focus();
 			// scroll(this.imageContainer.$, 0, 0);
 			// requestAnimationFrame(e => scroll(this.$, 0, 0));
+		var oldX = this.imageContainer.$._translateX;
+			this.imageContainer.$._translateX = ( -100 * wrapperIndex);
+			if(Math.abs(Math.abs(oldX) - 100 * wrapperIndex) < 201 ) {
+			var animated = this.touch.snapAnimation(undefined, this.imageContainer.$._translateX);
+			}
+			if(!animated) {
+				this.imageContainer.$.style.transform =
+					'translateX(' + this.imageContainer.$._translateX + '%)';
+			}
 		}
 	var toPreload = Settings.all.preload.get();
 		if(toPreload == 100) {
@@ -1472,7 +1478,7 @@ const SCROLL_X = 3;
 	
 	this.touch.startHandler = e => {
 		if(e.touches.length > 1) return;
-		this.touch.initialX = this._.image_container._translateX;
+		this.touch.initialX = this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper));
 		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
 		this.touch.startY = e.touches[0].pageY;
 		this._.image_container.style.transition = '';
@@ -1509,17 +1515,23 @@ const SCROLL_X = 3;
 		}
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
-		this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
+		this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
+		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
+		|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
+			this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+		}else{
+			//this._.image_container.style.opacity = 1;
+		}
 		if(this.touch.gesture == SWIPE) return;
-		if(Math.abs(this.touch.delta) > 5) {
+		if(Math.abs(this.touch.delta) > 2.5) {
 			//document.body.style.touchAction = 'none';
 			this.touch.gesture = SWIPE;
 			return;
 		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.2) {
+		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
 			this.touch.gesture = SCROLL;
 			this._.image_container._translateX = this.touch.initialX;
-			this._.image_container.style.transform = 'translate3d(' + this._.image_container._translateX + '%,0,0)';
+			this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
 			cancelAnimationFrame(this.touch.a);
 		}
 	}
@@ -1527,9 +1539,59 @@ const SCROLL_X = 3;
 	this.touch.moveHandler = e => {
 		this.touch.pageX = e.touches[0].pageX;
 		this.touch.pageY = e.touches[0].pageY;
-		if(this.touch.gesture == SWIPE)
-			{ e.preventDefault(); e.stopPropagation(); }
+		if(this.touch.gesture == SWIPE) {
+			
+			document.documentElement.style.overflow = "hidden";
+		}
+		else
+			document.documentElement.style.overflow = "auto";
+
 	}
+
+	this.touch.snapAnimation = function(start, target, time, element) {
+		if(time !== undefined) {
+			cancelAnimationFrame(this.RAF);
+			this.frame = 0;
+			this.start = start;
+			this.time = time;
+			this.element = element;
+			this.frames = Math.ceil(time * 60);
+			if(target === undefined) {
+				this.primed = true;
+				return;
+			}
+			this.target = target;
+			this.delta = this.target - this.start;
+			if(Math.abs(this.delta) < 0.1) return;
+			this.RAF = requestAnimationFrame(this.bind(this));
+			return;
+		}
+		if(start === undefined && target !== undefined) {
+			if(this.primed) {
+				this.target = target;
+				this.delta = this.target - this.start;
+				if(Math.abs(this.delta) < 0.1) return;
+				this.primed = false;
+				this.RAF = requestAnimationFrame(this.bind(this));
+				return;
+			}else{
+				return false;
+			}
+		}
+	
+		if(this.frame + 1 >= this.frames) {
+			cancelAnimationFrame(this.RAF);
+			this.RAF = null;
+			this.element._translateX = this.target;
+		}else{
+			this.RAF = requestAnimationFrame(this.bind(this));
+			this.frame++;
+		var t = this.frame/this.frames;
+			this.element._translateX = this.start + this.delta * ( t*(2-t) );
+		}
+		this.element.style.transform = 'translateX(' + this.element._translateX + '%)';
+	}
+	this.touch.snapAnimation = this.touch.snapAnimation.bind(this.touch.snapAnimation);
 
 	this.touch.endHandler = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
@@ -1539,31 +1601,35 @@ const SCROLL_X = 3;
 	var ms = Date.now() - this.touch.time;
 	var velocity = this.touch.delta / ms;
 	var transitionTime = 0.30 - Math.abs(velocity)/3;
-		this._.image_container.style.transition = 'transform '+ transitionTime +'s ease-out';
+		//this._.image_container.style.transition = 'transform '+ transitionTime +'s linear';
 		
-		if(velocity < this.touch.escapeVelocity * -1
-		|| this.touch.delta < this.touch.escapeDelta * -1) {
-			setTimeout(() => {
-				Settings.all.layout.get() == 'rtl'?
-					this.prev():
-					this.next();
-			}, 1)
+		this._.image_container.style.transition = 'opacity '+transitionTime+'s ease';
+		this._.image_container.style.opacity = 1;
+
+		if((velocity < this.touch.escapeVelocity * -1
+		|| this.touch.delta < this.touch.escapeDelta * -1)
+		&& !(Reader.SCP.chapter == Reader.SCP.lastChapter
+		&& Reader.SCP.page == Reader.SCP.lastPage)) {
+			this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
+			Settings.all.layout.get() == 'rtl'?
+				this.prev():
+				this.next();
 		}else{
-			if(velocity > this.touch.escapeVelocity
-			|| this.touch.delta > this.touch.escapeDelta) {
-				setTimeout(() => {
-					Settings.all.layout.get() == 'rtl'?
+			if((velocity > this.touch.escapeVelocity
+			|| this.touch.delta > this.touch.escapeDelta)
+			&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
+			&& Reader.SCP.page == 0)) {
+				this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
+				Settings.all.layout.get() == 'rtl'?
 					this.next():
 					this.prev();
-				}, 1)
 			}else{
-				this._.image_container._translateX = this.touch.initialX;
-				this._.image_container.style.transform = 'translate3d(' + this.touch.initialX + '%,0,0)';
+				this.touch.snapAnimation(this._.image_container._translateX, this.touch.initialX, transitionTime, this._.image_container);
 			}
 		}
 	var startPage = (function(that) {return that.selectedWrapper})(this);
 		this.touch.transitionTimer = setTimeout(() => {
-			this._.image_container.style.transition = ''
+			this._.image_container.style.transition = '';
 			shadowScroll();
 			scroll(startPage.$, startPage.$.scrollWidth,0)
 		}, Math.round(transitionTime*1000))
