@@ -938,12 +938,14 @@ function UI_Reader(o) {
 		if (this.loadingChapter) return;
 		
 		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+		console.log(nextWrapper);
+		console.log(this.imageView.imageWrappersMask.length - 1)
 		
-		if(nextWrapper == this.imageView.imageWrappersMask.length - 1){
+		if(nextWrapper >= this.imageView.imageWrappersMask.length - 1 && !window.location.pathname.includes("nh_proxy")){
 			let data = JSON.parse(window.localStorage.getItem("readChapters"));
 			if (data == null) data = {};
 			
-			let newdata = data[this.SCP.series];
+			let newdata = data[decodeURI(this.SCP.series)];
 			if (newdata == null) newdata = [];
 			
 			
@@ -951,7 +953,7 @@ function UI_Reader(o) {
 				newdata.push(this.SCP.chapter);
 			}
 			
-			data[this.SCP.series] = newdata;
+			data[decodeURI(this.SCP.series)] = newdata;
 			
 			window.localStorage.setItem("readChapters", JSON.stringify(data));
 		}

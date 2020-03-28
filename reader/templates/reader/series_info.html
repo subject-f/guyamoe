@@ -80,6 +80,7 @@
 		});
 	   
 	   applyRead(1);
+	   applyRead(2);
 	});
 	
 	function listMode(mode) {
@@ -121,61 +122,61 @@
 		$("#openOriginal").attr("onclick", `window.open('${cover}', '_blank')`);
 	}
 	   
-	function applyRead(mode){
-		let data = JSON.parse(window.localStorage.getItem("readChapters"));
-		if (data == null) data = {};
-		
-		let read = data["{{ slug }}"];
-	   	if (read == null) read = []
-		
-		switch(mode){
-			case 1:
-				document.getElementsByClassName("read-or-not").forEach(e => {
-					if (read.includes(e.getAttribute("data-num"))){
-						if(e.classList.contains("empty"))
-						   e.classList.remove("empty");
-						
-						e.classList.add("check");
-					}
-				});
-				break;
-			case 2:
-				document.getElementsByClassName("chapter-box").forEach(e => {
-					if (read.includes(e.getAttribute("data-num")))
-						e.classList.add(" hasread");
-				});
-				break;
-		}
-	}
-	   
-	   
-	function setRead(num, e){
-		let data = JSON.parse(window.localStorage.getItem("readChapters"));
-		if (data == null) data = {};
-		
-		let newdata = data["{{ slug }}"];
-		if (newdata == null) newdata = [];
-		
-		if (newdata.includes(num)){
-			for( var i = 0; i < newdata.length; i++){
-				if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
+		function applyRead(mode){
+			let data = JSON.parse(window.localStorage.getItem("readChapters"));
+			if (data == null) data = {};
+
+			let read = data["{{ slug }}"];
+			if (read == null) read = []
+
+			switch(mode){
+				case 1:
+					document.getElementsByClassName("read-or-not").forEach(e => {
+						if (read.includes(e.getAttribute("data-num"))){
+							if(e.classList.contains("empty"))
+							   e.classList.remove("empty");
+
+							e.classList.add("check");
+						}
+					});
+					break;
+				case 2:
+					document.getElementsByClassName("chapter-box").forEach(e => {
+						if (read.includes(e.getAttribute("data-num")))
+							e.classList.add("hasread");
+					});
+					break;
 			}
-			
-			e.classList.remove("check");
-			e.classList.add("empty");
-			
-		} else {
-			newdata.push(num);
-			
-			e.classList.remove("empty");
-			e.classList.add("check");
 		}
-		
-		data["{{ slug }}"] = newdata;
-		
-		
-		window.localStorage.setItem("readChapters", JSON.stringify(data));
-	}
+
+
+		function setRead(num, e){
+			let data = JSON.parse(window.localStorage.getItem("readChapters"));
+			if (data == null) data = {};
+
+			let newdata = data["{{ slug }}"];
+			if (newdata == null) newdata = [];
+
+			if (newdata.includes(num)){
+				for( var i = 0; i < newdata.length; i++){
+					if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
+				}
+
+				e.classList.remove("check");
+				e.classList.add("empty");
+
+			} else {
+				newdata.push(num);
+
+				e.classList.remove("empty");
+				e.classList.add("check");
+			}
+
+			data["{{ slug }}"] = newdata;
+
+
+			window.localStorage.setItem("readChapters", JSON.stringify(data));
+		}
 	
    </script>
 {% endblock %}

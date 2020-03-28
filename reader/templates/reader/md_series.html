@@ -65,6 +65,8 @@
            $(this).toggle($(this).find("td").text().toLowerCase().indexOf(value) > -1)
         });
      });
+	
+	applyRead(1);
   });
 
   function listMode(mode) {
@@ -104,6 +106,61 @@
      $("#imagepreview").attr("src", cover);
      $("#openOriginal").attr("onclick", `window.open('${cover}', '_blank')`);
   }
+			function applyRead(mode){
+			let data = JSON.parse(window.localStorage.getItem("readChapters"));
+			if (data == null) data = {};
+
+			let read = data["{{ slug }}"];
+			if (read == null) read = []
+
+			switch(mode){
+				case 1:
+					document.getElementsByClassName("read-or-not").forEach(e => {
+						if (read.includes(e.getAttribute("data-num"))){
+							if(e.classList.contains("empty"))
+							   e.classList.remove("empty");
+
+							e.classList.add("check");
+						}
+					});
+					break;
+				case 2:
+					document.getElementsByClassName("chapter-box").forEach(e => {
+						if (read.includes(e.getAttribute("data-num")))
+							e.classList.add(" hasread");
+					});
+					break;
+			}
+		}
+
+
+		function setRead(num, e){
+			let data = JSON.parse(window.localStorage.getItem("readChapters"));
+			if (data == null) data = {};
+
+			let newdata = data["{{ slug }}"];
+			if (newdata == null) newdata = [];
+
+			if (newdata.includes(num)){
+				for( var i = 0; i < newdata.length; i++){
+					if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
+				}
+
+				e.classList.remove("check");
+				e.classList.add("empty");
+
+			} else {
+				newdata.push(num);
+
+				e.classList.remove("empty");
+				e.classList.add("check");
+			}
+
+			data["{{ slug }}"] = newdata;
+
+
+			window.localStorage.setItem("readChapters", JSON.stringify(data));
+		}
 </script>
 {% endblock %} {% block body %}
 <style>
@@ -132,6 +189,25 @@
     background: none !important;
     background-color: none !important;
   }
+	.read-or-not{
+		text-align: center;
+	}
+	
+	.hasread{
+		opacity: 0.45;
+	}
+	
+	.read-or-not:hover{
+		cursor: pointer;
+	}
+	
+	.check::before{
+		content:"";
+	}
+	
+	.empty::before{
+		content:"";
+	}
 </style>
 <div
   class="modal fade"
@@ -238,6 +314,7 @@
           <table id="chapters" class="table table-hover">
             <thead>
               <tr>
+				<th scope="col" style="font-family: guya; text-align: center;" class="empty"></th>
                 <th scope="col">
                   Title&nbsp;&nbsp;&nbsp;&nbsp;<input
                     class="form-control-sm"
@@ -253,6 +330,7 @@
             <tbody id="chapterTable">
               {% for chapter, title, ch_slug, group, upload_date, volume, chapter_id in chapter_list %}
               <tr class="table-default">
+				<td scope="row" class="read-or-not empty" data-num="{{ chapter }}" style="font-family:guya" onclick="setRead('{{ chapter }}', this)"></td>
                 <td scope="row">
                   <a href="/read/md_proxy/{{ slug }}/{{ ch_slug }}/1"
                     >{{ chapter }} - {{ title }}</a
