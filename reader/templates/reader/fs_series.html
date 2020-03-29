@@ -30,63 +30,86 @@
         );
       });
     });
-	  applyRead(1);
+	  applyRead();
   });
-			function applyRead(mode){
-			let data = JSON.parse(window.localStorage.getItem("readChapters"));
-			if (data == null) data = {};
+			 
+    function applyRead(full){
+    let slug = "{{ slug }}";
+    let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
+      if(!readChapters[slug])
+        readChapters[slug] = [];
+    let seriesReads = readChapters[slug];
 
-			let read = data["{{ slug }}"];
-			if (read == null) read = []
+      if(full) {
+        document.querySelectorAll('[data-chapter]').forEach(item => {
+        var chapter = item.getAttribute('data-chapter')
+          if(readChapters[slug].includes(chapter))
+            item.classList.add('is-read');
+          else
+            item.classList.remove('is-read');
+        })
+      }else{
+        seriesReads.forEach(chapter => {
+          document.querySelectorAll('[data-chapter="'+chapter+'"]').forEach(item => {
+            item.classList.add('is-read');
+          })
+        })
+      }
 
-			switch(mode){
-				case 1:
-					document.getElementsByClassName("read-or-not").forEach(e => {
-						if (read.includes(e.getAttribute("data-num"))){
-							if(e.classList.contains("empty"))
-							   e.classList.remove("empty");
-
-							e.classList.add("check");
-						}
-					});
-					break;
-				case 2:
-					document.getElementsByClassName("chapter-box").forEach(e => {
-						if (read.includes(e.getAttribute("data-num")))
-							e.classList.add(" hasread");
-					});
-					break;
-			}
-		}
-
-
-		function setRead(num, e){
-			let data = JSON.parse(window.localStorage.getItem("readChapters"));
-			if (data == null) data = {};
-
-			let newdata = data["{{ slug }}"];
-			if (newdata == null) newdata = [];
-
-			if (newdata.includes(num)){
-				for( var i = 0; i < newdata.length; i++){
-					if ( newdata[i] === num) { newdata.splice(i, 1); i--;}
-				}
-
-				e.classList.remove("check");
-				e.classList.add("empty");
-
-			} else {
-				newdata.push(num);
-
-				e.classList.remove("empty");
-				e.classList.add("check");
-			}
-
-			data["{{ slug }}"] = newdata;
+    var icon = document.querySelector('th.read-icon')
+      if(document.querySelectorAll('tr[data-chapter]').length == seriesReads.length) {
+        icon.classList.add('all-read');
+        icon.setAttribute('data-tooltip', "This will unmark all chapters as read. Click again to confirm.")
+      }else{
+        icon.classList.remove('all-read');
+        icon.setAttribute('data-tooltip', "This will mark all chapters as read. Click again to confirm.")
+      }
+    }
 
 
-			window.localStorage.setItem("readChapters", JSON.stringify(data));
-		}
+    function setRead(chapter, force){
+    let slug = "{{ slug }}";
+    let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
+      if(!readChapters[slug])
+        readChapters[slug] = [];
+    let seriesReads = readChapters[slug];
+
+      if(seriesReads.includes(chapter)){
+        readChapters[slug] = seriesReads.filter(ch => ch != chapter);
+        document.querySelectorAll('.is-read[data-chapter="'+chapter+'"]').forEach(item => {
+          item.classList.remove('is-read');
+        })
+      } else {
+        readChapters[slug].push(chapter);
+        document.querySelectorAll('[data-chapter="'+chapter+'"]').forEach(item => {
+          item.classList.add('is-read');
+        })
+      }
+
+      localStorage.setItem("readChapters", JSON.stringify(readChapters));
+    }
+
+    function markAll(e){
+      let slug = "{{ slug }}";
+      let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
+        if(!readChapters[slug])
+          readChapters[slug] = [];
+      let seriesReads = readChapters[slug];
+      if(e.classList.contains('confirm')) {
+        if(!e.classList.contains('all-read')) {
+          readChapters[slug] = document.querySelectorAll('tr[data-chapter]')
+          .map(item => item.getAttribute('data-chapter'));
+        }else{
+          readChapters[slug] = [];
+        }
+
+        localStorage.setItem("readChapters", JSON.stringify(readChapters));
+        applyRead(true);
+        e.classList.remove('confirm');
+      }else{
+        e.classList.add('confirm');
+      }
+    }
 </script>
 {% endblock %} {% block body %}
 <style>
@@ -115,25 +138,6 @@
     background: none !important;
     background-color: none !important;
   }
-	.read-or-not{
-		text-align: center;
-	}
-	
-	.hasread{
-		opacity: 0.45;
-	}
-	
-	.read-or-not:hover{
-		cursor: pointer;
-	}
-	
-	.check::before{
-		content:"";
-	}
-	
-	.empty::before{
-		content:"";
-	}
 </style>
 <div
   class="modal fade"
@@ -204,7 +208,7 @@
           <table id="chapters" class="table table-hover">
             <thead>
               <tr>
-				<th scope="col" style="font-family: guya; text-align: center;" class="empty"></th>
+              <th scope="col" class="read-icon" onclick="markAll(this)" data-tooltip="This will mark all chapters as read. Click again to confirm."></th>
                 <th scope="col">
                   Title&nbsp;&nbsp;&nbsp;&nbsp;<input
                     class="form-control-sm"
@@ -218,8 +222,8 @@
             </thead>
             <tbody id="chapterTable">
               {% for chapter, title, link, upload_info in chapter_list %}
-              <tr class="table-default">
-				<td scope="row" class="read-or-not empty" data-num="{{ chapter }}" style="font-family:guya" onclick="setRead('{{ chapter }}', this)"></td>
+              <tr class="table-default" data-chapter="{{ chapter }}" >
+              <td scope="row" class="read-icon" onclick="setRead('{{ chapter }}', this)"></td>
                 <td scope="row">
                   <a href="/fs/{{ link }}">{{ chapter }} - {{ title }}</a>
                 </td>

@@ -958,6 +958,10 @@ main a {
 	border-top-right-radius: 0;
 }
 
+.page-series .table {
+	color: #ddd;
+}
+
 .page-series #chapters th {
 	white-space: nowrap;
 	padding: 0 1em;
@@ -978,10 +982,49 @@ main a {
 	text-decoration: none;
 }
 
+.page-series .read-icon {
+	text-align: center;
+	cursor: pointer;
+	position: relative;
+}
+.page-series td.read-icon:hover {
+	color: #eee;
+}
+.page-series .read-icon:before {
+	font-family: guya;
+	content:"";
+}
+.page-series th.read-icon.confirm:after {
+	content: attr(data-tooltip);
+	position: absolute;
+	padding: 0.4em 0.6em;
+	color: white;
+	margin-left: 8px;
+	margin-top: 4px;
+	line-height: 1.5em;
+	white-space: pre-wrap;
+	text-align: left;
+	width: 34ch;
+	background: rgba(20,20,20,0.95);
+	border-radius: 2px;
+	box-shadow: 2px 2px 3px rgba(0,0,0,0.7), 0px 2px 10px rgba(0,0,0,0.9);
+	z-index: 3000;
+	pointer-events: none;
+	border: 1px solid rgba(255,255,255,0.1)
+}
+
+.is-read {
+	opacity: 0.6;
+}
+.is-read .read-icon:before,
+.page-series .all-read:before {
+	content:"";
+}
 
 .page-series .btn-group {
 	display: flex;
 	height: 3em;
+	width: 100%;
 }
 .page-series .btn-group .btn {
 	outline: none !important;

@@ -1,5 +1,6 @@
 let mediaMatcher = window.matchMedia("(max-width: 700px)");
 let IS_MOBILE = mediaMatcher.matches;
+let HAS_LOCALSTORAGE = localStorage !== undefined;
 
 window.addEventListener('resize', () =>{
 	IS_MOBILE = mediaMatcher.matches;
@@ -936,34 +937,22 @@ function UI_Reader(o) {
 
 	this.nextPage = function() {
 		if (this.loadingChapter) return;
-		
-		var nextWrapper = this.imageView.imageWrappersMap[this.SCP.page] + 1;
-		console.log(nextWrapper);
-		console.log(this.imageView.imageWrappersMask.length - 1)
-		
-		if(nextWrapper >= this.imageView.imageWrappersMask.length - 1 && !window.location.pathname.includes("nh_proxy")){
-			let data = JSON.parse(window.localStorage.getItem("readChapters"));
-			if (data == null) data = {};
-			
-			let newdata = data[decodeURI(this.SCP.series)];
-			if (newdata == null) newdata = [];
-			
-			
-			if (!newdata.includes(this.SCP.chapter)){
-				newdata.push(this.SCP.chapter);
-			}
-			
-			data[decodeURI(this.SCP.series)] = newdata;
-			
-			window.localStorage.setItem("readChapters", JSON.stringify(data));
+	let nextWrapperIndex = this.imageView.imageWrappersMap[this.SCP.page] + 1;
+
+		//if last page
+		if(HAS_LOCALSTORAGE && nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1){
+		let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
+			if(!readChapters[this.SCP.series])
+				readChapters[this.SCP.series] = [];
+			if (!readChapters[this.SCP.series].includes(this.SCP.chapter))
+				readChapters[this.SCP.series].push(this.SCP.chapter)
+			localStorage.setItem("readChapters", JSON.stringify(readChapters));
 		}
 		
-		if(nextWrapper >= this.imageView.imageWrappersMask.length) {
-			
+		if(nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
-			
 		} else {
-			this.displayPage(this.imageView.imageWrappersMask[nextWrapper][0])
+			this.displayPage(this.imageView.imageWrappersMask[nextWrapperIndex][0])
 		}
 	}
 
