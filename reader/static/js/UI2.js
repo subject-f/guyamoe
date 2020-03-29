@@ -165,7 +165,7 @@ KeyListener.prototype = {
 				default:
 					this.exclusiveness = true;
 					break;
-				case false:1
+				case false:
 					this.exclusiveness = false;
 					break;
 			}
