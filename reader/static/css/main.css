@@ -118,6 +118,7 @@ aside {
 	transition: all 0.3s ease;
 }
 
+
 aside > header {
 	display: flex;
 	align-items: flex-top;
@@ -444,6 +445,8 @@ aside header > .guya {
 .Reader[data-preload="100"] .is-ico-button.preload:before {
 	content: "\e91b";
 }
+
+
 .rdr-page-selector .preloaded {
 	border-left-color: #6699b9;
 }
