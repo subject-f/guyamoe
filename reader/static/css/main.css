@@ -107,7 +107,7 @@ main {
 	position: relative;
 }
 
-aside {
+main > aside {
 	height: 100vh;
     min-width: 16em;
 	max-width: 16em;
@@ -119,7 +119,7 @@ aside {
 }
 
 
-aside > header {
+main > aside > header {
 	display: flex;
 	align-items: flex-top;
 	align-content: stretch;
@@ -1359,6 +1359,61 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	padding: 0;
 }
 
+.Loda_Settings {
+	margin-right: auto;
+	margin-left: 8rem;
+	flex-direction: row;
+	align-content: stretch;
+	user-select: none;
+}
+.Loda_Settings aside {
+	width: 11.2rem;
+	background: rgba(0,0,0,0.2);
+}
+.Loda_Settings .setting-tab {
+	padding: 0.5rem 1rem;
+	font-size: 0.9em;	
+}
+.Loda_Settings .setting-tab:hover {
+	background: rgba(255,255,255,0.05);
+	cursor: default;
+}
+.Loda_Settings .setting-tab.is-active {
+	background: rgba(0,0,0,0.3);
+	padding: 0.5rem 1rem;
+	font-size: 0.9em;
+}
+.Loda_Settings .setting-category-content  {
+	padding: 0 1rem;
+}
+.Loda_Settings .setting-header {
+	padding: 0;
+	min-height: 2.5rem;
+	padding-top: 0.5rem;
+	opacity: 0.65;
+}
+.Loda_Settings .setting-field  {
+	margin-bottom: 1rem;
+}
+
+.Loda_Settings .t-row {
+  margin: 0 0 0.7rem 0;
+}
+
+.Loda_Settings .is-ico-button {
+  font-size: 17.8px;
+}
+
+.StatefulButton {
+  border: 1px solid #131313;
+  background: rgba(0,0,0,0.1);
+}
+
+.StatefulButton.s {
+  background: #a1c5db;
+}
+
+
 .IndexSearch:empty:before {
 	content: "Type your query and press Enter to search the entire manga contents.";
 	width: 100%;
@@ -1648,7 +1703,6 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 
 
 .StatefulButton {
-	border: 1px solid #aaa;
 	border-radius: 3px;
 	display: inline-block;
 	padding: 0.4em 0.5em;
@@ -1660,6 +1714,8 @@ _:-webkit-full-screen:not(:root:root), .fit_height_limit .rdr-image-wrap .Reader
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	border: 1px solid #131313;
+ 	background: rgba(0,0,0,0.1);
 }
 
 .StatefulButton.s {

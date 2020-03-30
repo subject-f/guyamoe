@@ -152,7 +152,204 @@
 		</div>
 	</main>
 	<div class="Tooltippy"></div>
-	<div class="LodaManager hidden" tabindex="-1"></div>
+	<div class="LodaManager" tabindex="-1">
+		<div class="Loda-window UI Loda Loda_Settings" tabindex="-1">
+			<aside>
+				<button class="is-ico-button close" data-bind="close"></button>
+				<header data-bind="header">Settings</header>
+				<div class="settings-tabs" data-bind="tabs">
+					<div class="setting-tab s">Test text</div>
+					<div class="setting-tab">Test text</div>
+					<div class="setting-tab">Test text</div>
+					<div class="setting-tab">Test text</div>
+					<div class="setting-tab">Test text</div>
+				</div>
+			</aside>
+			<content data-bind="content">
+				<div class="setting-container">
+					<div class="setting-category-content">
+						<div class="setting-wrapper">
+							<header class="setting-header">Image fit mode</header>
+							<div class="setting-field"><div class="t-row">
+							<div class="t-1">
+								<div class="StatefulButton UI B utton Button" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
+							</div>
+						</div><div class="t-row">
+							<div class="t-tooltip">
+								Limit
+							</div>
+							<div class="t-1">
+								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
+								<div class="StatefulButton UI Button s" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
+							</div>
+						</div><div class="t-row">
+							<div class="t-tooltip">
+								Stretch
+							</div>
+							<div class="t-1">
+								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images expand to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images expand to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images expand to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
+							</div>
+						</div></div>
+						</div><div class="setting-wrapper">
+							<header class="setting-header">Page spread type</header>
+							<div class="setting-field"><div class="t-row">
+							
+							<div class="t-1">
+								<div data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height." class="StatefulButton UI Button p1"><div class="is-ico-button spread"></div><span>Single-page</span></div>
+								<div class="StatefulButton UI Button s p2" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button spread"></div><span>Two-page</span></div>
+								<div class="StatefulButton UI Button p2-odd" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button spread"></div><span>Two-page, odd</span></div>
+							</div>
+						</div></div>
+						</div><div class="setting-wrapper">
+							<header class="setting-header">Fit mode</header>
+							<div class="setting-field"><div class="t-row">
+							<div class="t-1">
+								<div class="StatefulButton UI B utton Button" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
+							</div>
+						</div><div class="t-row">
+							<div class="t-tooltip">
+								Limit
+							</div>
+							<div class="t-1">
+								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
+								<div class="StatefulButton UI Button s" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
+							</div>
+						</div><div class="t-row">
+							<div class="t-tooltip">
+								Stretch
+							</div>
+							<div class="t-1">
+								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images expand to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images expand to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
+								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images expand to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
+							</div>
+						</div></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+					</div>
+				</div>
+				<div class="setting-container">
+					<header class="setting-category-header">Test header</header>
+					<div class="setting-category-content">
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+					</div>
+				</div>
+				<div class="setting-container">
+					<header class="setting-category-header">Test header</header>
+					<div class="setting-category-content">
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+					</div>
+				</div>
+				<div class="setting-container">
+					<header class="setting-category-header">Test header</header>
+					<div class="setting-category-content">
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+					</div>
+				</div>
+				<div class="setting-container">
+					<header class="setting-category-header">Test header</header>
+					<div class="setting-category-content">
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+						<div class="setting-wrapper">
+							<div class="setting-header">Test setting</div>
+							<div class="setting-field"></div>
+						</div>
+					</div>
+				</div>
+			</content>
+		</div>
+	</div>
 </body>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
