@@ -1528,11 +1528,16 @@ const SCROLL_X = 3;
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
 		this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
-		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
-		|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
-			this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+		if(Settings.get('layout') == 'rtl'){
+			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
+			|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
+				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+			}
 		}else{
-			//this._.image_container.style.opacity = 1;
+			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
+			|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
+				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+			}
 		}
 		if(this.touch.gesture == SWIPE) return;
 		if(Math.abs(this.touch.delta) > 2.5) {
