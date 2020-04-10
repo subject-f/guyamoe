@@ -136,14 +136,17 @@ def get_all_metadata(series_slug):
 
 @cache_control(max_age=120)
 @decorator_from_middleware(OnlineNowMiddleware)
-def reader(request, series_slug, chapter, page):
-    metadata = get_all_metadata(series_slug)
-    if chapter in metadata:
-        metadata[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
-        metadata[chapter]["version_query"] = STATIC_VERSION
-        return render(request, 'reader/reader.html', metadata[chapter])
+def reader(request, series_slug, chapter, page=None):
+    if page:
+        metadata = get_all_metadata(series_slug)
+        if chapter in metadata:
+            metadata[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
+            metadata[chapter]["version_query"] = STATIC_VERSION
+            return render(request, 'reader/reader.html', metadata[chapter])
+        else:
+            return render(request, 'homepage/how_cute_404.html', status=404)
     else:
-        return render(request, 'homepage/how_cute_404.html', status=404)
+        return redirect('reader-manga-chapter', series_slug, chapter, "1")
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_proxy(request, md_series_id):
