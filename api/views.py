@@ -133,6 +133,7 @@ def upload_new_chapter(request, series_slug):
     else:
         return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
 
+@csrf_exempt
 def get_volume_covers(request, series_slug):
     if request.method == "POST":
         covers = cache.get(f"vol_covers_{series_slug}")
