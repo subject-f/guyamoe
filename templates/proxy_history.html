@@ -83,11 +83,6 @@
 
   let deleteItem = (event, element, proxySource, slug) => {
     event.preventDefault();
-    if (event.stopPropagation) {
-      event.stopPropagation();
-    } else {
-      event.cancelBubble = true;
-    }
     proxyHistoryHandler.deleteItem(proxySource, slug);
     element.parentElement.parentElement.parentElement.remove();
   };
