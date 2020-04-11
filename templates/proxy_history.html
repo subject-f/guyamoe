@@ -23,27 +23,21 @@
 
     let deleteItem = (proxySource, slug) => {
       let items = getItems();
-      let idx = items.findIndex(
-        (e) => e.slug === slug && e.proxySource === proxySource
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(items.filter((e) =>
+          e.slug !== slug || e.proxySource !== proxySource
+        ))
       );
-      if (idx !== -1) {
-        items.splice(idx, 1);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-      }
     };
 
     let pushItem = (coverUrl, proxySource, slug, url, title) => {
       if (enabled()) {
-        let items = getItems();
-        let idx = items.findIndex(
-          (e) => e.slug === slug && e.proxySource === proxySource
+        let items = getItems().filter((e) =>
+          e.slug !== slug || e.proxySource !== proxySource
         );
-        if (idx !== -1) {
-          items.splice(idx, 1);
-        } else {
-          if (items.length + 1 > MAX_VALUES) {
-            items.pop();
-          }
+        if (items.length + 1 > MAX_VALUES) {
+          items.pop();
         }
         localStorage.setItem(
           STORAGE_KEY,
