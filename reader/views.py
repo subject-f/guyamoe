@@ -152,7 +152,7 @@ def reader(request, series_slug, chapter, page=None):
 def md_proxy(request, md_series_id):
     metadata = md_series_page_data(md_series_id)
     if metadata:
-        metadata["relative_url"] = f"md_proxy/{md_series_id}"
+        metadata["relative_url"] = f"read/md_proxy/{md_series_id}"
         metadata["version_query"] = STATIC_VERSION
         return render(request, 'reader/md_series.html', metadata)
     else:
@@ -162,7 +162,7 @@ def md_proxy(request, md_series_id):
 def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"md_proxy/{md_series_id}/{chapter}/{page}"
+        data["relative_url"] = f"read/md_proxy/{md_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)
@@ -173,7 +173,7 @@ def md_chapter(request, md_series_id, chapter, page):
 def nh_proxy(request, nh_series_id):
     metadata = nh_series_data(nh_series_id)
     if metadata:
-        metadata["relative_url"] = f"nh_proxy/{nh_series_id}"
+        metadata["relative_url"] = f"read/nh_proxy/{nh_series_id}"
         metadata["version_query"] = STATIC_VERSION
         return render(request, 'reader/nh_series.html', metadata)
     else:
@@ -183,7 +183,7 @@ def nh_proxy(request, nh_series_id):
 def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"nh_proxy/{nh_series_id}/{chapter}/{page}"
+        data["relative_url"] = f"read/nh_proxy/{nh_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)
@@ -194,7 +194,7 @@ def nh_chapter(request, nh_series_id, chapter, page):
 def fs_proxy(request, encoded_url):
     metadata = fs_series_page_data(encoded_url)
     if metadata:
-        metadata["relative_url"] = f"fs_proxy/{encoded_url}"
+        metadata["relative_url"] = f"read/fs_proxy/{encoded_url}"
         metadata["version_query"] = STATIC_VERSION
         return render(request, 'reader/fs_series.html', metadata)
     else:
@@ -204,7 +204,7 @@ def fs_proxy(request, encoded_url):
 def fs_chapter(request, encoded_url, chapter, page):
     data = fs_series_data(encoded_url)
     if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"fs_proxy/{encoded_url}/{chapter}/{page}"
+        data["relative_url"] = f"read/fs_proxy/{encoded_url}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/reader.html', data)
