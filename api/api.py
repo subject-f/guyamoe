@@ -139,7 +139,7 @@ def md_series_data(series_id):
             data = {
                 "slug": series_id, "title": api_data["manga"]["title"], "description": api_data["manga"]["description"], 
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
-                "cover": api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
+                "cover": "https://mangadex.org" + api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
             cache.set(f"md_series_dt_{series_id}", data, 3600 * 24)
         else:
