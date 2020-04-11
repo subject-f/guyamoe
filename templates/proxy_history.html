@@ -175,7 +175,7 @@
           let title = "";
         {% endif %}
 
-        if (coverUrl && proxySource && slug && url && title) {
+        if (proxySource && slug && url && title) {
           proxyHistoryHandler.pushItem(coverUrl, proxySource, slug, url, title);
         }
       } catch (e) {
