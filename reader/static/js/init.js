@@ -2543,3 +2543,8 @@ function debug() {
 	el.id = 'test_element';
 	document.getElementsByClassName('rdr-image-wrap')[0].appendChild(el)
 }
+
+// This is a hacky fix that prevents the last div of a
+// flexbox from not receiving the scroll event from a
+// mousewheel. Probably requires some more investigation.
+window.addEventListener("wheel", () => {});
