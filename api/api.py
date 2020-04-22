@@ -363,11 +363,11 @@ def fs_series_page_data(encoded_url):
 
             for a in soup.find_all("div", class_="element"):
                 link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
                 chapter_number = "0"
                 if chapter_regex:
                     chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
                 volume_number = "1"
                 if volume_regex:
                     volume_number = volume_regex.group(2)
@@ -414,11 +414,11 @@ def fs_series_data(encoded_url):
 
             for a in soup.find_all("div", class_="element"):
                 link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
                 chapter_number = "0"
                 if chapter_regex:
                     chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
                 volume_number = "1"
                 if volume_regex:
                     volume_number = volume_regex.group(2)

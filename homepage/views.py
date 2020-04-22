@@ -99,11 +99,12 @@ def fs_gateway(request, raw_url):
         raw_url = raw_url[:-1]
     if "/read/" in raw_url:
         params = raw_url.split("/")
+        # ~~Translator~~ Developer's note: "en" means only english FS sites work
+        lang_idx = params.index("en")
+        chapter = params[lang_idx + 2]
         page = "1"
-        chapter = params[-1]
         if "/page/" in raw_url:
             page_idx = params.index("page")
-            chapter = params[page_idx - 1]
             page = params[page_idx + 1]
         return redirect('reader-fs-chapter', fs_encode_slug(raw_url), chapter, page)
     elif "/series/" in raw_url:
