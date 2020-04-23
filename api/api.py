@@ -102,7 +102,7 @@ def md_series_page_data(series_id):
                 "chapter_list": chapter_list,
                 "volume_list": sorted([], key=lambda m: m[0], reverse=True)
             }
-            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 3600 * 24)
+            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 60 * 5)
         else:
             return None
     return series_page_dt
@@ -141,7 +141,7 @@ def md_series_data(series_id):
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
                 "cover": "https://mangadex.org" + api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"md_series_dt_{series_id}", data, 3600 * 24)
+            cache.set(f"md_series_dt_{series_id}", data, 60 * 5)
         else:
             return None
     return data
@@ -383,7 +383,7 @@ def fs_series_page_data(encoded_url):
                 "chapter_list": chapter_list,
                 "original_url": f"https://{fs_decode_url(encoded_url)}"
             }
-            cache.set(f"fs_series_page_dt_{encoded_url}", data, 3600 * 24)
+            cache.set(f"fs_series_page_dt_{encoded_url}", data, 60 * 5)
         else:
             return None
     return data
@@ -432,7 +432,7 @@ def fs_series_data(encoded_url):
                 "author": "", "artist": "", "groups": groups_dict,
                 "cover": cover, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"fs_series_dt_{encoded_url}", data, 3600 * 24)
+            cache.set(f"fs_series_dt_{encoded_url}", data, 60 * 5)
         else:
             return None
     return data
@@ -447,13 +447,35 @@ def fs_chapter_data(encoded_url):
         if resp.status_code == 200:
             raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
             if not raw_data_regex:
-                return None
-            raw_data = raw_data_regex.group(2)
-            parser = lambda data: json.loads(data)
-            if raw_data.startswith("JSON.parse(atob("):
-                parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
-            
-            chapter_pages = [p["url"] for p in parser(raw_data)]
+                # JB's obfuscation. This is very hacky and will probably be subject to change
+                raw_data_regex = re.search(r'(?:var _0x3320=)(?P<array>[\d\D]+?)(?:;[\d\D]+?_0x3320,)(?P<shuffle>[\d\D]+)(?:\)\);)(?:[\d\D]+\]\(\([\d\D]+?\?)(?P<iftrue>[\d\D]+?)(?:\:)(?P<iffalse>[\d\D]+?)(?:\)[\d\D]+?\+)(?P<addition>[\d\D]+?)(?:\)[\d\D]+?-)(?P<subtraction>[\d\D]+?)(?:\))', resp.text)
+                if not raw_data_regex:
+                    return None
+                raw_data = raw_data_regex.group("array")
+                shuffle = int(raw_data_regex.group("shuffle"), 16)
+                if_true = int(raw_data_regex.group("iftrue"), 16)
+                if_false = int(raw_data_regex.group("iffalse"), 16)
+                add_unconditionally = int(raw_data_regex.group("addition"), 16)
+                sub_unconditionally = int(raw_data_regex.group("subtraction"), 16)
+                b64 = json.loads(raw_data.replace("\'", "\""))
+                b64 = b64[1] if b64[0] == "fromCharCode" else b64[0]
+                tmp = []
+                for c in b64:
+                    # Only run the deobfuscator if it's a character
+                    if c.isalpha():
+                        n = if_true if c <= "Z" else if_false
+                        c = ord(c) + add_unconditionally
+                        tmp.append(chr(c) if n >= c else chr(c - sub_unconditionally))
+                    else:
+                        tmp.append(c)
+                decoded = json.loads(base64.b64decode("".join(tmp)))
+                chapter_pages = [p["url"] for p in decoded]
+            else:
+                raw_data = raw_data_regex.group(2)
+                parser = lambda data: json.loads(data)
+                if raw_data.startswith("JSON.parse(atob("):
+                    parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
+                chapter_pages = [p["url"] for p in parser(raw_data)]
             cache.set(f"fs_chapter_dt_{encoded_url}", chapter_pages, 3600 * 24)
         else:
             return None
