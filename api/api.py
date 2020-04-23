@@ -335,7 +335,8 @@ def get_md_data(url):
     return requests.get(url, headers=headers)
 
 # Must have valid hexadecimal after % for many configurations
-ENCODE_STR = "%FF-"
+ENCODE_STR_SLASH = "%FF-"
+ENCODE_STR_QUESTION = "%DE-"
 
 def fs_series_page_data(encoded_url):
     data = cache.get(f"fs_series_page_dt_{encoded_url}")
@@ -352,7 +353,7 @@ def fs_series_page_data(encoded_url):
 
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -403,7 +404,7 @@ def fs_series_data(encoded_url):
 
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -424,7 +425,14 @@ def fs_series_data(encoded_url):
                     volume_number = volume_regex.group(2)
 
                 chapter = {"volume": volume_number, "title": link.get_text(), "groups": {"1": None}}
-                chapter["groups"]["1"] = fs_encode_url(link["href"].replace("https://", "").replace("http://", ""))
+                chp = chapter_number.split(".")
+                major_chapter = chp[0]
+                minor_chapter = "0"
+                if len(chp) > 1:
+                    minor_chapter = chp[1]
+                deconstructed_url = link["href"].split("/read/")
+                chapter_url = f"{deconstructed_url[0]}/api/reader/chapter?comic_stub={deconstructed_url[1].split('/')[0]}&chapter={major_chapter}&subchapter={minor_chapter}"
+                chapter["groups"]["1"] = fs_encode_url(chapter_url)
                 chapters_dict[chapter_number] = chapter
 
             data = {
@@ -440,42 +448,10 @@ def fs_series_data(encoded_url):
 def fs_chapter_data(encoded_url):
     chapter_pages = cache.get(f"fs_chapter_dt_{encoded_url}")
     if not chapter_pages:
-        try:
-            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        except requests.exceptions.ConnectionError:
-            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        resp = requests.get(fs_decode_url(encoded_url))
         if resp.status_code == 200:
-            raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
-            if not raw_data_regex:
-                # JB's obfuscation. This is very hacky and will probably be subject to change
-                raw_data_regex = re.search(r'(?:var _0x3320=)(?P<array>[\d\D]+?)(?:;[\d\D]+?_0x3320,)(?P<shuffle>[\d\D]+)(?:\)\);)(?:[\d\D]+\]\(\([\d\D]+?\?)(?P<iftrue>[\d\D]+?)(?:\:)(?P<iffalse>[\d\D]+?)(?:\)[\d\D]+?\+)(?P<addition>[\d\D]+?)(?:\)[\d\D]+?-)(?P<subtraction>[\d\D]+?)(?:\))', resp.text)
-                if not raw_data_regex:
-                    return None
-                raw_data = raw_data_regex.group("array")
-                shuffle = int(raw_data_regex.group("shuffle"), 16)
-                if_true = int(raw_data_regex.group("iftrue"), 16)
-                if_false = int(raw_data_regex.group("iffalse"), 16)
-                add_unconditionally = int(raw_data_regex.group("addition"), 16)
-                sub_unconditionally = int(raw_data_regex.group("subtraction"), 16)
-                b64 = json.loads(raw_data.replace("\'", "\""))
-                b64 = b64[1] if b64[0] == "fromCharCode" else b64[0]
-                tmp = []
-                for c in b64:
-                    # Only run the deobfuscator if it's a character
-                    if c.isalpha():
-                        n = if_true if c <= "Z" else if_false
-                        c = ord(c) + add_unconditionally
-                        tmp.append(chr(c) if n >= c else chr(c - sub_unconditionally))
-                    else:
-                        tmp.append(c)
-                decoded = json.loads(base64.b64decode("".join(tmp)))
-                chapter_pages = [p["url"] for p in decoded]
-            else:
-                raw_data = raw_data_regex.group(2)
-                parser = lambda data: json.loads(data)
-                if raw_data.startswith("JSON.parse(atob("):
-                    parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
-                chapter_pages = [p["url"] for p in parser(raw_data)]
+            data = json.loads(resp.text)
+            chapter_pages = [e["url"] for e in data["pages"]]
             cache.set(f"fs_chapter_dt_{encoded_url}", chapter_pages, 3600 * 24)
         else:
             return None
@@ -485,11 +461,11 @@ def fs_encode_slug(url):
     url = url.replace("/read/", "/series/").replace("https://", "").replace("http://", "")
     split = url.split("/")
     # Should it fail at this point if it's unrecognized? Probably
-    return ENCODE_STR.join(split[0:split.index("series") + 2])
+    return ENCODE_STR_SLASH.join(split[0:split.index("series") + 2])
 
 def fs_encode_url(url):
-    return url.replace("/", ENCODE_STR)
+    return url.replace("/", ENCODE_STR_SLASH).replace("?", ENCODE_STR_QUESTION)
 
 def fs_decode_url(url):
-    return url.replace(ENCODE_STR, "/")
+    return url.replace(ENCODE_STR_SLASH, "/").replace(ENCODE_STR_QUESTION, "?")
 
