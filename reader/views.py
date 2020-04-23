@@ -142,6 +142,7 @@ def reader(request, series_slug, chapter, page=None):
         if chapter in metadata:
             metadata[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
             metadata[chapter]["version_query"] = STATIC_VERSION
+            metadata[chapter]["first_party"] = True
             return render(request, 'reader/reader.html', metadata[chapter])
         else:
             return render(request, 'homepage/how_cute_404.html', status=404)
@@ -165,6 +166,7 @@ def md_chapter(request, md_series_id, chapter, page):
         data["relative_url"] = f"read/md_proxy/{md_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
+        data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
@@ -186,6 +188,7 @@ def nh_chapter(request, nh_series_id, chapter, page):
         data["relative_url"] = f"read/nh_proxy/{nh_series_id}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
+        data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)
@@ -207,6 +210,7 @@ def fs_chapter(request, encoded_url, chapter, page):
         data["relative_url"] = f"read/fs_proxy/{encoded_url}/{chapter}/{page}"
         data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
+        data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
         return render(request, 'homepage/how_cute_404.html', status=404)

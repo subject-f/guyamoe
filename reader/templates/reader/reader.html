@@ -8,13 +8,18 @@
 	    <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
 	    <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
 	    <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
+		{% if first_party %}
 		<meta property="og:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
 	    <meta name="twitter:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
 	    <meta name="twitter:card" content="Everything Kaguya-sama">
 		<meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
 	    <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
-		<meta property="og:url" content="/read/manga/{{ slug }}">
 	    <meta name="author" content="Akasaka Aka">
+		{% else %}
+		<meta property="og:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+		<meta name="twitter:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+		{% endif %}
+		<meta property="og:url" content="/read/manga/{{ slug }}">
 		<meta name="viewport" content="width=device-width">
 		{% if hide_referrer %}
 			<meta name="referrer" content="no-referrer">

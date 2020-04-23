@@ -102,7 +102,7 @@ def md_series_page_data(series_id):
                 "chapter_list": chapter_list,
                 "volume_list": sorted([], key=lambda m: m[0], reverse=True)
             }
-            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 3600 * 24)
+            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 60 * 5)
         else:
             return None
     return series_page_dt
@@ -141,7 +141,7 @@ def md_series_data(series_id):
                 "author": api_data["manga"]["author"], "artist": api_data["manga"]["artist"], "groups": groups_dict,
                 "cover": "https://mangadex.org" + api_data["manga"]["cover_url"], "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"md_series_dt_{series_id}", data, 3600 * 24)
+            cache.set(f"md_series_dt_{series_id}", data, 60 * 5)
         else:
             return None
     return data
@@ -335,7 +335,8 @@ def get_md_data(url):
     return requests.get(url, headers=headers)
 
 # Must have valid hexadecimal after % for many configurations
-ENCODE_STR = "%FF-"
+ENCODE_STR_SLASH = "%FF-"
+ENCODE_STR_QUESTION = "%DE-"
 
 def fs_series_page_data(encoded_url):
     data = cache.get(f"fs_series_page_dt_{encoded_url}")
@@ -352,7 +353,7 @@ def fs_series_page_data(encoded_url):
 
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -363,17 +364,17 @@ def fs_series_page_data(encoded_url):
 
             for a in soup.find_all("div", class_="element"):
                 link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
                 chapter_number = "0"
                 if chapter_regex:
                     chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
                 volume_number = "1"
                 if volume_regex:
                     volume_number = volume_regex.group(2)
                 chapter_title = link.get_text()
                 upload_info = a.find("div", class_="meta_r").get_text()
-                chapter_list.append([chapter_number, chapter_title, link["href"], upload_info])
+                chapter_list.append([chapter_number, chapter_number.replace(".", "-"), chapter_title, link["href"], upload_info])
 
             data = {
                 "series": title,
@@ -383,7 +384,7 @@ def fs_series_page_data(encoded_url):
                 "chapter_list": chapter_list,
                 "original_url": f"https://{fs_decode_url(encoded_url)}"
             }
-            cache.set(f"fs_series_page_dt_{encoded_url}", data, 3600 * 24)
+            cache.set(f"fs_series_page_dt_{encoded_url}", data, 60 * 5)
         else:
             return None
     return data
@@ -403,7 +404,7 @@ def fs_series_data(encoded_url):
 
             title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR)[0]}
+            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -414,17 +415,24 @@ def fs_series_data(encoded_url):
 
             for a in soup.find_all("div", class_="element"):
                 link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)(\d+)', link.get_text())
+                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
                 chapter_number = "0"
                 if chapter_regex:
                     chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)(\d+)', link.get_text())
+                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
                 volume_number = "1"
                 if volume_regex:
                     volume_number = volume_regex.group(2)
 
                 chapter = {"volume": volume_number, "title": link.get_text(), "groups": {"1": None}}
-                chapter["groups"]["1"] = fs_encode_url(link["href"].replace("https://", "").replace("http://", ""))
+                chp = chapter_number.split(".")
+                major_chapter = chp[0]
+                minor_chapter = "0"
+                if len(chp) > 1:
+                    minor_chapter = chp[1]
+                deconstructed_url = link["href"].split("/read/")
+                chapter_url = f"{deconstructed_url[0]}/api/reader/chapter?comic_stub={deconstructed_url[1].split('/')[0]}&chapter={major_chapter}&subchapter={minor_chapter}"
+                chapter["groups"]["1"] = fs_encode_url(chapter_url)
                 chapters_dict[chapter_number] = chapter
 
             data = {
@@ -432,7 +440,7 @@ def fs_series_data(encoded_url):
                 "author": "", "artist": "", "groups": groups_dict,
                 "cover": cover, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict
             }
-            cache.set(f"fs_series_dt_{encoded_url}", data, 3600 * 24)
+            cache.set(f"fs_series_dt_{encoded_url}", data, 60 * 5)
         else:
             return None
     return data
@@ -440,20 +448,10 @@ def fs_series_data(encoded_url):
 def fs_chapter_data(encoded_url):
     chapter_pages = cache.get(f"fs_chapter_dt_{encoded_url}")
     if not chapter_pages:
-        try:
-            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        except requests.exceptions.ConnectionError:
-            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
+        resp = requests.get(fs_decode_url(encoded_url))
         if resp.status_code == 200:
-            raw_data_regex = re.search(r'(var pages = )([\d\D]+?)(;)', resp.text)
-            if not raw_data_regex:
-                return None
-            raw_data = raw_data_regex.group(2)
-            parser = lambda data: json.loads(data)
-            if raw_data.startswith("JSON.parse(atob("):
-                parser = lambda data: json.loads(base64.b64decode(re.search(r'(JSON.parse\(atob\(\")([\d\D]+?)(\"\)\))', data).group(2)))
-            
-            chapter_pages = [p["url"] for p in parser(raw_data)]
+            data = json.loads(resp.text)
+            chapter_pages = [e["url"] for e in data["pages"]]
             cache.set(f"fs_chapter_dt_{encoded_url}", chapter_pages, 3600 * 24)
         else:
             return None
@@ -463,11 +461,11 @@ def fs_encode_slug(url):
     url = url.replace("/read/", "/series/").replace("https://", "").replace("http://", "")
     split = url.split("/")
     # Should it fail at this point if it's unrecognized? Probably
-    return ENCODE_STR.join(split[0:split.index("series") + 2])
+    return ENCODE_STR_SLASH.join(split[0:split.index("series") + 2])
 
 def fs_encode_url(url):
-    return url.replace("/", ENCODE_STR)
+    return url.replace("/", ENCODE_STR_SLASH).replace("?", ENCODE_STR_QUESTION)
 
 def fs_decode_url(url):
-    return url.replace(ENCODE_STR, "/")
+    return url.replace(ENCODE_STR_SLASH, "/").replace(ENCODE_STR_QUESTION, "?")
 
