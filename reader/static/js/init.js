@@ -941,11 +941,13 @@ function UI_Reader(o) {
 
 		//if last page
 		if(HAS_LOCALSTORAGE && nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1){
-		let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
-			if(!readChapters[this.SCP.series])
-				readChapters[this.SCP.series] = [];
-			if (!readChapters[this.SCP.series].includes(this.SCP.chapter))
-				readChapters[this.SCP.series].push(this.SCP.chapter)
+			let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
+			let series = unescape(this.SCP.series);
+			let chapter = this.SCP.chapter.toString().replace(".", "-");
+			if(!readChapters[series])
+				readChapters[series] = [];
+			if (!readChapters[series].includes(chapter))
+				readChapters[series].push(chapter);
 			localStorage.setItem("readChapters", JSON.stringify(readChapters));
 		}
 		

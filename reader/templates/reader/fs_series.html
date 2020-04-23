@@ -221,9 +221,9 @@
               </tr>
             </thead>
             <tbody id="chapterTable">
-              {% for chapter, title, link, upload_info in chapter_list %}
-              <tr class="table-default" data-chapter="{{ chapter }}" >
-              <td scope="row" class="read-icon" onclick="setRead('{{ chapter }}', this)"></td>
+              {% for chapter, ch_slug, title, link, upload_info in chapter_list %}
+              <tr class="table-default" data-chapter="{{ ch_slug }}" >
+              <td scope="row" class="read-icon" onclick="setRead('{{ ch_slug }}', this)"></td>
                 <td scope="row">
                   <a href="/fs/{{ link }}">{{ chapter }} - {{ title }}</a>
                 </td>

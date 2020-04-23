@@ -374,7 +374,7 @@ def fs_series_page_data(encoded_url):
                     volume_number = volume_regex.group(2)
                 chapter_title = link.get_text()
                 upload_info = a.find("div", class_="meta_r").get_text()
-                chapter_list.append([chapter_number, chapter_title, link["href"], upload_info])
+                chapter_list.append([chapter_number, chapter_number.replace(".", "-"), chapter_title, link["href"], upload_info])
 
             data = {
                 "series": title,
