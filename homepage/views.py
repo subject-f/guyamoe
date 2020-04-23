@@ -105,6 +105,8 @@ def fs_gateway(request, raw_url):
         page = "1"
         if "/page/" in raw_url:
             page_idx = params.index("page")
+            if lang_idx + 3 != page_idx:
+                chapter += f"-{params[lang_idx + 3]}"
             page = params[page_idx + 1]
         return redirect('reader-fs-chapter', fs_encode_slug(raw_url), chapter, page)
     elif "/series/" in raw_url:
