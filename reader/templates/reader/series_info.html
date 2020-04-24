@@ -359,8 +359,8 @@
 					</thead>
 					<tbody id="chapterTable">
 					{% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}                        
-						<tr class="table-default" data-chapter="{{ ch_slug }}" >
-							<td scope="row" class="read-icon" onclick="setRead('{{ ch_slug }}', this)"></td>
+						<tr class="table-default" data-chapter="{{ chapter }}" >
+							<td scope="row" class="read-icon" onclick="setRead('{{ chapter }}', this)"></td>
 							<td scope="row" class="chapter-title"><a href="/read/manga/{{ slug }}/{{ ch_slug }}/1">{{ chapter }} - {{ title }}</a></td>
 							<td scope="row">{{ group }}</td>
 							<td scope="row" class="detailed-chapter-upload-date"></td>
