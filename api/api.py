@@ -286,6 +286,7 @@ def nh_series_data(series_id):
                 "description": api_data["title"]["english"], "group": group, "artist": artist, "groups": groups_dict,
                 "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
                 "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.{'jpg' if api_data['images']['cover']['t'] == 'j' else 'png'}",
+                "timestamp": api_data["upload_date"]
             }
             cache.set(f"nh_series_dt_{series_id}", data, 3600 * 24)
         else:
