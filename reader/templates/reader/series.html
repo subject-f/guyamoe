@@ -493,7 +493,10 @@
                                 <td scope="row" class="chapter-title">
                                     <a href="/read/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
                                         {% if chapter %}
-                                        {{ chapter }} - 
+                                        {{ chapter }}
+                                        {% endif %}
+                                        {% if chapter and title %}
+                                         -
                                         {% endif %}
                                         {{ title }}
                                     </a>
