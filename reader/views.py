@@ -239,8 +239,11 @@ def nh_series_page_data(series_id):
                 "alt_titles_str": None,
                 "slug": data["slug"],
                 "cover_vol_url": data["cover"],
-                "metadata": [],
-                "synopsis": data["description"],
+                "metadata": [
+                    ["Author", data["artist"]],
+                    ["Language", data["lang"]]
+                ],
+                "synopsis": f"{data['description']}\n\n{' - '.join(data['tags'])}",
                 "author": data["artist"],
                 "chapter_list": chapter_list,
                 "root_domain": CANONICAL_ROOT_DOMAIN,
