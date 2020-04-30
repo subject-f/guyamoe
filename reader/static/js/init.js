@@ -941,14 +941,9 @@ function UI_Reader(o) {
 
 		//if last page
 		if(HAS_LOCALSTORAGE && nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1){
-			let readChapters = JSON.parse(localStorage.getItem("readChapters")) || {};
-			let series = unescape(this.SCP.series);
-			let chapter = this.SCP.chapter.toString().replace(".", "-");
-			if(!readChapters[series])
-				readChapters[series] = [];
-			if (!readChapters[series].includes(chapter))
-				readChapters[series].push(chapter);
-			localStorage.setItem("readChapters", JSON.stringify(readChapters));
+			let source = window.location.pathname.split("/").filter((e) => e.includes("proxy"));
+			source = (source.length) ? source[0] : undefined;
+			remoteStorage.guya.addChapter(this.SCP.chapter.toString(), unescape(this.SCP.series), source);
 		}
 		
 		if(nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
