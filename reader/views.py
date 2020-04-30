@@ -155,7 +155,7 @@ def md_series_page_data(series_id):
                 "author": api_data["manga"]["author"],
                 "chapter_list": chapter_list,
                 "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url": f"read/md_proxy/{api_data['manga']['description']}",
+                "relative_url": f"read/md_proxy/{series_id}",
                 "original_url": f"https://mangadex.org/title/{series_id}",
                 "available_features": ["detailed"],
                 "reader_modifier": "md_proxy"
