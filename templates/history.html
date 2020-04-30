@@ -192,12 +192,21 @@
     };
 
     let enableHistory = () => {
+      let settings = localStorage.getItem("settings");
+      localStorage.clear();
+      if (settings) {
+        localStorage.setItem("settings", settings);
+      }
       localStorage.setItem(STORAGE_KEY, true);
     };
 
     let disableHistory = () => {
       remoteStorage.disconnect();
-      localStorage.removeItem(STORAGE_KEY);
+      let settings = localStorage.getItem("settings");
+      localStorage.clear();
+      if (settings) {
+        localStorage.setItem("settings", settings);
+      }
     };
 
     return {
