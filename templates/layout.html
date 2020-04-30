@@ -19,7 +19,8 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 	<meta name="format-detection" content="telephone=no">
-	<meta name="theme-color" content="#2b2f33" /> {% block head %} {% endblock %}
+	<meta name="theme-color" content="#2b2f33" /> 
+	{% block head %} {% endblock %}
 	<style type="text/css">
 		.site-title,
 		.site-description {
@@ -27,12 +28,12 @@
 			clip: rect(1px, 1px, 1px, 1px);
 		}
 	</style>
-	{% include "proxy_history.html" %}
+	{% include "history.html" %}
 </head>
 
 <body class="d-flex flex-column h-100">
 	{% include "tracking.html" %}
-	{% load cache %} {% cache 500 sidebar %}
+	{% load cache %} {% cache 1 sidebar %}
 	<header>
 		<nav class="navbar navbar-expand-lg">
 			<div class="container-fluid">
@@ -88,6 +89,9 @@
 						<li class="nav-item">
 							<a class="nav-link" href="//discord.gg/gAUAkzr"><img alt="Discord" src="/static/img/discord.svg"></img>
 							</a>
+						</li>
+						<li class="nav-item">
+							<div id="rs-widget"></div>
 						</li>
 					</ul>
 				</div>

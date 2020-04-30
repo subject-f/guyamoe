@@ -1,3 +1,359 @@
+{% load static %}
+<meta name="referrer" content="no-referrer" />
+<script src="{% static 'js/remotestorage.min.js' %}"></script>
+<script src="{% static 'js/widget.min.js' %}"></script>
 <script>
+  const RS_PATH = "guya";
+  // Define the schema for our history
+  const Guya = {name: RS_PATH, builder: (private) => {
+    // TODO: history pinning, and also consolidate viewed chapters
+    // with the main SERIES_META schema
+    const SERIES_META = "series";
+    const CHAPTER = "chapter";
+    const REPLACEMENT_STR = "{SOURCE_SLUG_REPLACEMENT}";
+    const SERIES_META_PATH_BASE = "series/listing/";
+    const SERIES_META_PATH = `${SERIES_META_PATH_BASE}${REPLACEMENT_STR}`;
+    const READ_PATH = `series/read/${REPLACEMENT_STR}`;
 
+    private.declareType(SERIES_META, {
+      type: "object",
+      properties: {
+        slug: {
+          type: "string"
+        },
+        coverUrl: {
+          type: "string"
+        },
+        source: {
+          type: "string"
+        },
+        url: {
+          type: "string"
+        },
+        title: {
+          type: "string"
+        },
+        timestamp: {
+          type: "number"
+        }
+      },
+      required: ["slug", "source", "url", "title", "timestamp"]
+    });
+
+    private.declareType(CHAPTER, {
+      type: "object",
+      properties: {
+        chapters: {
+          type: "array",
+          default: []
+        }
+      }
+    });
+
+    let pathBuilder = (path, slug, source) => {
+      if (!source) source = "default";
+      if (source === "manga" || source === "series") source = "default";
+      source = source.replace(" ", "_");
+      return path.replace(REPLACEMENT_STR, `${source}-${slug}`);
+    }
+
+    let seriesBuilder = (slug, coverUrl, source, url, title) => {
+      source = source.replace(" ", "_");
+      return {
+        slug: slug,
+        coverUrl: coverUrl || "",
+        source: source,
+        url: url,
+        title: title,
+        timestamp: Date.now()
+      };
+    }
+
+    return {
+      exports: {
+        slugBuilder: (slug, source) => {
+          return `${source}-${slug}`;
+        },
+        addSeries: (slug, coverUrl, source, url, title) => {
+          let toStore = seriesBuilder(slug, coverUrl, source, url, title);
+          return private.storeObject(
+            SERIES_META,
+            pathBuilder(SERIES_META_PATH, slug, source),
+            toStore).then(() => true).catch(() => false);
+        },
+        removeSeries: (slug, source) => {
+          return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
+        },
+        getAllSeries: () => {
+          return private.getAll(SERIES_META_PATH_BASE);
+        },
+        addChapters: async (chapters, slug, source) => {
+          let obj = await private.getObject(pathBuilder(READ_PATH, slug, source));
+          if (obj) {
+            chapters = [...new Set([...obj.chapters, ...chapters])];
+          }
+          return private.storeObject(
+            CHAPTER,
+            pathBuilder(READ_PATH, slug, source),
+            {chapters: chapters}
+          );
+        },
+        addChapter: async (chapter, slug, source) => {
+          let obj = await private.getObject(pathBuilder(READ_PATH, slug, source));
+          let chapters = [chapter];
+          if (obj) {
+            chapters = [...new Set([...obj.chapters, ...chapters])];
+          }
+          return private.storeObject(
+            CHAPTER,
+            pathBuilder(READ_PATH, slug, source),
+            {chapters: chapters}
+          );
+        },
+        removeChapter: async (chapter, slug, source) => {
+          let obj = await private.getObject(pathBuilder(READ_PATH, slug, source));
+          if (obj) {
+            let newChapters = obj.chapters.filter(e => e !== chapter);
+            if (newChapters.length) {
+              return private.storeObject(
+                CHAPTER,
+                pathBuilder(READ_PATH, slug, source),
+                {chapters: newChapters}
+              );
+            } else {
+              return private.remove(pathBuilder(READ_PATH, slug, source));
+            }
+          }
+        },
+        removeAllChapters: (slug, source) => {
+          return private.remove(pathBuilder(READ_PATH, slug, source));
+        },
+        getReadChapters: (slug, source) => {
+          return private.getObject(pathBuilder(READ_PATH, slug, source)).then(obj => {
+            if (obj) {
+              return obj.chapters;
+            } else {
+              return [];
+            }
+          });
+        }
+      }
+    }
+  }};
+  const remoteStorage = new RemoteStorage({logging: true, modules: [Guya]});
+  remoteStorage.access.claim(RS_PATH, "rw");
+  remoteStorage.caching.enable(`/${RS_PATH}/`);
+
+  const widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
+
+  let MAX_CLICKS = 7;
+  // Realistically, any browser that supports localStorage will
+  // support arrow functions so tough luck, IE
+  // This IIFE will act as a disgusting LRU cache
+  let proxyHistoryHandler = (() => {
+    let STORAGE_KEY = "proxyHistory";
+    let MAX_VALUES = 20;
+
+    let enabled = () => {
+      return localStorage.getItem(STORAGE_KEY) ? true : false;
+    };
+
+    let sorted = (obj) => {
+      let sortable = [];
+      for (let s in obj) {
+        sortable.push(obj[s]);
+      }
+      sortable.sort((f, s) => s.timestamp - f.timestamp);
+      return sortable;
+    }
+
+    let getItems = async () => {
+      let items = await remoteStorage.guya.getAllSeries();
+      return sorted(items);
+    };
+
+    let deleteItem = async (proxySource, slug) => {
+      return remoteStorage.guya.removeSeries(slug, proxySource);
+    };
+
+    let pushItem = async (coverUrl, proxySource, slug, url, title) => {
+      if (enabled()) {
+        let items = await getItems();
+        if (!items.find((e) => e.slug === slug && e.source === proxySource.replace(" ", "_"))) {
+          if (items.length + 1 > MAX_VALUES) {
+            let last = items.pop();
+            if (last.slug !== slug && last.source !== proxySource) {
+              await remoteStorage.guya.removeSeries(last.slug, last.source);
+            }
+          }
+        }
+        await remoteStorage.guya.addSeries(slug, coverUrl, proxySource, url, title);
+      }
+    };
+
+    let enableHistory = () => {
+      localStorage.setItem(STORAGE_KEY, true);
+    };
+
+    let disableHistory = () => {
+      remoteStorage.disconnect();
+      localStorage.removeItem(STORAGE_KEY);
+    };
+
+    return {
+      enabled: enabled,
+      getItems: getItems,
+      deleteItem: deleteItem,
+      pushItem: pushItem,
+      history: {
+        enable: enableHistory,
+        disable: disableHistory,
+      },
+      max: MAX_VALUES,
+    };
+  })();
+
+  let deleteItem = (event, element, proxySource, slug) => {
+    event.preventDefault();
+    proxyHistoryHandler.deleteItem(proxySource, slug);
+    element.parentElement.parentElement.parentElement.remove();
+  };
+
+  let proxyDestroyElements = () => {
+    document.querySelectorAll(".proxy").forEach(e => e.remove());
+    document.getElementById("rs-widget").remove();
+  }
+
+  let proxyInitElements = async () => {
+    document
+      .querySelector("[role='main']")
+      .insertAdjacentHTML(
+        "beforeend",
+        "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy History</h3>"
+      );
+    let items = await proxyHistoryHandler.getItems();
+    if (items.length) {
+      items.forEach((item) => {
+        document.querySelector("[role='main']").insertAdjacentHTML(
+          "beforeend",
+          `<a href="${item.url}" class="manga-card smol proxy" style="background-image: url('${item.coverUrl}')">
+            <picture>
+              <img src="${item.coverUrl}">
+            </picture>
+            <article>
+              <h2>${item.title} <span class="tag">${item.source.replace("_", " ")}</span> <i class="fa fa-trash" onclick="deleteItem(event, this, '${item.source}', '${item.slug}');"></i></h2>
+            </article>
+          </a>`
+        );
+      });
+    } else {
+      document.querySelector("[role='main']").insertAdjacentHTML(
+        "beforeend",
+        `<div class="manga-card proxy" style="width:100%">
+          <article>
+              <p>Looks like you haven't used the proxy yet! This card will give you a short tutorial about how it works.</p>
+              <p>Note that your history is unique to your browser session, and won't be shared with guya.moe. If you clear your cache then your history will disappear.</p>
+              <br>
+              <h4>MangaDex</h4>
+              <p>Replace <code>mangadex.org</code> in the URL with <code>guya.moe</code>. For example, <code>https://mangadex.org/title/17274/</code> becomes <code>https://guya.moe/title/17274/</code>.</p>
+              <br>
+              <h4>NHentai</h4>
+              <p>Replace <code>nhentai.net</code> in the URL with <code>guya.moe</code>. For example, <code>https://nhentai.net/g/1/</code> becomes <code>https://guya.moe/g/1/</code>.</p>
+              <br>
+              <h4>FoolSlide Sites</h4>
+              <p>Append the FoolSlide site's URL to the end of <code>https://guya.moe/fs/</code>. For example, <code>https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to</code> becomes <code>https://guya.moe/fs/https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to</code>.</p>
+              <p>Some FoolSlide enabled sites include:</p>
+              <ul>
+                <li><code>https://hentai.cafe/</code></li>
+                <li><code>https://jaiminisbox.com/</code></li>
+                <li><code>https://helveticascans.com/</code></li>
+              </ul>
+              <p>Once you start reading, this card will disappear and this section will fill up with your last <strong>${proxyHistoryHandler.max}</strong> series.</p>
+              <p>You can also disable/enable this history feature at any time by clicking on the twintail Kaguya ${MAX_CLICKS} times. Note that it'll clear your history each time.</p>
+              <p><i>Got a suggestion on how we could improve this feature? Use the feedback box with the envelope symbol on your top left!</i></p>
+          </article>
+        </div>`
+      );
+    }
+  };
+
+  if (window.location.pathname.includes("proxy/")) {
+    if (proxyHistoryHandler.enabled()) {
+      try {
+        {% if cover_vol_url %}
+          let coverUrl = "{{ cover_vol_url }}";
+        {% elif cover %}
+          let coverUrl = "{{ cover }}";
+        {% else %}
+          let coverUrl = "";
+        {% endif %}
+
+        let proxySource = window.location.pathname
+          .split("/")
+          .find((e) => e.includes("proxy"))
+          .replace("_", " ");
+
+        {% if slug %}
+          let slug = "{{ slug }}";
+        {% else %}
+          let slug = "";
+        {% endif %}
+
+        {% if relative_url %}
+          let url = "{{ relative_url }}".split(slug)[0] + slug;
+        {% else %}
+          let url = "";
+        {% endif %}
+
+        {% if series %}
+          let title = "{{ series }}";
+        {% elif title %}
+          let title = "{{ title }}";
+        {% else %}
+          let title = "";
+        {% endif %}
+
+        if (proxySource && slug && url && title) {
+          remoteStorage.on("ready", () => {
+            proxyHistoryHandler.pushItem(coverUrl, proxySource, slug, url, title);
+          });
+        }
+      } catch (e) {
+        console.log("Failed pushing history", e);
+      }
+    }
+  } else if (window.location.pathname === "/") {
+    window.addEventListener("load", () => {
+      let enabled = proxyHistoryHandler.enabled();
+      let clicked = 0;
+      document.getElementById("twintail-guya").addEventListener("click", (e) => {
+        if (clicked < MAX_CLICKS) {
+          clicked++;
+          (e.target || e.srcElement).style.opacity = `${1 - clicked / 10}`;
+        } else {
+          (e.target || e.srcElement).style.opacity = "1";
+          clicked = 0;
+          if (enabled) {
+            proxyHistoryHandler.history.disable();
+            location.reload();
+          } else {
+            proxyHistoryHandler.history.enable();
+            location.reload();
+          }
+          enabled = !enabled;
+        }
+      });
+      if (enabled) {
+        proxyInitElements();
+      }
+    });
+  }
+
+  window.addEventListener("load", () => {
+    if (proxyHistoryHandler.enabled()) {
+      if (document.getElementById("rs-widget")) {
+        widget.attach("rs-widget");
+      }
+    }
+  });
 </script>
