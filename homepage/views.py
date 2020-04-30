@@ -102,7 +102,7 @@ def fs_gateway(request, raw_url):
         # ~~Translator~~ Developer's note: "en" means only english FS sites work
         lang_idx = params.index("en")
         chapter = params[lang_idx + 2]
-        if len(params) - 1 > lang_idx + 2:
+        if len(params) - 1 > lang_idx + 2 and params[lang_idx + 3] != "page":
             chapter += f"-{params[lang_idx + 3]}"
         page = "1"
         if "/page/" in raw_url:
