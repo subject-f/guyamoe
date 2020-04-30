@@ -72,6 +72,28 @@ header {
 	background-image: url(/static/img/dots-vertical.svg)
 }
 
+.rs-widget {
+	transform: translateY(-0.4em);
+}
+
+.rs-state-initial {
+	max-height: 3rem;
+	background-color: rgba(0,0,0,0) !important;
+}
+
+.rs-state-initial .rs-sub-headline {
+	display: none !important;
+}
+
+.rs-state-initial .rs-small-headline {
+	transform: translateY(6px);
+	color: #ffffff !important;
+}
+
+.rs-state-sign-in {
+	background-color: #ffffff !important;
+}
+
 .dropdown-menu {
 	font-size: unset;
 }
