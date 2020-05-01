@@ -419,8 +419,8 @@ function Linkable(o) {
 	}
 
 	this.S.out = (streamID, data) => {
-		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
 	var dataPacket = new DataPacket(streamID, data, this)
+		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
 		for (var i = 0; i < this.S.targets.length; i++) {
 			if(!(streamID in this.S.targets[i].S.inStreams)) {
 				continue;
@@ -651,6 +651,17 @@ function UI_Selector(o) {
 		return this;
 	}
 
+	this.addOverload = this.add;
+	this.add = function(items) {
+		this.addOverload.apply(this, arguments);
+		if(this.inverse) {
+			for (var i = 0; i < this.lastAdded.length; i++) {
+				this.lastAdded[i].$.classList.add(this.toggleClass);
+			}
+		}
+		return this;
+	}
+
 	this.select = function(what, state, force, silent) {
 	var result = this.selectAbstract(what, state, force, silent);
 		return result;
@@ -823,7 +834,7 @@ function UI_ContainerList(o) {
 	}));
 	
 	this.S.mapIn({
-		number: this.select,
+		number: (number) => this.select(number, undefined, true) ,
 	})
 }
 function UI_WindowedContainerList(o) {
@@ -974,14 +985,15 @@ function UI_Button(o) {
 	this.$['on'+this.method] = event => this.trigger(event);
 }
 
-function UI_StatefulButton(o) {
+function UI_ToggleButton(o) {
 	o=be(o);
 	UI_Button.call(this, Object.assign(o, {
-		kind: ['StatefulButton'].concat(o.kind || [])
+		kind: ['ToggleButton'].concat(o.kind || []),
+		html: o.html || `<div class="ToggleButton UI Button" data-bind="${o.option}"><div data-bind="icon" class="ico-btn"></div><span data-bind="name">${o.text}</span></div>`
 	}));
 	Linkable.call(this);
 	this.state = o.state || false;
-
+	this._.icon.setAttribute('data-'+o.setting, o.option);
 
 	this.on = function() {
 		this.$.classList.add('s');
@@ -1002,22 +1014,45 @@ function UI_StatefulButton(o) {
 			this.on();
 		}
 	}
-
 }
-
 
 function UI_ButtonGroup(o) {
 	o=be(o);
+var customHTML = o.html;
 	UI.call(this, Object.assign(o, {
 		kind: ['ButtonGroup'].concat(o.kind || []),
+		html: o.html || `
+			<div class="t-row">
+				<div class="t-1" data-bind="buttons">
+				</div>
+			</div>`
 	}));
 	Linkable.call(this);
-	//this.unique = o.unique || true;
-	this.linkedSetting = o.linkedSetting;
+	this.unique = o.unique || true;
+	this.setting = Settings.getByAddr(o.setting);
+
+	if(!customHTML) {
+		this.setting.options().forEach(option => {
+			this._.buttons.appendChild(new UI_ToggleButton({
+				setting: this.setting.addr,
+				text: this.setting.strings[option],
+				option: option
+			}).S.link(this).$);
+		})
+	}
 
 	this.refresh = () => {
-		this.buttons = this.$.getElementsByClassName('StatefulButton').filter(b => b._struct == undefined);
-		this.buttons = this.buttons.map(b => new UI_StatefulButton({node: b}).S.link(this));
+		this.buttons = this.$.getElementsByClassName('ToggleButton');
+		this.buttons = this.buttons.map(b => {
+			if(b._struct == undefined)
+				return new UI_ToggleButton({
+					node: b,
+					setting: this.setting.addr,
+					option: b.getAttribute('data-bind')
+				}).S.link(this);
+			else
+				return b._struct;
+		});
 		this.buttonsMapping = {};
 		this.buttons.forEach(b => {
 			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
@@ -1026,7 +1061,8 @@ function UI_ButtonGroup(o) {
 	}
 
 	this.select = function(button, silent) {
-		if(typeof button == 'string') {
+		if(Object.keys(this.buttonsMapping).length < 1) return;
+		if(!(button instanceof UI_ToggleButton)) {
 			button = this.buttonsMapping[button];
 		}
 		for (var i = 0; i < this.buttons.length; i++) {
@@ -1037,13 +1073,12 @@ function UI_ButtonGroup(o) {
 			}
 		}
 
-		//NOTE: data-bind in child buttons doubles as a setting value. Might cause issues.
 		this.S.out('id', button.$.getAttribute('data-bind'));
-		if(this.linkedSetting) {
+		if(this.setting && !silent) {
 			this.S.out('settingsPacket',
 				new SettingsPacket(
 					'set',
-					this.linkedSetting,
+					this.setting.addr,
 					button.$.getAttribute('data-bind')
 				)
 			);	
@@ -1054,7 +1089,7 @@ function UI_ButtonGroup(o) {
 		this.select(rawPacket.source);
 	}
 	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.linkedSetting)
+		if(settingsPacket.setting == this.setting.addr)
 			this.select(settingsPacket.value, true);
 	}
 
@@ -1063,9 +1098,77 @@ function UI_ButtonGroup(o) {
 		settingsPacket: this.settingsPacketHandler
 	})
 
+	this.refresh();
 }
 
 
+function UI_MultiStateButton(o) {
+	o=be(o);
+	UI_Button.call(this, Object.assign(o, {
+		kind: ['MultiStateButton'].concat(o.kind || [])
+	}));
+	Linkable.call(this);
+	this.setting = Settings.getByAddr(o.setting);
+	this.options = o.options || this.setting.options();
+	this.disabled = o.disabled || false;
+
+	this.set = function(state, silent) {
+		if(!this.options.includes(state)) return;
+		this.$.setAttribute('data-'+this.setting.addr, state);
+		this.state = state;
+		if(!silent && !this.disabled) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.setting.addr,
+					state
+				)
+			);
+		}
+	}
+
+	this.trigger = function(event) {
+	var idx = this.options.indexOf(this.state) + 1;
+		if(idx >= this.options.length) idx = 0;
+		this.set(this.options[idx]);
+	}
+
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.setting.addr)
+			this.set(settingsPacket.value, true);
+	}
+
+	this.S.mapIn({
+		settingsPacket: this.settingsPacketHandler
+	})
+	
+	this.set(o.state || Settings.get(this.setting.addr), true);
+	this.S.biLink(Settings);
+}
+	
+function UI_SettingDisplay(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['SettingDisplay'].concat(o.kind || [])
+	}));
+	Linkable.call(this);
+	this.setting = Settings.getByAddr(o.setting);
+	this.disabled = o.disabled || false;
+	this.entity = null;
+	switch(this.setting.type) {
+		case SETTING_MULTI:
+		case SETTING_BOOLEAN:
+			this.entity = new UI_ButtonGroup({
+				html: this.setting.html,
+				setting: this.setting.addr
+			}).S.biLink(Settings);
+			break;	
+	}
+
+	if(this.entity) this.$.appendChild(this.entity.$);
+
+	return this;
+}
 
 
 

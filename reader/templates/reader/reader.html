@@ -38,25 +38,25 @@
 			<img id="scan_line" data-bind="preload_entity">
 		</div>
 		<aside>
-			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual is-ico-button"></div></div>
+			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual ico-btn"></div></div>
 			<header>
-				<a href="/" class="is-ico-button guya"></a>
+				<a href="/" class="ico-btn guya"></a>
 				<h1 data-bind='title'><a href="/read/manga/{{ slug }}">{{ series_name }}</a></h1>
-				<button class="is-ico-button"></button>
+				<button class="ico-btn"></button>
 			</header>
 			<div class="rdr-aside-buffer" data-bind="rdr_aside_buffer"></div>
 			<div class="rdr-aside-content" data-bind="rdr_aside_content">
 				<section class="rdr-selector" data-bind="rdr_selector">
 					<div class="rdr-selector-top">
-						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev" data-tip="Previous volume"></button>
+						<button data-bind='vol_next' class="rdr-selector-vol ico-btn prev" data-tip="Previous volume"></button>
 						<div class="flex-spacer" data-bind='message'></div>
 						
-						<a data-bind='share_button' data-tip="Short link to current page" class="rdr-share is-ico-button "></a>
-						<!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment is-ico-button"></a> -->
-						<button data-bind='search' class="is-ico-button search"></button>
+						<a data-bind='share_button' data-tip="Short link to current page" class="rdr-share ico-btn "></a>
+						<!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment ico-btn"></a> -->
+						<button data-bind='search' class="ico-btn search"></button>
 					</div>
 					<div class="rdr-selector-mid">
-						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>
+						<button data-bind='chap_prev' class="rdr-selector-chap ico-btn prev"></button>
 						<div class="rdr-vol-wrap" data-bind='selector_vol'>
 							<label></label>
 							<select id="rdr-vol"></select>
@@ -65,16 +65,16 @@
 							<label></label>
 							<select id="rdr-chap"></select>
 						</div>
-						<button data-bind='chap_next' class="rdr-selector-chap is-ico-button next"></button>
+						<button data-bind='chap_next' class="rdr-selector-chap ico-btn next"></button>
 					</div>
 					<div class="rdr-selector-bot">
-						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next" data-tip="Next volume"></button>
+						<button data-bind='vol_prev' class="rdr-selector-vol ico-btn next" data-tip="Next volume"></button>
 						<div class="flex-spacer"></div>
-						<button data-bind='preload_button' class="rdr-selector-vol is-ico-button preload"></button>
-						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
-						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter"></button>
-						<button data-bind='spread_button' class="rdr-selector-vol is-ico-button spread"></button>
-						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin"></button>
+						<button data-bind='preload_button' class="ico-btn preload"></button>
+						<button data-bind='layout_button' class="ico-btn layout"></button>
+						<button data-bind='fit_button' class="ico-btn fitter"></button>
+						<button data-bind='spread_button' class="ico-btn spread"></button>
+						<button data-bind='sel_pin_button' class="ico-btn selpin"></button>
 					</div>
 				</section>
 				<section class="rdr-groups" data-bind='groups'>
@@ -82,7 +82,7 @@
 				<section class="rdr-previews">
 					<div class="header" data-bind="previews_button">
 						<span>Previews</span>
-						<div class="is-ico-button expander"></div>
+						<div class="ico-btn expander"></div>
 					</div>
 					<div data-bind='previews' class="rdr-previews-gallery">
 					</div>
@@ -92,7 +92,7 @@
 						<div class="header">Fit mode</div>
 						<div class="t-row">
 							<div class="t-1">
-								<div class="StatefulButton UI B	utton" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
+								<div class="ToggleButton UI Button" data-bind="none" data-tip="Images are displayed in natural resolution."><div class="ico-btn fitter none"></div><span>Original size</span></div>
 							</div>
 						</div>
 						<div class="t-row">
@@ -100,9 +100,9 @@
 								Limit
 							</div>
 							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
+								<div class="ToggleButton UI Button" data-bind="all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="ico-btn fitter all_limit"></div><span>All</span></div>
+								<div class="ToggleButton UI Button" data-bind="width_limit" data-tip="Natural image size that does not exceed max width."><div class="ico-btn fitter width_limit"></div><span>Width</span></div>
+								<div class="ToggleButton UI Button" data-bind="height_limit" data-tip="Natural image size that does not exceed max height."><div class="ico-btn fitter height_limit"></div><span>Height</span></div>
 							</div>
 						</div>
 						<div class="t-row">
@@ -110,9 +110,9 @@
 								Stretch
 							</div>
 							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images scale to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images scale to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images scale to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
+								<div class="ToggleButton UI Button" data-bind="all" data-tip="Images scale to width or height."><div class="ico-btn fitter all"></div><span>All</span></div>
+								<div class="ToggleButton UI Button" data-bind="width" data-tip="Images scale to max width."><div class="ico-btn fitter width"></div><span>Width</span></div>
+								<div class="ToggleButton UI Button" data-bind="height" data-tip="Images scale to max height."><div class="ico-btn fitter height"></div><span>Height</span></div>
 							</div>
 						</div>
 					</div>
@@ -131,7 +131,7 @@
 			</div>
 			<div class="zoom-level refresh-chapter is-hidden" data-bind="random_chapter">
 				<div class="refresh-chapter-note">This is the Blu-ray extras "random chapter".<br>Click this button to reshuffle the chapter.</div>
-				<div class="is-ico-button" data-bind="random_chapter_button">↻</div>
+				<div class="ico-btn" data-bind="random_chapter_button">↻</div>
 			</div>
 			<div class="hover-prev" data-bind="hover_prev">
 				<div class="hover-wrap">
@@ -147,206 +147,20 @@
 			</div>
 		</content>
 		<div class="zoom-level vis" data-bind="zoom_level">
-			<div class="is-ico-button" data-bind="zoom_level_plus"></div>
-			<div class="is-ico-button" data-bind="zoom_level_minus"></div>
+			<div class="ico-btn" data-bind="zoom_level_plus"></div>
+			<div class="ico-btn" data-bind="zoom_level_minus"></div>
 		</div>
 	</main>
 	<div class="Tooltippy"></div>
 	<div class="LodaManager" tabindex="-1">
 		<div class="Loda-window UI Loda Loda_Settings" tabindex="-1">
 			<aside>
-				<button class="is-ico-button close" data-bind="close"></button>
+				<button class="ico-btn close" data-bind="close"></button>
 				<header data-bind="header">Settings</header>
 				<div class="settings-tabs" data-bind="tabs">
-					<div class="setting-tab s">Test text</div>
-					<div class="setting-tab">Test text</div>
-					<div class="setting-tab">Test text</div>
-					<div class="setting-tab">Test text</div>
-					<div class="setting-tab">Test text</div>
 				</div>
 			</aside>
 			<content data-bind="content">
-				<div class="setting-container">
-					<div class="setting-category-content">
-						<div class="setting-wrapper">
-							<header class="setting-header">Image fit mode</header>
-							<div class="setting-field"><div class="t-row">
-							<div class="t-1">
-								<div class="StatefulButton UI B utton Button" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
-							</div>
-						</div><div class="t-row">
-							<div class="t-tooltip">
-								Limit
-							</div>
-							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
-								<div class="StatefulButton UI Button s" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
-							</div>
-						</div><div class="t-row">
-							<div class="t-tooltip">
-								Stretch
-							</div>
-							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images expand to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images expand to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images expand to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
-							</div>
-						</div></div>
-						</div><div class="setting-wrapper">
-							<header class="setting-header">Page spread type</header>
-							<div class="setting-field"><div class="t-row">
-							
-							<div class="t-1">
-								<div data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height." class="StatefulButton UI Button p1"><div class="is-ico-button spread"></div><span>Single-page</span></div>
-								<div class="StatefulButton UI Button s p2" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button spread"></div><span>Two-page</span></div>
-								<div class="StatefulButton UI Button p2-odd" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button spread"></div><span>Two-page, odd</span></div>
-							</div>
-						</div></div>
-						</div><div class="setting-wrapper">
-							<header class="setting-header">Fit mode</header>
-							<div class="setting-field"><div class="t-row">
-							<div class="t-1">
-								<div class="StatefulButton UI B utton Button" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
-							</div>
-						</div><div class="t-row">
-							<div class="t-tooltip">
-								Limit
-							</div>
-							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
-								<div class="StatefulButton UI Button s" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
-							</div>
-						</div><div class="t-row">
-							<div class="t-tooltip">
-								Stretch
-							</div>
-							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images expand to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images expand to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images expand to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
-							</div>
-						</div></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-					</div>
-				</div>
-				<div class="setting-container">
-					<header class="setting-category-header">Test header</header>
-					<div class="setting-category-content">
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-					</div>
-				</div>
-				<div class="setting-container">
-					<header class="setting-category-header">Test header</header>
-					<div class="setting-category-content">
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-					</div>
-				</div>
-				<div class="setting-container">
-					<header class="setting-category-header">Test header</header>
-					<div class="setting-category-content">
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-					</div>
-				</div>
-				<div class="setting-container">
-					<header class="setting-category-header">Test header</header>
-					<div class="setting-category-content">
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-						<div class="setting-wrapper">
-							<div class="setting-header">Test setting</div>
-							<div class="setting-field"></div>
-						</div>
-					</div>
-				</div>
 			</content>
 		</div>
 	</div>
@@ -355,7 +169,7 @@
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>
-<script>
+<script type="text/javascript">
 	// History tagging
 	tag();
 </script>

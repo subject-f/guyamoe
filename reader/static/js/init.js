@@ -148,155 +148,358 @@ function ReaderAPI(o) {
 	})
 }
 
+const SETTING_HIDDEN = -1;
+const SETTING_CUSTOM = 1;
+const SETTING_BOOLEAN = 10;
+const SETTING_MULTI = 20;
+const SETTING_MULTI_DROPDOWN = 21;
+const SETTING_VALUE = 30;
+const SETTING_VALUE_STEPPED = 31;
+	
+function Setting(o) {
+	this.name = o.name;
+	this.addr = o.addr;
+	this.prettyName = o.prettyName;
+	this.setting = this.default = o.default;
+	this.type = o.type || SETTING_HIDDEN;
+	if(o.options !== undefined) {
+		if(o.options instanceof Function)
+			this.options = o.options;
+		else{
+			if(o.options instanceof Array){
+				this.optionsPrimitive = o.options.slice(0);
+				this.options = function() {return this.optionsPrimitive};
+			}else
+				this.optionsPrimitive = o.options;
+		}
+	}else if(this.type == SETTING_BOOLEAN){
+		this.options = function() {return ["true", "false"]};
+	}
+	this.strings = o.strings;
+	this.postUpdate = o.postUpdate;
+	this.html = o.html;
+	this.global = (o.global===undefined)?true:o.global;
+	this.manual = o.manual; //if true, the setting needs an external .setClass call to update the class. This can be used where class update needs to be in the middle of something.
+
+	this.checkOptionValidity = function(value) {
+		if(this.options == undefined)
+			return true;
+		
+		if(this.options() instanceof Array)
+			return this.options().includes(value);
+		
+		return this.options() == value;
+	}
+
+	this.refresh = function() {
+		if(!this.checkOptionValidity(this.get()))
+			this.set(this.default);
+	}
+
+	this.cycle = function(options) {
+		switch(this.type){
+			case SETTING_BOOLEAN:
+			case SETTING_MULTI:
+			case SETTING_MULTI_DROPDOWN:
+			case SETTING_VALUE:
+			case SETTING_VALUE_STEPPED:
+				if(options === undefined)
+					options = this.options();
+			var index = options.indexOf(this.get());
+				return this.set(
+					(index+1 > options.length - 1)?options[0]:options[index+1]
+				);
+				break;
+		}
+		return false;
+	}
+	this.next = function() {
+		if(!this.options() instanceof Array) return;
+		if(this.options().includes(this.setting)) {
+		var targetIndex = this.options().indexOf(this.setting) + 1;
+			if(targetIndex > this.options().length - 1) return;
+			this.set(this.options()[targetIndex])
+		}
+	}
+	this.prev = function() {
+		if(!this.options() instanceof Array) return;
+		if(this.options().includes(this.setting)) {
+		var targetIndex = this.options().indexOf(this.setting) - 1;
+			if(targetIndex < 0) return;
+			this.set(this.options()[targetIndex])
+		}
+	}
+	this.get = function() {
+		return this.setting;
+	}
+	this.getFormatted = function() {
+		if(this.strings) {
+			if(this.strings instanceof Function) {
+				return this.strings(this.setting);
+			}
+			return this.strings[this.setting];
+		}else{
+			return '';
+		}
+	}
+	this.classString = function(option) {
+		if(option !== undefined) {
+			return this.name + '-' + option;
+		}else{
+			return this.name + '-' + this.get();
+		}
+	}
+	this.setClass = function() {
+	var classList = document.body.classList;
+		switch(this.type){
+			case SETTING_BOOLEAN:
+				classList.remove(this.classString(!this.get()));
+				classList.add(this.classString());
+				break;
+			case SETTING_MULTI:
+			case SETTING_MULTI_DROPDOWN:
+			case SETTING_VALUE:
+			case SETTING_VALUE_STEPPED:
+				classList.remove.apply(classList, [].filter.call(classList, cl => cl.indexOf(this.name) == 0));
+				classList.add(this.classString());
+				break;
+		}
+	}
+	this.set = function(value) {
+		if(!this.checkOptionValidity(value)) return false;
+		this.setting = value;
+		if(this.global && !this.manual)
+			this.setClass();
+	}
+}
+
+function SettingsCategory(name, hidden) {
+	nonEnum(this, "name", name);
+	nonEnum(this, "hidden", hidden);
+}
+
 function SettingsHandler(){
 	Linkable.call(this);
 
+	this.settings = {
+		apr: new SettingsCategory('Appearance'),
+		lyt: new SettingsCategory('Layout'),
+		bhv: new SettingsCategory('Behaviour'),
+		misc: new SettingsCategory('Miscellaneous', true)
+	};
 	this.all = {};
 
-	this.all.fit = new Setting(
-		'fit',
-		'Page fit',
-		[
-			'fit_none',
-			'fit_all_limit',
-			'fit_width_limit',
-			'fit_height_limit',
-			'fit_all',
-			'fit_width',
-			'fit_height'
+	this.newSetting = function(o) {
+	let obj = Object.byString(this.settings, o.addr.split('.').slice(0, -1).join('.'));
+		o.name = o.addr.split('.').pop();
+		this.all[o.addr] = obj[o.name] = new Setting(o);
+		return this;
+	}
+
+	this.newSetting({
+		addr: 'lyt.fit',
+		prettyName: 'Page fit',
+		options: [
+			'none',
+			'all_limit',
+			'width_limit',
+			'height_limit',
+			'all',
+			'width',
+			'height'
 		],
-		(IS_MOBILE)?'fit_all_limit':'fit_width_limit',
-		{
-			'fit_none': 'Images are displayed in natural resolution.',
-			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
-			'fit_width_limit': 'Natural image size that does not exceed max width.',
-			'fit_height_limit': 'Natural image size that does not exceed max height.',
-			'fit_all': 'Images expand to width or height.',
-			'fit_width': 'Images expand to max width.',
-			'fit_height': 'Images expand to max height.',
-		} 
-	)
-	this.all.layout = new Setting(
-		'layout',
-		'Reader layout',
-		['ltr', 'ttb', 'rtl'],
-		'ltr',
-		{
-			ltr: 'Layout set to left-to-right.',
-			ttb: 'Layout set to top-to-bottom.',
-			rtl: 'Layout set to right-to-left.'
-		}
-	)
-	this.all.spread = new Setting(
-		'spread',
-		'2-page spread',
-		['p1', 'p2', 'p2-odd'],
-		'p1',
-		{
-			'p1': 'Single-page layout',
-			'p2': 'Two-page layout',
-			'p2-odd': 'Two-page layout, odd'
+		default: (IS_MOBILE)?'all_limit':'width_limit',
+		strings: {
+			'none': 'Images are displayed in natural resolution.',
+			'all_limit': 'Natural image size that does not exceed max width or height.',
+			'width_limit': 'Natural image size that does not exceed max width.',
+			'height_limit': 'Natural image size that does not exceed max height.',
+			'all': 'Images expand to width or height.',
+			'width': 'Images expand to max width.',
+			'height': 'Images expand to max height.',
 		},
-		value => {
+		type: SETTING_MULTI,
+		html: `<div><div class="t-row">
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="none"><div data-bind="icon" class="ico-btn"></div><span>Original size</span></div>
+				</div>
+			</div><div class="t-row">
+				<div class="t-tooltip">
+					Limit
+				</div>
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="all_limit"><div data-bind="icon" class="ico-btn"></div><span>All</span></div>
+					<div class="ToggleButton" data-bind="width_limit"><div data-bind="icon" class="ico-btn"></div><span>Width</span></div>
+					<div class="ToggleButton" data-bind="height_limit"><div data-bind="icon" class="ico-btn"></div><span>Height</span></div>
+				</div>
+			</div><div class="t-row">
+				<div class="t-tooltip">
+					Stretch
+				</div>
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="all"><div data-bind="icon" class="ico-btn"></div><span>All</span></div>
+					<div class="ToggleButton" data-bind="width"><div data-bind="icon" class="ico-btn"></div><span>Width</span></div>
+					<div class="ToggleButton" data-bind="height"><div data-bind="icon" class="ico-btn"></div><span>Height</span></div>
+				</div>
+			</div></div>`
+	})
+	.newSetting({
+		addr: 'lyt.zoom',
+		prettyName: 'Zoom level',
+		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
+		default: '100',
+		strings: (i) => 'Zoom level set to %i%.'.replace('%i', i),
+		type: SETTING_VALUE_STEPPED
+	})
+	.newSetting({
+		addr: 'lyt.direction',
+		prettyName: 'Reader layout',
+		options: ['ltr', 'ttb', 'rtl'],
+		default: 'ltr',
+		strings: {
+			ltr: 'Left-to-right',
+			ttb: 'Top-to-bottom',
+			rtl: 'Right-to-left'
+		},
+		type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: 'lyt.spread',
+		prettyName: '2-page spread',
+		options: ['1', '2', '2-odd'],
+		default: '1',
+		strings: {
+			'1': '1-page layout',
+			'2': '2-page layout',
+			'2-odd': '2-page layout, odd'
+		},
+		type: SETTING_MULTI,
+		postUpdate: value => {
 			({
-				'p1': v => {
-					this.set('spreadCount', 1)
-					this.set('spreadOffset', 0)
+				'1': v => {
+					this.set('lyt.spreadCount', 1)
+					this.set('lyt.spreadOffset', 0)
 				},
-				'p2': v => {
-					this.set('spreadCount', 2)
-					this.set('spreadOffset', 0)
+				'2': v => {
+					this.set('lyt.spreadCount', 2)
+					this.set('lyt.spreadOffset', 0)
 				},
-				'p2-odd': v => {
-					this.set('spreadCount', 2)
-					this.set('spreadOffset', 1)
+				'2-odd': v => {
+					this.set('lyt.spreadCount', 2)
+					this.set('lyt.spreadOffset', 1)
 				}
 			})[value]()
 		}
-	)
-	this.all.spreadCount = new Setting(
-		'spreadCount',
-		'2-page spread count',
-		[1, 2, 3, 4],
-		1,
-		i => {
+	})
+	.newSetting({
+		addr: 'lyt.spreadCount',
+		prettyName: '2-page spread count',
+		options: [1, 2, 3, 4],
+		default: 1,
+		strings: i => {
 			return 'Spread page count: %i'.replace('%i', i)
-		}
-	)
-	this.all.spreadOffset = new Setting(
-		'spreadOffset',
-		'2-page spread offset',
-		i => {
-			return [...Array(this.all.spreadCount.get()).keys()]
-			// return i >= this.all.spreadCount.get()?null:i;
 		},
-		0,
-		i => {
+		type: SETTING_HIDDEN
+	})
+	.newSetting({
+		addr: 'lyt.spreadOffset',
+		prettyName: '2-page spread offset',
+		options: () => {
+			return [...Array(this.get('lyt.spreadCount')).keys()]
+		},
+		default: 0,
+		strings: i => {
 			return 'Spread page offset: %i pages'
 				.replace('%i', i)
 				.replace('1 pages', '1 page')
 				.replace('Spread page offset: 0 pages', 'No offset');
-		}
-	)
-	this.all.groupPreference = new Setting(
-		'groupPreference',
-		'Group preference',
-		[]
-	)
-	this.all.selectorPinned = new Setting(
-		'selectorPinned',
-		'Page selector',
-		(IS_MOBILE)?['selector-fade', 'selector-pinned']:['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
-		'selector-fade',
-		{
-			'selector-pinned': (IS_MOBILE)?'':'Page selector pinned with number.',
-			'selector-pinned-nonum': 'Page selector pinned without number.',
-			'selector-fade': (IS_MOBILE)?'':'Page selector is shown on hover.'
-		}
-	)
-	this.all.preload = new Setting(
-		'preload',
-		'Preload amount',
-		[1,2,3,4,5,6,7,8,9,100],
-		(IS_MOBILE)?2:3,
-		i => 'Reader will preload %i pages.'.replace('%i', i)
+		},
+		type: SETTING_HIDDEN
+	})
+	.newSetting({
+		addr: 'apr.selPinned',
+		prettyName: 'Page selector',
+		default: false,
+		strings: {
+			true: 'Pinned.',
+			false: 'Shown on hover.'
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'apr.selNonum',
+		prettyName: 'Show page selector number',
+		default: true,
+		strings: {
+			true: 'Visible',
+			false: 'Hidden'
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'apr.sidebar',
+		prettyName: 'Sidebar',
+		default: true,
+		strings: {
+			true: '',
+			false: '',
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'apr.previews',
+		prettyName: 'Previews',
+		default: false,
+		strings: {
+			true: '',
+			false: '',
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'bhv.preload',
+		prettyName: 'Preload amount',
+		options: [1,2,3,4,5,6,7,8,9,100],
+		default: (IS_MOBILE)?2:3,
+		strings: i => 'Reader will preload %i pages.'.replace('%i', i)
 			.replace('1 pages', '1 page')
-			.replace('100 pages', 'all pages')
-	)
-	this.all.sidebar = new Setting(
-		'sidebar',
-		'Sidebar',
-		['hide', 'show'],
-		'show',
-		{
-			'hide': '',
-			'show': '',
+			.replace('100 pages', 'all pages'),
+		type: SETTING_VALUE_STEPPED,
+		global: false
+	})
+	.newSetting({
+		addr: 'bhv.scrollYDelta',
+		prettyName: 'Vertical keyboard scroll speed',
+		options: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+		default: 25,
+		strings: i => 'Scroll speed set to %i pixels.'.replace('%i', i),
+		type: SETTING_VALUE,
+		global: false
+	})
+	.newSetting({
+		addr: 'misc.groupPreference',
+		prettyName: 'Group preference',
+		type: SETTING_HIDDEN
+	})
+
+	this.deserialize = function() {
+		if(!localStorage) return;
+	var settings = localStorage.getItem('settings');
+		if(!settings) return;
+		try{
+			settings = JSON.parse(settings);
+			if(settings.VER && settings.VER != this.ver) {
+				throw 'Settings ver changed';
+			}
+			for(var setting in settings) {
+				if(setting == 'VER') continue;
+				this.set(setting, settings[setting], true);
+			}
+		}catch (e){
+			localStorage.setItem('settings','');
+			console.warn('Settings were found to be corrupted and so were reset.')
 		}
-	)
-	this.all.previews = new Setting(
-		'previews',
-		'Previews',
-		['hide', 'show'],
-		'hide',
-		{
-			'hide': '',
-			'show': '',
-		}
-	)
-	this.all.zoom = new Setting(
-		'zoom',
-		'Zoom level',
-		['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
-		'100',
-		i => 'Zoom level set to %i%.'.replace('%i', i)
-	)
-	this.all.scrollYDelta = new Setting(
-		'scrollYDelta',
-		'Vertical keyboard scroll speed',
-		[5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-		25,
-		i => 'Scroll speed set to %i pixels.'.replace('%i', i)
-	)
+	}
 
 	this.sendInit = function() {
 		for(var setting in this.all) {
@@ -315,29 +518,10 @@ function SettingsHandler(){
 		return JSON.stringify(settings);
 	}
 
-	this.deserialize = function() {
-		if(!window.localStorage) return;
-	var settings = window.localStorage.getItem('settings');
-		if(!settings) return;
-		try{
-			settings = JSON.parse(settings);
-			if(settings.VER && settings.VER != this.ver) {
-				throw 'Settings ver changed';
-			}
-			for(var setting in settings) {
-				if(setting == 'VER') continue;
-				this.set(setting, settings[setting], true);
-			}
-		}catch (e){
-			localStorage.setItem('settings','');
-			console.warn('Settings were found to be corrupted and so were reset.')
-		}
-	}
-
 	this.query = function(qu, or) {
 		if(or) {
 			for(var key in qu) {
-			var setting = this.all[key];
+			var setting = this.getByAddr(key);
 				if(qu[key][0] == '!') {
 					if(qu[key].substr(1) != setting.get()) return true;
 				}else{
@@ -347,7 +531,7 @@ function SettingsHandler(){
 			return false;
 		}else{
 			for(var key in qu) {
-			var setting = this.all[key];
+			var setting = this.getByAddr(key);
 				if(qu[key][0] == '!') {
 					if(qu[key].substr(1) == setting.get()) return false;
 				}else{
@@ -358,34 +542,36 @@ function SettingsHandler(){
 		return true;
 	}
 
-	this.getByAddr() {
-		
+	this.getByAddr = function(addr) {
+		return this.all[addr];
 	}
 
 	this.get = function(settingID){
-		return this.all[settingID].get();
+		return this.getByAddr(settingID).get();
 	}
 	this.set = function(settingID, value, silent){
-	var setting = this.all[settingID];
+	var setting = this.getByAddr(settingID);
 		if(setting.set(value) == false) return;
 		if(setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
-
+	this.setClass = function(settingID){
+		this.getByAddr(settingID).setClass();
+	}
 	this.cycle = function(settingID, options, silent){
-	var setting = this.all[settingID];
+	var setting = this.getByAddr(settingID);
 		if(setting.cycle(options) == false) return;
 		if(setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
 	this.next = function(settingID, silent) {
-	var setting = this.all[settingID];
+	var setting = this.getByAddr(settingID);
 		setting.next();
 		if(setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
 	}
 	this.prev = function(settingID, silent) {
-	var setting = this.all[settingID];
+	var setting = this.getByAddr(settingID);
 		setting.prev();
 		if(setting.postUpdate) setting.postUpdate(setting.get());
 		this.settingUpdated(setting, silent);
@@ -399,10 +585,10 @@ function SettingsHandler(){
 
 	this.settingUpdated = function(setting, silent) {
 		this.refreshAll();
-		if(window.localStorage)
-			window.localStorage.setItem('settings', this.serialize())
+		if(localStorage)
+			localStorage.setItem('settings', this.serialize())
 		if(silent != true) {
-			this.S.out('settingsPacket', new SettingsPacket('change', setting.name, setting.setting))
+			this.S.out('settingsPacket', new SettingsPacket('change', setting.addr, setting.setting))
 			this.S.out('message', setting.getFormatted());
 		}
 	}
@@ -434,95 +620,6 @@ function SettingsPacket(type, settingName, value, silent) {
 	this.value = value;
 	this.silent = silent;
 	return this;
-}
-
-function Setting(name, prettyName, options, dflt, strings, postUpdate) {
-	this.name = name;
-	this.prettyName = prettyName;
-	this.default = dflt;
-	this.setting = this.default;
-	this.options = options;
-	this.strings = strings;
-	this.postUpdate = postUpdate;
-
-	this.refresh = function() {
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(this.get()) < 0)
-					this.set(this.default);
-			}else{
-				if(this.options(this.get()) == null) {
-					this.set(this.default);
-				}
-			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(this.get()) < 0)
-				this.set(this.default);
-		}else{
-			// console.warn(this.name + ' has no valid options.')
-		}
-	}
-
-	this.cycle = function(options) {
-		if(this.options instanceof Function) {
-			if(!(options = this.options()) instanceof Array) {
-				console.log('Option', this, 'did not return an array to cycle on.')
-				return false;
-			}
-		}else if(!(options = this.options) instanceof Array) {
-			console.log('Option', this, 'was not an array nor a function.')
-			return false;
-		}
-		if(options) {
-		var index = options.indexOf(this.setting);
-			return this.set(
-				(index+1 > options.length - 1)?options[0]:options[index+1]
-			);
-		}
-		return false;
-	}
-	this.next = function() {
-		if(this.options.indexOf(this.setting) < this.options.length - 1) {
-			this.set(this.options[this.options.indexOf(this.setting) + 1])
-		}
-	}
-	this.prev = function() {
-		if(this.options.indexOf(this.setting) > 0) {
-			this.set(this.options[this.options.indexOf(this.setting) - 1])
-		}
-	}
-	this.get = function() {
-		return this.setting;
-	}
-	this.getFormatted = function() {
-		if(this.strings) {
-			if(this.strings instanceof Function) {
-				return this.strings(this.setting);
-			}
-			return this.strings[this.setting];
-		}else{
-			return '';
-		}
-	}
-	this.set = function(value) {
-		if(value == this.setting) return false;
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(value) < 0)
-					throw new Error(this.name + ' must be one of: ' + this.options().join(', '))
-			}else{
-				if(this.options(value) == null) {
-					throw new Error(this.name + ' did not satisfy option constraints.');
-				}
-			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(value) < 0)
-				throw new Error(this.name + ' must be one of: ' + this.options.join(', '))
-		}else{
-			throw new Error(this.name + ' has no valid options.')
-		}
-		this.setting = value;
-	}
 }
 
 function UI_Tooltippy(o) {
@@ -617,25 +714,25 @@ function UI_Reader(o) {
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
 		.attach('nextVo', ['Period'], e => this.nextVolume())
-		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
-		.attach('layout', ['KeyD'], e => this.cycleLayout())
+		.attach('fit', ['KeyF'], e => Settings.cycle('lyt.fit'))
+		.attach('layout', ['KeyD'], e => Settings.cycle('lyt.direction'))
 		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
-		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
-		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
-		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
-		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
-		.attach('spreadCount', ['KeyU'], s => Settings.cycle('spreadCount'))
-		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('spreadOffset'))
+		.attach('sidebar', ['KeyS'], s => Settings.cycle('apr.sidebar'))
+		.attach('pageSelector', ['KeyN'], s => Settings.cycle('apr.selPinned'))
+		.attach('preload', ['KeyL'], s => Settings.cycle('bhv.preload'))
+		.attach('spread', ['KeyQ'], s => Settings.cycle('lyt.spread'))
+		.attach('spreadCount', ['KeyU'], s => Settings.cycle('lyt.spreadCount'))
+		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('lyt.spreadOffset'))
 		.attach('share', ['KeyR'], s => {
 			this.copyShortLink(s);
 		})
 		.attach('minus', ['Minus'], s => {
-			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
-				Settings.prev('zoom')
+			if(Settings.query({'lyt.fit':'width'}) || Settings.query({'lyt.fit':'width_limit'}))
+				Settings.prev('lyt.zoom')
 		})
 		.attach('plus', ['Equal'], s => {
-			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
-				Settings.next('zoom')
+			if(Settings.query({'lyt.fit':'width'}) || Settings.query({'lyt.fit':'width_limit'}))
+				Settings.next('lyt.zoom')
 		})
 		.attach('enter', ['Enter'], s => {
 			if(this.SCP.page == this.SCP.lastPage)
@@ -644,12 +741,12 @@ function UI_Reader(o) {
 
 		
 	new KeyListener(document.body)
-		.condition(() => Settings.all.layout.get() == 'ltr')
+		.condition(() => Settings.get('lyt.direction') == 'ltr')
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
 		
 	new KeyListener(document.body)
-		.condition(() => Settings.all.layout.get() == 'rtl')
+		.condition(() => Settings.get('lyt.direction') == 'rtl')
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
 		.attach('next', ['ArrowLeft'], e => this.nextPage());
 
@@ -691,10 +788,10 @@ function UI_Reader(o) {
 		dynamicHide: true
 	})
 	//views: fit
-	this.fitView = new UI_ButtonGroup({
-		node: this._.aside_views_fit,
-		linkedSetting: 'fit'
-	}).refresh().S.biLink(Settings);
+	// this.fitView = new UI_ButtonGroup({
+	// 	node: this._.aside_views_fit,
+	// 	linkedSetting: 'lyt.fit'
+	// }).S.biLink(Settings);
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -706,7 +803,7 @@ function UI_Reader(o) {
 				.attach('search', ['Ctrl+KeyF'], s => {
 					Loda.display('search')
 				})
-				.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
+				.attach('previews', ['KeyP'], s => Settings.cycle('apr.previews'))
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
 			document.querySelector("[class='rdr-previews']").style.display = 'none';
@@ -788,7 +885,7 @@ function UI_Reader(o) {
 	}
 
 	this.getGroup = function(chapter) {
-		let group = Settings.get('groupPreference');
+		let group = Settings.get('misc.groupPreference');
 
 		let chapterObj = this.current.chapters[chapter || this.SCP.chapter];
 
@@ -878,7 +975,7 @@ function UI_Reader(o) {
 	}
 
 	this.drawPreviews = (state) => {
-		state = state || Settings.query({previews:'show'});
+		state = state || Settings.query({'apr.previews':'show'});
 		if(state == 'show') {
 			this.$.classList.add('previews-open');
 			this.previews.clear();
@@ -993,53 +1090,20 @@ function UI_Reader(o) {
 			window.location.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
-	this.setFit = function(fit) {
-		Settings.all.fit.options.forEach(item => {
-			this.$.classList.remove(item);
-			this._.fit_button.classList.remove(item);
-		});
-		this.$.classList.add(fit);
-		this._.fit_button.classList.add(fit);
-		this.imageView.updateWides();
-	}
-
 	this.setLayout = function(layout, silent) {
-		Settings.all.layout.options.forEach(item => {
-			this.$.classList.remove(item);
-		});
-		this.$.classList.add(layout);
+		this.recalculateBuffer();
 		this.stickHeader();
 
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
-			this.imageView.setTouchHandlers(Settings.get('layout') != 'ttb');
+			this.imageView.setTouchHandlers(Settings.get('lyt.direction') != 'ttb');
 		}
-	}
-
-	this.setSelectorPin = function(state) {
-		Settings.all.selectorPinned.options.forEach(item => {
-			this.$.classList.remove(item);
-			this.$.classList.remove('nonum');
-		});
-		if(state == 'selector-pinned-nonum') {
-			this.$.classList.add('selector-pinned');
-			this.$.classList.add('nonum');
-		}else{
-			this.$.classList.add(state);
-		}
-		this.recalculateBuffer();
-		this.stickHeader();
-	}
-
-	this.cycleLayout = function() {
-		Settings.cycle('layout');
-		this.recalculateBuffer();
-	}
+	}	
 
 	this.recalculateBuffer = function() {
 		if (IS_MOBILE) {
-			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
+			if (Settings.get('lyt.direction') === 'ttb' && Settings.get('apr.selPinned')) {
 				// Order of these statements seem to matter for Chrome's scroll shifting behaviour; if height is
 				// set before top, the scroll bug occurs. Thus, it might break in future updates.
 				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
@@ -1050,44 +1114,26 @@ function UI_Reader(o) {
 			}
 		}
 	}
-
-	this.setPreload = function(number){
-		this.$.setAttribute('data-preload', number);
-	}
-
-	this.setZoom = function(zoom) {
-		this.imageView.updateScrollPosition();
-		Settings.all.zoom.options.forEach(item => {
-			this.$.classList.remove('zl'+item);
-		});
-		this.$.classList.add('zl'+zoom);
-		setTimeout(this.imageView.updateWides, 1);
-	}
-	this.setSpread = function(spread) {
-		Settings.all.spread.options.forEach(item => {
-			this.$.classList.remove(item);
-		});
-		this.$.classList.add(spread);
-	}
-
-	this.setSidebar = function(state) {
-		this.imageView.updateScrollPosition();
-		if(state == 'hide') {
-			this.$.classList.add('sidebar-hidden');
-		}else{
-			this.$.classList.remove('sidebar-hidden');
-		}
-		this.imageView.updateWides();
-	}
-
 	this.stickHeader = () => {
 		if(IS_MOBILE) {
-			if(Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
+			if(Settings.get('lyt.direction') == 'ttb' && Settings.get('apr.selPinned')) {
 				this.$.classList.add('stick');
 			}else{
 				this.$.classList.remove('stick');
 			}
 		}
+	}
+
+	this.setZoom = function(zoom) {
+		this.imageView.updateScrollPosition();
+		Settings.setClass('lyt.zoom'); //broke
+		setTimeout(this.imageView.updateWides, 1);
+	}
+
+	this.toggleSidebar = function(state) {
+		this.imageView.updateScrollPosition();
+		Settings.setClass('apr.sidebar');
+		this.imageView.updateWides();
 	}
 
 	this.enqueuePreload = url => {
@@ -1104,17 +1150,20 @@ function UI_Reader(o) {
 	this.settingsRouter = function(o) {
 		if(o.type != 'change') return;
 	var settings = {
-			'fit': o => this.setFit(o),
-			'layout': o => this.setLayout(o),
-			'groupPreference': o => {},
-			'selectorPinned': o => this.setSelectorPin(o),
-			'preload': o => this.setPreload(o),
-			'sidebar': o => this.setSidebar(o),
-			'previews': o => this.drawPreviews(o),
-			'zoom': o => this.setZoom(o),
-			'spread': o => this.setSpread(o),
-			'spreadCount': o => this.bootstrapChapter(),
-			'spreadOffset': o => this.bootstrapChapter(),
+			'lyt.fit': o => {
+				this.imageView.updateWides();
+			},
+			'lyt.direction': o => this.setLayout(o),
+			'lyt.zoom': o => this.setZoom(o),
+			'lyt.spreadCount': o => this.bootstrapChapter(),
+			'lyt.spreadOffset': o => this.bootstrapChapter(),
+			'bhv.preload': number => {
+				this.$.setAttribute('data-preload', number);
+			},
+			'apr.sidebar': o => this.toggleSidebar(o),
+			'apr.selPinned': o => this.setLayout(o, true),
+			'apr.previews': o => this.drawPreviews(o),
+			'misc.groupPreference': o => {},
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
 	}
@@ -1160,17 +1209,20 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
-	this._.preload_button.onmousedown = e => Settings.cycle('preload');
-	this._.layout_button.onmousedown = e => this.cycleLayout();
+
+	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
+	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
+	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit', disabled: true});
+	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'});
+	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
+	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
+	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
+	
 	this._.fit_button.onmousedown = e => {
 		this.asideViews.S.call('number', 0);
 	}
-	this._.sel_pin_button.onmousedown = e => Settings.cycle('selectorPinned');
-	this._.sidebar_button.onmousedown = e => Settings.cycle('sidebar');
-	this._.previews_button.onmousedown = e => Settings.cycle('previews');
-	this._.zoom_level_plus.onmousedown = e => Settings.next('zoom');
-	this._.zoom_level_minus.onmousedown = e => Settings.prev('zoom');
-	this._.spread_button.onmousedown = e => Settings.cycle('spread');
+	this._.zoom_level_plus.onmousedown = e => Settings.next('lyt.zoom');
+	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom');
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 	this._.random_chapter_button.addEventListener('mousedown', e => {
@@ -1196,13 +1248,13 @@ function UI_Reader(o) {
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
-		.attach(this._.fit_none, 'Images are displayed in natural resolution.')
-		.attach(this._.fit_all, 'Images expand to width or height.')
-		.attach(this._.fit_width, 'Images expand to max width.')
-		.attach(this._.fit_height, 'Images expand to max height.')
-		.attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
-		.attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
-		.attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
+		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
+		// .attach(this._.fit_all, 'Images expand to width or height.')
+		// .attach(this._.fit_width, 'Images expand to max width.')
+		// .attach(this._.fit_height, 'Images expand to max height.')
+		// .attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
+		// .attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
+		// .attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
@@ -1232,7 +1284,7 @@ function UI_ReaderImageView(o) {
 	this.imageContainer = new UI_Tabs({node: this._.image_container})
 	
 	this.getScrollElement = function() {
-		if(Settings.get('layout') == 'ttb') {
+		if(Settings.get('lyt.direction') == 'ttb') {
 			if(IS_MOBILE) {
 				return document.documentElement;
 			}else{
@@ -1246,11 +1298,11 @@ function UI_ReaderImageView(o) {
 	new KeyListener(document.body, 'hold')
 		.attach('slideDown', ['ArrowDown'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('bhv.scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		})
 		.attach('slideUp', ['ArrowUp'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('bhv.scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		});
 
 	this.scroll = {
@@ -1265,7 +1317,7 @@ function UI_ReaderImageView(o) {
 	document.onscroll = this._.image_container.onscroll = e => {
 		if(PROGRAMMATIC_SCROLL) return true;
 		if(!this.imageList) return true;
-		if(Settings.all.layout.get() != 'ttb') return true;
+		if(Settings.get('lyt.direction') != 'ttb') return true;
 
 		Reader.stickHeader();
 	var scrollTop = (e.target.scrollingElement)?
@@ -1311,7 +1363,7 @@ function UI_ReaderImageView(o) {
 	}
 
 	this.updateWides = () => {
-		if(Settings.get('layout') == 'ttb' && this.selectedWrapper ) {
+		if(Settings.get('lyt.direction') == 'ttb' && this.selectedWrapper ) {
 			// console.log('wideUpdate fire')
 			if(!this.scroll.anchorRAF && this.scroll.anchorObject) {
 				this.scrollAnchor();
@@ -1339,8 +1391,8 @@ function UI_ReaderImageView(o) {
 		this.imageWrappers = [];
 		this.imageWrappersMask = [];
 		this.imageWrappersMap = {};
-	var spreadCount = Settings.all.spreadCount.get();
-	var	spreadOffset = Settings.all.spreadOffset.get();
+	var spreadCount = Settings.get('lyt.spreadCount');
+	var	spreadOffset = Settings.get('lyt.spreadOffset');
 	var imageIndices = [];
 		for(var i=0; i < images.length; i++) {
 			imageIndices.push(i);
@@ -1351,7 +1403,7 @@ function UI_ReaderImageView(o) {
 			}
 			if(spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
 				if(wides.indexOf(i) > -1)
-					spreadOffset = Settings.all.spreadOffset.get();
+					spreadOffset = Settings.get('lyt.spreadOffset');
 				else
 					spreadOffset = 0;
 				this.imageWrappersMask.push(imageIndices);
@@ -1376,7 +1428,7 @@ function UI_ReaderImageView(o) {
 			wrapper.S.link(Reader.selector_page);
 			this.imageList = this.imageList.concat(wrapper.get());
 		})
-		if(Settings.all.layout.get() == 'rtl') {
+		if(Settings.get('lyt.direction') == 'rtl') {
 			this.imageWrappers.reverse();
 			this.imageWrappers.forEach(i => i.reverse());
 		}
@@ -1386,7 +1438,7 @@ function UI_ReaderImageView(o) {
 		scroll(this.imageContainer.$, 0,0);
 		
 		
-		if(Settings.all.layout.get() == 'ttb') {
+		if(Settings.get('lyt.direction') == 'ttb') {
 		var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
 			butt.$.onmousedown = e => {
@@ -1404,22 +1456,19 @@ function UI_ReaderImageView(o) {
 		this.selectedPage = this.imageList[index];
 		this.selectedWrapper = this.selectedPage.parentWrapper;
 		this.visiblePages = this.selectedWrapper.getIndices();
-		if(Settings.all.layout.get() == 'ttb') {
+		if(Settings.get('lyt.direction') == 'ttb') {
 			if (!dry){	
+				setTimeout(this.getScrollElement().focus(), 1);
 				shadowScroll();
 				if(IS_MOBILE) {
-					this.getScrollElement().focus();
 					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
 				}else{
-					this.getScrollElement().focus();
 					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
 				}
 			}
 		}else{
 		var wrapperIndex = this.imageWrappers.indexOf(this.selectedWrapper);
-			// this.selectedWrapper.$.focus();
-			// scroll(this.imageContainer.$, 0, 0);
-			// requestAnimationFrame(e => scroll(this.$, 0, 0));
+
 		var oldX = this.imageContainer.$._translateX;
 			this.imageContainer.$._translateX = ( -100 * wrapperIndex);
 			if(Math.abs(Math.abs(oldX) - 100 * wrapperIndex) < 201 ) {
@@ -1431,12 +1480,12 @@ function UI_ReaderImageView(o) {
 			}
 			this.getScrollElement().focus();
 		}
-	var toPreload = Settings.all.preload.get();
+	var toPreload = Settings.get('bhv.preload');
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
-		toPreload = toPreload * Settings.get('spreadCount');
-		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('spreadCount')); i++) {
+		toPreload = toPreload * Settings.get('lyt.spreadCount');
+		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('lyt.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
 			//	Reader.enqueuePreload(this.imageList[i].url);
@@ -1519,7 +1568,7 @@ const SCROLL_X = 3;
 	this.touch.anim = () => {
 		this.touch.a = requestAnimationFrame(this.touch.anim);
 		if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
-		if(Settings.all.layout.get() == 'ttb') return cancelAnimationFrame(this.touch.a);
+		if(Settings.get('lyt.direction') == 'ttb') return cancelAnimationFrame(this.touch.a);
 		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
@@ -1630,7 +1679,7 @@ const SCROLL_X = 3;
 		&& !(Reader.SCP.chapter == Reader.SCP.lastChapter
 		&& Reader.SCP.page == Reader.SCP.lastPage)) {
 			this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-			Settings.all.layout.get() == 'rtl'?
+			Settings.get('lyt.direction') == 'rtl'?
 				this.prev():
 				this.next();
 		}else{
@@ -1639,7 +1688,7 @@ const SCROLL_X = 3;
 			&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
 			&& Reader.SCP.page == 0)) {
 				this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-				Settings.all.layout.get() == 'rtl'?
+				Settings.get('lyt.direction') == 'rtl'?
 					this.next():
 					this.prev();
 			}else{
@@ -1705,30 +1754,30 @@ const SCROLL_X = 3;
 		if(e.type == 'click') {
 			switch (areas.indexOf(e.pageX)) {
 				case 1:
-					(Settings.all.layout.get() == 'rtl')?
+					(Settings.get('lyt.direction') == 'rtl')?
 						this.next(e):
 						this.prev(e);
 					break;
 				case 2:
 					if(IS_MOBILE)
-						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
+						Settings.cycle('apr.selPinned');
 					// else
-					// 	if(Settings.all.layout.get() != 'ttb')
-					// 		(Settings.all.layout.get() == 'ltr')?
+					// 	if(Settings.get('lyt.direction') != 'ttb')
+					// 		(Settings.get('lyt.direction') == 'ltr')?
 					// 			this.prev(e):
 					// 			this.next(e);
 					break;
 				case 3:
 					if(IS_MOBILE)
-						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
+						Settings.cycle('apr.selPinned');
 					// else
-					// 	if(Settings.all.layout.get() != 'ttb')
-					// 		(Settings.all.layout.get() == 'ltr')?
+					// 	if(Settings.get('lyt.direction') != 'ttb')
+					// 		(Settings.get('lyt.direction') == 'ltr')?
 					// 			this.next(e):
 					// 			this.prev(e);
 					break;
 				case 4:
-					(Settings.all.layout.get() == 'rtl')?
+					(Settings.get('lyt.direction') == 'rtl')?
 						this.prev(e):
 						this.next(e);
 					break;
@@ -1824,7 +1873,7 @@ function UI_ReaderImageWrapper(o) {
 		if(this.totalWidth > this.$.clientWidth) {
 			this.$.classList.add('too-wide');
 		}
-		if(Settings.get('layout') == 'rtl') {
+		if(Settings.get('lyt.direction') == 'rtl') {
 			shadowScroll();
 			scroll(this.$, this.totalWidth,0)
 		}
@@ -2160,7 +2209,7 @@ function UI_Loda(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['Loda'].concat(o.kind || []),
-		html: o.html || '<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content"></content></div>'
+		html: o.html || '<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content"></content></div>'
 	});
 	Linkable.call(this);
 	this.manager = o.manager;
@@ -2184,7 +2233,7 @@ function UI_Loda_Search(o) {
 		node: o.node,
 		kind: ['Loda_Search'].concat(o.kind || []),
 		name: 'Search',
-		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
+		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<input type="text" data-bind="input" placeholder="⌕" />
 				<div class="search-tabs" data-bind="tabs">
 				</div>
@@ -2447,7 +2496,7 @@ function UI_ChapterUnit(o) {
 	}
 }
 
-function UI_Loda_Setting(o) {
+function UI_Loda_Settings(o) {
 	o=be(o);
 	UI_Loda.call(this, {
 		node: o.node,
@@ -2457,7 +2506,6 @@ function UI_Loda_Setting(o) {
 	});
 	this.manager = o.manager;
 	this.name = 'Settings';
-	this.focusElement = this._.input;
 	this.content = new UI_ContainerList({
 		node: this._.content
 	});
@@ -2466,7 +2514,40 @@ function UI_Loda_Setting(o) {
 			node: this._.tabs
 		})
 		.S.link(this.content);
+	for(let category in Settings.settings) {
+		this.tabs.add(new UI_Tab({
+			text: Settings.settings[category].name
+		}));
+	var container = new UI_Dummy();
+		for(let setting in Settings.settings[category]) {
+			container.$.appendChild(new UI_SettingUnit({setting: Settings.settings[category][setting].addr}).$);
+		}
+		this.content.add(container);
+	}
 	this.tabs.select(0);
+	
+}
+
+function UI_SettingUnit(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['SettingUnit'].concat(o.kind || []),
+		name: 'SettingUnit',
+		html: o.html || `<div class="setting-wrapper">
+			<header class="setting-header" data-bind="header"></header>
+			<div class="setting-field" data-bind="field"></div>
+		</div>`
+	});
+
+	this.setting = o.setting;
+
+	this._.header.innerHTML = Settings.getByAddr(this.setting).prettyName;
+	this.controls = new UI_SettingDisplay({
+		node: this._.field,
+		setting: this.setting
+	}).S.biLink(Settings);
+	
 }
 
 
@@ -2557,7 +2638,7 @@ URL = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
-Loda = new UI_Loda_Setting({
+Loda_Settings = new UI_Loda_Settings({
 	node: document.querySelector('.Loda_Settings'),
 });
 
