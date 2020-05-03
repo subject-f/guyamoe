@@ -72,7 +72,7 @@
           title: title,
           timestamp: Date.now(),
           chapters: chapters || [],
-          pinned: pinned
+          pinned: (pinned === undefined) ? false : pinned
         };
       };
   
@@ -82,6 +82,7 @@
             return `${source}-${slug}`;
           },
           addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
+            console.log("add series");
             let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
             return private.storeObject(
               SERIES_META,
@@ -89,6 +90,7 @@
               toStore);
           },
           editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
+            console.log("edit series");
             let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
             if (obj) {
               let toStore = seriesBuilder(
@@ -111,12 +113,15 @@
             }
           },
           getSeries: (slug, source) => {
+            console.log("get series");
             return private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
           },
           removeSeries: (slug, source) => {
+            console.log("Remove series");
             return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
           },
           getAllSeries: () => {
+            console.log("get all series");
             // Note for the future: getAll gives you the objects within, while 
             // getListing gives you just a list of files; thus, this gives you the 
             // metadata within
@@ -138,80 +143,24 @@
   // chapter and series history. All logic should be here
   // and abstracted from the rest of the code
   const globalHistoryHandler = (() => {
-    let addSeries = async (slug, coverUrl, source, url, title, chapters) => {
+    const STORAGE_KEY = "proxyHistory";
+    const MAX_VALUES = 20;
+
+    // Helper to return an array of objects from a nested object, sorted by key
+    let sortObjectByKey = (obj, key) => {
+      let sortable = [];
+      for (let k in obj) {
+        sortable.push(obj[k]);
+      }
+      sortable.sort((f, s) => s[key] - f[key]);
+      return sortable;
     };
 
-    let removeSeries = async (slug, source) => {
-
-    };
-
-    let addChapter = async (slug, source, chapter) => {
-
-    };
-
-    let addChapters = async (slug, source, chapters) => {
-
-    };
-
-    let removeAllChapters = async (slug, source) => {
-
-    };
-
-    let pinSeries = async (slug, source) => {
-
-    };
-
-    let unpinSeries = async (slug, source) => {
-
-    };
-  })();
-
-  let MAX_CLICKS = 7;
-  // Realistically, any browser that supports localStorage will
-  // support arrow functions so tough luck, IE
-  // This IIFE will act as a disgusting LRU cache
-  let proxyHistoryHandler = (() => {
-    let STORAGE_KEY = "proxyHistory";
-    let MAX_VALUES = 20;
-
-    let enabled = () => {
+    const enabled = () => {
       return localStorage.getItem(STORAGE_KEY) ? true : false;
     };
 
-    let sorted = (obj) => {
-      let sortable = [];
-      for (let s in obj) {
-        sortable.push(obj[s]);
-      }
-      sortable.sort((f, s) => s.timestamp - f.timestamp);
-      return sortable;
-    }
-
-    let getItems = async () => {
-      let items = await remoteStorage.guya.getAllSeries();
-      return sorted(items);
-    };
-
-    let deleteItem = async (proxySource, slug) => {
-      return remoteStorage.guya.removeSeries(slug, proxySource);
-    };
-
-    let pushItem = async (coverUrl, proxySource, slug, url, title) => {
-      if (enabled()) {
-        let items = await getItems();
-        if (!items.find((e) => e.slug === slug && e.source === proxySource.replace(" ", "_"))) {
-          if (items.length + 1 > MAX_VALUES) {
-            let last = items.pop();
-            if (last.slug !== slug && last.source !== proxySource) {
-              await remoteStorage.guya.removeSeries(last.slug, last.source);
-            }
-          }
-        }
-        await remoteStorage.guya.addSeries(slug, coverUrl, proxySource, url, title);
-      }
-    };
-
-    let enableHistory = () => {
+    const enable = () => {
       let settings = localStorage.getItem("settings");
       localStorage.clear();
       if (settings) {
@@ -219,9 +168,8 @@
       }
       localStorage.setItem(STORAGE_KEY, true);
     };
-
-    let disableHistory = () => {
-      remoteStorage.disconnect();
+    
+    const disable = () => {
       let settings = localStorage.getItem("settings");
       localStorage.clear();
       if (settings) {
@@ -229,22 +177,129 @@
       }
     };
 
+    const pushSeries = async (slug, coverUrl, source, url, title) => {
+      let allCurrentSeries = sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp");
+
+      let existingSeries = allCurrentSeries.find((e) => e.slug === slug && e.source === source.replace(" ", "_"));
+
+      if (existingSeries) {
+        // Effectively this updates the timestamp of the series, pushing it to the top
+        return remoteStorage.guya.editSeries(slug, coverUrl, source, url, title, existingSeries.pinned, existingSeries.chapters);
+      } else {
+        allCurrentSeries = allCurrentSeries.filter(e => !e.pinned);
+        if (allCurrentSeries.length + 1 > MAX_VALUES) {
+          let last = allCurrentSeries.pop();
+          await remoteStorage.guya.removeSeries(last.slug, last.source);
+        }
+        return remoteStorage.guya.addSeries(slug, coverUrl, source, url, title, undefined, undefined);
+      }
+    };
+
+    const removeSeries = async (slug, source) => {
+      return remoteStorage.guya.removeSeries(slug, source);
+    };
+
+    const addChapters = async (slug, source, chapters) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        chapters = [...new Set([...chapters, ...existingSeries.chapters])];
+        console.log(chapters);
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+      } else {
+        console.error("[Global History] addChapters - Series didn't exist.");
+      }
+    };
+
+    const addChapter = async (slug, source, chapter) => {
+      return addChapters(slug, source, [chapter]);
+    };
+
+    const removeChapter = async (slug, source, chapter) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        chapters = existingSeries.chapters.filter(e => e !== chapter);
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+      } else {
+        console.error("[Global History] removeChapter - Series didn't exist.");
+      }
+    };
+
+    const removeAllChapters = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, []);
+      } else {
+        console.error("[Global History] removeAllChapters - series didn't exist.");
+      }
+    };
+
+    const getReadChapters = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return existingSeries.chapters;
+      } else {
+        console.error("[Global History] getReadChapters - series didn't exist.");
+      }
+    };
+
+    const pinSeries = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, true, undefined);
+      } else {
+        console.error("[Global History] pinSeries - series didn't exist.");
+      }
+    };
+
+    const unpinSeries = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, false, undefined);
+      } else {
+        console.error("[Global History] unpinSeries - series didn't exist.");
+      }
+    };
+
+    const getAllPinnedSeries = async () => {
+      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => e.pinned);
+    };
+
+    const getAllUnpinnedSeries = async () => {
+      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => !e.pinned);
+    };
+
     return {
-      enabled: enabled,
-      getItems: getItems,
-      deleteItem: deleteItem,
-      pushItem: pushItem,
-      history: {
-        enable: enableHistory,
-        disable: disableHistory,
-      },
       max: MAX_VALUES,
+      enabled,
+      pushSeries,
+      removeSeries,
+      addChapters,
+      addChapter,
+      removeChapter,
+      removeAllChapters,
+      getReadChapters,
+      pinSeries,
+      unpinSeries,
+      getAllPinnedSeries,
+      getAllUnpinnedSeries,
+      toggle: {
+        enable,
+        disable
+      }
     };
   })();
 
-  let deleteItem = (event, element, proxySource, slug) => {
+  let MAX_CLICKS = 7;
+
+  let deleteItem = async (event, element, proxySource, slug) => {
     event.preventDefault();
-    proxyHistoryHandler.deleteItem(proxySource, slug);
+    await globalHistoryHandler.removeSeries(slug, proxySource);
     element.parentElement.parentElement.parentElement.remove();
   };
 
@@ -260,7 +315,7 @@
         "beforeend",
         "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy History</h3>"
       );
-    let items = await proxyHistoryHandler.getItems();
+    let items = await globalHistoryHandler.getAllUnpinnedSeries();
     if (items.length) {
       items.forEach((item) => {
         document.querySelector("[role='main']").insertAdjacentHTML(
@@ -297,7 +352,7 @@
                 <li><code>https://jaiminisbox.com/</code></li>
                 <li><code>https://helveticascans.com/</code></li>
               </ul>
-              <p>Once you start reading, this card will disappear and this section will fill up with your last <strong>${proxyHistoryHandler.max}</strong> series.</p>
+              <p>Once you start reading, this card will disappear and this section will fill up with your last <strong>${globalHistoryHandler.max}</strong> series.</p>
               <p>You can also disable/enable this history feature at any time by clicking on the twintail Kaguya ${MAX_CLICKS} times. Note that it'll clear your history each time.</p>
               <p><i>Got a suggestion on how we could improve this feature? Use the feedback box with the envelope symbol on your top left!</i></p>
           </article>
@@ -306,54 +361,55 @@
     }
   };
 
-  if (window.location.pathname.includes("proxy/")) {
-    if (proxyHistoryHandler.enabled()) {
-      try {
-        {% if cover_vol_url %}
-          let coverUrl = "{{ cover_vol_url }}";
-        {% elif cover %}
-          let coverUrl = "{{ cover }}";
-        {% else %}
-          let coverUrl = "";
-        {% endif %}
+  let init = () => {
+    try {
+      {% if cover_vol_url %}
+      let coverUrl = "{{ cover_vol_url }}";
+      {% elif cover %}
+      let coverUrl = "{{ cover }}";
+      {% else %}
+      let coverUrl = "";
+      {% endif %}
 
-        let proxySource = window.location.pathname
-          .split("/")
-          .find((e) => e.includes("proxy"))
-          .replace("_", " ");
+      let source = window.location.pathname
+        .split("/")
+        .filter(e => e)[1]
+        .replace("_", " ");
 
-        {% if slug %}
-          let slug = "{{ slug }}";
-        {% else %}
-          let slug = "";
-        {% endif %}
+      {% if slug %}
+      let slug = "{{ slug }}";
+      {% else %}
+      let slug = "";
+      {% endif %}
 
-        {% if relative_url %}
-          let url = "{{ relative_url }}".split(slug)[0] + slug;
-        {% else %}
-          let url = "";
-        {% endif %}
+      {% if relative_url %}
+      let url = "{{ relative_url }}".split(slug)[0] + slug;
+      {% else %}
+      let url = "";
+      {% endif %}
 
-        {% if series %}
-          let title = "{{ series }}";
-        {% elif title %}
-          let title = "{{ title }}";
-        {% else %}
-          let title = "";
-        {% endif %}
+      {% if series %}
+      let title = "{{ series }}";
+      {% elif title %}
+      let title = "{{ title }}";
+      {% else %}
+      let title = "";
+      {% endif %}
 
-        if (proxySource && slug && url && title) {
-          remoteStorage.on("ready", () => {
-            proxyHistoryHandler.pushItem(coverUrl, proxySource, slug, url, title);
-          });
-        }
-      } catch (e) {
-        console.log("Failed pushing history", e);
+      if (source && slug && url && title) {
+        remoteStorage.on("ready", async () => {
+          await globalHistoryHandler.pushSeries(slug, coverUrl, source, url, title);
+          window.dispatchEvent(new CustomEvent("history-ready"));
+        });
       }
+    } catch (e) {
+      // Do nothing, silently fail.
     }
-  } else if (window.location.pathname === "/") {
+  };
+
+  if (window.location.pathname === "/") {
     window.addEventListener("load", () => {
-      let enabled = proxyHistoryHandler.enabled();
+      let enabled = globalHistoryHandler.enabled();
       let clicked = 0;
       document.getElementById("twintail-guya").addEventListener("click", (e) => {
         if (clicked < MAX_CLICKS) {
@@ -363,10 +419,10 @@
           (e.target || e.srcElement).style.opacity = "1";
           clicked = 0;
           if (enabled) {
-            proxyHistoryHandler.history.disable();
+            globalHistoryHandler.toggle.disable();
             location.reload();
           } else {
-            proxyHistoryHandler.history.enable();
+            globalHistoryHandler.toggle.enable();
             location.reload();
           }
           enabled = !enabled;
@@ -376,10 +432,12 @@
         proxyInitElements();
       }
     });
+  } else {
+    init();
   }
 
   window.addEventListener("load", () => {
-    if (proxyHistoryHandler.enabled()) {
+    if (globalHistoryHandler.enabled()) {
       if (document.getElementById("rs-widget")) {
         let widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
         widget.attach("rs-widget");
