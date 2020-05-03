@@ -59,10 +59,10 @@
         let slug = "{{ slug }}";
         let source = "{{ reader_modifier }}";
         if (e.classList.contains("all-read")) {
-            await remoteStorage.guya.removeAllChapters(slug, source);
+            await globalHistoryHandler.removeAllChapters(slug, source);
             e.classList.remove("all-read");
         } else {
-            await remoteStorage.guya.addChapters(chapters, slug, source);
+            await globalHistoryHandler.addChapters(slug, source, chapters);
             e.classList.add("all-read");
         }
         updateAllRead();
@@ -76,17 +76,17 @@
             let read = document.querySelectorAll("tr.is-read[data-chapter]").map(e => e.getAttribute("data-chapter"));
             if (read.includes(chapter)) {
                 document.querySelector(`[data-chapter="${chapter}"]`).classList.remove("is-read");
-                await remoteStorage.guya.removeChapter(chapter, slug, source);
+                await globalHistoryHandler.removeChapter(slug, source, chapter);
             } else {
                 document.querySelector(`[data-chapter="${chapter}"]`).classList.add("is-read");
-                await remoteStorage.guya.addChapter(chapter, slug, source);
+                await globalHistoryHandler.addChapter(slug, source, chapter);
             }
             updateAllRead();
         } else {
             if (markRead) {
-                return remoteStorage.guya.addChapter(chapter, slug, source);
+                return globalHistoryHandler.addChapter(slug, source, chapter);
             } else {
-                return remoteStorage.guya.removeChapter(chapter, slug, source);
+                return globalHistoryHandler.removeChapter(slug, source, chapter);
             }
         }
     }
@@ -94,11 +94,14 @@
     async function updateAllRead() {
         let slug = "{{ slug }}";
         let source = "{{ reader_modifier }}";
-        let read = await remoteStorage.guya.getReadChapters(slug, source);
+        let read = await globalHistoryHandler.getReadChapters(slug, source);
 
         if (document.querySelectorAll("tr[data-chapter]").length === read.length) {
             document.querySelector('th.read-icon').classList.add("all-read");
+        } else {
+            document.querySelector('th.read-icon').classList.remove("all-read");
         }
+
         document.querySelectorAll("[data-chapter]").forEach(item => {
             let chapter = item.getAttribute("data-chapter");
             if (read.includes(chapter)) {
@@ -219,12 +222,42 @@
         });
     }
 
+    let semaphore = ((callback) => {
+        let historyReady = false;
+        let windowLoaded = false;
+
+        let execute = () => {
+            if (historyReady && windowLoaded) {
+                callback();
+            }
+        };
+
+        let history = () => {
+            historyReady = true;
+            execute();
+        };
+
+        let loaded = () => {
+            windowLoaded = true;
+            execute();
+        }
+
+        return {
+            history,
+            loaded
+        }
+    })(updateAllRead);
+    
     window.addEventListener("load", () => {
         listMode("detailed");
         prettifyLastUpdatedTable();
         initSearchHandler();
-        updateAllRead();
-  });
+        semaphore.loaded();
+    });
+
+    window.addEventListener("history-ready", () => {
+        semaphore.history();
+    });
 
 </script>
 {% endblock %} {% block body %}

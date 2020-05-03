@@ -943,7 +943,7 @@ function UI_Reader(o) {
 		if(HAS_LOCALSTORAGE && nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1){
 			let source = window.location.pathname.split("/").filter((e) => e.includes("proxy"));
 			source = (source.length) ? source[0] : undefined;
-			remoteStorage.guya.addChapter(this.SCP.chapter.toString(), unescape(this.SCP.series), source);
+			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
 		}
 		
 		if(nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
