@@ -61,10 +61,9 @@
         return path.replace(REPLACEMENT_STR, `${source}-${slug}`);
       };
   
-      let seriesBuilder = (slug, coverUrl, source, url, title, chapters) => {
+      let seriesBuilder = (slug, coverUrl, source, url, title, pinned, chapters) => {
         source = source.replace(" ", "_");
-        let pinned = false;
-        if (firstPartyValidator(source)) pinned = true;
+        if (firstPartyValidator(source)) pinned = true; // First party chapters always pinned
         return {
           slug: slug,
           coverUrl: coverUrl || "",
@@ -82,14 +81,14 @@
           slugBuilder: (slug, source) => {
             return `${source}-${slug}`;
           },
-          addSeries: (slug, coverUrl, source, url, title, chapters) => {
-            let toStore = seriesBuilder(slug, coverUrl, source, url, title, chapters);
+          addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
+            let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
             return private.storeObject(
               SERIES_META,
               pathBuilder(SERIES_META_PATH, slug, source),
               toStore);
           },
-          editSeries: async (slug, coverUrl, source, url, title, chapters) => {
+          editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
             let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
             if (obj) {
               let toStore = seriesBuilder(
@@ -98,7 +97,8 @@
                 source || obj.source,
                 url || obj.url,
                 title || obj.title,
-                chapters || obj.chapters
+                (pinned !== undefined) ? pinned : obj.pinned,
+                chapters || obj.chapters // Empty array is truthy
               );
               return private.storeObject(
                 SERIES_META,
@@ -110,11 +110,11 @@
               throw new Error("Cannot edit a non-existent series.");
             }
           },
-          removeSeries: (slug, source) => {
-            return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
-          },
           getSeries: (slug, source) => {
             return private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
+          },
+          removeSeries: (slug, source) => {
+            return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
           },
           getAllSeries: () => {
             // Note for the future: getAll gives you the objects within, while 
@@ -132,6 +132,38 @@
     remoteStorage.caching.enable(`/${RS_PATH}/`);
 
     return remoteStorage;
+  })();
+
+  // This will be the main handler that deals with both
+  // chapter and series history. All logic should be here
+  // and abstracted from the rest of the code
+  const globalHistoryHandler = (() => {
+    let addSeries = async (slug, coverUrl, source, url, title, chapters) => {
+    };
+
+    let removeSeries = async (slug, source) => {
+
+    };
+
+    let addChapter = async (slug, source, chapter) => {
+
+    };
+
+    let addChapters = async (slug, source, chapters) => {
+
+    };
+
+    let removeAllChapters = async (slug, source) => {
+
+    };
+
+    let pinSeries = async (slug, source) => {
+
+    };
+
+    let unpinSeries = async (slug, source) => {
+
+    };
   })();
 
   let MAX_CLICKS = 7;
