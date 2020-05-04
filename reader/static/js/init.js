@@ -1430,6 +1430,7 @@ function UI_ReaderImageView(o) {
 				this.imageContainer.$.style.transform =
 					'translateX(' + this.imageContainer.$._translateX + '%)';
 			}
+			this.getScrollElement().focus();
 		}
 	var toPreload = Settings.all.preload.get();
 		if(toPreload == 100) {
@@ -2549,4 +2550,4 @@ function debug() {
 // This is a hacky fix that prevents the last div of a
 // flexbox from not receiving the scroll event from a
 // mousewheel. Probably requires some more investigation.
-window.addEventListener("wheel", () => {});
+// window.addEventListener("wheel", () => {});
