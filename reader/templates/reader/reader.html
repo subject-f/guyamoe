@@ -6,11 +6,7 @@
 		<meta name="theme-color" content="#2b2f33" />
 		<title>{{ series_name }} :: Chapter {{ chapter_number }} | Guya.moe</title>
 	    <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-	    <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-	    <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
-		{% if first_party %}
-		<meta property="og:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
-	    <meta name="twitter:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
+	    <meta 
 	    <meta name="twitter:card" content="Everything Kaguya-sama">
 		<meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
 	    <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
@@ -34,10 +30,8 @@
 <body>
 	{% include "tracking.html" %}
 	<main id="rdr-main" class="" tabindex="-1">
-		<div class="preload-entity">
-			<img id="scan_line" data-bind="preload_entity">
-		</div>
-		<aside>
+		<img class="preload-entity" id="scan_line" data-bind="preload_entity">
+		<aside class="unload">
 			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual ico-btn"></div></div>
 			<header>
 				<a href="/" class="ico-btn guya"></a>
@@ -70,11 +64,12 @@
 					<div class="rdr-selector-bot">
 						<button data-bind='vol_prev' class="rdr-selector-vol ico-btn next" data-tip="Next volume"></button>
 						<div class="flex-spacer"></div>
-						<button data-bind='preload_button' class="ico-btn preload"></button>
-						<button data-bind='layout_button' class="ico-btn layout"></button>
-						<button data-bind='fit_button' class="ico-btn fitter"></button>
-						<button data-bind='spread_button' class="ico-btn spread"></button>
-						<button data-bind='sel_pin_button' class="ico-btn selpin"></button>
+						<button data-bind='preload_button' class="ico-btn hidden"></button>
+						<button data-bind='layout_button' class="ico-btn"></button>
+						<button data-bind='fit_button' class="ico-btn"></button>
+						<button data-bind='spread_button' class="ico-btn"></button>
+						<button data-bind='sel_pin_button' class="ico-btn"></button>
+						<button data-bind='settings_button' class="ico-btn"></button>
 					</div>
 				</section>
 				<section class="rdr-groups" data-bind='groups'>
@@ -152,17 +147,8 @@
 		</div>
 	</main>
 	<div class="Tooltippy"></div>
-	<div class="LodaManager" tabindex="-1">
-		<div class="Loda-window UI Loda Loda_Settings" tabindex="-1">
-			<aside>
-				<button class="ico-btn close" data-bind="close"></button>
-				<header data-bind="header">Settings</header>
-				<div class="settings-tabs" data-bind="tabs">
-				</div>
-			</aside>
-			<content data-bind="content">
-			</content>
-		</div>
+	<div class="LodaManager hidden" tabindex="-1">
+
 	</div>
 </body>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>

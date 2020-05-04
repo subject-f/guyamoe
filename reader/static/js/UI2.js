@@ -993,6 +993,7 @@ function UI_ToggleButton(o) {
 	}));
 	Linkable.call(this);
 	this.state = o.state || false;
+	this.option = o.option;
 	this._.icon.setAttribute('data-'+o.setting, o.option);
 
 	this.on = function() {
@@ -1079,7 +1080,7 @@ var customHTML = o.html;
 				new SettingsPacket(
 					'set',
 					this.setting.addr,
-					button.$.getAttribute('data-bind')
+					button.option
 				)
 			);	
 		}
@@ -1145,33 +1146,59 @@ function UI_MultiStateButton(o) {
 	this.set(o.state || Settings.get(this.setting.addr), true);
 	this.S.biLink(Settings);
 }
-	
-function UI_SettingDisplay(o) {
+
+function UI_Slider(o) {
 	o=be(o);
 	UI.call(this, Object.assign(o, {
-		kind: ['SettingDisplay'].concat(o.kind || [])
+		kind: ['Slider'].concat(o.kind || []),
+		html: o.html || `<input type="range" />`
 	}));
 	Linkable.call(this);
 	this.setting = Settings.getByAddr(o.setting);
+	this.options = o.options || this.setting.options();
 	this.disabled = o.disabled || false;
-	this.entity = null;
-	switch(this.setting.type) {
-		case SETTING_MULTI:
-		case SETTING_BOOLEAN:
-			this.entity = new UI_ButtonGroup({
-				html: this.setting.html,
-				setting: this.setting.addr
-			}).S.biLink(Settings);
-			break;	
+	this.$.min = 0;
+	this.$.max = this.options.length - 1;
+	this.$.value = this.options.indexOf(this.setting.get());
+
+	this.set = function(state, silent) {
+		if(!this.options.includes(state)) return;
+		this.$.setAttribute('data-'+this.setting.addr, state);
+		this.state = state;
+		this.$.value = this.options.indexOf(state);
+		if(!silent && !this.disabled) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.setting.addr,
+					state
+				)
+			);
+		}
 	}
 
-	if(this.entity) this.$.appendChild(this.entity.$);
+	this.setByIndex = function(idx, silent) {
+		if(+idx > this.options.length - 1 || +idx < 0) return;
+		this.set(this.options[idx], silent);
+	}
 
-	return this;
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.setting.addr)
+			this.set(settingsPacket.value, true);
+	}
+
+	this.S.mapIn({
+		settingsPacket: this.settingsPacketHandler
+	})
+	
+	this.$.oninput = (e) => {
+		this.setByIndex(this.$.value);
+	}
+
+	this.set(o.state || Settings.get(this.setting.addr), true);
+	this.S.biLink(Settings);
 }
-
-
-
+	
 /* function UI_Button(o) {
 	o=be(o);
 	UI.call(this, {
@@ -1313,12 +1340,12 @@ function UI_Waitable(o) {
 	}
 }
 
-function UI_Slider(o) {
+function UI_Gallery(o) {
 	o=be(o);
 	UI.call(this, {
 		node: o.node,
-		kind: ['Slider'].concat(o.kind || []),
-		html: o.html || '<div class="slider"><div class="prev"></div><div class="wrapper"></div><div class="next"></div></div>',
+		kind: ['Gallery'].concat(o.kind || []),
+		html: o.html || '<div><div class="prev"></div><div class="wrapper"></div><div class="next"></div></div>',
 	});
 	Linkable.call(this, {});
 

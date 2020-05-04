@@ -173,13 +173,15 @@ function Setting(o) {
 				this.optionsPrimitive = o.options;
 		}
 	}else if(this.type == SETTING_BOOLEAN){
-		this.options = function() {return ["true", "false"]};
+		this.options = function() {return [true, false]};
 	}
 	this.strings = o.strings;
 	this.postUpdate = o.postUpdate;
 	this.html = o.html;
 	this.global = (o.global===undefined)?true:o.global;
 	this.manual = o.manual; //if true, the setting needs an external .setClass call to update the class. This can be used where class update needs to be in the middle of something.
+	this.hidden = o.hidden;
+	this.conditional = o.conditional;
 
 	this.checkOptionValidity = function(value) {
 		if(this.options == undefined)
@@ -282,8 +284,8 @@ function SettingsHandler(){
 	Linkable.call(this);
 
 	this.settings = {
-		apr: new SettingsCategory('Appearance'),
 		lyt: new SettingsCategory('Layout'),
+		apr: new SettingsCategory('Appearance'),
 		bhv: new SettingsCategory('Behaviour'),
 		misc: new SettingsCategory('Miscellaneous', true)
 	};
@@ -349,7 +351,8 @@ function SettingsHandler(){
 		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
 		default: '100',
 		strings: (i) => 'Zoom level set to %i%.'.replace('%i', i),
-		type: SETTING_VALUE_STEPPED
+		type: SETTING_VALUE_STEPPED,
+		conditional: {'lyt.fit': ['width_limit', 'width']}
 	})
 	.newSetting({
 		addr: 'lyt.direction',
@@ -399,7 +402,8 @@ function SettingsHandler(){
 		strings: i => {
 			return 'Spread page count: %i'.replace('%i', i)
 		},
-		type: SETTING_HIDDEN
+		type: SETTING_VALUE,
+		hidden: true
 	})
 	.newSetting({
 		addr: 'lyt.spreadOffset',
@@ -414,21 +418,22 @@ function SettingsHandler(){
 				.replace('1 pages', '1 page')
 				.replace('Spread page offset: 0 pages', 'No offset');
 		},
-		type: SETTING_HIDDEN
+		type: SETTING_VALUE,
+		hidden: true
 	})
 	.newSetting({
 		addr: 'apr.selPinned',
 		prettyName: 'Page selector',
 		default: false,
 		strings: {
-			true: 'Pinned.',
-			false: 'Shown on hover.'
+			true: 'Pinned',
+			false: 'Shown on hover'
 		},
 		type: SETTING_BOOLEAN
 	})
 	.newSetting({
-		addr: 'apr.selNonum',
-		prettyName: 'Show page selector number',
+		addr: 'apr.selNum',
+		prettyName: 'Page number in selector',
 		default: true,
 		strings: {
 			true: 'Visible',
@@ -441,8 +446,8 @@ function SettingsHandler(){
 		prettyName: 'Sidebar',
 		default: true,
 		strings: {
-			true: '',
-			false: '',
+			true: 'Show sidebar',
+			false: 'Hide sidebar',
 		},
 		type: SETTING_BOOLEAN
 	})
@@ -451,9 +456,10 @@ function SettingsHandler(){
 		prettyName: 'Previews',
 		default: false,
 		strings: {
-			true: '',
-			false: '',
+			true: 'Show previews',
+			false: 'Hide previews',
 		},
+		global: true,
 		type: SETTING_BOOLEAN
 	})
 	.newSetting({
@@ -479,7 +485,8 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'misc.groupPreference',
 		prettyName: 'Group preference',
-		type: SETTING_HIDDEN
+		type: SETTING_VALUE,
+		hidden: true
 	})
 
 	this.deserialize = function() {
@@ -827,6 +834,7 @@ function UI_Reader(o) {
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
 		this._.title.innerHTML = `<a href="${window.location.pathname.split("/").splice(0, 3).join("/")}/${this.current.slug}">${this.current.title}</a>`;
+		this.$.querySelector('aside').classList.remove('unload');
 	var chapterElements = [];
 	var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
@@ -975,9 +983,8 @@ function UI_Reader(o) {
 	}
 
 	this.drawPreviews = (state) => {
-		state = state || Settings.query({'apr.previews':'show'});
-		if(state == 'show') {
-			this.$.classList.add('previews-open');
+		state = state || Settings.query({'apr.previews':true});
+		if(state == true) {
 			this.previews.clear();
 			this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
 				preview => {
@@ -987,8 +994,6 @@ function UI_Reader(o) {
 				}
 			)
 			this.previews.select(this.SCP.page, undefined, undefined, true);
-		}else{
-			this.$.classList.remove('previews-open')
 		}
 
 	}
@@ -1209,6 +1214,8 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
+
+	this._.settings_button.onmousedown = e => Loda.display('settings');
 
 	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
 	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
@@ -2178,7 +2185,8 @@ function UI_LodaManager(o) {
 
 	this.library = {
 		test: new UI_Loda().S.link(this),
-		search: new UI_Loda_Search().S.link(this)
+		search: new UI_Loda_Search().S.link(this),
+		settings: new UI_Loda_Settings().S.link(this)
 	}
 
 	this.display = function(loda) {
@@ -2186,7 +2194,8 @@ function UI_LodaManager(o) {
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
 		this.$.focus();
-		this.library[loda].focus();
+		this.keyListener.noPropagation(!!this.library[loda].noPropagation);
+		setTimeout(() => this.library[loda].focus(), 100);
 	}
 
 	this.close = function() {
@@ -2195,10 +2204,16 @@ function UI_LodaManager(o) {
 		Reader.$.focus();
 	}
 
-	new KeyListener(this.$)
+	this.keyListener = new KeyListener(this.$)
 		.noPropagation(true)
 		.attach('close', ['Escape'], this.close.bind(this))
 
+	this.$.onmousedown = (e) => {
+		if(e.target == this.$) {
+			this.close();
+		}
+	}
+	
 	this.S.mapIn({
 		'close': this.close
 	})
@@ -2221,7 +2236,7 @@ function UI_Loda(o) {
 
 	this.focus = function() {
 		this.focusElement.focus();
-		this.focusElement.select();
+		if(this.focusElement.select) this.focusElement.select();
 	}
 
 	this._.close.onclick = this.close.bind(this)
@@ -2245,6 +2260,7 @@ function UI_Loda_Search(o) {
 	});
 	this.manager = o.manager;
 	this.name = 'Indexer';
+	this.noPropagation = true;
 	this.focusElement = this._.input;
 	this.container = new UI_ContainerList({
 		node: this._.container
@@ -2502,10 +2518,21 @@ function UI_Loda_Settings(o) {
 		node: o.node,
 		kind: ['Loda_Settings'].concat(o.kind || []),
 		name: 'Settings',
-		html: o.html || ``
+		html: o.html || `<div class="Loda-window UI Loda Loda_Settings" tabindex="-1">
+			<aside>
+				<button class="ico-btn close" data-bind="close"></button>
+				<header data-bind="header">Settings</header>
+				<div class="settings-tabs" data-bind="tabs">
+				</div>
+			</aside>
+			<content data-bind="content">
+			</content>
+		</div>`
 	});
+	this.focusElement = this.$;
 	this.manager = o.manager;
 	this.name = 'Settings';
+	this.noPropagation = false;
 	this.content = new UI_ContainerList({
 		node: this._.content
 	});
@@ -2520,12 +2547,12 @@ function UI_Loda_Settings(o) {
 		}));
 	var container = new UI_Dummy();
 		for(let setting in Settings.settings[category]) {
+			if(Settings.settings[category][setting].hidden) continue;
 			container.$.appendChild(new UI_SettingUnit({setting: Settings.settings[category][setting].addr}).$);
 		}
 		this.content.add(container);
 	}
 	this.tabs.select(0);
-	
 }
 
 function UI_SettingUnit(o) {
@@ -2534,7 +2561,8 @@ function UI_SettingUnit(o) {
 		node: o.node,
 		kind: ['SettingUnit'].concat(o.kind || []),
 		name: 'SettingUnit',
-		html: o.html || `<div class="setting-wrapper">
+		html: o.html || `
+		<div class="setting-wrapper">
 			<header class="setting-header" data-bind="header"></header>
 			<div class="setting-field" data-bind="field"></div>
 		</div>`
@@ -2549,6 +2577,39 @@ function UI_SettingUnit(o) {
 	}).S.biLink(Settings);
 	
 }
+
+function UI_SettingDisplay(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['SettingDisplay'].concat(o.kind || [])
+	}));
+	Linkable.call(this);
+	this.setting = Settings.getByAddr(o.setting);
+	this.disabled = o.disabled || false;
+	this.entity = null;
+	switch(this.setting.type) {
+		case SETTING_MULTI:
+		case SETTING_BOOLEAN:
+			this.entity = new UI_ButtonGroup({
+				html: this.setting.html,
+				setting: this.setting.addr
+			}).S.biLink(Settings);
+			break;
+		case SETTING_VALUE:
+		case SETTING_VALUE_STEPPED:
+			this.entity = new UI_Slider({
+				setting: this.setting.addr
+			}).S.biLink(Settings);
+			break;
+	}
+
+	if(this.entity) this.$.appendChild(this.entity.$);
+
+	return this;
+}
+
+
+
 
 
 
@@ -2638,9 +2699,6 @@ URL = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
-Loda_Settings = new UI_Loda_Settings({
-	node: document.querySelector('.Loda_Settings'),
-});
 
 API.S.link(Reader);
 Settings.S.link(Reader);
@@ -2648,6 +2706,7 @@ Reader.S.link(URL)
 Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
+
 
 function debug() {
 	var el = document.createElement('div');
