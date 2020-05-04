@@ -341,4 +341,14 @@
       // Do nothing, silently fail.
     }
   };
+
+  // Widget management should be on the templates but eh it's easier to put it in one place
+  window.addEventListener("load", () => {
+    if (globalHistoryHandler.enabled()) {
+      if (document.getElementById("rs-widget")) {
+        let widget = new Widget(remoteStorage, {autoCloseAfter: 10});
+        widget.attach("rs-widget");
+      }
+    }
+  });
 </script>

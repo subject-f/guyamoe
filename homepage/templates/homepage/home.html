@@ -402,12 +402,6 @@ let proxyInitElements = async () => {
 };
 
 window.addEventListener("load", () => {
-	if (globalHistoryHandler.enabled()) {
-		if (document.getElementById("rs-widget")) {
-			let widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
-			widget.attach("rs-widget");
-		}
-	}
 	let enabled = globalHistoryHandler.enabled();
 	let clicked = 0;
 	document.getElementById("twintail-guya").addEventListener("click", (e) => {
