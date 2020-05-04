@@ -306,7 +306,7 @@ def md_proxy(request, md_series_id):
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/series.html', data)
     else:
-        return render(request, 'reader/md_down.html', data)
+        return HttpResponse(status=500)
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def md_chapter(request, md_series_id, chapter, page):
@@ -318,7 +318,7 @@ def md_chapter(request, md_series_id, chapter, page):
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
-        return render(request, 'homepage/how_cute_404.html', status=404)
+        return HttpResponse(status=500)
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def nh_proxy(request, nh_series_id):
@@ -327,7 +327,7 @@ def nh_proxy(request, nh_series_id):
         data["version_query"] = STATIC_VERSION
         return render(request, 'reader/series.html', data)
     else:
-        return render(request, 'reader/how_cute_404.html', status=404)
+        return HttpResponse(status=500)
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def nh_chapter(request, nh_series_id, chapter, page):
@@ -339,7 +339,7 @@ def nh_chapter(request, nh_series_id, chapter, page):
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
-        return render(request, 'homepage/how_cute_404.html', status=404)
+        return HttpResponse(status=500)
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def fs_proxy(request, encoded_url):
@@ -360,4 +360,4 @@ def fs_chapter(request, encoded_url, chapter, page):
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
     else:
-        return render(request, 'homepage/how_cute_404.html', status=404)
+        return HttpResponse(status=500)
