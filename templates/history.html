@@ -86,7 +86,6 @@
             return `${source}-${slug}`;
           },
           addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
-            console.log("add series");
             let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
             return private.storeObject(
               SERIES_META,
@@ -94,7 +93,6 @@
               toStore);
           },
           editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
-            console.log("edit series");
             let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
             if (obj) {
               let toStore = seriesBuilder(
@@ -132,7 +130,7 @@
       }
     }};
 
-    let remoteStorage = new RemoteStorage({logging: true, modules: [Guya]});
+    let remoteStorage = new RemoteStorage({modules: [Guya]});
 
     remoteStorage.access.claim(RS_PATH, "rw");
     remoteStorage.caching.enable(`/${RS_PATH}/`);
@@ -205,7 +203,6 @@
 
       if (existingSeries) {
         chapters = [...new Set([...chapters, ...existingSeries.chapters])];
-        console.log(chapters);
         return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
       } else {
         console.error("[Global History] addChapters - Series didn't exist.");
