@@ -368,7 +368,7 @@ let proxyInitElements = async () => {
 			`<div class="manga-card proxy" style="width:100%">
 				<article>
 					<p>Looks like you haven't used the proxy yet! This card will give you a short tutorial about how it works.</p>
-					<p>Note that your history is unique to your browser session, and won't be shared with guya.moe. If you clear your cache then your history will disappear.</p>
+					<p>Note that your history is unique to you, and won't be shared with guya.moe.</p>
 					<br>
 					<h4>MangaDex</h4>
 					<p>Replace <code>mangadex.org</code> in the URL with <code>guya.moe</code>. For example, <code>https://mangadex.org/title/17274/</code> becomes <code>https://guya.moe/title/17274/</code>.</p>
@@ -385,7 +385,15 @@ let proxyInitElements = async () => {
 					<li><code>https://helveticascans.com/</code></li>
 					</ul>
 					<p>Once you start reading, this card will disappear and this section will fill up with your last <strong>${globalHistoryHandler.max}</strong> series.</p>
-					<p>You can also disable/enable this history feature at any time by clicking on the twintail Kaguya ${MAX_CLICKS} times. Note that it'll clear your history each time.</p>
+					<p>You can manually remove a series from your history by clicking on the <i class="fa fa-trash"></i> next to the title, or alternatively pin it with the <i class="fa fa-heart"></i> icon.</p>
+					<p>You can also disable/enable this history feature at any time by clicking on the twintail Kaguya ${MAX_CLICKS + 1} times. Note that it'll clear ALL your read history every time.</p>
+					<br>
+					<h4>Advanced Features</h4>
+					<p>You can now synchronize your reading history and favourites across different devices. This is done using a third party service which <i>you</i> control.</p>
+					<p>To get started, create an account with any <code>remotestorage</code> provider. We recommend <code><a href="https://5apps.com/storage">5apps</a></code> since it's free.</p>
+					<p>Once you've created an account, use your <code>user@provider.com</code> (eg. <code>guya@5apps.com</code>) account to log in using the <code>remotestorage</code> icon in the navbar. Then you're ready!</p>
+					<br>
+					<br>
 					<p><i>Got a suggestion on how we could improve this feature? Use the feedback box with the envelope symbol on your top left!</i></p>
 				</article>
 			</div>`
