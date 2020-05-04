@@ -10,8 +10,6 @@
     const RS_PATH = "guya";
     // Define the schema for our history
     const Guya = {name: RS_PATH, builder: (private) => {
-      // TODO: history pinning, and also consolidate viewed chapters
-      // with the main SERIES_META schema
       const SERIES_META = "series";
       const REPLACEMENT_STR = "{SOURCE_SLUG_REPLACEMENT}";
       const SERIES_META_PATH_BASE = "series/";
@@ -81,10 +79,14 @@
   
       return {
         exports: {
+          firstPartyHandler: (source) => {
+            return firstPartyValidator(source) ? "default" : source;
+          },
           slugBuilder: (slug, source) => {
             return `${source}-${slug}`;
           },
           addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
+            console.log("add series");
             let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
             return private.storeObject(
               SERIES_META,
@@ -92,6 +94,7 @@
               toStore);
           },
           editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
+            console.log("edit series");
             let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
             if (obj) {
               let toStore = seriesBuilder(
@@ -176,8 +179,8 @@
     };
 
     const pushSeries = async (slug, coverUrl, source, url, title) => {
+      source = remoteStorage.guya.firstPartyHandler(source);
       let allCurrentSeries = sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp");
-
       let existingSeries = allCurrentSeries.find((e) => e.slug === slug && e.source === source.replace(" ", "_"));
 
       if (existingSeries) {
@@ -293,93 +296,7 @@
     };
   })();
 
-  let MAX_CLICKS = 7;
-
-  let deleteItem = async (event, element, proxySource, slug) => {
-    event.preventDefault();
-    await globalHistoryHandler.removeSeries(slug, proxySource);
-    element.parentElement.parentElement.parentElement.remove();
-  };
-
-  let proxyDestroyElements = () => {
-    document.querySelectorAll(".proxy").forEach(e => e.remove());
-    document.getElementById("rs-widget").remove();
-  }
-
-
-  let proxyInitElements = async () => {
-    let firstUse = true;
-    let mangaAppender = (item, action) => {
-      if (item.url && item.coverUrl && item.title && item.source && item.slug) {
-        console.log(item.slug, item.source)
-        document.querySelector("[role='main']").insertAdjacentHTML(
-          "beforeend",
-          `<a href="${item.url}" class="manga-card smol proxy" style="background-image: url('${item.coverUrl}')">
-            <picture>
-              <img src="${item.coverUrl}">
-            </picture>
-            <article>
-              <h2>${item.title} <span class="tag">${item.source.replace("_", " ")}</span> <i class="fa fa-trash" onclick="deleteItem(event, this, '${item.source}', '${item.slug}');"></i></h2>
-            </article>
-          </a>`
-        );
-      }
-    };
-    let pinnedSeries = (await globalHistoryHandler.getAllPinnedSeries()).filter(e => e.source !== "default");
-    if (pinnedSeries.length) {
-      firstUse = false;
-      document
-      .querySelector("[role='main']")
-      .insertAdjacentHTML(
-        "beforeend",
-        "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy Favourites</h3>"
-      );
-      pinnedSeries.forEach((item) => mangaAppender(item));
-    }
-    let unpinnedSeries = await globalHistoryHandler.getAllUnpinnedSeries();
-    if (unpinnedSeries.length) {
-      firstUse = false;
-      document
-        .querySelector("[role='main']")
-        .insertAdjacentHTML(
-          "beforeend",
-          "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy History</h3>"
-        );
-      unpinnedSeries.forEach((item) => mangaAppender(item));
-    }
-
-    if (firstUse) {
-      document.querySelector("[role='main']").insertAdjacentHTML(
-        "beforeend",
-        `<div class="manga-card proxy" style="width:100%">
-          <article>
-              <p>Looks like you haven't used the proxy yet! This card will give you a short tutorial about how it works.</p>
-              <p>Note that your history is unique to your browser session, and won't be shared with guya.moe. If you clear your cache then your history will disappear.</p>
-              <br>
-              <h4>MangaDex</h4>
-              <p>Replace <code>mangadex.org</code> in the URL with <code>guya.moe</code>. For example, <code>https://mangadex.org/title/17274/</code> becomes <code>https://guya.moe/title/17274/</code>.</p>
-              <br>
-              <h4>NHentai</h4>
-              <p>Replace <code>nhentai.net</code> in the URL with <code>guya.moe</code>. For example, <code>https://nhentai.net/g/1/</code> becomes <code>https://guya.moe/g/1/</code>.</p>
-              <br>
-              <h4>FoolSlide Sites</h4>
-              <p>Append the FoolSlide site's URL to the end of <code>https://guya.moe/fs/</code>. For example, <code>https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to</code> becomes <code>https://guya.moe/fs/https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to</code>.</p>
-              <p>Some FoolSlide enabled sites include:</p>
-              <ul>
-                <li><code>https://hentai.cafe/</code></li>
-                <li><code>https://jaiminisbox.com/</code></li>
-                <li><code>https://helveticascans.com/</code></li>
-              </ul>
-              <p>Once you start reading, this card will disappear and this section will fill up with your last <strong>${globalHistoryHandler.max}</strong> series.</p>
-              <p>You can also disable/enable this history feature at any time by clicking on the twintail Kaguya ${MAX_CLICKS} times. Note that it'll clear your history each time.</p>
-              <p><i>Got a suggestion on how we could improve this feature? Use the feedback box with the envelope symbol on your top left!</i></p>
-          </article>
-        </div>`
-      );
-    }
-  };
-
-  let tag = () => {
+  const tag = () => {
     try {
       {% if cover_vol_url %}
       let coverUrl = "{{ cover_vol_url }}";
@@ -424,40 +341,4 @@
       // Do nothing, silently fail.
     }
   };
-
-  window.addEventListener("load", () => {
-    if (globalHistoryHandler.enabled()) {
-      if (document.getElementById("rs-widget")) {
-        let widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
-        widget.attach("rs-widget");
-      }
-    }
-    // Wait until the content's been loaded before loading the history items or tagging
-    if (window.location.pathname === "/") {
-      let enabled = globalHistoryHandler.enabled();
-      let clicked = 0;
-      document.getElementById("twintail-guya").addEventListener("click", (e) => {
-        if (clicked < MAX_CLICKS) {
-          clicked++;
-          (e.target || e.srcElement).style.opacity = `${1 - clicked / 10}`;
-        } else {
-          (e.target || e.srcElement).style.opacity = "1";
-          clicked = 0;
-          if (enabled) {
-            globalHistoryHandler.toggle.disable();
-            location.reload();
-          } else {
-            globalHistoryHandler.toggle.enable();
-            location.reload();
-          }
-          enabled = !enabled;
-        }
-      });
-      if (enabled) {
-        proxyInitElements();
-      }
-    } else if (window.location.pathname.includes("read")) { // reader, read, or any series that has read
-      tag();
-    }
-  });
 </script>
