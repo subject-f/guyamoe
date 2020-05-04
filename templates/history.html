@@ -63,7 +63,10 @@
   
       let seriesBuilder = (slug, coverUrl, source, url, title, pinned, chapters) => {
         source = source.replace(" ", "_");
-        if (firstPartyValidator(source)) pinned = true; // First party chapters always pinned
+        if (firstPartyValidator(source)) {
+          source = "default";
+          pinned = true; // First party chapters always pinned
+        }
         return {
           slug: slug,
           coverUrl: coverUrl || "",
@@ -82,7 +85,6 @@
             return `${source}-${slug}`;
           },
           addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
-            console.log("add series");
             let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
             return private.storeObject(
               SERIES_META,
@@ -90,7 +92,6 @@
               toStore);
           },
           editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
-            console.log("edit series");
             let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
             if (obj) {
               let toStore = seriesBuilder(
@@ -113,15 +114,12 @@
             }
           },
           getSeries: (slug, source) => {
-            console.log("get series");
             return private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
           },
           removeSeries: (slug, source) => {
-            console.log("Remove series");
             return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
           },
           getAllSeries: () => {
-            console.log("get all series");
             // Note for the future: getAll gives you the objects within, while 
             // getListing gives you just a list of files; thus, this gives you the 
             // metadata within
@@ -308,16 +306,12 @@
     document.getElementById("rs-widget").remove();
   }
 
+
   let proxyInitElements = async () => {
-    document
-      .querySelector("[role='main']")
-      .insertAdjacentHTML(
-        "beforeend",
-        "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy History</h3>"
-      );
-    let items = await globalHistoryHandler.getAllUnpinnedSeries();
-    if (items.length) {
-      items.forEach((item) => {
+    let firstUse = true;
+    let mangaAppender = (item, action) => {
+      if (item.url && item.coverUrl && item.title && item.source && item.slug) {
+        console.log(item.slug, item.source)
         document.querySelector("[role='main']").insertAdjacentHTML(
           "beforeend",
           `<a href="${item.url}" class="manga-card smol proxy" style="background-image: url('${item.coverUrl}')">
@@ -329,8 +323,32 @@
             </article>
           </a>`
         );
-      });
-    } else {
+      }
+    };
+    let pinnedSeries = (await globalHistoryHandler.getAllPinnedSeries()).filter(e => e.source !== "default");
+    if (pinnedSeries.length) {
+      firstUse = false;
+      document
+      .querySelector("[role='main']")
+      .insertAdjacentHTML(
+        "beforeend",
+        "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy Favourites</h3>"
+      );
+      pinnedSeries.forEach((item) => mangaAppender(item));
+    }
+    let unpinnedSeries = await globalHistoryHandler.getAllUnpinnedSeries();
+    if (unpinnedSeries.length) {
+      firstUse = false;
+      document
+        .querySelector("[role='main']")
+        .insertAdjacentHTML(
+          "beforeend",
+          "<h3 class='proxy' style='width:100%; padding-left:1rem;'>Proxy History</h3>"
+        );
+      unpinnedSeries.forEach((item) => mangaAppender(item));
+    }
+
+    if (firstUse) {
       document.querySelector("[role='main']").insertAdjacentHTML(
         "beforeend",
         `<div class="manga-card proxy" style="width:100%">
@@ -361,7 +379,7 @@
     }
   };
 
-  let init = () => {
+  let tag = () => {
     try {
       {% if cover_vol_url %}
       let coverUrl = "{{ cover_vol_url }}";
@@ -407,8 +425,15 @@
     }
   };
 
-  if (window.location.pathname === "/") {
-    window.addEventListener("load", () => {
+  window.addEventListener("load", () => {
+    if (globalHistoryHandler.enabled()) {
+      if (document.getElementById("rs-widget")) {
+        let widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
+        widget.attach("rs-widget");
+      }
+    }
+    // Wait until the content's been loaded before loading the history items or tagging
+    if (window.location.pathname === "/") {
       let enabled = globalHistoryHandler.enabled();
       let clicked = 0;
       document.getElementById("twintail-guya").addEventListener("click", (e) => {
@@ -431,17 +456,8 @@
       if (enabled) {
         proxyInitElements();
       }
-    });
-  } else {
-    init();
-  }
-
-  window.addEventListener("load", () => {
-    if (globalHistoryHandler.enabled()) {
-      if (document.getElementById("rs-widget")) {
-        let widget = new Widget(remoteStorage, {logging: true, autoCloseAfter: 10});
-        widget.attach("rs-widget");
-      }
+    } else if (window.location.pathname.includes("read")) { // reader, read, or any series that has read
+      tag();
     }
   });
 </script>
