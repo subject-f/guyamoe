@@ -83,7 +83,7 @@ def series_page_data(series_slug):
         for ch in chapter_dict:
             chapter, multiple_groups = chapter_dict[ch]
             u = chapter.uploaded_on
-            chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
+            chapter_list.append([chapter.clean_chapter_number(), chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
             volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
         volume_list = []
         for key, value in volume_dict.items():
@@ -130,15 +130,17 @@ def md_series_page_data(series_id):
             for ch in api_data["chapter"]:
                 if api_data["chapter"][ch]["lang_code"] == "gb":
                     chapter_id = api_data["chapter"][ch]["chapter"]
+                    chapter_list_id = api_data["chapter"][ch]["chapter"]
                     try:
                         float(api_data["chapter"][ch]["chapter"])
                     except ValueError:
                         chapter_id = f"0.0{str(api_data['chapter'][ch]['timestamp'])}"
+                        chapter_list_id = ""
                     date = datetime.utcfromtimestamp(api_data["chapter"][ch]["timestamp"])
                     if api_data["chapter"][ch]["chapter"] in chapter_dict:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
+                        chapter_dict[chapter_id] = [chapter_list_id, chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
                     else:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
+                        chapter_dict[chapter_id] = [chapter_list_id, chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
             chapter_list = [x[1] for x in sorted(chapter_dict.items(), key=lambda m: float(m[0]), reverse=True)]
             md_series_page_dt = {
                 "series": api_data["manga"]["title"],
@@ -201,7 +203,7 @@ def fs_series_page_data(encoded_url):
                     volume_number = volume_regex.group(2)
                 chapter_title = link.get_text()
                 upload_info = list(map(lambda e: e.strip(), a.find("div", class_="meta_r").get_text().replace("by", "").split(",")))
-                chapter_list.append([chapter_number, chapter_title, chapter_number.replace(".", "-"), upload_info[0], upload_info[1], ""])
+                chapter_list.append([chapter_number, chapter_number, chapter_title, chapter_number.replace(".", "-"), upload_info[0], upload_info[1], ""])
 
             fs_series_page_dt = {
                 "series": title,
@@ -231,7 +233,7 @@ def nh_series_page_data(series_id):
         if data:
             date = datetime.utcfromtimestamp(data["timestamp"])
             chapter_list = [
-                ["1", data["title"], "1", data["group"] or "NHentai", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], ""]
+                ["", "1", data["title"], "1", data["group"] or "NHentai", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], ""]
             ]
             nh_series_page_dt = {
                 "series": data["title"],

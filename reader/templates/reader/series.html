@@ -163,7 +163,7 @@
             {% endif %}
         ];
         chapterList.forEach((chapter, idx) => {
-            let chapterDate = new Date(Date.UTC(chapter[4][0], chapter[4][1], chapter[4][2], chapter[4][3], chapter[4][4], chapter[4][5], 0));
+            let chapterDate = new Date(Date.UTC(chapter[5][0], chapter[5][1], chapter[5][2], chapter[5][3], chapter[5][5], chapter[5][5], 0));
             if (isNaN(chapterDate.getUTCSeconds())) {
                 return;
             }
@@ -496,15 +496,15 @@
                             </tr>
                         </thead>
                         <tbody id="chapterTable">
-                            {% for chapter, title, ch_slug, group, upload_date, volume in chapter_list %}
+                            {% for chapter_list_value, chapter, title, ch_slug, group, upload_date, volume in chapter_list %}
                             <tr class="table-default" data-chapter="{{ chapter }}">
                                 <td scope="row" class="read-icon" onclick="updateRead('{{ chapter }}')"></td>
                                 <td scope="row" class="chapter-title">
                                     <a href="/read/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
-                                        {% if chapter and chapter > 0.09 %}
-                                        {{ chapter }}
+                                        {% if chapter_list_value %}
+                                        {{ chapter_list_value }}
                                         {% endif %}
-                                        {% if chapter and chapter > 0.09 and title %}
+                                        {% if chapter_list_value and title %}
                                          -
                                         {% endif %}
                                         {{ title }}
