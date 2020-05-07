@@ -157,6 +157,7 @@ const SETTING_VALUE = 30;
 const SETTING_VALUE_STEPPED = 31;
 	
 function Setting(o) {
+	Linkable.call(this);
 	this.name = o.name;
 	this.addr = o.addr;
 	this.prettyName = o.prettyName;
@@ -181,7 +182,8 @@ function Setting(o) {
 	this.global = (o.global===undefined)?true:o.global;
 	this.manual = o.manual; //if true, the setting needs an external .setClass call to update the class. This can be used where class update needs to be in the middle of something.
 	this.hidden = o.hidden;
-	this.conditional = o.conditional;
+	this.condition = o.condition;
+	this.disabled = o.disabled || false;
 
 	this.checkOptionValidity = function(value) {
 		if(this.options == undefined)
@@ -198,7 +200,7 @@ function Setting(o) {
 			this.set(this.default);
 	}
 
-	this.cycle = function(options) {
+	this.cycle = function(options, silent) {
 		switch(this.type){
 			case SETTING_BOOLEAN:
 			case SETTING_MULTI:
@@ -209,39 +211,41 @@ function Setting(o) {
 					options = this.options();
 			var index = options.indexOf(this.get());
 				return this.set(
-					(index+1 > options.length - 1)?options[0]:options[index+1]
+					(index+1 > options.length - 1)?options[0]:options[index+1],
+					silent
 				);
 				break;
 		}
 		return false;
 	}
-	this.next = function() {
+	this.next = function(silent) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) + 1;
 			if(targetIndex > this.options().length - 1) return;
-			this.set(this.options()[targetIndex])
+			this.set(this.options()[targetIndex], silent)
 		}
 	}
-	this.prev = function() {
+	this.prev = function(silent) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) - 1;
 			if(targetIndex < 0) return;
-			this.set(this.options()[targetIndex])
+			this.set(this.options()[targetIndex], silent)
 		}
 	}
 	this.get = function() {
 		return this.setting;
 	}
-	this.getFormatted = function() {
+	this.getFormatted = function(option) {
+		option = option===undefined?this.get():option;
 		if(this.strings) {
 			if(this.strings instanceof Function) {
-				return this.strings(this.setting);
+				return this.strings(option);
 			}
-			return this.strings[this.setting];
+			return this.strings[option];
 		}else{
-			return '';
+			return option;
 		}
 	}
 	this.classString = function(option) {
@@ -267,11 +271,30 @@ function Setting(o) {
 				break;
 		}
 	}
-	this.set = function(value) {
+	this.set = function(value, silent) {
 		if(!this.checkOptionValidity(value)) return false;
 		this.setting = value;
 		if(this.global && !this.manual)
 			this.setClass();
+		this.S.out('settingEvent', {
+			type: 'change',
+			setting: this,
+			silent: silent
+		})
+	}
+	this.disable = () => {
+		this.disabled = true;
+		this.S.out('settingEvent', {
+			type: 'disable',
+			setting: this
+		})
+	}
+	this.enable = () => {
+		this.disabled = false;
+		this.S.out('settingEvent', {
+			type: 'enable',
+			setting: this
+		})
 	}
 }
 
@@ -295,8 +318,145 @@ function SettingsHandler(){
 	let obj = Object.byString(this.settings, o.addr.split('.').slice(0, -1).join('.'));
 		o.name = o.addr.split('.').pop();
 		this.all[o.addr] = obj[o.name] = new Setting(o);
+		this.all[o.addr].S.link(this);
 		return this;
 	}
+
+	this.deserialize = function() {
+		if(!localStorage) return;
+	var settings = localStorage.getItem('settings');
+		if(!settings) return;
+		try{
+			settings = JSON.parse(settings);
+			if(settings.VER && settings.VER != this.ver) {
+				throw 'Settings ver changed';
+			}
+			for(var setting in settings) {
+				if(setting == 'VER') continue;
+				this.set(setting, settings[setting], true);
+			}
+		}catch (e){
+			localStorage.setItem('settings','');
+			console.warn('Settings were found to be corrupted and so were reset.')
+		}
+	}
+
+	this.sendInit = function() {
+		for(var setting in this.all) {
+			this.S.out('settingsPacket', new SettingsPacket('change', setting, this.get(setting)))
+		}
+	}
+
+	this.serialize = function() {
+	var settings = {};
+		for(var setting in this.all) {
+			settings[setting] = this.all[setting].get();
+		}
+		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
+		delete settings['groupPreference'];
+		settings.VER = this.ver;
+		return JSON.stringify(settings);
+	}
+
+	this.query = function(qu, or) {
+		if(or) {
+			for(var key in qu) {
+			var setting = this.getByAddr(key);
+				if(qu[key][0] == '!') {
+					if(qu[key].substr(1) != setting.get()) return true;
+				}else{
+					if(qu[key] == setting.get()) return true;
+				}
+			}
+			return false;
+		}else{
+			for(var key in qu) {
+			var setting = this.getByAddr(key);
+				if(qu[key] instanceof Array)
+					if(qu[key].includes(setting.get())) continue;
+				if(qu[key][0] == '!') {
+					if(qu[key].substr(1) == setting.get()) return false;
+				}else{
+					if(qu[key] != setting.get()) return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	this.getByAddr = function(addr) {
+		return this.all[addr];
+	}
+	this.get = function(settingID){
+		return this.getByAddr(settingID).get();
+	}
+	this.set = function(settingID, value, silent){
+		this.getByAddr(settingID).set(value, silent);
+	}
+	this.setClass = function(settingID){
+		this.getByAddr(settingID).setClass();
+	}
+	this.cycle = function(settingID, options, silent){
+		this.getByAddr(settingID).cycle(options, silent);
+	}
+	this.next = function(settingID, silent){
+		this.getByAddr(settingID).next(silent);
+	}
+	this.prev = function(settingID, silent){
+		this.getByAddr(settingID).prev(silent);
+	}
+
+	this.refreshAll = function() {
+		for(var key in this.all) {
+		let setting = this.all[key];
+			setting.refresh();
+			if(setting.condition) {
+				if(this.query(setting.condition))
+					setting.enable();
+				else
+					setting.disable();
+			}
+		}
+	}
+
+	this.settingUpdated = function(e) {
+		if(e.type == 'change') {
+			if(e.setting.postUpdate) e.setting.postUpdate(e.setting.get());
+			this.refreshAll(); //opt - update only linked setting
+			if(localStorage)
+				localStorage.setItem('settings', this.serialize())
+		}
+		if(e.silent != true) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					e.type,
+					e.setting.addr,
+					e.setting.get(),
+				)
+			)
+			if(e.type == 'change') this.S.out('message', e.setting.getFormatted());
+		}
+	}
+
+	this.packetHandler = (packet) => {
+		switch(packet.type) {
+			case 'set':
+				this.set(packet.setting, packet.value, packet.silent); 
+				break;
+			case 'cycle':
+				this.cycle(packet.setting, packet.value, packet.silent);
+				break;
+		}
+	}
+
+
+	this.S.mapIn({
+		settingsPacket: this.packetHandler,
+		init: this.sendInit,
+		settingEvent: this.settingUpdated
+	})
+
+	this.ver = '0.72';
 
 	this.newSetting({
 		addr: 'lyt.fit',
@@ -350,9 +510,9 @@ function SettingsHandler(){
 		prettyName: 'Zoom level',
 		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
 		default: '100',
-		strings: (i) => 'Zoom level set to %i%.'.replace('%i', i),
+		strings: (i) => `${i}%`,
 		type: SETTING_VALUE_STEPPED,
-		conditional: {'lyt.fit': ['width_limit', 'width']}
+		condition: {'lyt.fit': ['width_limit', 'width']}
 	})
 	.newSetting({
 		addr: 'lyt.direction',
@@ -467,9 +627,7 @@ function SettingsHandler(){
 		prettyName: 'Preload amount',
 		options: [1,2,3,4,5,6,7,8,9,100],
 		default: (IS_MOBILE)?2:3,
-		strings: i => 'Reader will preload %i pages.'.replace('%i', i)
-			.replace('1 pages', '1 page')
-			.replace('100 pages', 'all pages'),
+		strings: i => `${i}`.replace('100', '∞'),
 		type: SETTING_VALUE_STEPPED,
 		global: false
 	})
@@ -478,7 +636,7 @@ function SettingsHandler(){
 		prettyName: 'Vertical keyboard scroll speed',
 		options: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
 		default: 25,
-		strings: i => 'Scroll speed set to %i pixels.'.replace('%i', i),
+		strings: i => `${i}px`,
 		type: SETTING_VALUE,
 		global: false
 	})
@@ -488,142 +646,12 @@ function SettingsHandler(){
 		type: SETTING_VALUE,
 		hidden: true
 	})
-
-	this.deserialize = function() {
-		if(!localStorage) return;
-	var settings = localStorage.getItem('settings');
-		if(!settings) return;
-		try{
-			settings = JSON.parse(settings);
-			if(settings.VER && settings.VER != this.ver) {
-				throw 'Settings ver changed';
-			}
-			for(var setting in settings) {
-				if(setting == 'VER') continue;
-				this.set(setting, settings[setting], true);
-			}
-		}catch (e){
-			localStorage.setItem('settings','');
-			console.warn('Settings were found to be corrupted and so were reset.')
-		}
-	}
-
-	this.sendInit = function() {
-		for(var setting in this.all) {
-			this.S.out('settingsPacket', new SettingsPacket('change', setting, this.get(setting)))
-		}
-	}
-
-	this.serialize = function() {
-	var settings = {};
-		for(var setting in this.all) {
-			settings[setting] = this.all[setting].get();
-		}
-		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
-		delete settings['groupPreference'];
-		settings.VER = this.ver;
-		return JSON.stringify(settings);
-	}
-
-	this.query = function(qu, or) {
-		if(or) {
-			for(var key in qu) {
-			var setting = this.getByAddr(key);
-				if(qu[key][0] == '!') {
-					if(qu[key].substr(1) != setting.get()) return true;
-				}else{
-					if(qu[key] == setting.get()) return true;
-				}
-			}
-			return false;
-		}else{
-			for(var key in qu) {
-			var setting = this.getByAddr(key);
-				if(qu[key][0] == '!') {
-					if(qu[key].substr(1) == setting.get()) return false;
-				}else{
-					if(qu[key] != setting.get()) return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	this.getByAddr = function(addr) {
-		return this.all[addr];
-	}
-
-	this.get = function(settingID){
-		return this.getByAddr(settingID).get();
-	}
-	this.set = function(settingID, value, silent){
-	var setting = this.getByAddr(settingID);
-		if(setting.set(value) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
-	}
-	this.setClass = function(settingID){
-		this.getByAddr(settingID).setClass();
-	}
-	this.cycle = function(settingID, options, silent){
-	var setting = this.getByAddr(settingID);
-		if(setting.cycle(options) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
-	}
-	this.next = function(settingID, silent) {
-	var setting = this.getByAddr(settingID);
-		setting.next();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
-	}
-	this.prev = function(settingID, silent) {
-	var setting = this.getByAddr(settingID);
-		setting.prev();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
-	}
-
-	this.refreshAll = function() {
-		for(var key in this.all) {
-			this.all[key].refresh()
-		}
-	}
-
-	this.settingUpdated = function(setting, silent) {
-		this.refreshAll();
-		if(localStorage)
-			localStorage.setItem('settings', this.serialize())
-		if(silent != true) {
-			this.S.out('settingsPacket', new SettingsPacket('change', setting.addr, setting.setting))
-			this.S.out('message', setting.getFormatted());
-		}
-	}
-
-	this.packetHandler = (packet) => {
-		switch(packet.type) {
-			case 'set':
-				this.set(packet.setting, packet.value, packet.silent); 
-				break;
-			case 'cycle':
-				this.cycle(packet.setting, packet.value, packet.silent);
-				break;
-		}
-	}
-
-	this.ver = '0.72';
-
-	this.S.mapIn({
-		settingsPacket: this.packetHandler,
-		init: this.sendInit
-	})
-
-	this.deserialize();
+	.deserialize();
 }
 
-function SettingsPacket(type, settingName, value, silent) {
+function SettingsPacket(type, settingAddr, value, silent) {
 	this.type = type;
-	this.setting = settingName;
+	this.setting = settingAddr;
 	this.value = value;
 	this.silent = silent;
 	return this;
@@ -745,6 +773,7 @@ function UI_Reader(o) {
 			if(this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
 		})
+		.attach('enter', ['Ctrl+Enter'], e => Loda.display('settings'))
 
 		
 	new KeyListener(document.body)
@@ -1214,9 +1243,7 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
-
 	this._.settings_button.onmousedown = e => Loda.display('settings');
-
 	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
 	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
 	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit', disabled: true});
@@ -1224,7 +1251,6 @@ function UI_Reader(o) {
 	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
 	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
 	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
-	
 	this._.fit_button.onmousedown = e => {
 		this.asideViews.S.call('number', 0);
 	}
@@ -2548,7 +2574,9 @@ function UI_Loda_Settings(o) {
 	var container = new UI_Dummy();
 		for(let setting in Settings.settings[category]) {
 			if(Settings.settings[category][setting].hidden) continue;
-			container.$.appendChild(new UI_SettingUnit({setting: Settings.settings[category][setting].addr}).$);
+		let sU = new UI_SettingUnit({setting: Settings.settings[category][setting]});
+			Settings.S.link(sU);
+			container.$.appendChild(sU.$);
 		}
 		this.content.add(container);
 	}
@@ -2557,6 +2585,7 @@ function UI_Loda_Settings(o) {
 
 function UI_SettingUnit(o) {
 	o=be(o);
+	Linkable.call(this);
 	UI.call(this, {
 		node: o.node,
 		kind: ['SettingUnit'].concat(o.kind || []),
@@ -2570,12 +2599,34 @@ function UI_SettingUnit(o) {
 
 	this.setting = o.setting;
 
-	this._.header.innerHTML = Settings.getByAddr(this.setting).prettyName;
+	this._.header.innerHTML = this.setting.prettyName;
 	this.controls = new UI_SettingDisplay({
 		node: this._.field,
 		setting: this.setting
-	}).S.biLink(Settings);
-	
+	})
+
+	this.packetHandler = (packet) => {
+		if(packet.setting != this.setting.addr) return;
+		if(packet.type == 'disable')
+			this.hide();
+		else if(packet.type == 'enable')
+			this.show();
+	}
+	this.hide = () => {
+		this._.header.classList.add('disabled');
+		this._.field.classList.add('disabled');
+	}
+	this.show = () => {
+		this._.header.classList.remove('disabled');
+		this._.field.classList.remove('disabled');
+	}
+
+	if(this.setting.disabled)
+		this.hide()
+
+	this.S.mapIn({
+		settingsPacket: this.packetHandler
+	})
 }
 
 function UI_SettingDisplay(o) {
@@ -2583,8 +2634,7 @@ function UI_SettingDisplay(o) {
 	UI.call(this, Object.assign(o, {
 		kind: ['SettingDisplay'].concat(o.kind || [])
 	}));
-	Linkable.call(this);
-	this.setting = Settings.getByAddr(o.setting);
+	this.setting = o.setting;
 	this.disabled = o.disabled || false;
 	this.entity = null;
 	switch(this.setting.type) {
@@ -2592,16 +2642,17 @@ function UI_SettingDisplay(o) {
 		case SETTING_BOOLEAN:
 			this.entity = new UI_ButtonGroup({
 				html: this.setting.html,
-				setting: this.setting.addr
+				setting: this.setting
 			}).S.biLink(Settings);
 			break;
 		case SETTING_VALUE:
 		case SETTING_VALUE_STEPPED:
 			this.entity = new UI_Slider({
-				setting: this.setting.addr
+				setting: this.setting
 			}).S.biLink(Settings);
 			break;
 	}
+
 
 	if(this.entity) this.$.appendChild(this.entity.$);
 

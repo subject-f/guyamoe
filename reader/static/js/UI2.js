@@ -1030,7 +1030,7 @@ var customHTML = o.html;
 	}));
 	Linkable.call(this);
 	this.unique = o.unique || true;
-	this.setting = Settings.getByAddr(o.setting);
+	this.setting = o.setting;
 
 	if(!customHTML) {
 		this.setting.options().forEach(option => {
@@ -1151,21 +1151,35 @@ function UI_Slider(o) {
 	o=be(o);
 	UI.call(this, Object.assign(o, {
 		kind: ['Slider'].concat(o.kind || []),
-		html: o.html || `<input type="range" />`
+		html: o.html || `<div>
+			<div class="slider-wrap">
+				<input data-bind="slider" class="slider-control" type="range" />
+				<div class="ticks" data-bind="ticks"></div>
+			</div>
+			<input data-bind="number" class="slider-value" type="text" />
+		</div>`
 	}));
 	Linkable.call(this);
-	this.setting = Settings.getByAddr(o.setting);
+	this.setting = o.setting;
 	this.options = o.options || this.setting.options();
 	this.disabled = o.disabled || false;
-	this.$.min = 0;
-	this.$.max = this.options.length - 1;
-	this.$.value = this.options.indexOf(this.setting.get());
+
+	this._.slider.min = 0;
+	this._.slider.max = this.options.length - 1;
+
+	this.options.forEach(option => {
+	let tick = crelm('i');
+		if(this.options.length < 14)
+			tick.innerHTML = this.setting.getFormatted(option);
+		this._.ticks.appendChild(tick);
+	})
 
 	this.set = function(state, silent) {
 		if(!this.options.includes(state)) return;
-		this.$.setAttribute('data-'+this.setting.addr, state);
+		this._.slider.setAttribute('data-'+this.setting.addr, state);
 		this.state = state;
-		this.$.value = this.options.indexOf(state);
+		this._.slider.value = this.options.indexOf(state);
+		this._.number.value = this.setting.getFormatted(state);
 		if(!silent && !this.disabled) {
 			this.S.out('settingsPacket',
 				new SettingsPacket(
@@ -1191,9 +1205,19 @@ function UI_Slider(o) {
 		settingsPacket: this.settingsPacketHandler
 	})
 	
-	this.$.oninput = (e) => {
-		this.setByIndex(this.$.value);
+	this._.slider.oninput = (e) => {
+		this.setByIndex(this._.slider.value);
 	}
+	this._.number.onblur = (e) => {
+	let val = parseInt(this._.number.value);	
+		this.set(this.options.reduce((p, c) => (
+			Math.abs(c - val) < Math.abs(p - val) ? c : p)
+		));
+	}
+	new KeyListener(this._.number)
+		.attach('esc', ['Escape'], (e) => e.target.blur())
+		.attach('enter', ['Enter'], (e) => this._.number.onblur())
+		.noPropagation(true)
 
 	this.set(o.state || Settings.get(this.setting.addr), true);
 	this.S.biLink(Settings);
