@@ -501,10 +501,10 @@
                                 <td scope="row" class="read-icon" onclick="updateRead('{{ chapter }}')"></td>
                                 <td scope="row" class="chapter-title">
                                     <a href="/read/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
-                                        {% if chapter %}
+                                        {% if chapter and chapter > 0.09 %}
                                         {{ chapter }}
                                         {% endif %}
-                                        {% if chapter and title %}
+                                        {% if chapter and chapter > 0.09 and title %}
                                          -
                                         {% endif %}
                                         {{ title }}

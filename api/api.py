@@ -89,7 +89,7 @@ def md_series_data(series_id):
                             chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"] = api_data["chapter"][chapter]["title"]
                         chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
                     else:
-                        chapters_dict[api_data["chapter"][chapter]["chapter"] if api_data["chapter"][chapter]["chapter"] else str(api_data["chapter"][chapter]["timestamp"])] = {
+                        chapters_dict[api_data["chapter"][chapter]["chapter"] if api_data["chapter"][chapter]["chapter"] else f"0.0{str(api_data['chapter'][chapter]['timestamp'])}"] = {
                             "volume": api_data["chapter"][chapter]["volume"],
                             "title": api_data["chapter"][chapter]["title"],
                             "groups": {

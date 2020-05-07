@@ -133,12 +133,12 @@ def md_series_page_data(series_id):
                     try:
                         float(api_data["chapter"][ch]["chapter"])
                     except ValueError:
-                        chapter_id = str(api_data["chapter"][ch]["timestamp"])
+                        chapter_id = f"0.0{str(api_data['chapter'][ch]['timestamp'])}"
                     date = datetime.utcfromtimestamp(api_data["chapter"][ch]["timestamp"])
                     if api_data["chapter"][ch]["chapter"] in chapter_dict:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
+                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
                     else:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
+                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
             chapter_list = [x[1] for x in sorted(chapter_dict.items(), key=lambda m: float(m[0]), reverse=True)]
             md_series_page_dt = {
                 "series": api_data["manga"]["title"],
