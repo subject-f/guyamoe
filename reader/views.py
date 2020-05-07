@@ -231,7 +231,7 @@ def nh_series_page_data(series_id):
         if data:
             date = datetime.utcfromtimestamp(data["timestamp"])
             chapter_list = [
-                ["", data["title"], "1", data["group"] or "NHentai", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], ""]
+                ["1", data["title"], "1", data["group"] or "NHentai", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], ""]
             ]
             nh_series_page_dt = {
                 "series": data["title"],
