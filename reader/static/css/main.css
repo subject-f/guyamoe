@@ -709,6 +709,14 @@ aside header > .guya {
 	scroll-behavior: smooth;
 }
 
+/* DO NOT
+I REPEAT, DO NOT
+EVER TOUCH THIS DECLARATION. */
+.rdr-image-wrap:after {
+	content: "ы";
+	font-size: 0.005em;
+}
+
 .rdr-image-wrap * {
 	transform: translate3d(0, 0, 0);
 	-webkit-transform: translate3d(0, 0, 0);
