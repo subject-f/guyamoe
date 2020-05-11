@@ -65,47 +65,10 @@ def series_data(series_slug):
             break
     return {"slug": series_slug, "title": series.name, "description": series.synopsis, "author": series.author.name, "artist": series.artist.name, "groups": groups_dict, "cover": cover_vol_url, "preferred_sort": settings.PREFERRED_SORT, "chapters": chapters_dict}
 
-def md_series_page_data(series_id):
-    series_page_dt = cache.get(f"md_series_page_dt_{series_id}")
-    if not series_page_dt:
-        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
-        if resp.status_code == 200:
-            data = resp.text
-            api_data = json.loads(data)
-            chapter_list = []
-            latest_chap_id = next(iter(api_data["chapter"]))
-            date = datetime.utcfromtimestamp(api_data["chapter"][latest_chap_id]["timestamp"])
-            last_updated = (api_data["chapter"][latest_chap_id]["chapter"], datetime.utcfromtimestamp(api_data["chapter"][latest_chap_id]["timestamp"]).strftime("%y/%m/%d"))
-            chapter_dict = {}
-            for ch in api_data["chapter"]:
-                if api_data["chapter"][ch]["lang_code"] == "gb":
-                    chapter_id = api_data["chapter"][ch]["chapter"]
-                    try:
-                        float(api_data["chapter"][ch]["chapter"])
-                    except ValueError:
-                        chapter_id = str(api_data["chapter"][ch]["timestamp"])
-                    date = datetime.utcfromtimestamp(api_data["chapter"][ch]["timestamp"])
-                    if api_data["chapter"][ch]["chapter"] in chapter_dict:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
-                    else:
-                        chapter_dict[chapter_id] = [chapter_id, api_data["chapter"][ch]["title"], api_data["chapter"][ch]["chapter"].replace(".", "-") or chapter_id, api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"], ch]
-            chapter_list = [x[1] for x in sorted(chapter_dict.items(), key=lambda m: float(m[0]), reverse=True)]
-            series_page_dt = {
-                "series": api_data["manga"]["title"],
-                "series_id": api_data["manga"]["description"],
-                "slug": series_id,
-                "cover_vol_url": "https://mangadex.org" + api_data["manga"]["cover_url"],
-                "synopsis": api_data["manga"]["description"], 
-                "author": api_data["manga"]["author"],
-                "artist": api_data["manga"]["artist"],
-                "last_added": last_updated,
-                "chapter_list": chapter_list,
-                "volume_list": sorted([], key=lambda m: m[0], reverse=True)
-            }
-            cache.set(f"md_series_page_dt_{series_id}", series_page_dt, 60 * 5)
-        else:
-            return None
-    return series_page_dt
+def series_data_cache(series_slug):
+    series_api_data = series_data(series_slug)
+    cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
+    return series_api_data
 
 def md_series_data(series_id):
     data = cache.get(f"md_series_dt_{series_id}")
@@ -126,7 +89,7 @@ def md_series_data(series_id):
                             chapters_dict[api_data["chapter"][chapter]["chapter"]]["title"] = api_data["chapter"][chapter]["title"]
                         chapters_dict[api_data["chapter"][chapter]["chapter"]]["groups"][api_data["chapter"][chapter]["group_id"]] = chapter
                     else:
-                        chapters_dict[api_data["chapter"][chapter]["chapter"] if api_data["chapter"][chapter]["chapter"] else str(api_data["chapter"][chapter]["timestamp"])] = {
+                        chapters_dict[api_data["chapter"][chapter]["chapter"] if api_data["chapter"][chapter]["chapter"] else f"0.0{str(api_data['chapter'][chapter]['timestamp'])}"] = {
                             "volume": api_data["chapter"][chapter]["volume"],
                             "title": api_data["chapter"][chapter]["title"],
                             "groups": {
@@ -146,7 +109,7 @@ def md_series_data(series_id):
             return None
     return data
 
-def md_chapter_info(chapter_id):
+def md_chapter_data(chapter_id):
     chapter_info = cache.get(f"md_chapter_dt_{chapter_id}")
     if not chapter_info:
         resp = get_md_data(f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter")
@@ -160,10 +123,12 @@ def md_chapter_info(chapter_id):
             return None
     return chapter_info
 
-def series_data_cache(series_slug):
-    series_api_data = series_data(series_slug)
-    cache.set(f"series_api_data_{series_slug}", series_api_data, 3600 * 48)
-    return series_api_data
+def get_md_data(url):
+    headers = {
+        'Referer': 'https://mangadex.org',
+        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
+    }
+    return requests.get(url, headers=headers)
 
 def all_groups():
     groups_data = cache.get(f"all_groups_data")
@@ -321,73 +286,16 @@ def nh_series_data(series_id):
                 "description": api_data["title"]["english"], "group": group, "artist": artist, "groups": groups_dict,
                 "tags": tag_list, "lang": ", ".join(lang_list), "chapters": chapters_dict,
                 "cover": f"https://t.nhentai.net/galleries/{api_data['media_id']}/cover.{'jpg' if api_data['images']['cover']['t'] == 'j' else 'png'}",
+                "timestamp": api_data["upload_date"]
             }
             cache.set(f"nh_series_dt_{series_id}", data, 3600 * 24)
         else:
             return None
     return data
 
-def get_md_data(url):
-    headers = {
-        'Referer': 'https://mangadex.org',
-        'User-Agent': 'Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.'
-    }
-    return requests.get(url, headers=headers)
-
 # Must have valid hexadecimal after % for many configurations
 ENCODE_STR_SLASH = "%FF-"
 ENCODE_STR_QUESTION = "%DE-"
-
-def fs_series_page_data(encoded_url):
-    data = cache.get(f"fs_series_page_dt_{encoded_url}")
-    if not data:
-        try:
-            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        except requests.exceptions.ConnectionError:
-            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        if resp.status_code == 200:
-            data = resp.text
-            soup = BeautifulSoup(data, "html.parser")
-
-            comic_info = soup.find("div", class_="large comic")
-
-            title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
-            description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
-            cover_div = soup.find("div", class_="thumbnail")
-            if cover_div and cover_div.find("img")["src"]:
-                cover = cover_div.find("img")["src"]
-            else:
-                cover = ""
-
-            chapter_list = []
-
-            for a in soup.find_all("div", class_="element"):
-                link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
-                chapter_number = "0"
-                if chapter_regex:
-                    chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
-                volume_number = "1"
-                if volume_regex:
-                    volume_number = volume_regex.group(2)
-                chapter_title = link.get_text()
-                upload_info = a.find("div", class_="meta_r").get_text()
-                chapter_list.append([chapter_number, chapter_number.replace(".", "-"), chapter_title, link["href"], upload_info])
-
-            data = {
-                "series": title,
-                "slug": encoded_url,
-                "cover_vol_url": cover,
-                "synopsis": description, 
-                "chapter_list": chapter_list,
-                "original_url": f"https://{fs_decode_url(encoded_url)}"
-            }
-            cache.set(f"fs_series_page_dt_{encoded_url}", data, 60 * 5)
-        else:
-            return None
-    return data
 
 def fs_series_data(encoded_url):
     data = cache.get(f"fs_series_dt_{encoded_url}")

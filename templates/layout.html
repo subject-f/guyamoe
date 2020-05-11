@@ -4,34 +4,6 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<!-- Google Tag Manager -->
-	<script>
-		(function(w, d, s, l, i) {
-			w[l] = w[l] || [];
-			w[l].push({
-				'gtm.start': new Date().getTime(),
-				event: 'gtm.js'
-			});
-			var f = d.getElementsByTagName(s)[0],
-				j = d.createElement(s),
-				dl = l != 'dataLayer' ? '&l=' + l : '';
-			j.async = true;
-			j.src =
-				'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-			f.parentNode.insertBefore(j, f);
-		})(window, document, 'script', 'dataLayer', 'GTM-WWRXZB4');
-	</script>
-	<!-- End Google Tag Manager -->
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-153182310-1"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag() {
-			dataLayer.push(arguments);
-		}
-		gtag('js', new Date());
-		gtag('config', 'UA-153182310-1');
-	</script>
 	<link rel="canonical" href="https://guya.moe/{{ relative_url }}" />
 	<link defer rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 	<link rel="stylesheet" href="{% static 'css/index.css' %}{{ version_query }}">
@@ -47,7 +19,8 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 	<meta name="format-detection" content="telephone=no">
-	<meta name="theme-color" content="#2b2f33" /> {% block head %} {% endblock %}
+	<meta name="theme-color" content="#2b2f33" /> 
+	{% block head %} {% endblock %}
 	<style type="text/css">
 		.site-title,
 		.site-description {
@@ -55,17 +28,12 @@
 			clip: rect(1px, 1px, 1px, 1px);
 		}
 	</style>
-	{% include "referral.html" %}
-	{% include "proxy_history.html" %}
+	{% include "history.html" %}
 </head>
 
 <body class="d-flex flex-column h-100">
-	<!-- Google Tag Manager (noscript) -->
-	<noscript>
-		<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWRXZB4" height="0" width="0" style="display:none;visibility:hidden"></iframe>
-	</noscript>
-	<!-- End Google Tag Manager (noscript) -->
-	{% load cache %} {% cache 500 sidebar %}
+	{% include "tracking.html" %}
+	{% load cache %} {% cache 1 sidebar %}
 	<header>
 		<nav class="navbar navbar-expand-lg">
 			<div class="container-fluid">
@@ -121,6 +89,9 @@
 						<li class="nav-item">
 							<a class="nav-link" href="//discord.gg/gAUAkzr"><img alt="Discord" src="/static/img/discord.svg"></img>
 							</a>
+						</li>
+						<li class="nav-item">
+							<div id="rs-widget"></div>
 						</li>
 					</ul>
 				</div>

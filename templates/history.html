@@ -1,0 +1,351 @@
+{% load static %}
+<meta name="referrer" content="no-referrer" />
+<script src="{% static 'js/remotestorage.min.js' %}"></script>
+<script src="{% static 'js/widget.min.js' %}"></script>
+<script>
+  // remoteStorage backend that'll be our plugged in module
+  // This should be abstracted from what actually handles updates,
+  // since this'll give us the ability to pull this out in the future
+  const remoteStorage = (() => {
+    const RS_PATH = "guya";
+    // Define the schema for our history
+    const Guya = {name: RS_PATH, builder: (private) => {
+      const SERIES_META = "series";
+      const REPLACEMENT_STR = "{SOURCE_SLUG_REPLACEMENT}";
+      const SERIES_META_PATH_BASE = "series/";
+      const SERIES_META_PATH = `${SERIES_META_PATH_BASE}${REPLACEMENT_STR}`;
+  
+      private.declareType(SERIES_META, {
+        type: "object",
+        properties: {
+          slug: {
+            type: "string"
+          },
+          coverUrl: {
+            type: "string"
+          },
+          source: {
+            type: "string"
+          },
+          url: {
+            type: "string"
+          },
+          title: {
+            type: "string"
+          },
+          timestamp: {
+            type: "number"
+          },
+          chapters: {
+            type: "array",
+            default: [] // Note that these aren't validated by our schema handler
+          },
+          pinned: {
+            type: "boolean",
+            default: false // Thus it's documenting only; handle it
+          }
+        },
+        required: ["slug", "source", "url", "title", "timestamp", "chapters", "pinned"]
+      });
+  
+      let firstPartyValidator = (source) => {
+        return (source === "manga" || source === "series" || source === "default");
+      };
+  
+      let pathBuilder = (path, slug, source) => {
+        if (!source) source = "default";
+        if (firstPartyValidator(source)) source = "default";
+        source = source.replace(" ", "_");
+        return path.replace(REPLACEMENT_STR, `${source}-${slug}`);
+      };
+  
+      let seriesBuilder = (slug, coverUrl, source, url, title, pinned, chapters) => {
+        source = source.replace(" ", "_");
+        if (firstPartyValidator(source)) {
+          source = "default";
+          pinned = true; // First party chapters always pinned
+        }
+        return {
+          slug: slug,
+          coverUrl: coverUrl || "",
+          source: source,
+          url: url,
+          title: title,
+          timestamp: Date.now(),
+          chapters: chapters || [],
+          pinned: (pinned === undefined) ? false : pinned
+        };
+      };
+  
+      return {
+        exports: {
+          firstPartyHandler: (source) => {
+            return firstPartyValidator(source) ? "default" : source;
+          },
+          slugBuilder: (slug, source) => {
+            return `${source}-${slug}`;
+          },
+          addSeries: (slug, coverUrl, source, url, title, pinned, chapters) => {
+            let toStore = seriesBuilder(slug, coverUrl, source, url, title, pinned, chapters);
+            return private.storeObject(
+              SERIES_META,
+              pathBuilder(SERIES_META_PATH, slug, source),
+              toStore);
+          },
+          editSeries: async (slug, coverUrl, source, url, title, pinned, chapters) => {
+            let obj = await private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
+            if (obj) {
+              let toStore = seriesBuilder(
+                slug || obj.slug,
+                coverUrl || obj.coverUrl,
+                source || obj.source,
+                url || obj.url,
+                title || obj.title,
+                (pinned !== undefined) ? pinned : obj.pinned,
+                chapters || obj.chapters // Empty array is truthy
+              );
+              return private.storeObject(
+                SERIES_META,
+                pathBuilder(SERIES_META_PATH, slug, source),
+                toStore
+              )
+            } else {
+              // Fail-fast instead of adding the series
+              throw new Error("Cannot edit a non-existent series.");
+            }
+          },
+          getSeries: (slug, source) => {
+            return private.getObject(pathBuilder(SERIES_META_PATH, slug, source));
+          },
+          removeSeries: (slug, source) => {
+            return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
+          },
+          getAllSeries: () => {
+            // Note for the future: getAll gives you the objects within, while 
+            // getListing gives you just a list of files; thus, this gives you the 
+            // metadata within
+            return private.getAll(SERIES_META_PATH_BASE);
+          }
+        }
+      }
+    }};
+
+    let remoteStorage = new RemoteStorage({modules: [Guya]});
+
+    remoteStorage.access.claim(RS_PATH, "rw");
+    remoteStorage.caching.enable(`/${RS_PATH}/`);
+
+    return remoteStorage;
+  })();
+
+  // This will be the main handler that deals with both
+  // chapter and series history. All logic should be here
+  // and abstracted from the rest of the code
+  const globalHistoryHandler = (() => {
+    const STORAGE_KEY = "proxyHistory";
+    const MAX_VALUES = 20;
+
+    // Helper to return an array of objects from a nested object, sorted by key
+    let sortObjectByKey = (obj, key) => {
+      let sortable = [];
+      for (let k in obj) {
+        sortable.push(obj[k]);
+      }
+      sortable.sort((f, s) => s[key] - f[key]);
+      return sortable;
+    };
+
+    const enabled = () => {
+      return localStorage.getItem(STORAGE_KEY) ? true : false;
+    };
+
+    const enable = () => {
+      let settings = localStorage.getItem("settings");
+      localStorage.clear();
+      if (settings) {
+        localStorage.setItem("settings", settings);
+      }
+      localStorage.setItem(STORAGE_KEY, true);
+    };
+    
+    const disable = () => {
+      let settings = localStorage.getItem("settings");
+      localStorage.clear();
+      if (settings) {
+        localStorage.setItem("settings", settings);
+      }
+    };
+
+    const pushSeries = async (slug, coverUrl, source, url, title) => {
+      source = remoteStorage.guya.firstPartyHandler(source);
+      let allCurrentSeries = sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp");
+      let existingSeries = allCurrentSeries.find((e) => e.slug === slug && e.source === source.replace(" ", "_"));
+
+      if (existingSeries) {
+        // Effectively this updates the timestamp of the series, pushing it to the top
+        return remoteStorage.guya.editSeries(slug, coverUrl, source, url, title, existingSeries.pinned, existingSeries.chapters);
+      } else {
+        allCurrentSeries = allCurrentSeries.filter(e => !e.pinned);
+        if (allCurrentSeries.length + 1 > MAX_VALUES) {
+          let last = allCurrentSeries.pop();
+          await remoteStorage.guya.removeSeries(last.slug, last.source);
+        }
+        return remoteStorage.guya.addSeries(slug, coverUrl, source, url, title, undefined, undefined);
+      }
+    };
+
+    const removeSeries = async (slug, source) => {
+      return remoteStorage.guya.removeSeries(slug, source);
+    };
+
+    const addChapters = async (slug, source, chapters) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        chapters = [...new Set([...chapters, ...existingSeries.chapters])];
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+      } else {
+        console.error("[Global History] addChapters - Series didn't exist.");
+      }
+    };
+
+    const addChapter = async (slug, source, chapter) => {
+      return addChapters(slug, source, [chapter]);
+    };
+
+    const removeChapter = async (slug, source, chapter) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        chapters = existingSeries.chapters.filter(e => e !== chapter);
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+      } else {
+        console.error("[Global History] removeChapter - Series didn't exist.");
+      }
+    };
+
+    const removeAllChapters = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, []);
+      } else {
+        console.error("[Global History] removeAllChapters - series didn't exist.");
+      }
+    };
+
+    const getReadChapters = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return existingSeries.chapters;
+      } else {
+        console.error("[Global History] getReadChapters - series didn't exist.");
+      }
+    };
+
+    const pinSeries = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, true, undefined);
+      } else {
+        console.error("[Global History] pinSeries - series didn't exist.");
+      }
+    };
+
+    const unpinSeries = async (slug, source) => {
+      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+
+      if (existingSeries) {
+        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, false, undefined);
+      } else {
+        console.error("[Global History] unpinSeries - series didn't exist.");
+      }
+    };
+
+    const getAllPinnedSeries = async () => {
+      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => e.pinned);
+    };
+
+    const getAllUnpinnedSeries = async () => {
+      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => !e.pinned);
+    };
+
+    return {
+      max: MAX_VALUES,
+      enabled,
+      pushSeries,
+      removeSeries,
+      addChapters,
+      addChapter,
+      removeChapter,
+      removeAllChapters,
+      getReadChapters,
+      pinSeries,
+      unpinSeries,
+      getAllPinnedSeries,
+      getAllUnpinnedSeries,
+      toggle: {
+        enable,
+        disable
+      }
+    };
+  })();
+
+  const tag = () => {
+    try {
+      {% if cover_vol_url %}
+      let coverUrl = "{{ cover_vol_url }}";
+      {% elif cover %}
+      let coverUrl = "{{ cover }}";
+      {% else %}
+      let coverUrl = "";
+      {% endif %}
+
+      let source = window.location.pathname
+        .split("/")
+        .filter(e => e)[1]
+        .replace("_", " ");
+
+      {% if slug %}
+      let slug = "{{ slug }}";
+      {% else %}
+      let slug = "";
+      {% endif %}
+
+      {% if relative_url %}
+      let url = "{{ relative_url }}".split(slug)[0] + slug;
+      {% else %}
+      let url = "";
+      {% endif %}
+
+      {% if series %}
+      let title = "{{ series }}";
+      {% elif title %}
+      let title = "{{ title }}";
+      {% else %}
+      let title = "";
+      {% endif %}
+
+      if (source && slug && url && title) {
+        remoteStorage.on("ready", async () => {
+          await globalHistoryHandler.pushSeries(slug, coverUrl, source, url, title);
+          window.dispatchEvent(new CustomEvent("history-ready"));
+        });
+      }
+    } catch (e) {
+      // Do nothing, silently fail.
+    }
+  };
+
+  // Widget management should be on the templates but eh it's easier to put it in one place
+  window.addEventListener("load", () => {
+    if (globalHistoryHandler.enabled()) {
+      if (document.getElementById("rs-widget")) {
+        let widget = new Widget(remoteStorage, {autoCloseAfter: 10});
+        widget.attach("rs-widget");
+      }
+    }
+  });
+</script>

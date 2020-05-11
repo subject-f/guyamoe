@@ -24,35 +24,15 @@
 		{% if hide_referrer %}
 			<meta name="referrer" content="no-referrer">
 		{% endif %}
-		<!-- Google Tag Manager -->
-		<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-		j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-		'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-		})(window,document,'script','dataLayer','GTM-WWRXZB4');</script>
-		<!-- End Google Tag Manager -->
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-153182310-1"></script>
-		<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-
-		gtag('config', 'UA-153182310-1');
-		</script>
 		<link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/icons.css' %}{{ version_query }}">
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
-		{% include "referral.html" %}
-		{% include "proxy_history.html" %}
+		{% include "history.html" %}
 	</head>
 	
 <body>
-	<!-- Google Tag Manager (noscript) -->
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWRXZB4"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-	<!-- End Google Tag Manager (noscript) -->
+	{% include "tracking.html" %}
 	<main id="rdr-main" class="" tabindex="-1">
 		<div class="preload-entity">
 			<img id="scan_line" data-bind="preload_entity">
@@ -178,4 +158,8 @@
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>
+<script>
+	// History tagging
+	tag();
+</script>
 </html>

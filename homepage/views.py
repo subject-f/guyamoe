@@ -7,7 +7,7 @@ from django.views.decorators.http import condition
 from django.core.cache import cache
 from django.conf import settings
 
-from api.api import all_chapter_data_etag, md_chapter_info, fs_encode_slug
+from api.api import all_chapter_data_etag, md_chapter_data, fs_encode_slug
 from guyamoe.settings import STATIC_VERSION
 from reader.middleware import OnlineNowMiddleware
 from reader.users_cache_lib import get_user_ip
@@ -83,7 +83,7 @@ def md_series(request, md_series_id):
 
 @decorator_from_middleware(ForwardParametersMiddleware)
 def md_chapter(request, md_chapter_id, page=1):
-    chapter_info = md_chapter_info(md_chapter_id)
+    chapter_info = md_chapter_data(md_chapter_id)
     return redirect('reader-md-chapter', chapter_info["series_id"], str(chapter_info["chapter"]).replace(".", "-"), page)
 
 @decorator_from_middleware(ForwardParametersMiddleware)
@@ -98,15 +98,15 @@ def fs_gateway(request, raw_url):
     if raw_url.endswith("/"):
         raw_url = raw_url[:-1]
     if "/read/" in raw_url:
-        params = raw_url.split("/")
+        params = [n for n in raw_url.split("/") if n]
         # ~~Translator~~ Developer's note: "en" means only english FS sites work
         lang_idx = params.index("en")
         chapter = params[lang_idx + 2]
+        if len(params) - 1 > lang_idx + 2 and params[lang_idx + 3] != "page":
+            chapter += f"-{params[lang_idx + 3]}"
         page = "1"
         if "/page/" in raw_url:
             page_idx = params.index("page")
-            if lang_idx + 3 != page_idx:
-                chapter += f"-{params[lang_idx + 3]}"
             page = params[page_idx + 1]
         return redirect('reader-fs-chapter', fs_encode_slug(raw_url), chapter, page)
     elif "/series/" in raw_url:
