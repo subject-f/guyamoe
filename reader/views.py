@@ -83,7 +83,7 @@ def series_page_data(series_slug):
         for ch in chapter_dict:
             chapter, multiple_groups = chapter_dict[ch]
             u = chapter.uploaded_on
-            chapter_list.append([chapter.clean_chapter_number(), chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
+            chapter_list.append([chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
             volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
         volume_list = []
         for key, value in volume_dict.items():

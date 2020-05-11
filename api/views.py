@@ -163,6 +163,7 @@ def search_index(request, series_slug):
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
 
+@csrf_exempt
 def clear_cache(request):
     if request.method == "POST" and request.user and request.user.is_staff:
         if request.POST["clear_type"] == "all":
