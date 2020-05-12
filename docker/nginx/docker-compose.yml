@@ -1,0 +1,16 @@
+version: "3.7"
+
+# This file doesn't work on its own
+services:
+  nginx:
+    image: nginx
+    depends_on:
+      - web
+    volumes:
+      - type: bind
+        source: ./nginx/web.conf
+        target: /etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80 # You might have to change this to just 80 if it doesn't bind properly
+    networks:
+      - guyamoe-intercontinental-highway

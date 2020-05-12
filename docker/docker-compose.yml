@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+  web:
+    build:
+      context: ../
+      # Note that this is based on the context dir
+      # (Mostly) everything else is based off the
+      # compose file's dir
+      dockerfile: ./docker/Dockerfile
+    command: python -u docker/init.py
+    volumes:
+      - type: bind
+        source: ../
+        target: /guya
+      - type: bind
+        source: ./settings.py
+        target: /guya/guyamoe/settings.py
+    ports:
+      - 8000:8000
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - memcached
+      - postgres
+    networks:
+      - guyamoe-intercontinental-highway
+  memcached:
+    image: memcached:latest
+    restart: always
+    entrypoint:
+      - memcached
+      - -m 512
+    networks:
+      - guyamoe-intercontinental-highway
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=POSTGRES_PASSWORD
+      - POSTGRES_USER=POSTGRES_USER
+      - POSTGRES_DB=kaguyamoe
+    networks:
+      - guyamoe-intercontinental-highway
+
+# Give the network a name so it's more deterministic
+# Otherwise it defaults to <directory>_default
+networks:
+  guyamoe-intercontinental-highway:
+    name: guyamoe-intercontinental-highway
