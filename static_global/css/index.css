@@ -28,9 +28,9 @@ header {
 
 .navbar {
 	text-shadow: none;
-	height: 4.5rem;
+	height: 5em;
 	align-items: stretch;
-	padding: 0.3rem 0;
+	padding: 0.7rem 0;
 	border: none;
 }
 
@@ -73,7 +73,13 @@ header {
 }
 
 .rs-widget {
-	transform: translateY(-0.4em);
+	transform: translateY(-5px);
+}
+
+@media (max-width: 1400px) {
+	.rs-widget {
+		transform: translateY(-10px);
+	}
 }
 
 .rs-state-initial {
