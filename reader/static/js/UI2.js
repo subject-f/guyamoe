@@ -769,7 +769,7 @@ function UI_Selector(o) {
 		return this.selectedItems;
 	}
 	
-	this.handler = function(event) {
+	this.handler = (event) => {
 	var element;
 		if(this.held) return;
 		if(event.target !== this.$ && this.$.contains(event.target)) {
@@ -886,7 +886,7 @@ function UI_Tabs(o){
 		persistent: true,
 		refire: true,
 		toggleClass: 'is-active',
-		held: o.held||false,
+		held: o.held || false,
 		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
 
@@ -1044,6 +1044,10 @@ var customHTML = o.html;
 
 	this.refresh = () => {
 		this.buttons = this.$.getElementsByClassName('ToggleButton');
+		if(this.buttons.length == 4)
+			this.$.classList.add('b4');
+		else
+			this.$.classList.remove('b4');
 		this.buttons = this.buttons.map(b => {
 			if(b._struct == undefined)
 				return new UI_ToggleButton({
@@ -1161,24 +1165,27 @@ function UI_Slider(o) {
 	}));
 	Linkable.call(this);
 	this.setting = o.setting;
-	this.options = o.options || this.setting.options();
 	this.disabled = o.disabled || false;
 
-	this._.slider.min = 0;
-	this._.slider.max = this.options.length - 1;
-
-	this.options.forEach(option => {
-	let tick = crelm('i');
-		if(this.options.length < 14)
-			tick.innerHTML = this.setting.getFormatted(option);
-		this._.ticks.appendChild(tick);
-	})
+	this.draw = () => {
+		this._.slider.min = 0;
+		this._.slider.max = this.setting.options().length - 1;
+		this._.ticks.innerHTML = '';
+		this.setting.options().forEach(option => {
+		let tick = crelm('i');
+			if(this.setting.options().length < 14)
+				tick.innerHTML = this.setting.getFormatted(option);
+			this._.ticks.appendChild(tick);
+		})
+	}
 
 	this.set = function(state, silent) {
-		if(!this.options.includes(state)) return;
+		if(!this.setting.options().includes(state)) return;
 		this._.slider.setAttribute('data-'+this.setting.addr, state);
 		this.state = state;
-		this._.slider.value = this.options.indexOf(state);
+	let val = this.setting.options().indexOf(state);
+		if(this._.slider.value != val)
+			this._.slider.value = val;
 		this._.number.value = this.setting.getFormatted(state);
 		if(!silent && !this.disabled) {
 			this.S.out('settingsPacket',
@@ -1192,13 +1199,17 @@ function UI_Slider(o) {
 	}
 
 	this.setByIndex = function(idx, silent) {
-		if(+idx > this.options.length - 1 || +idx < 0) return;
-		this.set(this.options[idx], silent);
+		if(+idx > this.setting.options().length - 1 || +idx < 0) return;
+		this.set(this.setting.options()[idx], silent);
 	}
 
 	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.setting.addr)
-			this.set(settingsPacket.value, true);
+		if(settingsPacket.setting == this.setting.addr) {
+			if(settingsPacket.type == 'change') {
+				this.set(settingsPacket.value, true);
+				this.draw();
+			}
+		}
 	}
 
 	this.S.mapIn({
@@ -1210,7 +1221,7 @@ function UI_Slider(o) {
 	}
 	this._.number.onblur = (e) => {
 	let val = parseInt(this._.number.value);	
-		this.set(this.options.reduce((p, c) => (
+		this.set(this.setting.options().reduce((p, c) => (
 			Math.abs(c - val) < Math.abs(p - val) ? c : p)
 		));
 	}
@@ -1219,6 +1230,7 @@ function UI_Slider(o) {
 		.attach('enter', ['Enter'], (e) => this._.number.onblur())
 		.noPropagation(true)
 
+	this.draw();
 	this.set(o.state || Settings.get(this.setting.addr), true);
 	this.S.biLink(Settings);
 }

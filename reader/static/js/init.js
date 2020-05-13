@@ -57,6 +57,7 @@ function LoadHandler(o) {
 	}
 
 	document.addEventListener("DOMContentLoaded", e => this.onload());
+
 }
 
 function ReaderAPI(o) {
@@ -200,6 +201,10 @@ function Setting(o) {
 			this.set(this.default);
 	}
 
+	this.update = function() {
+		this.set(this.get());
+	}
+
 	this.cycle = function(options, silent) {
 		switch(this.type){
 			case SETTING_BOOLEAN:
@@ -298,19 +303,21 @@ function Setting(o) {
 	}
 }
 
-function SettingsCategory(name, hidden) {
+function SettingsCategory(name, hidden, icon) {
 	nonEnum(this, "name", name);
 	nonEnum(this, "hidden", hidden);
+	nonEnum(this, "icon", hidden);
 }
 
 function SettingsHandler(){
 	Linkable.call(this);
 
 	this.settings = {
-		lyt: new SettingsCategory('Layout'),
-		apr: new SettingsCategory('Appearance'),
-		bhv: new SettingsCategory('Behaviour'),
-		misc: new SettingsCategory('Miscellaneous', true)
+		lyt: new SettingsCategory('Layout', false),
+		apr: new SettingsCategory('Appearance', false),
+		bhv: new SettingsCategory('Behaviour', false),
+		adv: new SettingsCategory('Advanced', false),
+		misc: new SettingsCategory('Miscellaneous', true),
 	};
 	this.all = {};
 
@@ -353,7 +360,7 @@ function SettingsHandler(){
 			settings[setting] = this.all[setting].get();
 		}
 		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
-		delete settings['groupPreference'];
+		delete settings['misc.groupPreference'];
 		settings.VER = this.ver;
 		return JSON.stringify(settings);
 	}
@@ -372,8 +379,15 @@ function SettingsHandler(){
 		}else{
 			for(var key in qu) {
 			var setting = this.getByAddr(key);
-				if(qu[key] instanceof Array)
+				if(qu[key] instanceof Array) {
+					if(qu[key][0][0] == '!') {
+						if(qu[key][0].substr(1) == setting.get())
+							return false;
+						else
+							continue;
+					}
 					if(qu[key].includes(setting.get())) continue;
+				}
 				if(qu[key][0] == '!') {
 					if(qu[key].substr(1) == setting.get()) return false;
 				}else{
@@ -404,6 +418,9 @@ function SettingsHandler(){
 	}
 	this.prev = function(settingID, silent){
 		this.getByAddr(settingID).prev(silent);
+	}
+	this.update = function(settingID){
+		this.getByAddr(settingID).update();
 	}
 
 	this.refreshAll = function() {
@@ -507,7 +524,7 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'lyt.zoom',
-		prettyName: 'Zoom level',
+		prettyName: 'Maximum page width',
 		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
 		default: '100',
 		strings: (i) => `${i}%`,
@@ -540,46 +557,56 @@ function SettingsHandler(){
 		postUpdate: value => {
 			({
 				'1': v => {
-					this.set('lyt.spreadCount', 1)
-					this.set('lyt.spreadOffset', 0)
+					this.set('adv.spreadCount', 1)
+					this.set('adv.spreadOffset', 0)
 				},
 				'2': v => {
-					this.set('lyt.spreadCount', 2)
-					this.set('lyt.spreadOffset', 0)
+					this.set('adv.spreadCount', 2)
+					this.set('adv.spreadOffset', 0)
 				},
 				'2-odd': v => {
-					this.set('lyt.spreadCount', 2)
-					this.set('lyt.spreadOffset', 1)
+					this.set('adv.spreadCount', 2)
+					this.set('adv.spreadOffset', 1)
 				}
 			})[value]()
 		}
 	})
 	.newSetting({
-		addr: 'lyt.spreadCount',
+		addr: 'adv.spreadCount',
 		prettyName: '2-page spread count',
-		options: [1, 2, 3, 4],
+		options: [1,2,3,4,5,6,7,8,9,10],
 		default: 1,
 		strings: i => {
-			return 'Spread page count: %i'.replace('%i', i)
+			return '%ip'.replace('%i', i)
 		},
+		postUpdate: () => this.update('adv.spreadOffset'),
 		type: SETTING_VALUE,
-		hidden: true
+		// hidden: true
 	})
 	.newSetting({
-		addr: 'lyt.spreadOffset',
+		addr: 'adv.spreadOffset',
 		prettyName: '2-page spread offset',
 		options: () => {
-			return [...Array(this.get('lyt.spreadCount')).keys()]
+			return [...Array(this.get('adv.spreadCount')).keys()]
 		},
 		default: 0,
 		strings: i => {
-			return 'Spread page offset: %i pages'
-				.replace('%i', i)
-				.replace('1 pages', '1 page')
-				.replace('Spread page offset: 0 pages', 'No offset');
+			return '%ip'.replace('%i', i)
 		},
+		condition: {'adv.spreadCount': ['!1']},
 		type: SETTING_VALUE,
-		hidden: true
+		// hidden: true
+	})
+	.newSetting({
+		addr: 'apr.selectorAnchor',
+		prettyName: 'Page selector position',
+		options: ['left', 'bottom'],
+		default: 'left',
+		strings: {
+			'left': 'Left',
+			'bottom': 'Bottom' 
+		},
+		type: SETTING_MULTI
 	})
 	.newSetting({
 		addr: 'apr.selPinned',
@@ -593,7 +620,17 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'apr.selNum',
-		prettyName: 'Page number in selector',
+		prettyName: 'Page number in page selector',
+		default: true,
+		strings: {
+			true: 'Visible',
+			false: 'Hidden'
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'apr.hoverinos',
+		prettyName: 'On-hover page hints (next, prev)',
 		default: true,
 		strings: {
 			true: 'Visible',
@@ -619,7 +656,6 @@ function SettingsHandler(){
 			true: 'Show previews',
 			false: 'Hide previews',
 		},
-		global: true,
 		type: SETTING_BOOLEAN
 	})
 	.newSetting({
@@ -633,11 +669,36 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'bhv.scrollYDelta',
-		prettyName: 'Vertical keyboard scroll speed',
+		prettyName: 'Vertical scroll speed using keyboard arrows',
 		options: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
 		default: 25,
 		strings: i => `${i}px`,
 		type: SETTING_VALUE,
+		global: false
+	})
+	.newSetting({
+		addr: 'bhv.resetScroll',
+		prettyName: 'Reset page scroll after page flip',
+		default: false,
+		strings: {
+			true: 'Reset',
+			false: 'Leave it be',
+		},
+		type: SETTING_BOOLEAN,
+		global: false
+	})
+	.newSetting({
+		addr: 'bhv.historyUpdate',
+		prettyName: 'Browser history/back button behavior',
+		options: ['none','replace','chap','jump'],
+		default: 'none',
+		strings: {
+			'none': "Don't touch browser history",
+			'replace': "Only change page title",
+			'chap': "Add every chapter to history",
+			'jump': "Add every chapter and page skips",
+		},
+		type: SETTING_MULTI,
 		global: false
 	})
 	.newSetting({
@@ -756,25 +817,20 @@ function UI_Reader(o) {
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('apr.selPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('bhv.preload'))
 		.attach('spread', ['KeyQ'], s => Settings.cycle('lyt.spread'))
-		.attach('spreadCount', ['KeyU'], s => Settings.cycle('lyt.spreadCount'))
-		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('lyt.spreadOffset'))
-		.attach('share', ['KeyR'], s => {
-			this.copyShortLink(s);
-		})
-		.attach('minus', ['Minus'], s => {
-			if(Settings.query({'lyt.fit':'width'}) || Settings.query({'lyt.fit':'width_limit'}))
-				Settings.prev('lyt.zoom')
-		})
-		.attach('plus', ['Equal'], s => {
-			if(Settings.query({'lyt.fit':'width'}) || Settings.query({'lyt.fit':'width_limit'}))
-				Settings.next('lyt.zoom')
-		})
+		.attach('spreadCount', ['KeyU'], s => Settings.cycle('adv.spreadCount'))
+		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('adv.spreadOffset'))
+		.attach('share', ['KeyR'], s => this.copyShortLink(s))
 		.attach('enter', ['Enter'], s => {
 			if(this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
 		})
 		.attach('enter', ['Ctrl+Enter'], e => Loda.display('settings'))
 
+		
+	new KeyListener(document.body)
+		.condition(() => ['width','width_limit'].includes(Settings.get('lyt.fit')))
+		.attach('minus', ['Minus'], s => Settings.prev('lyt.zoom'))
+		.attach('plus', ['Equal'], s => Settings.next('lyt.zoom'))
 		
 	new KeyListener(document.body)
 		.condition(() => Settings.get('lyt.direction') == 'ltr')
@@ -892,7 +948,7 @@ function UI_Reader(o) {
 	}
 
 	this.drawGroup = function(group) {
-		Settings.set('groupPreference', group);	
+		Settings.set('misc.groupPreference', group);	
 		this.initChapter();
 	}
 
@@ -1189,8 +1245,8 @@ function UI_Reader(o) {
 			},
 			'lyt.direction': o => this.setLayout(o),
 			'lyt.zoom': o => this.setZoom(o),
-			'lyt.spreadCount': o => this.bootstrapChapter(),
-			'lyt.spreadOffset': o => this.bootstrapChapter(),
+			'adv.spreadCount': o => this.bootstrapChapter(),
+			'adv.spreadOffset': o => this.bootstrapChapter(),
 			'bhv.preload': number => {
 				this.$.setAttribute('data-preload', number);
 			},
@@ -1246,14 +1302,14 @@ function UI_Reader(o) {
 	this._.settings_button.onmousedown = e => Loda.display('settings');
 	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
 	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
-	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit', disabled: true});
+	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'});
 	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'});
 	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
 	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
 	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
-	this._.fit_button.onmousedown = e => {
-		this.asideViews.S.call('number', 0);
-	}
+	// this._.fit_button.onmousedown = e => {
+	// 	this.asideViews.S.call('number', 0);
+	// }
 	this._.zoom_level_plus.onmousedown = e => Settings.next('lyt.zoom');
 	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom');
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
@@ -1314,9 +1370,16 @@ function UI_ReaderImageView(o) {
 	});
 	Linkable.call(this);
 	this.firstDraw = true;
-	this.imageContainer = new UI_Tabs({node: this._.image_container})
+	this.imageContainer = new UI_Tabs({
+		node: this._.image_container,
+		held: true
+	})
 	
 	this.getScrollElement = function() {
+		if(Loda.open) return {
+			focus: () => {},
+			scroll: () => {}
+		};
 		if(Settings.get('lyt.direction') == 'ttb') {
 			if(IS_MOBILE) {
 				return document.documentElement;
@@ -1424,8 +1487,8 @@ function UI_ReaderImageView(o) {
 		this.imageWrappers = [];
 		this.imageWrappersMask = [];
 		this.imageWrappersMap = {};
-	var spreadCount = Settings.get('lyt.spreadCount');
-	var	spreadOffset = Settings.get('lyt.spreadOffset');
+	var spreadCount = Settings.get('adv.spreadCount');
+	var	spreadOffset = Settings.get('adv.spreadOffset');
 	var imageIndices = [];
 		for(var i=0; i < images.length; i++) {
 			imageIndices.push(i);
@@ -1436,7 +1499,7 @@ function UI_ReaderImageView(o) {
 			}
 			if(spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
 				if(wides.indexOf(i) > -1)
-					spreadOffset = Settings.get('lyt.spreadOffset');
+					spreadOffset = Settings.get('adv.spreadOffset');
 				else
 					spreadOffset = 0;
 				this.imageWrappersMask.push(imageIndices);
@@ -1512,13 +1575,14 @@ function UI_ReaderImageView(o) {
 					'translateX(' + this.imageContainer.$._translateX + '%)';
 			}
 			this.getScrollElement().focus();
+			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
 	var toPreload = Settings.get('bhv.preload');
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
-		toPreload = toPreload * Settings.get('lyt.spreadCount');
-		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('lyt.spreadCount')); i++) {
+		toPreload = toPreload * Settings.get('adv.spreadCount');
+		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
 			//	Reader.enqueuePreload(this.imageList[i].url);
@@ -1566,7 +1630,7 @@ const SCROLL_X = 3;
 		em: parseFloat(getComputedStyle(document.body).fontSize),
 		gesture: null,
 		time: null,
-		escapeVelocity: 0.1,
+		escapeVelocity: 0.05,
 		escapeDelta: 40,
 		imagePosition: 0,
 		a: null
@@ -1612,7 +1676,7 @@ const SCROLL_X = 3;
 		this.touch.deltaY = this.touch.pageY - this.touch.startY;
 		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
 		this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
-		if(Settings.get('layout') == 'rtl'){
+		if(Settings.get('lyt.direction') == 'rtl'){
 			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
 			|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
 				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
@@ -1641,12 +1705,14 @@ const SCROLL_X = 3;
 		this.touch.pageX = e.touches[0].pageX;
 		this.touch.pageY = e.touches[0].pageY;
 		if(this.touch.gesture == SWIPE) {
-			
+			if(this.touch.scrollLocked == true) return;
 			document.documentElement.style.overflow = "hidden";
-		}
-		else
+			this.touch.scrollLocked = true;
+		}else{
+			if(this.touch.scrollLocked == false) return;
 			document.documentElement.style.overflow = "auto";
-
+			this.touch.scrollLocked = false;
+		}
 	}
 
 	this.touch.snapAnimation = function(start, target, time, element) {
@@ -2044,37 +2110,58 @@ function UI_PageSelector(o) {
 function URLChanger(o) {
 	o=be(o);
 	Linkable.call(this);
+	this.hostname = location.hostname[0].toUpperCase() + location.hostname.slice(1);
+	this.recentState = {};
 
 	this.updateURL = function(SCP) {
-		setTimeout((function(){
-			window.history.replaceState(
-				{},
-				SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ', Page '
-					+ (SCP.page + 1)
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya',
-				window.location.pathname.split('/').slice(0, 3).join('/') // "/reader/series/"
-					+ '/'
-					+ SCP.series
-					+ '/'
-					+ SCP.chapter.replace('.', '-')
-					+ '/'
-					+ (SCP.page + 1)
-					+ '/'
-			);
-		var newtitle = SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya';
-			if(newtitle != document.title) document.title = newtitle;
-		}).bind(this), 1)
+		if(this.recentState.chapter == SCP.chapter && this.recentState.page == SCP.page)
+			return;
+	var pathName = location.pathname
+			.split('/')
+			.slice(0, 3)
+			.concat([SCP.series, SCP.chapter.replace('.', '-'), SCP.page + 1, ''])
+			.join('/');
+
+		switch(Settings.get('bhv.historyUpdate')) {
+			case 'none':
+				if(this.titleSet) return;
+				this.titleSet = true;
+			var	title = `${Reader.current.title} | ${this.hostname}`;
+				window.history.replaceState(null, title, pathName);
+				document.title = title;
+				break;
+			case 'replace':
+				title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+				window.history.replaceState(null, title, pathName);
+				document.title = title;
+				break;
+			case 'chap':
+				if(SCP.chapter == this.chapter) return;
+				title = `${SCP.chapter} - ${SCP.chapterName} - ${Reader.current.title} | ${this.hostname}`
+				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+				document.title = title;
+				break;
+			case 'jump':
+				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
+					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+					document.title = title;
+				}
+				break;
+		}
+		this.page = SCP.page;
+		this.chapter = SCP.chapter;
 	}
+
+	this.onHistory = (e) => {
+		if(!e.state) return;
+		this.recentState = e.state;
+		if(Reader.SCP.chapter != e.state.chapter)
+			Reader.initChapter(e.state.chapter, e.state.page);
+		else
+			Reader.displayPage(e.state.page);
+	}
+	window.addEventListener('popstate', this.onHistory);
 
 	this.S.mapIn({
 		SCP: this.updateURL
@@ -2216,6 +2303,7 @@ function UI_LodaManager(o) {
 	}
 
 	this.display = function(loda) {
+		this.open = true;
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
@@ -2228,6 +2316,7 @@ function UI_LodaManager(o) {
 		this.$.classList.add('hidden');
 		this.$.innerHTML = '';
 		Reader.$.focus();
+		this.open = false;
 	}
 
 	this.keyListener = new KeyListener(this.$)
@@ -2511,7 +2600,8 @@ function UI_ChapterUnit(o) {
 	this.pages = o.pages;
 	this.substring = o.substring
 	this.pageList = new UI_Tabs({
-		node: this._.pages
+		node: this._.pages,
+		held: true
 	})
 	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
 	for(var group in o.chapter.images) {
@@ -2559,27 +2649,36 @@ function UI_Loda_Settings(o) {
 	this.manager = o.manager;
 	this.name = 'Settings';
 	this.noPropagation = false;
+
 	this.content = new UI_ContainerList({
 		node: this._.content
 	});
-
 	this.tabs = new UI_Tabs({
-			node: this._.tabs
-		})
-		.S.link(this.content);
-	for(let category in Settings.settings) {
+		node: this._.tabs
+	}).S.link(this.content);
+
+	this.createCategory = (tabName, content) => {
 		this.tabs.add(new UI_Tab({
-			text: Settings.settings[category].name
+			text: tabName
 		}));
+		this.content.add(content);
+		return this;
+	} 
+
+	for(let category in Settings.settings) {
+		if(Settings.settings[category].hidden) continue;
 	var container = new UI_Dummy();
 		for(let setting in Settings.settings[category]) {
 			if(Settings.settings[category][setting].hidden) continue;
-		let sU = new UI_SettingUnit({setting: Settings.settings[category][setting]});
+		let sU = new UI_SettingUnit({
+				setting: Settings.settings[category][setting]
+			});
 			Settings.S.link(sU);
 			container.$.appendChild(sU.$);
 		}
-		this.content.add(container);
+		this.createCategory(Settings.settings[category].name, container);
 	}
+
 	this.tabs.select(0);
 }
 
@@ -2734,6 +2833,51 @@ function thirdPartySeriesHandler(url, chapter, group) {
 	}
 }
 
+function UI_About(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['About'].concat(o.kind || []),
+		html: `<div>
+			<img src="/static/img/Guya-moe.png">
+			<p class="muted">Version: v2.16.20200510</p>
+			<hr>
+			<p>Design, UX: Algoinde</p>
+			<p>Reader code: Algoinde, funkyhippo</p>
+			<p>Backend: appu</p>
+			<hr>
+			<a href="https://github.com/appu1232/guyamoe">Github</a>
+			<a href="https://discord.gg/4WPqwSY">Discord</a>
+			<hr>
+			<p class="muted">Powered by</p>
+			<div class="cubari" data-bind="cubari"><div></div></div>
+		</div>`
+	}));
+
+	this.cubariMove = (e) => {
+		var x = e.pageX;
+		var y = e.pageY;
+		var	cCR = this._.cubari.getBoundingClientRect();	
+		var cX = cCR.left + cCR.width / 2;
+		var cY = cCR.top + cCR.height / 2;
+		var	xDist = (cX - x) / (cX - x<0?document.documentElement.clientWidth - cX:cX) * -16;
+		var yDist = (cY - y) / (cY - y<0?document.documentElement.clientHeight - cY:cY) * -12;
+			this._.cubari.children[0].style.transform = `translate3d(${xDist}%, ${yDist}%, 0)`
+		}
+	this._.cubari.onmouseover = () => {
+		if(this.listener) return;
+		this.listener = true;
+		document.addEventListener('mousemove', this.cubariMove);
+		this._.cubari.children[0].style.transition = '';
+		setTimeout(() => {
+			document.removeEventListener('mousemove', this.cubariMove);
+			this._.cubari.children[0].style.transform = '';
+			this._.cubari.children[0].style.transition = 'transform 0.3s ease';
+			this.listener = false;
+		}, 5000);
+	}
+
+	return this;
+}
 
 alg.createBin();
 
@@ -2750,6 +2894,8 @@ URL = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
+
+Loda.library.settings.createCategory('About', new UI_About());
 
 API.S.link(Reader);
 Settings.S.link(Reader);
