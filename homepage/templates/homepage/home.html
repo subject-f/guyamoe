@@ -426,4 +426,13 @@ window.addEventListener("load", () => {
 	}
 });
 </script>
+<script>
+// Expand the series listing if requested
+window.addEventListener("load", () => {
+	if(window.location.hash == '#chapter_listing_exp') {
+		document.getElementById('chapter_listing').classList.add('vis');
+		document.getElementById('chapter_listing_exp').classList.add('vis');
+	}
+});
+</script>
 {% endblock %}
