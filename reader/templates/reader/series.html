@@ -50,6 +50,7 @@
     }
 
     function setImage(element) {
+        document.getElementById("imagepreview").removeAttribute("src");
         document.getElementById("imagepreview").src = element.getAttribute("img-source");
         document.getElementById("openOriginal").onclick = () => window.open(`${element.getAttribute("img-source")}`, '_blank');
 
