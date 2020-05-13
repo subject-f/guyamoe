@@ -43,15 +43,30 @@
                     method: "POST",
                     body: formData
                 }).then(data => data.json()).then(data => data["covers"].forEach((cover) => {
-                    volumeCovers.insertAdjacentHTML("beforeend", `<a data-toggle="modal" onclick="setImage('${cover[1]}')" data-target="#imagemodal"><img class="mb-1" src="${cover[2]}" onerror='if (this.src != &quot;${cover[1]}&quot;) this.src=&quot;${cover[1]}&quot;'></a>`);
+                    volumeCovers.insertAdjacentHTML("beforeend", `<a data-toggle="modal" img-source="${cover[1]}" onclick="setImage(this)" data-target="#imagemodal"><img class="mb-1" src="${cover[2]}" onerror='if (this.src != &quot;${cover[1]}&quot;) this.src=&quot;${cover[1]}&quot;'></a>`);
                 }));
             }
         }
     }
 
-    function setImage(cover) {
-        document.getElementById("imagepreview").src = cover;
-        document.getElementById("openOriginal").onclick = `window.open('${cover}', '_blank')`;
+    function setImage(element) {
+        document.getElementById("imagepreview").src = element.getAttribute("img-source");
+        document.getElementById("openOriginal").onclick = () => window.open(`${element.getAttribute("img-source")}`, '_blank');
+
+        let prevButton = document.getElementById("volumePrev");
+        let nextButton = document.getElementById("volumeNext");
+        if (element.previousSibling) {
+            prevButton.removeAttribute("disabled");
+            prevButton.onclick = () => setImage(element.previousSibling);
+        } else {
+            prevButton.setAttribute("disabled", true);
+        }
+        if (element.nextSibling) {
+            nextButton.removeAttribute("disabled");
+            nextButton.onclick = () => setImage(element.nextSibling);
+        } else {
+            nextButton.setAttribute("disabled", true);
+        }
     }
 
     async function markAll(e) {
@@ -296,7 +311,13 @@
                 <img src="" id="imagepreview" style="width: 100%; height: 100%;" />
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="openOriginal">
+                <button type="button" class="btn btn-default" id="volumePrev">
+                    Prev
+                </button>
+                <button type="button" class="btn btn-default" id="volumeNext">
+                    Next
+                </button>
+                <button type="button" class="btn btn-default" id="openOriginal">
                     Open original
                 </button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">
