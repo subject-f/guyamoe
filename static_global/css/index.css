@@ -197,17 +197,6 @@ header {
 		border: 0;
 	}
 
-	.blackbox-host {
-		padding-right: 0 !important;
-		order: 999;
-	}
-	
-	#blackbox {
-		max-width: 100%;
-		margin-left: 0;
-	}
-
-
 	.enter-key {
 		top: -0.8rem !important;
 	}
@@ -226,13 +215,6 @@ header {
 
 .pusher {
 	flex-grow: 1;
-}
-
-.blackbox-host {
-	padding-right: 1rem;
-	flex-grow: 0;
-	flex-basis: 50%;
-	justify-content: flex-end;
 }
 
 .navbar .nav-item {

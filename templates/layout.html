@@ -113,14 +113,6 @@
 					link.classList.add('s')
 			}
 		});
-		blackbox.style.height = "";
-		blackbox.style.height = Math.min(blackbox.scrollHeight, 500) + "px";
-		blackbox.nextElementSibling.style.top = Math.min(blackbox.scrollHeight, 500) + "px";
-		blackbox.addEventListener('keydown', autosize);
-		blackbox.addEventListener('blur', e => e.target.placeholder = '');
-		blackbox.addEventListener('focus', e => e.target.placeholder = 'Black hole mail. Send us your feedback!');
-		// blackbox.addEventListener('mouseleave',  e => e.target.placeholder = '');
-		// blackbox.addEventListener('mouseenter', e => e.target.placeholder = 'Send feedback!');
 
 		function autosize() {
 			var el = this;
@@ -131,29 +123,6 @@
 			}, 0);
 		}
 
-		blackbox_submit.onclick = function(e) {
-			blackbox.focus();
-			var formData = new FormData();
-			formData.append("text", blackbox.value)
-			fetch('/api/black_hole_mail/', {
-					method: 'POST',
-					body: formData
-				})
-				.then((response) => response.json())
-				.then((data) => {
-					if (data.success) {
-						blackbox.placeholder = 'Sent!'
-					} else {
-						blackbox.placeholder = data.error
-					}
-				})
-				.catch((error) => {
-					blackbox.placeholder = 'Send failed.'
-				});
-			console.log(blackbox.value);
-			blackbox.value = '';
-			autosize.call(blackbox)
-		}
 	</script>
 	{% endcache %} {% block body %} {% endblock %}
 	<script>
