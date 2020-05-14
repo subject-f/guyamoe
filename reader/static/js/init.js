@@ -1628,12 +1628,10 @@ function UI_ReaderImageView(o) {
 		if(Settings.get('lyt.direction') == 'ttb') {
 			if (!dry){	
 				setTimeout(this.getScrollElement().focus(), 1);
-				if(wrapperIndex > 0) {
-					if(IS_MOBILE) {
-						scroll(this.getScrollElement(), 0, this.wrappers.current.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
-					}else{
-						scroll(this.getScrollElement(), 0,this.wrappers.current.$.offsetTop);
-					}
+				if(IS_MOBILE) {
+					scroll(this.getScrollElement(), 0, this.wrappers.current.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
+				}else{
+					scroll(this.getScrollElement(), 0,this.wrappers.current.$.offsetTop);
 				}
 			}
 		}else{
