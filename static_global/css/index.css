@@ -619,13 +619,39 @@ main a {
 	top: -1px;
 }
 
-
 .manga-link.guya {
 	font-size: 1.18em;
 	border-color: #f00c;
 	background-color: #c608082e;
 	/*animation: 0.3s shake infinite;*/
 }
+
+.manga-link.chapter {
+	font-size: 0.9rem;
+	border-color: #f00c; 
+	background-color: #c608082e;
+	padding: 0;
+	cursor: pointer;
+	margin-left: 0;
+	outline: none !important;
+}
+.manga-link.chapter > span {
+	border-color: #f00c;
+	padding: 0.4em 0.8em;
+	display: inline-block;
+	color: #ddd;
+}
+.manga-link.chapter .manga-link-chap {
+	border-right: 1px solid #f00c;
+	padding: 0.4em 0.5em;
+}
+.manga-link.chapter .manga-link-text {
+	background: rgba(0,0,0,0.4);
+}
+.manga-link.chapter.no-chapter .manga-link-chap {
+	display: none;
+}
+
 
 @keyframes shake {
   10%, 90% {

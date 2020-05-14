@@ -473,7 +473,7 @@ function SettingsHandler(){
 					e.setting.get(),
 				)
 			)
-			if(!e.setting.notip)
+			if(!e.notip)
 				if(e.type == 'change')
 					this.S.out('message', e.setting.getHelp());
 		}
@@ -896,8 +896,8 @@ function UI_Reader(o) {
 		
 	new KeyListener(document.body)
 		.condition(() => ['width','width_limit'].includes(Settings.get('lyt.fit')))
-		.attach('minus', ['Minus'], s => Settings.prev('lyt.zoom'))
-		.attach('plus', ['Equal'], s => Settings.next('lyt.zoom'))
+		.attach('minus', ['Minus'], s => Settings.prev('lyt.zoom', undefined, true))
+		.attach('plus', ['Equal'], s => Settings.next('lyt.zoom', undefined, true))
 		
 	new KeyListener(document.body)
 		.condition(() => Settings.get('lyt.direction') == 'ltr')
@@ -1381,8 +1381,8 @@ function UI_Reader(o) {
 	// this._.fit_button.onmousedown = e => {
 	// 	this.asideViews.S.call('number', 0);
 	// }
-	this._.zoom_level_plus.onmousedown = e => Settings.next('lyt.zoom');
-	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom');
+	this._.zoom_level_plus.onmousedown = e => Settings.next('lyt.zoom', undefined, true);
+	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom', undefined, true);
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 	this._.random_chapter_button.addEventListener('mousedown', e => {
