@@ -2407,14 +2407,21 @@ function UI_LodaManager(o) {
 		settings: new UI_Loda_Settings().S.link(this)
 	}
 
+	this.scrollTop = 0;
+
 	this.display = function(loda) {
 		this.open = true;
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
+
 		this.$.focus();
 		this.keyListener.noPropagation(!!this.library[loda].noPropagation);
-		setTimeout(() => this.library[loda].focus(), 100);
+		if(this.currentLoda == loda && this.scrollTop > 0)
+			scroll(this.$, 0, this.scrollTop)
+		else
+			setTimeout(() => this.library[loda].focus(), 100);
+		this.currentLoda = loda;
 	}
 
 	this.close = function() {
@@ -2432,6 +2439,10 @@ function UI_LodaManager(o) {
 		if(e.target == this.$) {
 			this.close();
 		}
+	}
+
+	this.$.onscroll = (e) => {
+		this.scrollTop = this.$.scrollTop; 
 	}
 	
 	this.S.mapIn({

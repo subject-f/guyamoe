@@ -2403,7 +2403,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	.Loda_Settings {
 		width: 100%;
 		margin: 0 1rem;
-		height: 55vh;
+		height: 57vh;
 		flex-direction: column-reverse;
 	}
 	.Loda_Settings aside {
@@ -2469,8 +2469,10 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 		display: none;
 	}
 		
-	.LodaManager {
-		align-content: flex-end !important;
+	.Loda_Settings {
+		align-self: flex-end;
+		order: 100;
+		margin-bottom: 5vh;
 	}
 }
 /*
