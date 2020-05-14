@@ -198,11 +198,11 @@ var reading_button = null;
 				return this.setButton('last', this.chL[0]);
 			}
 		var streak = 0; 
-		var index = -1;
+		var index = 0;
 			for(var i=0; i < read.length; i++) {
 			var oldIndex = index;
 				index = this.chL.indexOf(read[i]);
-				if(Math.abs(oldIndex - index) > 1) {
+				if(Math.abs(oldIndex - index) > 1 || index < 0) {
 					streak = 0;
 				}else{
 					streak++;
