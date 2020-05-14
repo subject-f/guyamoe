@@ -1,7 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-	<head>
+<head>
 		<meta charset="UTF-8">
 		<meta name="theme-color" content="#2b2f33" />
 		<title>{{ series_name }} :: Chapter {{ chapter_number }} | Guya.moe</title>
@@ -25,7 +25,6 @@
 			<meta name="referrer" content="no-referrer">
 		{% endif %}
 		<link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
-		<link rel="stylesheet" type="text/css" href="{% static 'css/icons.css' %}{{ version_query }}">
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 		{% include "history.html" %}
@@ -34,29 +33,27 @@
 <body>
 	{% include "tracking.html" %}
 	<main id="rdr-main" class="" tabindex="-1">
-		<div class="preload-entity">
-			<img id="scan_line" data-bind="preload_entity">
-		</div>
-		<aside>
-			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual is-ico-button"></div></div>
+		<img class="preload-entity" id="scan_line" data-bind="preload_entity">
+		<aside class="unload">
+			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual ico-btn"></div></div>
 			<header>
-				<a href="/" class="is-ico-button guya"></a>
+				<a href="/" class="ico-btn guya"></a>
 				<h1 data-bind='title'><a href="/read/manga/{{ slug }}">{{ series_name }}</a></h1>
-				<button class="is-ico-button"></button>
+				<button class="ico-btn"></button>
 			</header>
 			<div class="rdr-aside-buffer" data-bind="rdr_aside_buffer"></div>
 			<div class="rdr-aside-content" data-bind="rdr_aside_content">
 				<section class="rdr-selector" data-bind="rdr_selector">
 					<div class="rdr-selector-top">
-						<button data-bind='vol_next' class="rdr-selector-vol is-ico-button prev" data-tip="Previous volume"></button>
+						<button data-bind='vol_next' class="rdr-selector-vol ico-btn prev" data-tip="Previous volume"></button>
 						<div class="flex-spacer" data-bind='message'></div>
 						
-						<a data-bind='share_button' data-tip="Short link to current page" class="rdr-share is-ico-button "></a>
-						<!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment is-ico-button"></a> -->
-						<button data-bind='search' class="is-ico-button search"></button>
+						<a data-bind='share_button' data-tip="Short link to current page" class="rdr-share ico-btn "></a>
+						<!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment ico-btn"></a> -->
+						<button data-bind='search' class="ico-btn search"></button>
 					</div>
 					<div class="rdr-selector-mid">
-						<button data-bind='chap_prev' class="rdr-selector-chap is-ico-button prev"></button>
+						<button data-bind='chap_prev' class="rdr-selector-chap ico-btn prev"></button>
 						<div class="rdr-vol-wrap" data-bind='selector_vol'>
 							<label></label>
 							<select id="rdr-vol"></select>
@@ -65,16 +62,17 @@
 							<label></label>
 							<select id="rdr-chap"></select>
 						</div>
-						<button data-bind='chap_next' class="rdr-selector-chap is-ico-button next"></button>
+						<button data-bind='chap_next' class="rdr-selector-chap ico-btn next"></button>
 					</div>
 					<div class="rdr-selector-bot">
-						<button data-bind='vol_prev' class="rdr-selector-vol is-ico-button next" data-tip="Next volume"></button>
+						<button data-bind='vol_prev' class="rdr-selector-vol ico-btn next" data-tip="Next volume"></button>
 						<div class="flex-spacer"></div>
-						<button data-bind='preload_button' class="rdr-selector-vol is-ico-button preload"></button>
-						<button data-bind='layout_button' class="rdr-selector-vol is-ico-button layout"></button>
-						<button data-bind='fit_button' class="rdr-selector-vol is-ico-button fitter"></button>
-						<button data-bind='spread_button' class="rdr-selector-vol is-ico-button spread"></button>
-						<button data-bind='sel_pin_button' class="rdr-selector-vol is-ico-button selpin"></button>
+						<button data-bind='preload_button' class="ico-btn hidden"></button>
+						<button data-bind='fit_button' class="ico-btn"></button>
+						<button data-bind='layout_button' class="ico-btn"></button>
+						<button data-bind='spread_button' class="ico-btn"></button>
+						<button data-bind='sel_pin_button' class="ico-btn"></button>
+						<button data-bind='settings_button' class="ico-btn"></button>
 					</div>
 				</section>
 				<section class="rdr-groups" data-bind='groups'>
@@ -82,17 +80,17 @@
 				<section class="rdr-previews">
 					<div class="header" data-bind="previews_button">
 						<span>Previews</span>
-						<div class="is-ico-button expander"></div>
+						<div class="ico-btn expander"></div>
 					</div>
 					<div data-bind='previews' class="rdr-previews-gallery">
 					</div>
 				</section>
-				<section class="rdr-aside-overlay hidden" data-bind="aside_views">
+<!-- 				<section class="rdr-aside-overlay hidden" data-bind="aside_views">
 					<div class="rdr-aside-view fit_view UI Dummy ButtonGroup" data-bind="aside_views_fit">
 						<div class="header">Fit mode</div>
 						<div class="t-row">
 							<div class="t-1">
-								<div class="StatefulButton UI B	utton" data-bind="fit_none" data-tip="Images are displayed in natural resolution."><div class="is-ico-button fitter fit_none"></div><span>Original size</span></div>
+								<div class="ToggleButton UI Button" data-bind="none" data-tip="Images are displayed in natural resolution."><div class="ico-btn fitter none"></div><span>Original size</span></div>
 							</div>
 						</div>
 						<div class="t-row">
@@ -100,9 +98,9 @@
 								Limit
 							</div>
 							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="is-ico-button fitter fit_all_limit"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width_limit" data-tip="Natural image size that does not exceed max width."><div class="is-ico-button fitter fit_width_limit"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height_limit" data-tip="Natural image size that does not exceed max height."><div class="is-ico-button fitter fit_height_limit"></div><span>Height</span></div>
+								<div class="ToggleButton UI Button" data-bind="all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="ico-btn fitter all_limit"></div><span>All</span></div>
+								<div class="ToggleButton UI Button" data-bind="width_limit" data-tip="Natural image size that does not exceed max width."><div class="ico-btn fitter width_limit"></div><span>Width</span></div>
+								<div class="ToggleButton UI Button" data-bind="height_limit" data-tip="Natural image size that does not exceed max height."><div class="ico-btn fitter height_limit"></div><span>Height</span></div>
 							</div>
 						</div>
 						<div class="t-row">
@@ -110,14 +108,14 @@
 								Stretch
 							</div>
 							<div class="t-1">
-								<div class="StatefulButton UI Button" data-bind="fit_all" data-tip="Images scale to width or height."><div class="is-ico-button fitter fit_all"></div><span>All</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_width" data-tip="Images scale to max width."><div class="is-ico-button fitter fit_width"></div><span>Width</span></div>
-								<div class="StatefulButton UI Button" data-bind="fit_height" data-tip="Images scale to max height."><div class="is-ico-button fitter fit_height"></div><span>Height</span></div>
+								<div class="ToggleButton UI Button" data-bind="all" data-tip="Images scale to width or height."><div class="ico-btn fitter all"></div><span>All</span></div>
+								<div class="ToggleButton UI Button" data-bind="width" data-tip="Images scale to max width."><div class="ico-btn fitter width"></div><span>Width</span></div>
+								<div class="ToggleButton UI Button" data-bind="height" data-tip="Images scale to max height."><div class="ico-btn fitter height"></div><span>Height</span></div>
 							</div>
 						</div>
 					</div>
 				</section>
-			</div>
+ -->			</div>
 		</aside>
 		<div class="rdr-page-selector vis" data-bind="page_selector">
 			<div class="rdr-page-selector-counter" data-bind="page_keys_count">
@@ -131,7 +129,7 @@
 			</div>
 			<div class="zoom-level refresh-chapter is-hidden" data-bind="random_chapter">
 				<div class="refresh-chapter-note">This is the Blu-ray extras "random chapter".<br>Click this button to reshuffle the chapter.</div>
-				<div class="is-ico-button" data-bind="random_chapter_button">↻</div>
+				<div class="ico-btn" data-bind="random_chapter_button">↻</div>
 			</div>
 			<div class="hover-prev" data-bind="hover_prev">
 				<div class="hover-wrap">
@@ -147,18 +145,20 @@
 			</div>
 		</content>
 		<div class="zoom-level vis" data-bind="zoom_level">
-			<div class="is-ico-button" data-bind="zoom_level_plus"></div>
-			<div class="is-ico-button" data-bind="zoom_level_minus"></div>
+			<div class="ico-btn" data-bind="zoom_level_plus"></div>
+			<div class="ico-btn" data-bind="zoom_level_minus"></div>
 		</div>
 	</main>
 	<div class="Tooltippy"></div>
-	<div class="LodaManager hidden" tabindex="-1"></div>
+	<div class="LodaManager hidden" tabindex="-1">
+
+	</div>
 </body>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>
-<script>
+<script type="text/javascript">
 	// History tagging
 	tag();
 </script>

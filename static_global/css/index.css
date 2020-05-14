@@ -1,5 +1,23 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i|Vollkorn:400,400i,600&display=swap&subset=latin-ext');
+@font-face {
+	font-family: 'guya';
+	src:
+	url('../fonts/guya.woff?bss2') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
 
+.ico-btn {
+	font-family: 'guya' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
 
 html {
   scroll-behavior: smooth;

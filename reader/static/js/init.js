@@ -57,6 +57,7 @@ function LoadHandler(o) {
 	}
 
 	document.addEventListener("DOMContentLoaded", e => this.onload());
+
 }
 
 function ReaderAPI(o) {
@@ -148,155 +149,222 @@ function ReaderAPI(o) {
 	})
 }
 
+const SETTING_HIDDEN = -1;
+const SETTING_CUSTOM = 1;
+const SETTING_BOOLEAN = 10;
+const SETTING_MULTI = 20;
+const SETTING_MULTI_DROPDOWN = 21;
+const SETTING_VALUE = 30;
+const SETTING_VALUE_STEPPED = 31;
+	
+function Setting(o) {
+	Linkable.call(this);
+	this.name = o.name;
+	this.addr = o.addr;
+	this.prettyName = o.prettyName;
+	this.setting = this.default = o.default;
+	this.type = o.type || SETTING_HIDDEN;
+	if(o.options !== undefined) {
+		if(o.options instanceof Function)
+			this.options = o.options;
+		else{
+			if(o.options instanceof Array){
+				this.optionsPrimitive = o.options.slice(0);
+				this.options = function() {return this.optionsPrimitive};
+			}else
+				this.optionsPrimitive = o.options;
+		}
+	}else if(this.type == SETTING_BOOLEAN){
+		this.options = function() {return [true, false]};
+	}
+	this.strings = o.strings;
+	this.postUpdate = o.postUpdate;
+	this.html = o.html;
+	this.global = (o.global===undefined)?true:o.global;
+	this.manual = o.manual; //if true, the setting needs an external .setClass call to update the class. This can be used where class update needs to be in the middle of something.
+	this.hidden = o.hidden;
+	this.condition = o.condition;
+	this.nomobile = o.nomobile;
+	this.help = o.help;
+	this.disabled = o.disabled || false;
+
+	this.checkOptionValidity = function(value) {
+		if(this.options == undefined)
+			return true;
+		
+		if(this.options() instanceof Array)
+			return this.options().includes(value);
+		
+		return this.options() == value;
+	}
+
+	this.refresh = function() {
+		if(!this.checkOptionValidity(this.get()))
+			this.set(this.default);
+	}
+
+	this.update = function() {
+		this.set(this.get());
+	}
+
+	this.cycle = function(options, silent, notip) {
+		switch(this.type){
+			case SETTING_BOOLEAN:
+			case SETTING_MULTI:
+			case SETTING_MULTI_DROPDOWN:
+			case SETTING_VALUE:
+			case SETTING_VALUE_STEPPED:
+				if(options === undefined)
+					options = this.options();
+			var index = options.indexOf(this.get());
+				return this.set(
+					(index+1 > options.length - 1)?options[0]:options[index+1],
+					silent,
+					notip
+				);
+				break;
+		}
+		return false;
+	}
+	this.next = function(silent, notip) {
+		if(!this.options() instanceof Array) return;
+		if(this.options().includes(this.setting)) {
+		var targetIndex = this.options().indexOf(this.setting) + 1;
+			if(targetIndex > this.options().length - 1) return;
+			this.set(this.options()[targetIndex], silent, notip)
+		}
+	}
+	this.prev = function(silent, notip) {
+		if(!this.options() instanceof Array) return;
+		if(this.options().includes(this.setting)) {
+		var targetIndex = this.options().indexOf(this.setting) - 1;
+			if(targetIndex < 0) return;
+			this.set(this.options()[targetIndex], silent, notip)
+		}
+	}
+	this.get = function() {
+		return this.setting;
+	}
+	this.getFormatted = function(option) {
+		option = option===undefined?this.get():option;
+		if(this.strings) {
+			if(this.strings instanceof Function) {
+				return this.strings(option);
+			}
+			return this.strings[option];
+		}else{
+			return option;
+		}
+	}
+	this.getHelp = function(option) {
+		option = option===undefined?this.get():option;
+		if(this.help) {
+			if(typeof this.help == 'string') {
+				return this.help;
+			}
+			return this.help[option];
+		}else{
+			return '';
+		}
+	}
+	this.classString = function(option) {
+		if(option !== undefined) {
+			return this.name + '-' + option;
+		}else{
+			return this.name + '-' + this.get();
+		}
+	}
+	this.setClass = function() {
+	var classList = document.body.classList;
+		switch(this.type){
+			case SETTING_BOOLEAN:
+				classList.remove(this.classString(!this.get()));
+				classList.add(this.classString());
+				break;
+			case SETTING_MULTI:
+			case SETTING_MULTI_DROPDOWN:
+			case SETTING_VALUE:
+			case SETTING_VALUE_STEPPED:
+				classList.remove.apply(classList, [].filter.call(classList, cl => cl.indexOf(this.name) == 0));
+				classList.add(this.classString());
+				break;
+		}
+	}
+	this.set = function(value, silent, notip) {
+		if(!this.checkOptionValidity(value)) return false;
+		this.setting = value;
+		if(this.global && !this.manual)
+			this.setClass();
+		this.S.out('settingEvent', {
+			type: 'change',
+			setting: this,
+			silent: silent,
+			notip: notip
+		})
+	}
+	this.disable = () => {
+		this.disabled = true;
+		this.S.out('settingEvent', {
+			type: 'disable',
+			setting: this
+		})
+	}
+	this.enable = () => {
+		this.disabled = false;
+		this.S.out('settingEvent', {
+			type: 'enable',
+			setting: this
+		})
+	}
+}
+
+function SettingsCategory(name, hidden, icon) {
+	nonEnum(this, "name", name);
+	nonEnum(this, "hidden", hidden);
+	nonEnum(this, "icon", hidden);
+}
+
 function SettingsHandler(){
 	Linkable.call(this);
 
+	this.settings = {
+		lyt: new SettingsCategory('Layout', false),
+		apr: new SettingsCategory('Appearance', false),
+		bhv: new SettingsCategory('Behavior', false),
+		adv: new SettingsCategory('Advanced', false),
+		misc: new SettingsCategory('Miscellaneous', true),
+	};
 	this.all = {};
 
-	this.all.fit = new Setting(
-		'fit',
-		'Page fit',
-		[
-			'fit_none',
-			'fit_all_limit',
-			'fit_width_limit',
-			'fit_height_limit',
-			'fit_all',
-			'fit_width',
-			'fit_height'
-		],
-		(IS_MOBILE)?'fit_all_limit':'fit_width_limit',
-		{
-			'fit_none': 'Images are displayed in natural resolution.',
-			'fit_all_limit': 'Natural image size that does not exceed max width or height.',
-			'fit_width_limit': 'Natural image size that does not exceed max width.',
-			'fit_height_limit': 'Natural image size that does not exceed max height.',
-			'fit_all': 'Images expand to width or height.',
-			'fit_width': 'Images expand to max width.',
-			'fit_height': 'Images expand to max height.',
-		} 
-	)
-	this.all.layout = new Setting(
-		'layout',
-		'Reader layout',
-		['ltr', 'ttb', 'rtl'],
-		'ltr',
-		{
-			ltr: 'Layout set to left-to-right.',
-			ttb: 'Layout set to top-to-bottom.',
-			rtl: 'Layout set to right-to-left.'
+	this.newSetting = function(o) {
+	let obj = Object.byString(this.settings, o.addr.split('.').slice(0, -1).join('.'));
+		o.name = o.addr.split('.').pop();
+		this.all[o.addr] = obj[o.name] = new Setting(o);
+		this.all[o.addr].S.link(this);
+		return this;
+	}
+
+	this.deserialize = function() {
+		if(!localStorage) return;
+	var settings = localStorage.getItem('settings');
+		try{
+			if(!settings) throw 'No settings';
+			settings = JSON.parse(settings);
+			if(settings.VER && settings.VER != this.ver) {
+				throw 'Settings ver changed';
+			}
+			for(var setting in settings) {
+				if(setting == 'VER') continue;
+				this.set(setting, settings[setting], true);
+			}
+		}catch (e){
+			localStorage.setItem('settings','');
+			console.warn('Settings were found to be corrupted and so were reset.');
+			for (var setting in this.all) {
+				this.all[setting].set(this.all[setting].get());
+			}
 		}
-	)
-	this.all.spread = new Setting(
-		'spread',
-		'2-page spread',
-		['p1', 'p2', 'p2-odd'],
-		'p1',
-		{
-			'p1': 'Single-page layout',
-			'p2': 'Two-page layout',
-			'p2-odd': 'Two-page layout, odd'
-		},
-		value => {
-			({
-				'p1': v => {
-					this.set('spreadCount', 1)
-					this.set('spreadOffset', 0)
-				},
-				'p2': v => {
-					this.set('spreadCount', 2)
-					this.set('spreadOffset', 0)
-				},
-				'p2-odd': v => {
-					this.set('spreadCount', 2)
-					this.set('spreadOffset', 1)
-				}
-			})[value]()
-		}
-	)
-	this.all.spreadCount = new Setting(
-		'spreadCount',
-		'2-page spread count',
-		[1, 2, 3, 4],
-		1,
-		i => {
-			return 'Spread page count: %i'.replace('%i', i)
-		}
-	)
-	this.all.spreadOffset = new Setting(
-		'spreadOffset',
-		'2-page spread offset',
-		i => {
-			return [...Array(this.all.spreadCount.get()).keys()]
-			// return i >= this.all.spreadCount.get()?null:i;
-		},
-		0,
-		i => {
-			return 'Spread page offset: %i pages'
-				.replace('%i', i)
-				.replace('1 pages', '1 page')
-				.replace('Spread page offset: 0 pages', 'No offset');
-		}
-	)
-	this.all.groupPreference = new Setting(
-		'groupPreference',
-		'Group preference',
-		[]
-	)
-	this.all.selectorPinned = new Setting(
-		'selectorPinned',
-		'Page selector',
-		(IS_MOBILE)?['selector-fade', 'selector-pinned']:['selector-fade', 'selector-pinned', 'selector-pinned-nonum'],
-		'selector-fade',
-		{
-			'selector-pinned': (IS_MOBILE)?'':'Page selector pinned with number.',
-			'selector-pinned-nonum': 'Page selector pinned without number.',
-			'selector-fade': (IS_MOBILE)?'':'Page selector is shown on hover.'
-		}
-	)
-	this.all.preload = new Setting(
-		'preload',
-		'Preload amount',
-		[1,2,3,4,5,6,7,8,9,100],
-		(IS_MOBILE)?2:3,
-		i => 'Reader will preload %i pages.'.replace('%i', i)
-			.replace('1 pages', '1 page')
-			.replace('100 pages', 'all pages')
-	)
-	this.all.sidebar = new Setting(
-		'sidebar',
-		'Sidebar',
-		['hide', 'show'],
-		'show',
-		{
-			'hide': '',
-			'show': '',
-		}
-	)
-	this.all.previews = new Setting(
-		'previews',
-		'Previews',
-		['hide', 'show'],
-		'hide',
-		{
-			'hide': '',
-			'show': '',
-		}
-	)
-	this.all.zoom = new Setting(
-		'zoom',
-		'Zoom level',
-		['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
-		'100',
-		i => 'Zoom level set to %i%.'.replace('%i', i)
-	)
-	this.all.scrollYDelta = new Setting(
-		'scrollYDelta',
-		'Vertical keyboard scroll speed',
-		[5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-		25,
-		i => 'Scroll speed set to %i pixels.'.replace('%i', i)
-	)
+	}
 
 	this.sendInit = function() {
 		for(var setting in this.all) {
@@ -310,34 +378,15 @@ function SettingsHandler(){
 			settings[setting] = this.all[setting].get();
 		}
 		// delete groupPreference from localstorage so it does not load preferred group even on better quality release
-		delete settings['groupPreference'];
+		delete settings['misc.groupPreference'];
 		settings.VER = this.ver;
 		return JSON.stringify(settings);
-	}
-
-	this.deserialize = function() {
-		if(!window.localStorage) return;
-	var settings = window.localStorage.getItem('settings');
-		if(!settings) return;
-		try{
-			settings = JSON.parse(settings);
-			if(settings.VER && settings.VER != this.ver) {
-				throw 'Settings ver changed';
-			}
-			for(var setting in settings) {
-				if(setting == 'VER') continue;
-				this.set(setting, settings[setting], true);
-			}
-		}catch (e){
-			localStorage.setItem('settings','');
-			console.warn('Settings were found to be corrupted and so were reset.')
-		}
 	}
 
 	this.query = function(qu, or) {
 		if(or) {
 			for(var key in qu) {
-			var setting = this.all[key];
+			var setting = this.getByAddr(key);
 				if(qu[key][0] == '!') {
 					if(qu[key].substr(1) != setting.get()) return true;
 				}else{
@@ -347,7 +396,16 @@ function SettingsHandler(){
 			return false;
 		}else{
 			for(var key in qu) {
-			var setting = this.all[key];
+			var setting = this.getByAddr(key);
+				if(qu[key] instanceof Array) {
+					if(qu[key][0][0] == '!') {
+						if(qu[key][0].substr(1) == setting.get())
+							return false;
+						else
+							continue;
+					}
+					if(qu[key].includes(setting.get())) continue;
+				}
 				if(qu[key][0] == '!') {
 					if(qu[key].substr(1) == setting.get()) return false;
 				}else{
@@ -358,48 +416,66 @@ function SettingsHandler(){
 		return true;
 	}
 
+	this.getByAddr = function(addr) {
+		return this.all[addr];
+	}
 	this.get = function(settingID){
-		return this.all[settingID].get();
+		return this.getByAddr(settingID).get();
 	}
-	this.set = function(settingID, value, silent){
-	var setting = this.all[settingID];
-		if(setting.set(value) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
+	this.set = function(settingID, value, silent, notip){
+		this.getByAddr(settingID).set(value, silent, notip);
 	}
-
-	this.cycle = function(settingID, options, silent){
-	var setting = this.all[settingID];
-		if(setting.cycle(options) == false) return;
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
+	this.setClass = function(settingID){
+		this.getByAddr(settingID).setClass();
 	}
-	this.next = function(settingID, silent) {
-	var setting = this.all[settingID];
-		setting.next();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
+	this.cycle = function(settingID, options, silent, notip){
+		this.getByAddr(settingID).cycle(options, silent, notip);
 	}
-	this.prev = function(settingID, silent) {
-	var setting = this.all[settingID];
-		setting.prev();
-		if(setting.postUpdate) setting.postUpdate(setting.get());
-		this.settingUpdated(setting, silent);
+	this.next = function(settingID, silent, notip){
+		this.getByAddr(settingID).next(silent, notip);
+	}
+	this.prev = function(settingID, silent, notip){
+		this.getByAddr(settingID).prev(silent, notip);
+	}
+	this.update = function(settingID){
+		this.getByAddr(settingID).update();
 	}
 
 	this.refreshAll = function() {
 		for(var key in this.all) {
-			this.all[key].refresh()
+		let setting = this.all[key];
+			setting.refresh();
+			if(setting.condition) {
+			var result = this.query(setting.condition);
+				if(result) {
+					if(!setting.disabled) return;
+					setting.enable();
+				}else{
+					if(setting.disabled) return;
+					setting.disable();
+				}
+			}
 		}
 	}
 
-	this.settingUpdated = function(setting, silent) {
-		this.refreshAll();
-		if(window.localStorage)
-			window.localStorage.setItem('settings', this.serialize())
-		if(silent != true) {
-			this.S.out('settingsPacket', new SettingsPacket('change', setting.name, setting.setting))
-			this.S.out('message', setting.getFormatted());
+	this.settingUpdated = function(e) {
+		if(e.type == 'change') {
+			if(e.setting.postUpdate) e.setting.postUpdate(e.setting.get());
+			this.refreshAll(); //opt - update only linked setting
+			if(localStorage)
+				localStorage.setItem('settings', this.serialize())
+		}
+		if(e.silent != true) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					e.type,
+					e.setting.addr,
+					e.setting.get(),
+				)
+			)
+			if(!e.setting.notip)
+				if(e.type == 'change')
+					this.S.out('message', e.setting.getHelp());
 		}
 	}
 
@@ -414,111 +490,297 @@ function SettingsHandler(){
 		}
 	}
 
-	this.ver = '0.72';
 
 	this.S.mapIn({
 		settingsPacket: this.packetHandler,
-		init: this.sendInit
+		init: this.sendInit,
+		settingEvent: this.settingUpdated
 	})
 
-	this.deserialize();
+	this.ver = '0.75';
+
+	this.newSetting({
+		addr: 'lyt.fit',
+		prettyName: 'Page fit',
+		options: [
+			'none',
+			'all_limit',
+			'width_limit',
+			'height_limit',
+			'all',
+			'width',
+			'height'
+		],
+		default: (IS_MOBILE)?'all_limit':'width_limit',
+		strings: {
+			'none': 'Images are displayed in natural resolution.',
+			'all_limit': 'Natural image size that does not exceed max width or height.',
+			'width_limit': 'Natural image size that does not exceed max width.',
+			'height_limit': 'Natural image size that does not exceed max height.',
+			'all': 'Images expand to width or height.',
+			'width': 'Images expand to max width.',
+			'height': 'Images expand to max height.',
+		},
+		help: {
+			'none': 'Images are displayed in natural resolution.',
+			'all_limit': 'Natural image size that does not exceed max width or height.',
+			'width_limit': 'Natural image size that does not exceed max width.',
+			'height_limit': 'Natural image size that does not exceed max height.',
+			'all': 'Images expand to width or height.',
+			'width': 'Images expand to max width.',
+			'height': 'Images expand to max height.',
+		},
+		type: SETTING_MULTI,
+		html: `<div><div class="t-row">
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="none"><div data-bind="icon" class="ico-btn"></div><span>Original size</span></div>
+				</div>
+			</div><div class="t-row">
+				<div class="t-tooltip">
+					Limit
+				</div>
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="all_limit"><div data-bind="icon" class="ico-btn"></div><span>All</span></div>
+					<div class="ToggleButton" data-bind="width_limit"><div data-bind="icon" class="ico-btn"></div><span>Width</span></div>
+					<div class="ToggleButton" data-bind="height_limit"><div data-bind="icon" class="ico-btn"></div><span>Height</span></div>
+				</div>
+			</div><div class="t-row">
+				<div class="t-tooltip">
+					Stretch
+				</div>
+				<div class="t-1">
+					<div class="ToggleButton" data-bind="all"><div data-bind="icon" class="ico-btn"></div><span>All</span></div>
+					<div class="ToggleButton" data-bind="width"><div data-bind="icon" class="ico-btn"></div><span>Width</span></div>
+					<div class="ToggleButton" data-bind="height"><div data-bind="icon" class="ico-btn"></div><span>Height</span></div>
+				</div>
+			</div></div>`
+	})
+	.newSetting({
+		addr: 'lyt.zoom',
+		prettyName: 'Maximum page width',
+		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
+		default: '100',
+		strings: (i) => `${i}%`,
+		help: 'Maximum width the page expands to. Works only in width modes of page fit.',
+		type: SETTING_VALUE_STEPPED,
+		condition: {'lyt.fit': ['width_limit', 'width']},
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'lyt.direction',
+		prettyName: 'Reader layout',
+		options: ['ltr', 'ttb', 'rtl'],
+		default: 'ltr',
+		strings: {
+			ltr: 'Left-to-right',
+			ttb: 'Top-to-bottom',
+			rtl: 'Right-to-left'
+		},
+		help: {
+			ltr: 'Left-to-right reading mode.',
+			ttb: 'Vertical view.',
+			rtl: 'Right-to-left reading mode.'
+		},
+		type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: 'lyt.spread',
+		prettyName: '2-page spread',
+		options: ['1', '2', '2-odd'],
+		default: '1',
+		strings: {
+			'1': '1-page layout',
+			'2': '2-page layout',
+			'2-odd': '2-page layout, odd'
+		},
+		help: {
+			'1': 'Single page displayed.',
+			'2': 'Two pages at once.',
+			'2-odd': 'Two pages at once, shifted by one.'
+		},
+		type: SETTING_MULTI,
+		postUpdate: value => {
+			({
+				'1': v => {
+					this.set('adv.spreadCount', 1)
+					this.set('adv.spreadOffset', 0)
+				},
+				'2': v => {
+					this.set('adv.spreadCount', 2)
+					this.set('adv.spreadOffset', 0)
+				},
+				'2-odd': v => {
+					this.set('adv.spreadCount', 2)
+					this.set('adv.spreadOffset', 1)
+				}
+			})[value]()
+		}
+	})
+	.newSetting({
+		addr: 'adv.spreadCount',
+		prettyName: 'Spread mode custom page count',
+		options: [1,2,3,4,5,6,7,8,9,10],
+		default: 1,
+		strings: i => {
+			return '%ip'.replace('%i', i)
+		},
+		postUpdate: () => this.update('adv.spreadOffset'),
+		type: SETTING_VALUE,
+		// hidden: true
+	})
+	.newSetting({
+		addr: 'adv.spreadOffset',
+		prettyName: 'Spread mode custom page offset',
+		options: () => {
+			return [...Array(this.get('adv.spreadCount')).keys()]
+		},
+		default: 0,
+		strings: i => {
+			return '%ip'.replace('%i', i)
+		},
+		condition: {'adv.spreadCount': ['!1']},
+		type: SETTING_VALUE,
+		// hidden: true
+	})
+	.newSetting({
+		addr: 'apr.selectorAnchor',
+		prettyName: 'Page selector position',
+		options: ['left', 'bottom'],
+		default: 'left',
+		strings: {
+			'left': 'Left',
+			'bottom': 'Bottom'
+		},
+		help: {
+			'left': 'Page selector is shown near the sidebar.',
+			'bottom': 'Page selector is at the bottom of the page.'	
+		},
+		type: SETTING_MULTI,
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'apr.selPinned',
+		prettyName: 'Page selector',
+		default: false,
+		strings: {
+			true: 'Always visible',
+			false: `Only on ${IS_MOBILE?'tap':'hover'}`
+		},
+		type: SETTING_BOOLEAN
+	})
+	.newSetting({
+		addr: 'apr.selNum',
+		prettyName: 'Page number in page selector',
+		default: true,
+		strings: {
+			true: 'Show page number',
+			false: 'Hide page number'
+		},
+		type: SETTING_BOOLEAN,
+	})
+	.newSetting({
+		addr: 'apr.hoverinos',
+		prettyName: 'On-hover page hints (next, prev)',
+		default: true,
+		strings: {
+			true: 'Visible',
+			false: 'Hidden'
+		},
+		type: SETTING_BOOLEAN,
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'apr.sidebar',
+		prettyName: 'Sidebar',
+		default: true,
+		strings: {
+			true: 'Show sidebar',
+			false: 'Hide sidebar',
+		},
+		type: SETTING_BOOLEAN,
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'apr.previews',
+		prettyName: 'Previews',
+		default: false,
+		strings: {
+			true: 'Show previews',
+			false: 'Hide previews',
+		},
+		type: SETTING_BOOLEAN,
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'bhv.preload',
+		prettyName: 'Image preload',
+		options: [1,2,3,4,5,6,7,8,9,100],
+		default: (IS_MOBILE)?2:3,
+		strings: i => `${i}`.replace('100', '∞'),
+		type: SETTING_VALUE_STEPPED,
+		global: false
+	})
+	.newSetting({
+		addr: 'bhv.scrollYDelta',
+		prettyName: 'Vertical scroll speed using keyboard arrows',
+		options: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+		default: 25,
+		strings: i => `${i}px`,
+		type: SETTING_VALUE,
+		global: false,
+		nomobile: true
+	})
+	.newSetting({
+		addr: 'bhv.resetScroll',
+		prettyName: 'Reset page scroll after page flip',
+		default: false,
+		strings: {
+			true: 'Reset',
+			false: 'Leave it be',
+		},
+		help: {
+			true: 'On page switch, resets vertical scroll of the previous page.',
+			false: 'Vertical scroll on pages is saved.',
+		},
+		type: SETTING_BOOLEAN,
+		global: false
+	})
+	.newSetting({
+		addr: 'bhv.historyUpdate',
+		prettyName: 'Browser history/back button behavior',
+		options: ['none','replace','chap','jump'],
+		default: 'replace',
+		strings: {
+			'none': "Don't touch browser history",
+			'replace': "Only change page title",
+			'chap': "Add every chapter to history",
+			'jump': "Add every chapter and page&nbsp;skips",
+		},
+		help: {
+			'none': "Page URL and title won't update at all.",
+			'replace': "When you go to next chapter, page title and URL changes.",
+			'chap': "Remembers chapters in browser history so you can go back with browser buttons.",
+			'jump': "Also adds out-of-order page skips to history in addition to chapters.",
+		},
+		type: SETTING_MULTI,
+		global: false
+	})
+	.newSetting({
+		addr: 'misc.groupPreference',
+		prettyName: 'Group preference',
+		type: SETTING_VALUE,
+		hidden: true,
+		global: false
+	})
+	.deserialize();
 }
 
-function SettingsPacket(type, settingName, value, silent) {
+function SettingsPacket(type, settingAddr, value, silent) {
 	this.type = type;
-	this.setting = settingName;
+	this.setting = settingAddr;
 	this.value = value;
 	this.silent = silent;
 	return this;
-}
-
-function Setting(name, prettyName, options, dflt, strings, postUpdate) {
-	this.name = name;
-	this.prettyName = prettyName;
-	this.default = dflt;
-	this.setting = this.default;
-	this.options = options;
-	this.strings = strings;
-	this.postUpdate = postUpdate;
-
-	this.refresh = function() {
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(this.get()) < 0)
-					this.set(this.default);
-			}else{
-				if(this.options(this.get()) == null) {
-					this.set(this.default);
-				}
-			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(this.get()) < 0)
-				this.set(this.default);
-		}else{
-			// console.warn(this.name + ' has no valid options.')
-		}
-	}
-
-	this.cycle = function(options) {
-		if(this.options instanceof Function) {
-			if(!(options = this.options()) instanceof Array) {
-				console.log('Option', this, 'did not return an array to cycle on.')
-				return false;
-			}
-		}else if(!(options = this.options) instanceof Array) {
-			console.log('Option', this, 'was not an array nor a function.')
-			return false;
-		}
-		if(options) {
-		var index = options.indexOf(this.setting);
-			return this.set(
-				(index+1 > options.length - 1)?options[0]:options[index+1]
-			);
-		}
-		return false;
-	}
-	this.next = function() {
-		if(this.options.indexOf(this.setting) < this.options.length - 1) {
-			this.set(this.options[this.options.indexOf(this.setting) + 1])
-		}
-	}
-	this.prev = function() {
-		if(this.options.indexOf(this.setting) > 0) {
-			this.set(this.options[this.options.indexOf(this.setting) - 1])
-		}
-	}
-	this.get = function() {
-		return this.setting;
-	}
-	this.getFormatted = function() {
-		if(this.strings) {
-			if(this.strings instanceof Function) {
-				return this.strings(this.setting);
-			}
-			return this.strings[this.setting];
-		}else{
-			return '';
-		}
-	}
-	this.set = function(value) {
-		if(value == this.setting) return false;
-		if(this.options instanceof Function) {
-			if(this.options() instanceof Array) {
-				if(this.options().indexOf(value) < 0)
-					throw new Error(this.name + ' must be one of: ' + this.options().join(', '))
-			}else{
-				if(this.options(value) == null) {
-					throw new Error(this.name + ' did not satisfy option constraints.');
-				}
-			}
-		}else if(this.options instanceof Array){
-			if(this.options.length > 0 && this.options.indexOf(value) < 0)
-				throw new Error(this.name + ' must be one of: ' + this.options.join(', '))
-		}else{
-			throw new Error(this.name + ' has no valid options.')
-		}
-		this.setting = value;
-	}
 }
 
 function UI_Tooltippy(o) {
@@ -538,13 +800,14 @@ function UI_Tooltippy(o) {
 		var rect = e.target.getBoundingClientRect()
 		var bodyRect = document.body.getBoundingClientRect();
 		var align = e.target.getAttribute('data-tip-align')
+		var offset = e.target._ttOffset || 2;
 			this.set(tip);
 			this.$.style.display = 'block';
 			if(IS_MOBILE) return;
 			if(align == 'right')
 				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) - rect.height + this.$.offsetHeight + 2 + 'px';
 			else
-				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + 2 + 'px';
+				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + offset + 'px';
 			if(e.pageX > window.innerWidth / 2) {
 				this.$.style.left = 'unset';
 				this.$.style.right = window.innerWidth - rect.left - rect.width + 'px';
@@ -583,11 +846,12 @@ function UI_Tooltippy(o) {
 		this.$.style.display = 'none';
 	}
 
-	this.attach = function(element, text, align) {
+	this.attach = function(element, text, align, offset) {
 		element.onmouseover = e => this.handler(e);
 		element.onmouseleave = e => this.reset(e)
 		element.setAttribute('data-tip', text);
 		if(align) element.setAttribute('data-tip-align', align);
+		element._ttOffset = offset;
 		return this;
 	}
 }
@@ -613,39 +877,35 @@ function UI_Reader(o) {
 		.attach('nextCh', ['BracketRight'], e => this.nextChapter())
 		.attach('prevVo', ['Comma'], e => this.prevVolume())
 		.attach('nextVo', ['Period'], e => this.nextVolume())
-		.attach('fit', ['KeyF'], e => Settings.cycle('fit'))
-		.attach('layout', ['KeyD'], e => this.cycleLayout())
+		.attach('fit', ['KeyF'], e => Settings.cycle('lyt.fit'))
+		.attach('layout', ['KeyD'], e => Settings.cycle('lyt.direction'))
 		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
-		.attach('sidebar', ['KeyS'], s => Settings.cycle('sidebar'))
-		.attach('pageSelector', ['KeyN'], s => Settings.cycle('selectorPinned'))
-		.attach('preload', ['KeyL'], s => Settings.cycle('preload'))
-		.attach('spread', ['KeyQ'], s => Settings.cycle('spread'))
-		.attach('spreadCount', ['KeyU'], s => Settings.cycle('spreadCount'))
-		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('spreadOffset'))
-		.attach('share', ['KeyR'], s => {
-			this.copyShortLink(s);
-		})
-		.attach('minus', ['Minus'], s => {
-			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
-				Settings.prev('zoom')
-		})
-		.attach('plus', ['Equal'], s => {
-			if(Settings.query({fit:'fit_width'}) || Settings.query({fit:'fit_width_limit'}))
-				Settings.next('zoom')
-		})
+		.attach('sidebar', ['KeyS'], s => Settings.cycle('apr.sidebar'))
+		.attach('pageSelector', ['KeyN'], s => Settings.cycle('apr.selPinned'))
+		.attach('preload', ['KeyL'], s => Settings.cycle('bhv.preload'))
+		.attach('spread', ['KeyQ'], s => Settings.cycle('lyt.spread'))
+		.attach('spreadCount', ['KeyU'], s => Settings.cycle('adv.spreadCount'))
+		.attach('spreadOffset', ['KeyI'], s => Settings.cycle('adv.spreadOffset'))
+		.attach('share', ['KeyR'], s => this.copyShortLink(s))
 		.attach('enter', ['Enter'], s => {
 			if(this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
 		})
+		.attach('enter', ['Ctrl+Enter'], e => Loda.display('settings'))
 
 		
 	new KeyListener(document.body)
-		.condition(() => Settings.all.layout.get() == 'ltr')
+		.condition(() => ['width','width_limit'].includes(Settings.get('lyt.fit')))
+		.attach('minus', ['Minus'], s => Settings.prev('lyt.zoom'))
+		.attach('plus', ['Equal'], s => Settings.next('lyt.zoom'))
+		
+	new KeyListener(document.body)
+		.condition(() => Settings.get('lyt.direction') == 'ltr')
 		.attach('prev', ['ArrowLeft'], e => this.prevPage())
 		.attach('next', ['ArrowRight'], e => this.nextPage());
 		
 	new KeyListener(document.body)
-		.condition(() => Settings.all.layout.get() == 'rtl')
+		.condition(() => Settings.get('lyt.direction') == 'rtl')
 		.attach('prev', ['ArrowRight'], e => this.prevPage())
 		.attach('next', ['ArrowLeft'], e => this.nextPage());
 
@@ -687,10 +947,10 @@ function UI_Reader(o) {
 		dynamicHide: true
 	})
 	//views: fit
-	this.fitView = new UI_ButtonGroup({
-		node: this._.aside_views_fit,
-		linkedSetting: 'fit'
-	}).refresh().S.biLink(Settings);
+	// this.fitView = new UI_ButtonGroup({
+	// 	node: this._.aside_views_fit,
+	// 	linkedSetting: 'lyt.fit'
+	// }).S.biLink(Settings);
 
 	this.updateData = function(data) {
 		this.current = data;
@@ -702,7 +962,7 @@ function UI_Reader(o) {
 				.attach('search', ['Ctrl+KeyF'], s => {
 					Loda.display('search')
 				})
-				.attach('previews', ['KeyP'], s => Settings.cycle('previews'))
+				.attach('previews', ['KeyP'], s => Settings.cycle('apr.previews'))
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
 			document.querySelector("[class='rdr-previews']").style.display = 'none';
@@ -726,6 +986,7 @@ function UI_Reader(o) {
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
 		this._.title.innerHTML = `<a href="${window.location.pathname.split("/").splice(0, 3).join("/")}/${this.current.slug}">${this.current.title}</a>`;
+		this.$.querySelector('aside').classList.remove('unload');
 	var chapterElements = [];
 	var volElements = {};
 		for (var i = this.current.chaptersIndex.length - 1; i >= 0; i--) {
@@ -754,7 +1015,7 @@ function UI_Reader(o) {
 	}
 
 	this.drawGroup = function(group) {
-		Settings.set('groupPreference', group);	
+		Settings.set('misc.groupPreference', group);	
 		this.initChapter();
 	}
 
@@ -784,7 +1045,7 @@ function UI_Reader(o) {
 	}
 
 	this.getGroup = function(chapter) {
-		let group = Settings.get('groupPreference');
+		let group = Settings.get('misc.groupPreference');
 
 		let chapterObj = this.current.chapters[chapter || this.SCP.chapter];
 
@@ -874,9 +1135,8 @@ function UI_Reader(o) {
 	}
 
 	this.drawPreviews = (state) => {
-		state = state || Settings.query({previews:'show'});
-		if(state == 'show') {
-			this.$.classList.add('previews-open');
+		state = state || Settings.query({'apr.previews':true});
+		if(state == true) {
 			this.previews.clear();
 			this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
 				preview => {
@@ -886,8 +1146,6 @@ function UI_Reader(o) {
 				}
 			)
 			this.previews.select(this.SCP.page, undefined, undefined, true);
-		}else{
-			this.$.classList.remove('previews-open')
 		}
 
 	}
@@ -989,101 +1247,54 @@ function UI_Reader(o) {
 			window.location.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
-	this.setFit = function(fit) {
-		Settings.all.fit.options.forEach(item => {
-			this.$.classList.remove(item);
-			this._.fit_button.classList.remove(item);
-		});
-		this.$.classList.add(fit);
-		this._.fit_button.classList.add(fit);
-		this.imageView.updateWides();
-	}
-
-	this.setLayout = function(layout, silent) {
-		Settings.all.layout.options.forEach(item => {
-			this.$.classList.remove(item);
-		});
-		this.$.classList.add(layout);
-		this.stickHeader();
+	this.setLayout = (layout, silent) => {
+		requestAnimationFrame(() => {
+			this.recalculateBuffer();
+			this.stickHeader();
+		})
 
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
-			this.imageView.setTouchHandlers(Settings.get('layout') != 'ttb');
+			this.imageView.setTouchHandlers(Settings.get('lyt.direction') != 'ttb');
 		}
-	}
+	}	
 
-	this.setSelectorPin = function(state) {
-		Settings.all.selectorPinned.options.forEach(item => {
-			this.$.classList.remove(item);
-			this.$.classList.remove('nonum');
-		});
-		if(state == 'selector-pinned-nonum') {
-			this.$.classList.add('selector-pinned');
-			this.$.classList.add('nonum');
-		}else{
-			this.$.classList.add(state);
-		}
-		this.recalculateBuffer();
-		this.stickHeader();
-	}
-
-	this.cycleLayout = function() {
-		Settings.cycle('layout');
-		this.recalculateBuffer();
-	}
-
-	this.recalculateBuffer = function() {
+	this.recalculateBuffer = () => {
 		if (IS_MOBILE) {
-			if (Settings.get('layout') === 'ttb' && Settings.get('selectorPinned') === 'selector-pinned') {
+			if (Settings.get('lyt.direction') === 'ttb' && Settings.get('apr.selPinned')) {
+			var tOH = this._.title.offsetHeight;
+			var sOH = this._.rdr_selector.offsetHeight;
 				// Order of these statements seem to matter for Chrome's scroll shifting behaviour; if height is
 				// set before top, the scroll bug occurs. Thus, it might break in future updates.
-				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
-				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
+				this._.rdr_selector.style.top = tOH + 'px';
+				this._.rdr_aside_buffer.style.height = tOH + sOH + 'px';
 				// console.log(window.scrollY); // This statement also reintroduces the scroll bug regardless of order
 			} else {
 				this._.rdr_aside_buffer.style.height = '0px';
 			}
 		}
 	}
-
-	this.setPreload = function(number){
-		this.$.setAttribute('data-preload', number);
-	}
-
-	this.setZoom = function(zoom) {
-		this.imageView.updateScrollPosition();
-		Settings.all.zoom.options.forEach(item => {
-			this.$.classList.remove('zl'+item);
-		});
-		this.$.classList.add('zl'+zoom);
-		setTimeout(this.imageView.updateWides, 1);
-	}
-	this.setSpread = function(spread) {
-		Settings.all.spread.options.forEach(item => {
-			this.$.classList.remove(item);
-		});
-		this.$.classList.add(spread);
-	}
-
-	this.setSidebar = function(state) {
-		this.imageView.updateScrollPosition();
-		if(state == 'hide') {
-			this.$.classList.add('sidebar-hidden');
-		}else{
-			this.$.classList.remove('sidebar-hidden');
-		}
-		this.imageView.updateWides();
-	}
-
 	this.stickHeader = () => {
 		if(IS_MOBILE) {
-			if(Settings.get('layout') == 'ttb' && Settings.get('selectorPinned') == 'selector-pinned') {
+			if(Settings.get('lyt.direction') == 'ttb' && Settings.get('apr.selPinned')) {
 				this.$.classList.add('stick');
 			}else{
 				this.$.classList.remove('stick');
 			}
 		}
+	}
+
+	this.setZoom = function(zoom) {
+		this.imageView.updateScrollPosition();
+		Settings.setClass('lyt.zoom'); //broke
+		setTimeout(this.imageView.updateWides, 1);
+	}
+
+	this.toggleSidebar = function(state) {
+		this.imageView.updateScrollPosition();
+		Settings.setClass('apr.sidebar');
+		this.imageView.updateWides();
 	}
 
 	this.enqueuePreload = url => {
@@ -1100,17 +1311,20 @@ function UI_Reader(o) {
 	this.settingsRouter = function(o) {
 		if(o.type != 'change') return;
 	var settings = {
-			'fit': o => this.setFit(o),
-			'layout': o => this.setLayout(o),
-			'groupPreference': o => {},
-			'selectorPinned': o => this.setSelectorPin(o),
-			'preload': o => this.setPreload(o),
-			'sidebar': o => this.setSidebar(o),
-			'previews': o => this.drawPreviews(o),
-			'zoom': o => this.setZoom(o),
-			'spread': o => this.setSpread(o),
-			'spreadCount': o => this.bootstrapChapter(),
-			'spreadOffset': o => this.bootstrapChapter(),
+			'lyt.fit': o => {
+				this.imageView.updateWides();
+			},
+			'lyt.direction': o => this.setLayout(o),
+			'lyt.zoom': o => this.setZoom(o),
+			'adv.spreadCount': o => this.bootstrapChapter(),
+			'adv.spreadOffset': o => this.bootstrapChapter(),
+			'bhv.preload': number => {
+				this.$.setAttribute('data-preload', number);
+			},
+			'apr.sidebar': o => this.toggleSidebar(o),
+			'apr.selPinned': o => this.setLayout(o, true),
+			'apr.previews': o => this.drawPreviews(o),
+			'misc.groupPreference': o => {},
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
 	}
@@ -1156,17 +1370,19 @@ function UI_Reader(o) {
 	this._.chap_next.onmousedown = e => this.nextChapter();
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
-	this._.preload_button.onmousedown = e => Settings.cycle('preload');
-	this._.layout_button.onmousedown = e => this.cycleLayout();
-	this._.fit_button.onmousedown = e => {
-		this.asideViews.S.call('number', 0);
-	}
-	this._.sel_pin_button.onmousedown = e => Settings.cycle('selectorPinned');
-	this._.sidebar_button.onmousedown = e => Settings.cycle('sidebar');
-	this._.previews_button.onmousedown = e => Settings.cycle('previews');
-	this._.zoom_level_plus.onmousedown = e => Settings.next('zoom');
-	this._.zoom_level_minus.onmousedown = e => Settings.prev('zoom');
-	this._.spread_button.onmousedown = e => Settings.cycle('spread');
+	this._.settings_button.onmousedown = e => Loda.display('settings');
+	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
+	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
+	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'});
+	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'});
+	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
+	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
+	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
+	// this._.fit_button.onmousedown = e => {
+	// 	this.asideViews.S.call('number', 0);
+	// }
+	this._.zoom_level_plus.onmousedown = e => Settings.next('lyt.zoom');
+	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom');
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 	this._.random_chapter_button.addEventListener('mousedown', e => {
@@ -1192,13 +1408,13 @@ function UI_Reader(o) {
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
-		.attach(this._.fit_none, 'Images are displayed in natural resolution.')
-		.attach(this._.fit_all, 'Images expand to width or height.')
-		.attach(this._.fit_width, 'Images expand to max width.')
-		.attach(this._.fit_height, 'Images expand to max height.')
-		.attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
-		.attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
-		.attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
+		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
+		// .attach(this._.fit_all, 'Images expand to width or height.')
+		// .attach(this._.fit_width, 'Images expand to max width.')
+		// .attach(this._.fit_height, 'Images expand to max height.')
+		// .attach(this._.fit_all_limit, 'Natural image size that does not exceed max width or height.')
+		// .attach(this._.fit_width_limit, 'Natural image size that does not exceed max width.')
+		// .attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
 
@@ -1225,28 +1441,36 @@ function UI_ReaderImageView(o) {
 	});
 	Linkable.call(this);
 	this.firstDraw = true;
-	this.imageContainer = new UI_Tabs({node: this._.image_container})
+	this.imageContainer = new UI_Tabs({
+		node: this._.image_container,
+		held: true
+	})
+	this.wrappers = {};
 	
 	this.getScrollElement = function() {
-		if(Settings.get('layout') == 'ttb') {
+		if(Loda.open) return {
+			focus: () => {},
+			scroll: () => {}
+		};
+		if(Settings.get('lyt.direction') == 'ttb') {
 			if(IS_MOBILE) {
 				return document.documentElement;
 			}else{
 				return this._.image_container;
 			}
 		}else{
-			return this.selectedWrapper.$;
+			return this.wrappers.current.$;
 		}
 	}
 
 	new KeyListener(document.body, 'hold')
 		.attach('slideDown', ['ArrowDown'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop + Settings.get('bhv.scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		})
 		.attach('slideUp', ['ArrowUp'], (e, frame) => {
 		var scr = this.getScrollElement();
-			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('scrollYDelta')*Math.min((frame+1)*2/20,1), true)
+			scroll(scr, scr.scrollLeft,scr.scrollTop - Settings.get('bhv.scrollYDelta')*Math.min((frame+1)*2/20,1), true)
 		});
 
 	this.scroll = {
@@ -1261,7 +1485,7 @@ function UI_ReaderImageView(o) {
 	document.onscroll = this._.image_container.onscroll = e => {
 		if(PROGRAMMATIC_SCROLL) return true;
 		if(!this.imageList) return true;
-		if(Settings.all.layout.get() != 'ttb') return true;
+		if(Settings.get('lyt.direction') != 'ttb') return true;
 
 		Reader.stickHeader();
 	var scrollTop = (e.target.scrollingElement)?
@@ -1295,19 +1519,18 @@ function UI_ReaderImageView(o) {
 
 	this.scrollAnchor = () => {
 		this.scroll.anchorRAF = requestAnimationFrame(this.scrollAnchor);
-		shadowScroll();
 		scroll(this.imageContainer.$, 0, this.scroll.anchorObject.offsetTop + (this.scroll.anchorOffset>0?this.scroll.anchorOffset*-1:this.scroll.anchorObject.offsetHeight * this.scroll.anchorPoint))
 	}
 
 	this.updateScrollPosition = () => {
-		if(!this.selectedWrapper) return;
-		this.scroll.anchorObject = this.selectedWrapper.$;
-		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
-		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
+		if(!this.wrappers.current) return;
+		this.scroll.anchorObject = this.wrappers.current.$;
+		this.scroll.anchorOffset = this.wrappers.current.$.getBoundingClientRect().top;
+		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.wrappers.current.$.offsetTop) / this.wrappers.current.$.offsetHeight;
 	}
 
 	this.updateWides = () => {
-		if(Settings.get('layout') == 'ttb' && this.selectedWrapper ) {
+		if(Settings.get('lyt.direction') == 'ttb' && this.wrappers.current ) {
 			// console.log('wideUpdate fire')
 			if(!this.scroll.anchorRAF && this.scroll.anchorObject) {
 				this.scrollAnchor();
@@ -1335,8 +1558,8 @@ function UI_ReaderImageView(o) {
 		this.imageWrappers = [];
 		this.imageWrappersMask = [];
 		this.imageWrappersMap = {};
-	var spreadCount = Settings.all.spreadCount.get();
-	var	spreadOffset = Settings.all.spreadOffset.get();
+	var spreadCount = Settings.get('adv.spreadCount');
+	var	spreadOffset = Settings.get('adv.spreadOffset');
 	var imageIndices = [];
 		for(var i=0; i < images.length; i++) {
 			imageIndices.push(i);
@@ -1347,7 +1570,7 @@ function UI_ReaderImageView(o) {
 			}
 			if(spreadOffset >= spreadCount - 1 || i >= images.length - 1) {
 				if(wides.indexOf(i) > -1)
-					spreadOffset = Settings.all.spreadOffset.get();
+					spreadOffset = Settings.get('adv.spreadOffset');
 				else
 					spreadOffset = 0;
 				this.imageWrappersMask.push(imageIndices);
@@ -1372,17 +1595,16 @@ function UI_ReaderImageView(o) {
 			wrapper.S.link(Reader.selector_page);
 			this.imageList = this.imageList.concat(wrapper.get());
 		})
-		if(Settings.all.layout.get() == 'rtl') {
+		if(Settings.get('lyt.direction') == 'rtl') {
 			this.imageWrappers.reverse();
 			this.imageWrappers.forEach(i => i.reverse());
 		}
 		this.imageContainer.add(this.imageWrappers);
 
-		shadowScroll();
 		scroll(this.imageContainer.$, 0,0);
 		
 		
-		if(Settings.all.layout.get() == 'ttb') {
+		if(Settings.get('lyt.direction') == 'ttb') {
 		var butt = new UI_Dummy();
 			butt.$.classList.add('nextCha');
 			butt.$.onmousedown = e => {
@@ -1398,41 +1620,39 @@ function UI_ReaderImageView(o) {
 			return;
 
 		this.selectedPage = this.imageList[index];
-		this.selectedWrapper = this.selectedPage.parentWrapper;
-		this.visiblePages = this.selectedWrapper.getIndices();
-		if(Settings.all.layout.get() == 'ttb') {
+		this.wrappers.current = this.selectedPage.parentWrapper;
+	var wrapperIndex = this.imageWrappers.indexOf(this.wrappers.current);
+		this.wrappers.left = this.imageWrappers[wrapperIndex - 1] || null;
+		this.wrappers.right = this.imageWrappers[wrapperIndex + 1] || null;
+		this.visiblePages = this.wrappers.current.getIndices();
+		if(Settings.get('lyt.direction') == 'ttb') {
 			if (!dry){	
-				shadowScroll();
-				if(IS_MOBILE) {
-					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
-				}else{
-					this.getScrollElement().focus();
-					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
+				setTimeout(this.getScrollElement().focus(), 1);
+				if(wrapperIndex > 0) {
+					if(IS_MOBILE) {
+						scroll(this.getScrollElement(), 0, this.wrappers.current.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
+					}else{
+						scroll(this.getScrollElement(), 0,this.wrappers.current.$.offsetTop);
+					}
 				}
 			}
 		}else{
-		var wrapperIndex = this.imageWrappers.indexOf(this.selectedWrapper);
-			// this.selectedWrapper.$.focus();
-			// scroll(this.imageContainer.$, 0, 0);
-			// requestAnimationFrame(e => scroll(this.$, 0, 0));
-		var oldX = this.imageContainer.$._translateX;
-			this.imageContainer.$._translateX = ( -100 * wrapperIndex);
-			if(Math.abs(Math.abs(oldX) - 100 * wrapperIndex) < 201 ) {
-			var animated = this.touch.snapAnimation(undefined, this.imageContainer.$._translateX);
+			if(this.touch.transitionTimer) {
+				this.touch.transitionTimer.then(() => {
+					this.moveContainer(wrapperIndex);
+				})
+			}else{
+				this.moveContainer(wrapperIndex);
 			}
-			if(!animated) {
-				this.imageContainer.$.style.transform =
-					'translateX(' + this.imageContainer.$._translateX + '%)';
-			}
-			this.getScrollElement().focus();
+			//this.getScrollElement().focus();
+			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
-	var toPreload = Settings.all.preload.get();
+	var toPreload = Settings.get('bhv.preload');
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
-		toPreload = toPreload * Settings.get('spreadCount');
-		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('spreadCount')); i++) {
+		toPreload = toPreload * Settings.get('adv.spreadCount');
+		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
 			//	Reader.enqueuePreload(this.imageList[i].url);
@@ -1443,12 +1663,46 @@ function UI_ReaderImageView(o) {
 		}
 	}
 
-	this.prev = function() {
+	this.prev = () => {
 		this.S.out('event', {type: 'prevPage'});
 
 	}
-	this.next = function() {
+	this.next = () => {
 		this.S.out('event', {type: 'nextPage'})
+	}
+
+	this.moveContainer = (index) => {
+		this.containerOffset = ( -100 * index);
+		// this.imageContainer.$.style.transform = 'translateX(' + this.containerOffset + '%)';
+		this.imageContainer.$.style.marginLeft = this.containerOffset + '%';
+	}
+
+	this.moveWrappers = (offset, snap) => {
+		if(!this.touch.affectedWrappers) {
+			this.touch.affectedWrappers = [];
+			if(this.wrappers.left) this.touch.affectedWrappers.push(this.wrappers.left);
+			this.touch.affectedWrappers.push(this.wrappers.current);
+			if(this.wrappers.right) this.touch.affectedWrappers.push(this.wrappers.right);
+		}
+		if(snap) {
+			this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style.transition = `transform ${this.touch.transitionTime}s cubic-bezier(${this.touch.transitionTime},.55,.4,1)`);
+			this.touch.transitionTimer = promiseTimeout(Math.round(this.touch.transitionTime*1000), true);
+			this.touch.transitionTimer.then(() => {
+					this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
+					this.touch.affectedWrappers = null;
+					delete this.touch.transitionTimer;
+				}).catch(() => {delete this.touch.transitionTimer;})	
+		}else{
+			//for regrab
+			if(this.touch.transitionTimer) {
+				this.touch.transitionTimer.cancel();
+				this.touch.transitionTimer = false;
+				this.touch.affectedWrappers = null;
+			}
+		}
+		if(this.wrappers.left) this.wrappers.left.$.style.transform = `translateX(${offset * 100}%)`;
+		this.wrappers.current.$.style.transform = `translateX(${offset * 100}%)`;
+		if(this.wrappers.right) this.wrappers.right.$.style.transform = `translateX(${offset * 100}%)`;
 	}
 
 const SCROLL = 1;
@@ -1480,174 +1734,193 @@ const SCROLL_X = 3;
 		em: parseFloat(getComputedStyle(document.body).fontSize),
 		gesture: null,
 		time: null,
-		escapeVelocity: 0.1,
-		escapeDelta: 40,
+		escapeVelocity: 0.07,
+		escapeDelta: 0.40,
 		imagePosition: 0,
 		a: null
 	};
 	
 	this.touch.startHandler = e => {
+		if(this.touch.transitionTimer) return;
 		if(e.touches.length > 1) return;
-		this.touch.initialX = this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper));
-		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
-		this.touch.startY = e.touches[0].pageY;
+		this.touch.initialX = 0;
+		this.touch.x = e.touches[0].pageX;
+		this.touch.y = e.touches[0].pageY;
+		this.touch.containerWidth = this._.image_container.offsetWidth;
+		this.touch.startX = this.touch.x;
+		this.touch.startY = this.touch.y;
 		this._.image_container.style.transition = '';
 		this.touch.gesture = null;
 		this.touch.delta = 0;
 		this.touch.deltaY = 0;
 		this.touch.scrollY = window.scrollY;
-		this.touch.time = Date.now();
-	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
+		this.touch.measures = [];
+		this.touch.times = [];
+		if(this.touch.affectedWrappers) this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
+		this.touch.affectedWrappers = null;
+	var maxScroll = this.wrappers.current.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.wrappers.current.$.offsetWidth;
 		if(maxScroll <= 0){
 			this.touch.imagePosition = null;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
+		}else if(Math.abs(this.wrappers.current.$.scrollLeft) >= maxScroll-2) {
 			this.touch.imagePosition = 1;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
+		}else if(Math.abs(this.wrappers.current.$.scrollLeft) == 0) {
 			this.touch.imagePosition = -1;
 		}else{
 			this.touch.imagePosition = 0;
 		}
-		this.touch.pageX = e.touches[0].pageX;
-		this.touch.pageY = e.touches[0].pageY;
-		this.touch.a = requestAnimationFrame(this.touch.anim);
+		//this.touch.a = requestAnimationFrame(this.touch.anim);
 	}
 	
-	this.touch.anim = () => {
-		this.touch.a = requestAnimationFrame(this.touch.anim);
-		if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
-		if(Settings.all.layout.get() == 'ttb') return cancelAnimationFrame(this.touch.a);
-		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+	// this.touch.anim = () => {
+	// 	this.touch.a = requestAnimationFrame(this.touch.anim);
+	// 	if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
+	// 	if(Settings.get('lyt.direction') == 'ttb') return cancelAnimationFrame(this.touch.a);
+
+	// 	this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
+	// 	if(this.touch.imagePosition == 0
+	// 	|| this.touch.imagePosition == 1 && this.touch.delta > 0
+	// 	|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
+	// 		this.touch.gesture = SCROLL_X;
+	// 		return cancelAnimationFrame(this.touch.a);
+	// 	}
+	// 	this.touch.deltaY = this.touch.y - this.touch.startY;
+
+	// 	if(Settings.get('lyt.direction') == 'rtl'){
+	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
+	// 		|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
+	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
+	// 		}
+	// 	}else{
+	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
+	// 		|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
+	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
+	// 		}
+	// 	}
+
+	// 	this.touch.time = Date.now();
+	// 	this.moveWrappers(this.touch.delta);
+
+	// 	if(this.touch.gesture == SWIPE) return; 
+
+	// 	if(Math.abs(this.touch.delta) > 0.025) {
+	// 		this.touch.gesture = SWIPE;
+	// 		return;
+	// 	}
+	// 	if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
+	// 		this.touch.gesture = SCROLL;
+	// 		this.moveWrappers(0);
+	// 		cancelAnimationFrame(this.touch.a);
+	// 	}
+	// }
+	
+	this.touch.moveHandler = e => {
+		if(this.touch.transitionTimer) return;
+		this.touch.x = e.touches[0].pageX;
+		this.touch.y = e.touches[0].pageY;
+		// this.touch.a = requestAnimationFrame(this.touch.anim);
+		if(this.touch.gesture == SCROLL) return;
+		if(Settings.get('lyt.direction') == 'ttb') return;
+
+		this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
 		|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
 			this.touch.gesture = SCROLL_X;
-			return cancelAnimationFrame(this.touch.a);
+			return;
 		}
-		this.touch.deltaY = this.touch.pageY - this.touch.startY;
-		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
-		this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
-		if(Settings.get('layout') == 'rtl'){
+		this.touch.deltaY = this.touch.y - this.touch.startY;
+
+		if(Settings.get('lyt.direction') == 'rtl'){
 			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
 			|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
-				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
 			}
 		}else{
 			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
 			|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
-				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
 			}
 		}
-		if(this.touch.gesture == SWIPE) return;
-		if(Math.abs(this.touch.delta) > 2.5) {
-			//document.body.style.touchAction = 'none';
+
+		this.touch.measures.push(this.touch.x);
+		this.touch.times.push(Date.now());
+		this.moveWrappers(this.touch.delta);
+
+
+		if(Math.abs(this.touch.delta) > 0.030 || this.touch.gesture == SWIPE) {
 			this.touch.gesture = SWIPE;
-			return;
-		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
-			this.touch.gesture = SCROLL;
-			this._.image_container._translateX = this.touch.initialX;
-			this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
-			cancelAnimationFrame(this.touch.a);
-		}
-	}
-	
-	this.touch.moveHandler = e => {
-		this.touch.pageX = e.touches[0].pageX;
-		this.touch.pageY = e.touches[0].pageY;
-		if(this.touch.gesture == SWIPE) {
-			
+			if(this.touch.scrollLocked == true) return;
 			document.documentElement.style.overflow = "hidden";
-		}
-		else
-			document.documentElement.style.overflow = "auto";
-
-	}
-
-	this.touch.snapAnimation = function(start, target, time, element) {
-		if(time !== undefined) {
-			cancelAnimationFrame(this.RAF);
-			this.frame = 0;
-			this.start = start;
-			this.time = time;
-			this.element = element;
-			this.frames = Math.ceil(time * 60);
-			if(target === undefined) {
-				this.primed = true;
-				return;
-			}
-			this.target = target;
-			this.delta = this.target - this.start;
-			if(Math.abs(this.delta) < 0.1) return;
-			this.RAF = requestAnimationFrame(this.bind(this));
+			this.touch.scrollLocked = true;
 			return;
 		}
-		if(start === undefined && target !== undefined) {
-			if(this.primed) {
-				this.target = target;
-				this.delta = this.target - this.start;
-				if(Math.abs(this.delta) < 0.1) return;
-				this.primed = false;
-				this.RAF = requestAnimationFrame(this.bind(this));
-				return;
-			}else{
-				return false;
-			}
+		if(Math.abs(this.touch.deltaY) > this.touch.em) {
+			this.touch.gesture = SCROLL;
+			this.moveWrappers(0);
+			if(this.touch.scrollLocked == false) return;
+			document.documentElement.style.overflow = "auto";
+			this.touch.scrollLocked = false;
+			return;
 		}
-	
-		if(this.frame + 1 >= this.frames) {
-			cancelAnimationFrame(this.RAF);
-			this.RAF = null;
-			this.element._translateX = this.target;
-		}else{
-			this.RAF = requestAnimationFrame(this.bind(this));
-			this.frame++;
-		var t = this.frame/this.frames;
-			this.element._translateX = this.start + this.delta * ( t*(2-t) );
-		}
-		this.element.style.transform = 'translateX(' + this.element._translateX + '%)';
 	}
-	this.touch.snapAnimation = this.touch.snapAnimation.bind(this.touch.snapAnimation);
 
 	this.touch.endHandler = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
-		clearTimeout(this.touch.transitionTimer);
-		cancelAnimationFrame(this.touch.a);
+		if(this.touch.transitionTimer) return;
+		//cancelAnimationFrame(this.touch.a);
 		//this._.image_container.style.touchAction = 'unset';
-	var ms = Date.now() - this.touch.time;
-	var velocity = this.touch.delta / ms;
-	var transitionTime = 0.30 - Math.abs(velocity)/3;
-		//this._.image_container.style.transition = 'transform '+ transitionTime +'s linear';
-		
-		this._.image_container.style.transition = 'opacity '+transitionTime+'s ease';
-		this._.image_container.style.opacity = 1;
-
+	var times = this.touch.times.slice(-4);
+	var measures = this.touch.measures.slice(-4);
+	var ms = times[times.length-1] - times[0];
+	var delta = measures[measures.length-1] - measures[0];
+	var velocity = (delta / ms) * this.touch.em / 100;
+		this.touch.times = [];
+		this.touch.measures = [];
+		this.touch.transitionTime = Math.max(0, 0.30 - Math.abs(velocity)/2.5);
+		if(isNaN(this.touch.transitionTime)) this.touch.transitionTime = 0;
+		if(isNaN(this.touch.transitionTime)) debugger;
 		if((velocity < this.touch.escapeVelocity * -1
 		|| this.touch.delta < this.touch.escapeDelta * -1)
 		&& !(Reader.SCP.chapter == Reader.SCP.lastChapter
 		&& Reader.SCP.page == Reader.SCP.lastPage)) {
-			this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-			Settings.all.layout.get() == 'rtl'?
-				this.prev():
-				this.next();
-		}else{
-			if((velocity > this.touch.escapeVelocity
-			|| this.touch.delta > this.touch.escapeDelta)
-			&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
-			&& Reader.SCP.page == 0)) {
-				this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-				Settings.all.layout.get() == 'rtl'?
-					this.next():
-					this.prev();
-			}else{
-				this.touch.snapAnimation(this._.image_container._translateX, this.touch.initialX, transitionTime, this._.image_container);
+			this.moveWrappers(-1, true);
+			switch(Settings.get('lyt.direction')){
+				case 'ltr':
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.next)
+					else
+						this.next();
+					break; 
+				case 'rtl': 
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.prev)
+					else
+						this.prev();
+					break;
 			}
+		}else
+		if((velocity > this.touch.escapeVelocity
+		|| this.touch.delta > this.touch.escapeDelta)
+		&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
+		&& Reader.SCP.page == 0)) {
+			this.moveWrappers(1, true);
+			switch(Settings.get('lyt.direction')){
+				case 'ltr':
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.prev)
+					else
+						this.prev();
+					break; 
+				case 'rtl': 
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.next)
+					else
+						this.next();
+					break;
+			}
+		}else{
+			this.moveWrappers(0, true);
 		}
-	var startPage = (function(that) {return that.selectedWrapper})(this);
-		this.touch.transitionTimer = setTimeout(() => {
-			this._.image_container.style.transition = '';
-			shadowScroll();
-			scroll(startPage.$, startPage.$.scrollWidth,0)
-		}, Math.round(transitionTime*1000))
 	}
 
 	this.mouseHandler = function(e) {
@@ -1701,30 +1974,17 @@ const SCROLL_X = 3;
 		if(e.type == 'click') {
 			switch (areas.indexOf(e.pageX)) {
 				case 1:
-					(Settings.all.layout.get() == 'rtl')?
+					(Settings.get('lyt.direction') == 'rtl')?
 						this.next(e):
 						this.prev(e);
 					break;
 				case 2:
-					if(IS_MOBILE)
-						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
-					// else
-					// 	if(Settings.all.layout.get() != 'ttb')
-					// 		(Settings.all.layout.get() == 'ltr')?
-					// 			this.prev(e):
-					// 			this.next(e);
-					break;
 				case 3:
 					if(IS_MOBILE)
-						Settings.cycle('selectorPinned', ['selector-pinned', 'selector-fade']);
-					// else
-					// 	if(Settings.all.layout.get() != 'ttb')
-					// 		(Settings.all.layout.get() == 'ltr')?
-					// 			this.next(e):
-					// 			this.prev(e);
+						Settings.cycle('apr.selPinned', undefined, undefined, true);
 					break;
 				case 4:
-					(Settings.all.layout.get() == 'rtl')?
+					(Settings.get('lyt.direction') == 'rtl')?
 						this.prev(e):
 						this.next(e);
 					break;
@@ -1820,8 +2080,7 @@ function UI_ReaderImageWrapper(o) {
 		if(this.totalWidth > this.$.clientWidth) {
 			this.$.classList.add('too-wide');
 		}
-		if(Settings.get('layout') == 'rtl') {
-			shadowScroll();
+		if(Settings.get('lyt.direction') == 'rtl') {
 			scroll(this.$, this.totalWidth,0)
 		}
 	}
@@ -1958,37 +2217,58 @@ function UI_PageSelector(o) {
 function URLChanger(o) {
 	o=be(o);
 	Linkable.call(this);
+	this.hostname = location.hostname[0].toUpperCase() + location.hostname.slice(1);
+	this.recentState = {};
 
 	this.updateURL = function(SCP) {
-		setTimeout((function(){
-			window.history.replaceState(
-				{},
-				SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ', Page '
-					+ (SCP.page + 1)
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya',
-				window.location.pathname.split('/').slice(0, 3).join('/') // "/reader/series/"
-					+ '/'
-					+ SCP.series
-					+ '/'
-					+ SCP.chapter.replace('.', '-')
-					+ '/'
-					+ (SCP.page + 1)
-					+ '/'
-			);
-		var newtitle = SCP.chapter
-					+ ' - '
-					+ SCP.chapterName
-					+ ' - '
-					+ Reader.current.title
-					+ ' :: Guya';
-			if(newtitle != document.title) document.title = newtitle;
-		}).bind(this), 1)
+		if(this.recentState.chapter == SCP.chapter && this.recentState.page == SCP.page)
+			return;
+	var pathName = location.pathname
+			.split('/')
+			.slice(0, 3)
+			.concat([SCP.series, SCP.chapter.replace('.', '-'), SCP.page + 1, ''])
+			.join('/');
+
+		switch(Settings.get('bhv.historyUpdate')) {
+			case 'none':
+				if(this.titleSet) return;
+				this.titleSet = true;
+			var	title = `${Reader.current.title} | ${this.hostname}`;
+				window.history.replaceState(null, title, pathName);
+				document.title = title;
+				break;
+			case 'replace':
+				title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+				window.history.replaceState(null, title, pathName);
+				document.title = title;
+				break;
+			case 'chap':
+				if(SCP.chapter == this.chapter) return;
+				title = `${SCP.chapter} - ${SCP.chapterName} - ${Reader.current.title} | ${this.hostname}`
+				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+				document.title = title;
+				break;
+			case 'jump':
+				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
+					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+					document.title = title;
+				}
+				break;
+		}
+		this.page = SCP.page;
+		this.chapter = SCP.chapter;
 	}
+
+	this.onHistory = (e) => {
+		if(!e.state) return;
+		this.recentState = e.state;
+		if(Reader.SCP.chapter != e.state.chapter)
+			Reader.initChapter(e.state.chapter, e.state.page);
+		else
+			Reader.displayPage(e.state.page);
+	}
+	window.addEventListener('popstate', this.onHistory);
 
 	this.S.mapIn({
 		SCP: this.updateURL
@@ -2125,27 +2405,37 @@ function UI_LodaManager(o) {
 
 	this.library = {
 		test: new UI_Loda().S.link(this),
-		search: new UI_Loda_Search().S.link(this)
+		search: new UI_Loda_Search().S.link(this),
+		settings: new UI_Loda_Settings().S.link(this)
 	}
 
 	this.display = function(loda) {
+		this.open = true;
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
 		this.$.appendChild(this.library[loda].$);
 		this.$.focus();
-		this.library[loda].focus();
+		this.keyListener.noPropagation(!!this.library[loda].noPropagation);
+		setTimeout(() => this.library[loda].focus(), 100);
 	}
 
 	this.close = function() {
 		this.$.classList.add('hidden');
 		this.$.innerHTML = '';
 		Reader.$.focus();
+		this.open = false;
 	}
 
-	new KeyListener(this.$)
+	this.keyListener = new KeyListener(this.$)
 		.noPropagation(true)
 		.attach('close', ['Escape'], this.close.bind(this))
 
+	this.$.onmousedown = (e) => {
+		if(e.target == this.$) {
+			this.close();
+		}
+	}
+	
 	this.S.mapIn({
 		'close': this.close
 	})
@@ -2156,7 +2446,7 @@ function UI_Loda(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['Loda'].concat(o.kind || []),
-		html: o.html || '<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content"></content></div>'
+		html: o.html || '<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content"></content></div>'
 	});
 	Linkable.call(this);
 	this.manager = o.manager;
@@ -2168,7 +2458,7 @@ function UI_Loda(o) {
 
 	this.focus = function() {
 		this.focusElement.focus();
-		this.focusElement.select();
+		if(this.focusElement.select) this.focusElement.select();
 	}
 
 	this._.close.onclick = this.close.bind(this)
@@ -2180,7 +2470,7 @@ function UI_Loda_Search(o) {
 		node: o.node,
 		kind: ['Loda_Search'].concat(o.kind || []),
 		name: 'Search',
-		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="is-ico-button close" data-bind="close"></button><content data-bind="content">
+		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<input type="text" data-bind="input" placeholder="⌕" />
 				<div class="search-tabs" data-bind="tabs">
 				</div>
@@ -2192,6 +2482,7 @@ function UI_Loda_Search(o) {
 	});
 	this.manager = o.manager;
 	this.name = 'Indexer';
+	this.noPropagation = true;
 	this.focusElement = this._.input;
 	this.container = new UI_ContainerList({
 		node: this._.container
@@ -2236,7 +2527,6 @@ function UI_Loda_Search(o) {
 		})
 
 }
-
 
 function UI_IndexSearch(o) {
 	o=be(o);
@@ -2343,6 +2633,7 @@ function UI_IndexSearch(o) {
 		// 'quickText': this.clear
 	})
 }
+
 function UI_MangaSearch(o) {
 	o=be(o);
 	UI_Tabs.call(this, {
@@ -2416,7 +2707,8 @@ function UI_ChapterUnit(o) {
 	this.pages = o.pages;
 	this.substring = o.substring
 	this.pageList = new UI_Tabs({
-		node: this._.pages
+		node: this._.pages,
+		held: true
 	})
 	this._.title.innerHTML = (o.chapter.id + ' - ' + o.chapter.title).replace(new RegExp('('+o.substring+')', 'gi'), '<i>$1</i>');
 	for(var group in o.chapter.images) {
@@ -2442,6 +2734,145 @@ function UI_ChapterUnit(o) {
 		Loda.close();
 	}
 }
+
+function UI_Loda_Settings(o) {
+	o=be(o);
+	UI_Loda.call(this, {
+		node: o.node,
+		kind: ['Loda_Settings'].concat(o.kind || []),
+		name: 'Settings',
+		html: o.html || `<div class="Loda-window UI Loda Loda_Settings" tabindex="-1">
+			<aside>
+				<button class="ico-btn close" data-bind="close"></button>
+				<header data-bind="header">Settings</header>
+				<div class="settings-tabs" data-bind="tabs">
+				</div>
+			</aside>
+			<content data-bind="content">
+			</content>
+		</div>`
+	});
+	this.focusElement = this.$;
+	this.manager = o.manager;
+	this.name = 'Settings';
+	this.noPropagation = false;
+
+	this.content = new UI_ContainerList({
+		node: this._.content
+	});
+	this.tabs = new UI_Tabs({
+		node: this._.tabs
+	}).S.link(this.content);
+
+	this.createCategory = (tabName, content) => {
+		this.tabs.add(new UI_IconTab({
+			text: tabName
+		}));
+		this.content.add(content);
+		return this;
+	} 
+
+	for(let category in Settings.settings) {
+		if(Settings.settings[category].hidden) continue;
+	var container = new UI_Dummy();
+		for(let setting in Settings.settings[category]) {
+			if(Settings.settings[category][setting].hidden) continue;
+		let sU = new UI_SettingUnit({
+				setting: Settings.settings[category][setting]
+			});
+			Settings.S.link(sU);
+			container.$.appendChild(sU.$);
+		}
+		this.createCategory(Settings.settings[category].name, container);
+	}
+
+	this.tabs.select(0);
+}
+
+function UI_SettingUnit(o) {
+	o=be(o);
+	Linkable.call(this);
+	UI.call(this, {
+		node: o.node,
+		kind: ['SettingUnit'].concat(o.kind || []),
+		name: 'SettingUnit',
+		html: o.html || `
+		<div class="setting-wrapper">
+			<header class="setting-header" data-bind="header"></header>
+			<div class="setting-field" data-bind="field"></div>
+		</div>`
+	});
+
+	this.setting = o.setting;
+
+	this._.header.innerHTML = this.setting.prettyName;
+	this.controls = new UI_SettingDisplay({
+		node: this._.field,
+		setting: this.setting
+	})
+
+	this.packetHandler = (packet) => {
+		if(packet.setting != this.setting.addr) return;
+		if(packet.type == 'disable')
+			this.hide();
+		else if(packet.type == 'enable')
+			this.show();
+	}
+	this.hide = () => {
+		this._.header.classList.add('disabled');
+		this._.field.classList.add('disabled');
+	}
+	this.show = () => {
+		this._.header.classList.remove('disabled');
+		this._.field.classList.remove('disabled');
+	}
+
+	if(this.setting.disabled)
+		this.hide()
+
+	if(this.setting.nomobile)
+		this.$.classList.add('nomobile');
+
+	this.S.mapIn({
+		settingsPacket: this.packetHandler
+	})
+}
+
+function UI_SettingDisplay(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['SettingDisplay'].concat(o.kind || [])
+	}));
+	this.setting = o.setting;
+	this.disabled = o.disabled || false;
+	this.entity = null;
+	switch(this.setting.type) {
+		case SETTING_MULTI:
+		case SETTING_BOOLEAN:
+			this.entity = new UI_ButtonGroup({
+				html: this.setting.html,
+				setting: this.setting
+			}).S.biLink(Settings);
+			break;
+		case SETTING_VALUE:
+		case SETTING_VALUE_STEPPED:
+			this.entity = new UI_Slider({
+				setting: this.setting
+			}).S.biLink(Settings);
+			break;
+	}
+
+
+	if(this.entity) this.$.appendChild(this.entity.$);
+
+	return this;
+}
+
+
+
+
+
+
 
 function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 	for (let i = 0; i < chapter.groups[group].length; i++) {
@@ -2512,6 +2943,51 @@ function thirdPartySeriesHandler(url, chapter, group) {
 	}
 }
 
+function UI_About(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['About'].concat(o.kind || []),
+		html: `<div>
+			<img src="/static/img/Guya-moe.png">
+			<p class="muted">Version: v2.16.20200510</p>
+			<hr>
+			<p>Design, UX: Algoinde</p>
+			<p>Reader code: Algoinde, funkyhippo</p>
+			<p>Backend: appu</p>
+			<hr>
+			<a href="https://github.com/appu1232/guyamoe" target="_blank">Github</a>
+			<a href="https://discord.gg/4WPqwSY" target="_blank">Discord</a>
+			<hr>
+			<p class="muted">Powered by</p>
+			<div class="cubari" data-bind="cubari"><div></div></div>
+		</div>`
+	}));
+
+	this.cubariMove = (e) => {
+		var x = e.pageX;
+		var y = e.pageY;
+		var	cCR = this._.cubari.getBoundingClientRect();	
+		var cX = cCR.left + cCR.width / 2;
+		var cY = cCR.top + cCR.height / 2;
+		var	xDist = (cX - x) / (cX - x<0?document.documentElement.clientWidth - cX:cX) * -16;
+		var yDist = (cY - y) / (cY - y<0?document.documentElement.clientHeight - cY:cY) * -12;
+			this._.cubari.children[0].style.transform = `translate3d(${xDist}%, ${yDist}%, 0)`
+		}
+	this._.cubari.onmouseover = () => {
+		if(this.listener) return;
+		this.listener = true;
+		document.addEventListener('mousemove', this.cubariMove);
+		this._.cubari.children[0].style.transition = '';
+		setTimeout(() => {
+			document.removeEventListener('mousemove', this.cubariMove);
+			this._.cubari.children[0].style.transform = '';
+			this._.cubari.children[0].style.transition = 'transform 0.3s ease';
+			this.listener = false;
+		}, 5000);
+	}
+
+	return this;
+}
 
 alg.createBin();
 
@@ -2524,17 +3000,20 @@ Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
 });
 Loader = new LoadHandler();
-URL = new URLChanger();
+URLC = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
 
+Loda.library.settings.createCategory('About', new UI_About());
+
 API.S.link(Reader);
 Settings.S.link(Reader);
-Reader.S.link(URL)
+Reader.S.link(URLC)
 Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');
+
 
 function debug() {
 	var el = document.createElement('div');

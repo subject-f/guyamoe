@@ -419,8 +419,8 @@ function Linkable(o) {
 	}
 
 	this.S.out = (streamID, data) => {
-		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
 	var dataPacket = new DataPacket(streamID, data, this)
+		if(DEBUG) console.debug('Sending',dataPacket, 'using stream '+streamID, '...');
 		for (var i = 0; i < this.S.targets.length; i++) {
 			if(!(streamID in this.S.targets[i].S.inStreams)) {
 				continue;
@@ -651,6 +651,17 @@ function UI_Selector(o) {
 		return this;
 	}
 
+	this.addOverload = this.add;
+	this.add = function(items) {
+		this.addOverload.apply(this, arguments);
+		if(this.inverse) {
+			for (var i = 0; i < this.lastAdded.length; i++) {
+				this.lastAdded[i].$.classList.add(this.toggleClass);
+			}
+		}
+		return this;
+	}
+
 	this.select = function(what, state, force, silent) {
 	var result = this.selectAbstract(what, state, force, silent);
 		return result;
@@ -758,7 +769,7 @@ function UI_Selector(o) {
 		return this.selectedItems;
 	}
 	
-	this.handler = function(event) {
+	this.handler = (event) => {
 	var element;
 		if(this.held) return;
 		if(event.target !== this.$ && this.$.contains(event.target)) {
@@ -823,7 +834,7 @@ function UI_ContainerList(o) {
 	}));
 	
 	this.S.mapIn({
-		number: this.select,
+		number: (number) => this.select(number, undefined, true) ,
 	})
 }
 function UI_WindowedContainerList(o) {
@@ -875,7 +886,7 @@ function UI_Tabs(o){
 		persistent: true,
 		refire: true,
 		toggleClass: 'is-active',
-		held: o.held||false,
+		held: o.held || false,
 		childrenConstructor: o.childrenConstructor || UI_Dummy
 	});
 
@@ -915,6 +926,15 @@ function UI_Tab(o) {
 	}
 
 	this.S.addIn('count', this.update);
+}
+
+function UI_IconTab(o) {
+	o=be(o);
+	UI_Tab.call(this, Object.assign(o, {
+		kind: ['IconTab'].concat(o.kind || []),
+		html: o.html || '<div><i class="ico-btn" data-bind="icon"></i><span data-bind="text"></span><i data-bind="counter"></i></div>'
+	}))
+	this.$.setAttribute('data-name', o.text);
 }
 
 function UI_Input(o) {
@@ -974,14 +994,16 @@ function UI_Button(o) {
 	this.$['on'+this.method] = event => this.trigger(event);
 }
 
-function UI_StatefulButton(o) {
+function UI_ToggleButton(o) {
 	o=be(o);
 	UI_Button.call(this, Object.assign(o, {
-		kind: ['StatefulButton'].concat(o.kind || [])
+		kind: ['ToggleButton'].concat(o.kind || []),
+		html: o.html || `<div class="ToggleButton UI Button" data-bind="${o.option}"><div data-bind="icon" class="ico-btn"></div><span data-bind="name">${o.text}</span></div>`
 	}));
 	Linkable.call(this);
 	this.state = o.state || false;
-
+	this.option = o.option;
+	this._.icon.setAttribute('data-'+o.setting, o.option);
 
 	this.on = function() {
 		this.$.classList.add('s');
@@ -1002,31 +1024,61 @@ function UI_StatefulButton(o) {
 			this.on();
 		}
 	}
-
 }
-
 
 function UI_ButtonGroup(o) {
 	o=be(o);
+var customHTML = o.html;
 	UI.call(this, Object.assign(o, {
 		kind: ['ButtonGroup'].concat(o.kind || []),
+		html: o.html || `
+			<div class="t-row">
+				<div class="t-1" data-bind="buttons">
+				</div>
+			</div>`
 	}));
 	Linkable.call(this);
-	//this.unique = o.unique || true;
-	this.linkedSetting = o.linkedSetting;
+	this.unique = o.unique || true;
+	this.setting = o.setting;
+
+	if(!customHTML) {
+		this.setting.options().forEach(option => {
+		var button = new UI_ToggleButton({
+				setting: this.setting.addr,
+				text: this.setting.strings[option],
+				option: option
+			});
+		var buttonElement = this._.buttons.appendChild(button.S.link(this).$);
+		})
+	}
 
 	this.refresh = () => {
-		this.buttons = this.$.getElementsByClassName('StatefulButton').filter(b => b._struct == undefined);
-		this.buttons = this.buttons.map(b => new UI_StatefulButton({node: b}).S.link(this));
+		this.buttons = this.$.getElementsByClassName('ToggleButton');
+		if(this.buttons.length == 4)
+			this.$.classList.add('b4');
+		else
+			this.$.classList.remove('b4');
+		this.buttons = this.buttons.map(b => {
+			if(b._struct == undefined)
+				return new UI_ToggleButton({
+					node: b,
+					setting: this.setting.addr,
+					option: b.getAttribute('data-bind')
+				}).S.link(this);
+			else
+				return b._struct;
+		});
 		this.buttonsMapping = {};
 		this.buttons.forEach(b => {
 			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
+			Tooltippy.attach(b.$, this.setting.getHelp(b.$.getAttribute('data-bind')), undefined, 10)
 		});
 		return this;
 	}
 
 	this.select = function(button, silent) {
-		if(typeof button == 'string') {
+		if(Object.keys(this.buttonsMapping).length < 1) return;
+		if(!(button instanceof UI_ToggleButton)) {
 			button = this.buttonsMapping[button];
 		}
 		for (var i = 0; i < this.buttons.length; i++) {
@@ -1037,14 +1089,13 @@ function UI_ButtonGroup(o) {
 			}
 		}
 
-		//NOTE: data-bind in child buttons doubles as a setting value. Might cause issues.
 		this.S.out('id', button.$.getAttribute('data-bind'));
-		if(this.linkedSetting) {
+		if(this.setting && !silent) {
 			this.S.out('settingsPacket',
 				new SettingsPacket(
 					'set',
-					this.linkedSetting,
-					button.$.getAttribute('data-bind')
+					this.setting.addr,
+					button.option
 				)
 			);	
 		}
@@ -1054,7 +1105,7 @@ function UI_ButtonGroup(o) {
 		this.select(rawPacket.source);
 	}
 	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.linkedSetting)
+		if(settingsPacket.setting == this.setting.addr)
 			this.select(settingsPacket.value, true);
 	}
 
@@ -1063,12 +1114,138 @@ function UI_ButtonGroup(o) {
 		settingsPacket: this.settingsPacketHandler
 	})
 
+	this.refresh();
 }
 
 
+function UI_MultiStateButton(o) {
+	o=be(o);
+	UI_Button.call(this, Object.assign(o, {
+		kind: ['MultiStateButton'].concat(o.kind || [])
+	}));
+	Linkable.call(this);
+	this.setting = Settings.getByAddr(o.setting);
+	this.options = o.options || this.setting.options();
+	this.disabled = o.disabled || false;
 
+	this.set = function(state, silent) {
+		if(!this.options.includes(state)) return;
+		this.$.setAttribute('data-'+this.setting.addr, state);
+		this.state = state;
+		if(!silent && !this.disabled) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.setting.addr,
+					state
+				)
+			);
+		}
+	}
 
+	this.trigger = function(event) {
+	var idx = this.options.indexOf(this.state) + 1;
+		if(idx >= this.options.length) idx = 0;
+		this.set(this.options[idx]);
+	}
 
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.setting.addr)
+			this.set(settingsPacket.value, true);
+	}
+
+	this.S.mapIn({
+		settingsPacket: this.settingsPacketHandler
+	})
+	
+	this.set(o.state || Settings.get(this.setting.addr), true);
+	this.S.biLink(Settings);
+}
+
+function UI_Slider(o) {
+	o=be(o);
+	UI.call(this, Object.assign(o, {
+		kind: ['Slider'].concat(o.kind || []),
+		html: o.html || `<div>
+			<div class="slider-wrap">
+				<input data-bind="slider" class="slider-control" type="range" />
+				<div class="ticks" data-bind="ticks"></div>
+			</div>
+			<input data-bind="number" class="slider-value" type="text" />
+		</div>`
+	}));
+	Linkable.call(this);
+	this.setting = o.setting;
+	this.disabled = o.disabled || false;
+
+	this.draw = () => {
+		this._.slider.min = 0;
+		this._.slider.max = this.setting.options().length - 1;
+		this._.ticks.innerHTML = '';
+		this.setting.options().forEach(option => {
+		let tick = crelm('i');
+			if(this.setting.options().length < 14)
+				tick.innerHTML = this.setting.getFormatted(option);
+			this._.ticks.appendChild(tick);
+		})
+	}
+
+	this.set = function(state, silent) {
+		if(!this.setting.options().includes(state)) return;
+		this._.slider.setAttribute('data-'+this.setting.addr, state);
+		this.state = state;
+	let val = this.setting.options().indexOf(state);
+		if(this._.slider.value != val)
+			this._.slider.value = val;
+		this._.number.value = this.setting.getFormatted(state);
+		if(!silent && !this.disabled) {
+			this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.setting.addr,
+					state
+				)
+			);
+		}
+	}
+
+	this.setByIndex = function(idx, silent) {
+		if(+idx > this.setting.options().length - 1 || +idx < 0) return;
+		this.set(this.setting.options()[idx], silent);
+	}
+
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.setting.addr) {
+			if(settingsPacket.type == 'change') {
+				this.set(settingsPacket.value, true);
+				this.draw();
+			}
+		}
+	}
+
+	this.S.mapIn({
+		settingsPacket: this.settingsPacketHandler
+	})
+	
+	this._.slider.oninput = (e) => {
+		this.setByIndex(this._.slider.value);
+	}
+	this._.number.onblur = (e) => {
+	let val = parseInt(this._.number.value);	
+		this.set(this.setting.options().reduce((p, c) => (
+			Math.abs(c - val) < Math.abs(p - val) ? c : p)
+		));
+	}
+	new KeyListener(this._.number)
+		.attach('esc', ['Escape'], (e) => e.target.blur())
+		.attach('enter', ['Enter'], (e) => this._.number.onblur())
+		.noPropagation(true)
+	Tooltippy.attach(this._.slider, this.setting.getHelp(), undefined, 10);
+	this.draw();
+	this.set(o.state || Settings.get(this.setting.addr), true);
+	this.S.biLink(Settings);
+}
+	
 /* function UI_Button(o) {
 	o=be(o);
 	UI.call(this, {
@@ -1210,12 +1387,12 @@ function UI_Waitable(o) {
 	}
 }
 
-function UI_Slider(o) {
+function UI_Gallery(o) {
 	o=be(o);
 	UI.call(this, {
 		node: o.node,
-		kind: ['Slider'].concat(o.kind || []),
-		html: o.html || '<div class="slider"><div class="prev"></div><div class="wrapper"></div><div class="next"></div></div>',
+		kind: ['Gallery'].concat(o.kind || []),
+		html: o.html || '<div><div class="prev"></div><div class="wrapper"></div><div class="next"></div></div>',
 	});
 	Linkable.call(this, {});
 

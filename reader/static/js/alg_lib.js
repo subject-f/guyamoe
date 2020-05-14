@@ -32,6 +32,21 @@ Object.filter = (obj, predicate) =>
           .filter( key => predicate(obj[key]) )
           .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
+Object.byString = function(o, s) {
+    s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
+    s = s.replace(/^\./, '');           // strip a leading dot
+    var a = s.split('.');
+    for (var i = 0, n = a.length; i < n; ++i) {
+        var k = a[i];
+        if (o !== undefined && k in o) {
+            o = o[k];
+        } else {
+            return;
+        }
+    }
+    return o;
+}
+
 DOMTokenList.prototype.cycle = function(array) {
 var classesArray = Array.prototype.slice.call(this);
 	for(var i=0; i<array.length; i++) {
@@ -958,3 +973,28 @@ function scrollToY(element, scrollTargetY, time, easing) {
 
     exports.reset = reset;
 }));
+
+function nonEnum(ctx, name, value) {
+	Object.defineProperty(ctx, name, {
+		enumerable: false,
+		writable: true,
+		value: value
+	})
+}
+
+function promiseTimeout(ms, value) {
+	var res, rej;
+	var p = new Promise(function(resolve, reject) {
+		res = resolve;
+		rej = reject;
+	}).catch(() => {});
+	p._timeout = setTimeout(function() {
+		res(value);
+	}, ms);
+	p.cancel = function(err) {
+		clearTimeout(p._timeout);
+		rej(err);
+		return false;
+	};
+	return p;
+}
