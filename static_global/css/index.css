@@ -454,6 +454,7 @@ main a {
 	position: relative;
 	font-size: 1em;
 	flex-grow: 1;
+	transform: translateZ(0);
 }
 
 .manga-card:first-child {
