@@ -928,6 +928,15 @@ function UI_Tab(o) {
 	this.S.addIn('count', this.update);
 }
 
+function UI_IconTab(o) {
+	o=be(o);
+	UI_Tab.call(this, Object.assign(o, {
+		kind: ['IconTab'].concat(o.kind || []),
+		html: o.html || '<div><i class="ico-btn" data-bind="icon"></i><span data-bind="text"></span><i data-bind="counter"></i></div>'
+	}))
+	this.$.setAttribute('data-name', o.text);
+}
+
 function UI_Input(o) {
 	o=be(o);
 	UI.call(this, {
@@ -1034,11 +1043,12 @@ var customHTML = o.html;
 
 	if(!customHTML) {
 		this.setting.options().forEach(option => {
-			this._.buttons.appendChild(new UI_ToggleButton({
+		var button = new UI_ToggleButton({
 				setting: this.setting.addr,
 				text: this.setting.strings[option],
 				option: option
-			}).S.link(this).$);
+			});
+		var buttonElement = this._.buttons.appendChild(button.S.link(this).$);
 		})
 	}
 
@@ -1061,6 +1071,7 @@ var customHTML = o.html;
 		this.buttonsMapping = {};
 		this.buttons.forEach(b => {
 			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
+			Tooltippy.attach(b.$, this.setting.getHelp(b.$.getAttribute('data-bind')), undefined, 10)
 		});
 		return this;
 	}
@@ -1229,7 +1240,7 @@ function UI_Slider(o) {
 		.attach('esc', ['Escape'], (e) => e.target.blur())
 		.attach('enter', ['Enter'], (e) => this._.number.onblur())
 		.noPropagation(true)
-
+	Tooltippy.attach(this._.slider, this.setting.getHelp(), undefined, 10);
 	this.draw();
 	this.set(o.state || Settings.get(this.setting.addr), true);
 	this.S.biLink(Settings);

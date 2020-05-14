@@ -184,6 +184,8 @@ function Setting(o) {
 	this.manual = o.manual; //if true, the setting needs an external .setClass call to update the class. This can be used where class update needs to be in the middle of something.
 	this.hidden = o.hidden;
 	this.condition = o.condition;
+	this.nomobile = o.nomobile;
+	this.help = o.help;
 	this.disabled = o.disabled || false;
 
 	this.checkOptionValidity = function(value) {
@@ -205,7 +207,7 @@ function Setting(o) {
 		this.set(this.get());
 	}
 
-	this.cycle = function(options, silent) {
+	this.cycle = function(options, silent, notip) {
 		switch(this.type){
 			case SETTING_BOOLEAN:
 			case SETTING_MULTI:
@@ -217,26 +219,27 @@ function Setting(o) {
 			var index = options.indexOf(this.get());
 				return this.set(
 					(index+1 > options.length - 1)?options[0]:options[index+1],
-					silent
+					silent,
+					notip
 				);
 				break;
 		}
 		return false;
 	}
-	this.next = function(silent) {
+	this.next = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) + 1;
 			if(targetIndex > this.options().length - 1) return;
-			this.set(this.options()[targetIndex], silent)
+			this.set(this.options()[targetIndex], silent, notip)
 		}
 	}
-	this.prev = function(silent) {
+	this.prev = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) - 1;
 			if(targetIndex < 0) return;
-			this.set(this.options()[targetIndex], silent)
+			this.set(this.options()[targetIndex], silent, notip)
 		}
 	}
 	this.get = function() {
@@ -251,6 +254,17 @@ function Setting(o) {
 			return this.strings[option];
 		}else{
 			return option;
+		}
+	}
+	this.getHelp = function(option) {
+		option = option===undefined?this.get():option;
+		if(this.help) {
+			if(typeof this.help == 'string') {
+				return this.help;
+			}
+			return this.help[option];
+		}else{
+			return '';
 		}
 	}
 	this.classString = function(option) {
@@ -276,7 +290,7 @@ function Setting(o) {
 				break;
 		}
 	}
-	this.set = function(value, silent) {
+	this.set = function(value, silent, notip) {
 		if(!this.checkOptionValidity(value)) return false;
 		this.setting = value;
 		if(this.global && !this.manual)
@@ -284,7 +298,8 @@ function Setting(o) {
 		this.S.out('settingEvent', {
 			type: 'change',
 			setting: this,
-			silent: silent
+			silent: silent,
+			notip: notip
 		})
 	}
 	this.disable = () => {
@@ -315,7 +330,7 @@ function SettingsHandler(){
 	this.settings = {
 		lyt: new SettingsCategory('Layout', false),
 		apr: new SettingsCategory('Appearance', false),
-		bhv: new SettingsCategory('Behaviour', false),
+		bhv: new SettingsCategory('Behavior', false),
 		adv: new SettingsCategory('Advanced', false),
 		misc: new SettingsCategory('Miscellaneous', true),
 	};
@@ -332,8 +347,8 @@ function SettingsHandler(){
 	this.deserialize = function() {
 		if(!localStorage) return;
 	var settings = localStorage.getItem('settings');
-		if(!settings) return;
 		try{
+			if(!settings) throw 'No settings';
 			settings = JSON.parse(settings);
 			if(settings.VER && settings.VER != this.ver) {
 				throw 'Settings ver changed';
@@ -344,7 +359,10 @@ function SettingsHandler(){
 			}
 		}catch (e){
 			localStorage.setItem('settings','');
-			console.warn('Settings were found to be corrupted and so were reset.')
+			console.warn('Settings were found to be corrupted and so were reset.');
+			for (var setting in this.all) {
+				this.all[setting].set(this.all[setting].get());
+			}
 		}
 	}
 
@@ -404,20 +422,20 @@ function SettingsHandler(){
 	this.get = function(settingID){
 		return this.getByAddr(settingID).get();
 	}
-	this.set = function(settingID, value, silent){
-		this.getByAddr(settingID).set(value, silent);
+	this.set = function(settingID, value, silent, notip){
+		this.getByAddr(settingID).set(value, silent, notip);
 	}
 	this.setClass = function(settingID){
 		this.getByAddr(settingID).setClass();
 	}
-	this.cycle = function(settingID, options, silent){
-		this.getByAddr(settingID).cycle(options, silent);
+	this.cycle = function(settingID, options, silent, notip){
+		this.getByAddr(settingID).cycle(options, silent, notip);
 	}
-	this.next = function(settingID, silent){
-		this.getByAddr(settingID).next(silent);
+	this.next = function(settingID, silent, notip){
+		this.getByAddr(settingID).next(silent, notip);
 	}
-	this.prev = function(settingID, silent){
-		this.getByAddr(settingID).prev(silent);
+	this.prev = function(settingID, silent, notip){
+		this.getByAddr(settingID).prev(silent, notip);
 	}
 	this.update = function(settingID){
 		this.getByAddr(settingID).update();
@@ -428,10 +446,14 @@ function SettingsHandler(){
 		let setting = this.all[key];
 			setting.refresh();
 			if(setting.condition) {
-				if(this.query(setting.condition))
+			var result = this.query(setting.condition);
+				if(result) {
+					if(!setting.disabled) return;
 					setting.enable();
-				else
+				}else{
+					if(setting.disabled) return;
 					setting.disable();
+				}
 			}
 		}
 	}
@@ -451,7 +473,9 @@ function SettingsHandler(){
 					e.setting.get(),
 				)
 			)
-			if(e.type == 'change') this.S.out('message', e.setting.getFormatted());
+			if(!e.setting.notip)
+				if(e.type == 'change')
+					this.S.out('message', e.setting.getHelp());
 		}
 	}
 
@@ -473,7 +497,7 @@ function SettingsHandler(){
 		settingEvent: this.settingUpdated
 	})
 
-	this.ver = '0.72';
+	this.ver = '0.75';
 
 	this.newSetting({
 		addr: 'lyt.fit',
@@ -489,6 +513,15 @@ function SettingsHandler(){
 		],
 		default: (IS_MOBILE)?'all_limit':'width_limit',
 		strings: {
+			'none': 'Images are displayed in natural resolution.',
+			'all_limit': 'Natural image size that does not exceed max width or height.',
+			'width_limit': 'Natural image size that does not exceed max width.',
+			'height_limit': 'Natural image size that does not exceed max height.',
+			'all': 'Images expand to width or height.',
+			'width': 'Images expand to max width.',
+			'height': 'Images expand to max height.',
+		},
+		help: {
 			'none': 'Images are displayed in natural resolution.',
 			'all_limit': 'Natural image size that does not exceed max width or height.',
 			'width_limit': 'Natural image size that does not exceed max width.',
@@ -528,8 +561,10 @@ function SettingsHandler(){
 		options: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
 		default: '100',
 		strings: (i) => `${i}%`,
+		help: 'Maximum width the page expands to. Works only in width modes of page fit.',
 		type: SETTING_VALUE_STEPPED,
-		condition: {'lyt.fit': ['width_limit', 'width']}
+		condition: {'lyt.fit': ['width_limit', 'width']},
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'lyt.direction',
@@ -540,6 +575,11 @@ function SettingsHandler(){
 			ltr: 'Left-to-right',
 			ttb: 'Top-to-bottom',
 			rtl: 'Right-to-left'
+		},
+		help: {
+			ltr: 'Left-to-right reading mode.',
+			ttb: 'Vertical view.',
+			rtl: 'Right-to-left reading mode.'
 		},
 		type: SETTING_MULTI
 	})
@@ -552,6 +592,11 @@ function SettingsHandler(){
 			'1': '1-page layout',
 			'2': '2-page layout',
 			'2-odd': '2-page layout, odd'
+		},
+		help: {
+			'1': 'Single page displayed.',
+			'2': 'Two pages at once.',
+			'2-odd': 'Two pages at once, shifted by one.'
 		},
 		type: SETTING_MULTI,
 		postUpdate: value => {
@@ -573,7 +618,7 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'adv.spreadCount',
-		prettyName: '2-page spread count',
+		prettyName: 'Spread mode custom page count',
 		options: [1,2,3,4,5,6,7,8,9,10],
 		default: 1,
 		strings: i => {
@@ -585,7 +630,7 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'adv.spreadOffset',
-		prettyName: '2-page spread offset',
+		prettyName: 'Spread mode custom page offset',
 		options: () => {
 			return [...Array(this.get('adv.spreadCount')).keys()]
 		},
@@ -604,17 +649,22 @@ function SettingsHandler(){
 		default: 'left',
 		strings: {
 			'left': 'Left',
-			'bottom': 'Bottom' 
+			'bottom': 'Bottom'
 		},
-		type: SETTING_MULTI
+		help: {
+			'left': 'Page selector is shown near the sidebar.',
+			'bottom': 'Page selector is at the bottom of the page.'	
+		},
+		type: SETTING_MULTI,
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.selPinned',
 		prettyName: 'Page selector',
 		default: false,
 		strings: {
-			true: 'Pinned',
-			false: 'Shown on hover'
+			true: 'Always visible',
+			false: `Only on ${IS_MOBILE?'tap':'hover'}`
 		},
 		type: SETTING_BOOLEAN
 	})
@@ -623,10 +673,10 @@ function SettingsHandler(){
 		prettyName: 'Page number in page selector',
 		default: true,
 		strings: {
-			true: 'Visible',
-			false: 'Hidden'
+			true: 'Show page number',
+			false: 'Hide page number'
 		},
-		type: SETTING_BOOLEAN
+		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
 		addr: 'apr.hoverinos',
@@ -636,7 +686,8 @@ function SettingsHandler(){
 			true: 'Visible',
 			false: 'Hidden'
 		},
-		type: SETTING_BOOLEAN
+		type: SETTING_BOOLEAN,
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.sidebar',
@@ -646,7 +697,8 @@ function SettingsHandler(){
 			true: 'Show sidebar',
 			false: 'Hide sidebar',
 		},
-		type: SETTING_BOOLEAN
+		type: SETTING_BOOLEAN,
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.previews',
@@ -656,11 +708,12 @@ function SettingsHandler(){
 			true: 'Show previews',
 			false: 'Hide previews',
 		},
-		type: SETTING_BOOLEAN
+		type: SETTING_BOOLEAN,
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'bhv.preload',
-		prettyName: 'Preload amount',
+		prettyName: 'Image preload',
 		options: [1,2,3,4,5,6,7,8,9,100],
 		default: (IS_MOBILE)?2:3,
 		strings: i => `${i}`.replace('100', '∞'),
@@ -674,7 +727,8 @@ function SettingsHandler(){
 		default: 25,
 		strings: i => `${i}px`,
 		type: SETTING_VALUE,
-		global: false
+		global: false,
+		nomobile: true
 	})
 	.newSetting({
 		addr: 'bhv.resetScroll',
@@ -684,6 +738,10 @@ function SettingsHandler(){
 			true: 'Reset',
 			false: 'Leave it be',
 		},
+		help: {
+			true: 'On page switch, resets vertical scroll of the previous page.',
+			false: 'Vertical scroll on pages is saved.',
+		},
 		type: SETTING_BOOLEAN,
 		global: false
 	})
@@ -691,12 +749,18 @@ function SettingsHandler(){
 		addr: 'bhv.historyUpdate',
 		prettyName: 'Browser history/back button behavior',
 		options: ['none','replace','chap','jump'],
-		default: 'none',
+		default: 'replace',
 		strings: {
 			'none': "Don't touch browser history",
 			'replace': "Only change page title",
 			'chap': "Add every chapter to history",
-			'jump': "Add every chapter and page skips",
+			'jump': "Add every chapter and page&nbsp;skips",
+		},
+		help: {
+			'none': "Page URL and title won't update at all.",
+			'replace': "When you go to next chapter, page title and URL changes.",
+			'chap': "Remembers chapters in browser history so you can go back with browser buttons.",
+			'jump': "Also adds out-of-order page skips to history in addition to chapters.",
 		},
 		type: SETTING_MULTI,
 		global: false
@@ -705,7 +769,8 @@ function SettingsHandler(){
 		addr: 'misc.groupPreference',
 		prettyName: 'Group preference',
 		type: SETTING_VALUE,
-		hidden: true
+		hidden: true,
+		global: false
 	})
 	.deserialize();
 }
@@ -735,13 +800,14 @@ function UI_Tooltippy(o) {
 		var rect = e.target.getBoundingClientRect()
 		var bodyRect = document.body.getBoundingClientRect();
 		var align = e.target.getAttribute('data-tip-align')
+		var offset = e.target._ttOffset || 2;
 			this.set(tip);
 			this.$.style.display = 'block';
 			if(IS_MOBILE) return;
 			if(align == 'right')
 				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) - rect.height + this.$.offsetHeight + 2 + 'px';
 			else
-				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + 2 + 'px';
+				this.$.style.bottom = document.body.offsetHeight - (rect.top - bodyRect.top) + offset + 'px';
 			if(e.pageX > window.innerWidth / 2) {
 				this.$.style.left = 'unset';
 				this.$.style.right = window.innerWidth - rect.left - rect.width + 'px';
@@ -780,11 +846,12 @@ function UI_Tooltippy(o) {
 		this.$.style.display = 'none';
 	}
 
-	this.attach = function(element, text, align) {
+	this.attach = function(element, text, align, offset) {
 		element.onmouseover = e => this.handler(e);
 		element.onmouseleave = e => this.reset(e)
 		element.setAttribute('data-tip', text);
 		if(align) element.setAttribute('data-tip-align', align);
+		element._ttOffset = offset;
 		return this;
 	}
 }
@@ -1180,9 +1247,11 @@ function UI_Reader(o) {
 			window.location.href = '/read/manga/' + this.SCP.series + '/' + this.SCP.chapter + '/comments';
 	}
 
-	this.setLayout = function(layout, silent) {
-		this.recalculateBuffer();
-		this.stickHeader();
+	this.setLayout = (layout, silent) => {
+		requestAnimationFrame(() => {
+			this.recalculateBuffer();
+			this.stickHeader();
+		})
 
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
@@ -1191,13 +1260,15 @@ function UI_Reader(o) {
 		}
 	}	
 
-	this.recalculateBuffer = function() {
+	this.recalculateBuffer = () => {
 		if (IS_MOBILE) {
 			if (Settings.get('lyt.direction') === 'ttb' && Settings.get('apr.selPinned')) {
+			var tOH = this._.title.offsetHeight;
+			var sOH = this._.rdr_selector.offsetHeight;
 				// Order of these statements seem to matter for Chrome's scroll shifting behaviour; if height is
 				// set before top, the scroll bug occurs. Thus, it might break in future updates.
-				this._.rdr_selector.style.top = this._.title.offsetHeight + 'px';
-				this._.rdr_aside_buffer.style.height = this._.title.offsetHeight + this._.rdr_selector.offsetHeight + 'px';
+				this._.rdr_selector.style.top = tOH + 'px';
+				this._.rdr_aside_buffer.style.height = tOH + sOH + 'px';
 				// console.log(window.scrollY); // This statement also reintroduces the scroll bug regardless of order
 			} else {
 				this._.rdr_aside_buffer.style.height = '0px';
@@ -1374,6 +1445,7 @@ function UI_ReaderImageView(o) {
 		node: this._.image_container,
 		held: true
 	})
+	this.wrappers = {};
 	
 	this.getScrollElement = function() {
 		if(Loda.open) return {
@@ -1387,7 +1459,7 @@ function UI_ReaderImageView(o) {
 				return this._.image_container;
 			}
 		}else{
-			return this.selectedWrapper.$;
+			return this.wrappers.current.$;
 		}
 	}
 
@@ -1447,19 +1519,18 @@ function UI_ReaderImageView(o) {
 
 	this.scrollAnchor = () => {
 		this.scroll.anchorRAF = requestAnimationFrame(this.scrollAnchor);
-		shadowScroll();
 		scroll(this.imageContainer.$, 0, this.scroll.anchorObject.offsetTop + (this.scroll.anchorOffset>0?this.scroll.anchorOffset*-1:this.scroll.anchorObject.offsetHeight * this.scroll.anchorPoint))
 	}
 
 	this.updateScrollPosition = () => {
-		if(!this.selectedWrapper) return;
-		this.scroll.anchorObject = this.selectedWrapper.$;
-		this.scroll.anchorOffset = this.selectedWrapper.$.getBoundingClientRect().top;
-		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.selectedWrapper.$.offsetTop) / this.selectedWrapper.$.offsetHeight;
+		if(!this.wrappers.current) return;
+		this.scroll.anchorObject = this.wrappers.current.$;
+		this.scroll.anchorOffset = this.wrappers.current.$.getBoundingClientRect().top;
+		this.scroll.anchorPoint = (this.imageContainer.$.scrollTop - this.wrappers.current.$.offsetTop) / this.wrappers.current.$.offsetHeight;
 	}
 
 	this.updateWides = () => {
-		if(Settings.get('lyt.direction') == 'ttb' && this.selectedWrapper ) {
+		if(Settings.get('lyt.direction') == 'ttb' && this.wrappers.current ) {
 			// console.log('wideUpdate fire')
 			if(!this.scroll.anchorRAF && this.scroll.anchorObject) {
 				this.scrollAnchor();
@@ -1530,7 +1601,6 @@ function UI_ReaderImageView(o) {
 		}
 		this.imageContainer.add(this.imageWrappers);
 
-		shadowScroll();
 		scroll(this.imageContainer.$, 0,0);
 		
 		
@@ -1550,31 +1620,31 @@ function UI_ReaderImageView(o) {
 			return;
 
 		this.selectedPage = this.imageList[index];
-		this.selectedWrapper = this.selectedPage.parentWrapper;
-		this.visiblePages = this.selectedWrapper.getIndices();
+		this.wrappers.current = this.selectedPage.parentWrapper;
+	var wrapperIndex = this.imageWrappers.indexOf(this.wrappers.current);
+		this.wrappers.left = this.imageWrappers[wrapperIndex - 1] || null;
+		this.wrappers.right = this.imageWrappers[wrapperIndex + 1] || null;
+		this.visiblePages = this.wrappers.current.getIndices();
 		if(Settings.get('lyt.direction') == 'ttb') {
 			if (!dry){	
 				setTimeout(this.getScrollElement().focus(), 1);
-				shadowScroll();
-				if(IS_MOBILE) {
-					scroll(this.getScrollElement(), 0, this.selectedWrapper.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
-				}else{
-					scroll(this.getScrollElement(), 0,this.selectedWrapper.$.offsetTop);
+				if(wrapperIndex > 0) {
+					if(IS_MOBILE) {
+						scroll(this.getScrollElement(), 0, this.wrappers.current.$.getBoundingClientRect().top + this.getScrollElement().scrollTop);
+					}else{
+						scroll(this.getScrollElement(), 0,this.wrappers.current.$.offsetTop);
+					}
 				}
 			}
 		}else{
-		var wrapperIndex = this.imageWrappers.indexOf(this.selectedWrapper);
-
-		var oldX = this.imageContainer.$._translateX;
-			this.imageContainer.$._translateX = ( -100 * wrapperIndex);
-			if(Math.abs(Math.abs(oldX) - 100 * wrapperIndex) < 201 ) {
-			var animated = this.touch.snapAnimation(undefined, this.imageContainer.$._translateX);
+			if(this.touch.transitionTimer) {
+				this.touch.transitionTimer.then(() => {
+					this.moveContainer(wrapperIndex);
+				})
+			}else{
+				this.moveContainer(wrapperIndex);
 			}
-			if(!animated) {
-				this.imageContainer.$.style.transform =
-					'translateX(' + this.imageContainer.$._translateX + '%)';
-			}
-			this.getScrollElement().focus();
+			//this.getScrollElement().focus();
 			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
 	var toPreload = Settings.get('bhv.preload');
@@ -1593,12 +1663,46 @@ function UI_ReaderImageView(o) {
 		}
 	}
 
-	this.prev = function() {
+	this.prev = () => {
 		this.S.out('event', {type: 'prevPage'});
 
 	}
-	this.next = function() {
+	this.next = () => {
 		this.S.out('event', {type: 'nextPage'})
+	}
+
+	this.moveContainer = (index) => {
+		this.containerOffset = ( -100 * index);
+		// this.imageContainer.$.style.transform = 'translateX(' + this.containerOffset + '%)';
+		this.imageContainer.$.style.marginLeft = this.containerOffset + '%';
+	}
+
+	this.moveWrappers = (offset, snap) => {
+		if(!this.touch.affectedWrappers) {
+			this.touch.affectedWrappers = [];
+			if(this.wrappers.left) this.touch.affectedWrappers.push(this.wrappers.left);
+			this.touch.affectedWrappers.push(this.wrappers.current);
+			if(this.wrappers.right) this.touch.affectedWrappers.push(this.wrappers.right);
+		}
+		if(snap) {
+			this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style.transition = `transform ${this.touch.transitionTime}s cubic-bezier(${this.touch.transitionTime},.55,.4,1)`);
+			this.touch.transitionTimer = promiseTimeout(Math.round(this.touch.transitionTime*1000), true);
+			this.touch.transitionTimer.then(() => {
+					this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
+					this.touch.affectedWrappers = null;
+					delete this.touch.transitionTimer;
+				}).catch(() => {delete this.touch.transitionTimer;})	
+		}else{
+			//for regrab
+			if(this.touch.transitionTimer) {
+				this.touch.transitionTimer.cancel();
+				this.touch.transitionTimer = false;
+				this.touch.affectedWrappers = null;
+			}
+		}
+		if(this.wrappers.left) this.wrappers.left.$.style.transform = `translateX(${offset * 100}%)`;
+		this.wrappers.current.$.style.transform = `translateX(${offset * 100}%)`;
+		if(this.wrappers.right) this.wrappers.right.$.style.transform = `translateX(${offset * 100}%)`;
 	}
 
 const SCROLL = 1;
@@ -1630,176 +1734,193 @@ const SCROLL_X = 3;
 		em: parseFloat(getComputedStyle(document.body).fontSize),
 		gesture: null,
 		time: null,
-		escapeVelocity: 0.05,
-		escapeDelta: 40,
+		escapeVelocity: 0.07,
+		escapeDelta: 0.40,
 		imagePosition: 0,
 		a: null
 	};
 	
 	this.touch.startHandler = e => {
+		if(this.touch.transitionTimer) return;
 		if(e.touches.length > 1) return;
-		this.touch.initialX = this.imageContainer.$._translateX = ( -100 * this.imageWrappers.indexOf(this.selectedWrapper));
-		this.touch.start = e.touches[0].pageX / this._.image_container.offsetWidth * 100;
-		this.touch.startY = e.touches[0].pageY;
+		this.touch.initialX = 0;
+		this.touch.x = e.touches[0].pageX;
+		this.touch.y = e.touches[0].pageY;
+		this.touch.containerWidth = this._.image_container.offsetWidth;
+		this.touch.startX = this.touch.x;
+		this.touch.startY = this.touch.y;
 		this._.image_container.style.transition = '';
 		this.touch.gesture = null;
 		this.touch.delta = 0;
 		this.touch.deltaY = 0;
 		this.touch.scrollY = window.scrollY;
-		this.touch.time = Date.now();
-	var maxScroll = this.selectedWrapper.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.selectedWrapper.$.offsetWidth;
+		this.touch.measures = [];
+		this.touch.times = [];
+		if(this.touch.affectedWrappers) this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
+		this.touch.affectedWrappers = null;
+	var maxScroll = this.wrappers.current.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.wrappers.current.$.offsetWidth;
 		if(maxScroll <= 0){
 			this.touch.imagePosition = null;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) >= maxScroll-2) {
+		}else if(Math.abs(this.wrappers.current.$.scrollLeft) >= maxScroll-2) {
 			this.touch.imagePosition = 1;
-		}else if(Math.abs(this.selectedWrapper.$.scrollLeft) == 0) {
+		}else if(Math.abs(this.wrappers.current.$.scrollLeft) == 0) {
 			this.touch.imagePosition = -1;
 		}else{
 			this.touch.imagePosition = 0;
 		}
-		this.touch.pageX = e.touches[0].pageX;
-		this.touch.pageY = e.touches[0].pageY;
-		this.touch.a = requestAnimationFrame(this.touch.anim);
+		//this.touch.a = requestAnimationFrame(this.touch.anim);
 	}
 	
-	this.touch.anim = () => {
-		this.touch.a = requestAnimationFrame(this.touch.anim);
-		if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
-		if(Settings.get('lyt.direction') == 'ttb') return cancelAnimationFrame(this.touch.a);
-		this.touch.delta = this.touch.pageX / this._.image_container.offsetWidth * 100 - this.touch.start;
+	// this.touch.anim = () => {
+	// 	this.touch.a = requestAnimationFrame(this.touch.anim);
+	// 	if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
+	// 	if(Settings.get('lyt.direction') == 'ttb') return cancelAnimationFrame(this.touch.a);
+
+	// 	this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
+	// 	if(this.touch.imagePosition == 0
+	// 	|| this.touch.imagePosition == 1 && this.touch.delta > 0
+	// 	|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
+	// 		this.touch.gesture = SCROLL_X;
+	// 		return cancelAnimationFrame(this.touch.a);
+	// 	}
+	// 	this.touch.deltaY = this.touch.y - this.touch.startY;
+
+	// 	if(Settings.get('lyt.direction') == 'rtl'){
+	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
+	// 		|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
+	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
+	// 		}
+	// 	}else{
+	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
+	// 		|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
+	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
+	// 		}
+	// 	}
+
+	// 	this.touch.time = Date.now();
+	// 	this.moveWrappers(this.touch.delta);
+
+	// 	if(this.touch.gesture == SWIPE) return; 
+
+	// 	if(Math.abs(this.touch.delta) > 0.025) {
+	// 		this.touch.gesture = SWIPE;
+	// 		return;
+	// 	}
+	// 	if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
+	// 		this.touch.gesture = SCROLL;
+	// 		this.moveWrappers(0);
+	// 		cancelAnimationFrame(this.touch.a);
+	// 	}
+	// }
+	
+	this.touch.moveHandler = e => {
+		if(this.touch.transitionTimer) return;
+		this.touch.x = e.touches[0].pageX;
+		this.touch.y = e.touches[0].pageY;
+		// this.touch.a = requestAnimationFrame(this.touch.anim);
+		if(this.touch.gesture == SCROLL) return;
+		if(Settings.get('lyt.direction') == 'ttb') return;
+
+		this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
 		|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
 			this.touch.gesture = SCROLL_X;
-			return cancelAnimationFrame(this.touch.a);
+			return;
 		}
-		this.touch.deltaY = this.touch.pageY - this.touch.startY;
-		this._.image_container._translateX = this.touch.initialX + this.touch.delta;
-		this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
+		this.touch.deltaY = this.touch.y - this.touch.startY;
+
 		if(Settings.get('lyt.direction') == 'rtl'){
 			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
 			|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
-				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
 			}
 		}else{
 			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
 			|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
-				this._.image_container.style.opacity = (60-Math.abs(this.touch.delta))/60;
+				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
 			}
 		}
-		if(this.touch.gesture == SWIPE) return;
-		if(Math.abs(this.touch.delta) > 2.5) {
-			//document.body.style.touchAction = 'none';
+
+		this.touch.measures.push(this.touch.x);
+		this.touch.times.push(Date.now());
+		this.moveWrappers(this.touch.delta);
+
+
+		if(Math.abs(this.touch.delta) > 0.030 || this.touch.gesture == SWIPE) {
 			this.touch.gesture = SWIPE;
-			return;
-		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
-			this.touch.gesture = SCROLL;
-			this._.image_container._translateX = this.touch.initialX;
-			this._.image_container.style.transform = 'translateX(' + this._.image_container._translateX + '%)';
-			cancelAnimationFrame(this.touch.a);
-		}
-	}
-	
-	this.touch.moveHandler = e => {
-		this.touch.pageX = e.touches[0].pageX;
-		this.touch.pageY = e.touches[0].pageY;
-		if(this.touch.gesture == SWIPE) {
 			if(this.touch.scrollLocked == true) return;
 			document.documentElement.style.overflow = "hidden";
 			this.touch.scrollLocked = true;
-		}else{
+			return;
+		}
+		if(Math.abs(this.touch.deltaY) > this.touch.em) {
+			this.touch.gesture = SCROLL;
+			this.moveWrappers(0);
 			if(this.touch.scrollLocked == false) return;
 			document.documentElement.style.overflow = "auto";
 			this.touch.scrollLocked = false;
-		}
-	}
-
-	this.touch.snapAnimation = function(start, target, time, element) {
-		if(time !== undefined) {
-			cancelAnimationFrame(this.RAF);
-			this.frame = 0;
-			this.start = start;
-			this.time = time;
-			this.element = element;
-			this.frames = Math.ceil(time * 60);
-			if(target === undefined) {
-				this.primed = true;
-				return;
-			}
-			this.target = target;
-			this.delta = this.target - this.start;
-			if(Math.abs(this.delta) < 0.1) return;
-			this.RAF = requestAnimationFrame(this.bind(this));
 			return;
 		}
-		if(start === undefined && target !== undefined) {
-			if(this.primed) {
-				this.target = target;
-				this.delta = this.target - this.start;
-				if(Math.abs(this.delta) < 0.1) return;
-				this.primed = false;
-				this.RAF = requestAnimationFrame(this.bind(this));
-				return;
-			}else{
-				return false;
-			}
-		}
-	
-		if(this.frame + 1 >= this.frames) {
-			cancelAnimationFrame(this.RAF);
-			this.RAF = null;
-			this.element._translateX = this.target;
-		}else{
-			this.RAF = requestAnimationFrame(this.bind(this));
-			this.frame++;
-		var t = this.frame/this.frames;
-			this.element._translateX = this.start + this.delta * ( t*(2-t) );
-		}
-		this.element.style.transform = 'translateX(' + this.element._translateX + '%)';
 	}
-	this.touch.snapAnimation = this.touch.snapAnimation.bind(this.touch.snapAnimation);
 
 	this.touch.endHandler = e => {
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
-		clearTimeout(this.touch.transitionTimer);
-		cancelAnimationFrame(this.touch.a);
+		if(this.touch.transitionTimer) return;
+		//cancelAnimationFrame(this.touch.a);
 		//this._.image_container.style.touchAction = 'unset';
-	var ms = Date.now() - this.touch.time;
-	var velocity = this.touch.delta / ms;
-	var transitionTime = 0.30 - Math.abs(velocity)/3;
-		//this._.image_container.style.transition = 'transform '+ transitionTime +'s linear';
-		
-		this._.image_container.style.transition = 'opacity '+transitionTime+'s ease';
-		this._.image_container.style.opacity = 1;
-
+	var times = this.touch.times.slice(-4);
+	var measures = this.touch.measures.slice(-4);
+	var ms = times[times.length-1] - times[0];
+	var delta = measures[measures.length-1] - measures[0];
+	var velocity = (delta / ms) * this.touch.em / 100;
+		this.touch.times = [];
+		this.touch.measures = [];
+		this.touch.transitionTime = Math.max(0, 0.30 - Math.abs(velocity)/2.5);
+		if(isNaN(this.touch.transitionTime)) this.touch.transitionTime = 0;
+		if(isNaN(this.touch.transitionTime)) debugger;
 		if((velocity < this.touch.escapeVelocity * -1
 		|| this.touch.delta < this.touch.escapeDelta * -1)
 		&& !(Reader.SCP.chapter == Reader.SCP.lastChapter
 		&& Reader.SCP.page == Reader.SCP.lastPage)) {
-			this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-			Settings.get('lyt.direction') == 'rtl'?
-				this.prev():
-				this.next();
-		}else{
-			if((velocity > this.touch.escapeVelocity
-			|| this.touch.delta > this.touch.escapeDelta)
-			&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
-			&& Reader.SCP.page == 0)) {
-				this.touch.snapAnimation(this._.image_container._translateX, undefined, transitionTime, this._.image_container);
-				Settings.get('lyt.direction') == 'rtl'?
-					this.next():
-					this.prev();
-			}else{
-				this.touch.snapAnimation(this._.image_container._translateX, this.touch.initialX, transitionTime, this._.image_container);
+			this.moveWrappers(-1, true);
+			switch(Settings.get('lyt.direction')){
+				case 'ltr':
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.next)
+					else
+						this.next();
+					break; 
+				case 'rtl': 
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.prev)
+					else
+						this.prev();
+					break;
 			}
+		}else
+		if((velocity > this.touch.escapeVelocity
+		|| this.touch.delta > this.touch.escapeDelta)
+		&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
+		&& Reader.SCP.page == 0)) {
+			this.moveWrappers(1, true);
+			switch(Settings.get('lyt.direction')){
+				case 'ltr':
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.prev)
+					else
+						this.prev();
+					break; 
+				case 'rtl': 
+					if(this.touch.transitionTimer)
+						this.touch.transitionTimer.then(this.next)
+					else
+						this.next();
+					break;
+			}
+		}else{
+			this.moveWrappers(0, true);
 		}
-	var startPage = (function(that) {return that.selectedWrapper})(this);
-		this.touch.transitionTimer = setTimeout(() => {
-			this._.image_container.style.transition = '';
-			shadowScroll();
-			scroll(startPage.$, startPage.$.scrollWidth,0)
-		}, Math.round(transitionTime*1000))
 	}
 
 	this.mouseHandler = function(e) {
@@ -1858,22 +1979,9 @@ const SCROLL_X = 3;
 						this.prev(e);
 					break;
 				case 2:
-					if(IS_MOBILE)
-						Settings.cycle('apr.selPinned');
-					// else
-					// 	if(Settings.get('lyt.direction') != 'ttb')
-					// 		(Settings.get('lyt.direction') == 'ltr')?
-					// 			this.prev(e):
-					// 			this.next(e);
-					break;
 				case 3:
 					if(IS_MOBILE)
-						Settings.cycle('apr.selPinned');
-					// else
-					// 	if(Settings.get('lyt.direction') != 'ttb')
-					// 		(Settings.get('lyt.direction') == 'ltr')?
-					// 			this.next(e):
-					// 			this.prev(e);
+						Settings.cycle('apr.selPinned', undefined, undefined, true);
 					break;
 				case 4:
 					(Settings.get('lyt.direction') == 'rtl')?
@@ -1973,7 +2081,6 @@ function UI_ReaderImageWrapper(o) {
 			this.$.classList.add('too-wide');
 		}
 		if(Settings.get('lyt.direction') == 'rtl') {
-			shadowScroll();
 			scroll(this.$, this.totalWidth,0)
 		}
 	}
@@ -2658,7 +2765,7 @@ function UI_Loda_Settings(o) {
 	}).S.link(this.content);
 
 	this.createCategory = (tabName, content) => {
-		this.tabs.add(new UI_Tab({
+		this.tabs.add(new UI_IconTab({
 			text: tabName
 		}));
 		this.content.add(content);
@@ -2722,6 +2829,9 @@ function UI_SettingUnit(o) {
 
 	if(this.setting.disabled)
 		this.hide()
+
+	if(this.setting.nomobile)
+		this.$.classList.add('nomobile');
 
 	this.S.mapIn({
 		settingsPacket: this.packetHandler
@@ -2845,8 +2955,8 @@ function UI_About(o) {
 			<p>Reader code: Algoinde, funkyhippo</p>
 			<p>Backend: appu</p>
 			<hr>
-			<a href="https://github.com/appu1232/guyamoe">Github</a>
-			<a href="https://discord.gg/4WPqwSY">Discord</a>
+			<a href="https://github.com/appu1232/guyamoe" target="_blank">Github</a>
+			<a href="https://discord.gg/4WPqwSY" target="_blank">Discord</a>
 			<hr>
 			<p class="muted">Powered by</p>
 			<div class="cubari" data-bind="cubari"><div></div></div>
@@ -2890,7 +3000,7 @@ Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
 });
 Loader = new LoadHandler();
-URL = new URLChanger();
+URLC = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
@@ -2899,7 +3009,7 @@ Loda.library.settings.createCategory('About', new UI_About());
 
 API.S.link(Reader);
 Settings.S.link(Reader);
-Reader.S.link(URL)
+Reader.S.link(URLC)
 Reader.S.link(Settings)
 Reader.$.focus()
 if(window.location.hash == '#s') Loda.display('search');

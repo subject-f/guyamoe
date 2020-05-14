@@ -981,3 +981,20 @@ function nonEnum(ctx, name, value) {
 		value: value
 	})
 }
+
+function promiseTimeout(ms, value) {
+	var res, rej;
+	var p = new Promise(function(resolve, reject) {
+		res = resolve;
+		rej = reject;
+	}).catch(() => {});
+	p._timeout = setTimeout(function() {
+		res(value);
+	}, ms);
+	p.cancel = function(err) {
+		clearTimeout(p._timeout);
+		rej(err);
+		return false;
+	};
+	return p;
+}

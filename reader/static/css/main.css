@@ -1,7 +1,7 @@
 @font-face {
 	font-family: 'guya';
 	src:
-	url('../fonts/guya.woff?bss2') format('woff');
+	url('../fonts/guya.woff?bsas2') format('woff');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -35,7 +35,7 @@ html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, sub, sup, tt, var, center,d3200
+small, strike, sub, sup, tt, var, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
@@ -110,6 +110,10 @@ button:focus, option, details, summary {
 	border-color:transparent;
 }
 /* ---------------------- */
+
+html {
+	background: #272b30;
+}
 
 body {
 	background: #272b30;
@@ -816,6 +820,9 @@ aside header > .guya {
 .direction-ltr .rdr-image-wrap {
 	will-change: transform;
 }
+.direction-ttb .rdr-image-wrap {
+	margin-left: unset !important;
+}
 
 .loaded .rdr-image-wrap {
 	scroll-behavior: smooth;
@@ -1498,7 +1505,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 .Loda_Settings .Tab {
 	padding: 0.5rem 1rem;
-	font-size: 0.9em;	
+	font-size: 0.9em;
 }
 .Loda_Settings .Tab:hover {
 	background: rgba(255,255,255,0.05);
@@ -1508,6 +1515,9 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	background: rgba(0,0,0,0.3);
 	padding: 0.5rem 1rem;
 	font-size: 0.9em;
+}
+.Loda_Settings .Tab .ico-btn {
+	display: none;
 }
 .Loda_Settings .setting-wrapper  {
 	padding: 0.3rem 1rem 1.2rem 1rem;
@@ -1828,6 +1838,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	line-height: 1.2;
 	cursor: default;
 	user-select: none;
+	text-align: center;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -2314,11 +2325,13 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	.Tooltippy {
 		position: fixed;
 		will-change: transform;
-		bottom: 4rem;
-		top: unset;
-		font-size: 1rem;
+		top: 30vh;
+		bottom: unset !important;
+		font-size: 0.9rem;
 		text-align: center;
 		max-width: 80vw;
+		border: 1px solid rgba(255,255,255,0.1);
+		border-radius: 3px;
 	}
 	.Tooltippy .Tooltippy-key {
 		display: none;
@@ -2390,16 +2403,71 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	.Loda_Settings {
 		width: 100%;
 		margin: 0 1rem;
-		height: 50vh;
+		height: 55vh;
+		flex-direction: column-reverse;
 	}
-
+	.Loda_Settings aside {
+		display: flex;
+		width: auto;
+		padding: 0;
+		flex-shrink: 1;
+		flex-grow: 0;
+	}
+	.Loda_Settings aside header {
+		display: none;
+	}
 	.Loda_Settings content {
-		font-size: 120%;
+		font-size: 110%;
 		max-width: 100%;
 		flex-grow: 1;
 		overflow: auto;
 	}
+	.Loda_Settings content > div {
+		padding-bottom: 0.5rem;
+	}
+	.Loda_Settings .close {
+		position: static;
+		order: 100;
+		margin-left: auto;
+	}
+	.Loda_Settings .settings-tabs {
+		display: flex;
+	}
 	
+	.Loda_Settings .IconTab {
+		padding: 0 !important;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 16px;
+	}
+
+	.IconTab > span {
+		display: none;
+	}
+
+	.IconTab .ico-btn {
+		display: flex !important;
+	}
+	.IconTab[data-name="Layout"] .ico-btn:before {
+		content: "\e936"
+	}
+	.IconTab[data-name="Appearance"] .ico-btn:before {
+		content: "\e908"
+	}
+	.IconTab[data-name="Behavior"] .ico-btn:before {
+		content: "\e934"
+	}
+	.IconTab[data-name="Advanced"] .ico-btn:before {
+		content: "\e935"
+	}
+	.IconTab[data-name="About"] .ico-btn:before {
+		content: "\e903"
+	}
+	
+	.nomobile {
+		display: none;
+	}
 		
 	.LodaManager {
 		align-content: flex-end !important;
@@ -2663,6 +2731,7 @@ input[type=range]::-ms-thumb {
 
 .About p {
 	padding: 0.2rem;
+	font-size: 0.9em;
 }
 
 .About a {
