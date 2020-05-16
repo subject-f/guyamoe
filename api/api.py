@@ -117,7 +117,7 @@ def md_chapter_data(chapter_id):
             data = resp.text
             api_data = json.loads(data)
             chapter_pages = [f"{api_data['server']}{api_data['hash']}/{page}" for page in api_data["page_array"]]
-            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"] or str(api_data["timestamp"])}
+            chapter_info = {"pages": chapter_pages, "series_id": api_data["manga_id"], "chapter": api_data["chapter"] or f'0.0{str(api_data["timestamp"])}'}
             cache.set(f"md_chapter_dt_{chapter_id}", chapter_info, 3600 * 24)
         else:
             return None
