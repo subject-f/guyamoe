@@ -28,3 +28,7 @@ migrations/
 static/
 #media root
 media/manga/*
+
+#test coverage
+.coverage
+htmlcov/
