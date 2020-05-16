@@ -8,6 +8,14 @@ docker-compose up
 ``` 
 in this directory and you're done. 
 
+## Running Tests
+
+Because you should.
+
+```
+docker-compose -f docker-compose.yml -f tests/docker-compose.yml up --abort-on-container-exit --remove-orphans
+```
+
 ## `settings.py`
 
 Since we're bind mounting the settings within a bind mount, things get a bit wonky with the settings. If you modify the actual settings file, it'll shadow the bind mount and you'll have to restart your containers to revert it.
