@@ -801,6 +801,7 @@ main a {
 }
 .chapter-listing th.chapter-name {
 	padding-left: 0;
+	transform: translateX(-7.2ch);
 }
 .chapter-listing th.chapter-date {
 	cursor: pointer;
