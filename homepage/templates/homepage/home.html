@@ -251,9 +251,10 @@
 			<th class="chapter-n"></th>
 			<th class="chapter-name">
 				<span id="season-selector">
-					<a class="manga-link selected" onclick="toggleAdaptedSeasons(this)">All</a>
-					<a class="manga-link" onclick="toggleAdaptedSeasons(this, 1)">Season 1</a>
-					<a class="manga-link" onclick="toggleAdaptedSeasons(this, 2)">Season 2</a>
+					<a class="manga-link selected" onclick="toggleAdaptedSeasons(this, {})">All</a>
+					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {season: 1})">Season 1</a>
+					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {season: 2})">Season 2</a>
+					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
 				</span>
 			</th>
 			<th class="chapter-date" onclick="chapter_listing.children[1].reverseChildren(); event.target.classList.toggle('desc')">Upload date</th>
@@ -299,15 +300,21 @@ var chaps_asc = msd.chapter_list.reverse();
 		return n;
 	}
 
-	function toggleAdaptedSeasons(element, season) {
+	function toggleAdaptedSeasons(element, options) {
 		document.getElementById("season-selector").children.forEach(e => e.classList.remove("selected"));
 		element.classList.add("selected");
 		chapter_listing.children[1].children.forEach(e => {
-			if (season) {
-				if (e.classList.contains(`s${season}`)) {
+			if (options.season) {
+				if (e.classList.contains(`s${options.season}`)) {
 					e.classList.remove("hidden");
 				} else {
 					e.classList.add("hidden");
+				}
+			} else if (options.notAdapted) {
+				if (e.classList.contains("adapted")) {
+					e.classList.add("hidden");
+				} else {
+					e.classList.remove("hidden");
 				}
 			} else {
 				e.classList.remove("hidden");
