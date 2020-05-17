@@ -251,10 +251,10 @@
 			<th class="chapter-n"></th>
 			<th class="chapter-name">
 				<span id="season-selector">
-					<a class="manga-link selected" onclick="toggleAdaptedSeasons(this, {})">All</a>
-					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {season: 1})">Season 1</a>
-					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {season: 2})">Season 2</a>
-					<a class="manga-link" onclick="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
+					<a class="manga-link season selected" onclick="toggleAdaptedSeasons(this, {})">All</a>
+					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 1})">Season 1</a>
+					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 2})">Season 2</a>
+					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
 				</span>
 			</th>
 			<th class="chapter-date" onclick="chapter_listing.children[1].reverseChildren(); event.target.classList.toggle('desc')">Upload date</th>
