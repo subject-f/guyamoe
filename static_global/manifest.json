@@ -1,0 +1,7 @@
+{
+  "name": "Guya",
+  "short_name": "Guya",
+  "theme_color": "#282a36",
+  "background_color": "#282a36",
+  "display": "standalone"
+}

@@ -15,8 +15,13 @@
 	</script>
 	<script defer src="{% static 'js/bootstrap.min.js' %}">
 	</script>
+	<link rel="manifest" href="{% static 'manifest.json' %}">
+	<link rel="icon" sizes="128x128" href="{% static 'logo_small.png' %}" />
+	<link rel="icon" sizes="512x512" href="{% static 'logo.png' %}" />
+	<link rel="apple-touch-icon" sizes="128x128" href="{% static 'logo_small.png' %}" />
+	<link rel="apple-touch-icon" sizes="512x512" href="{% static 'logo.png' %}" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="theme-color" content="#2b2f33" /> 
 	{% block head %} {% endblock %}
