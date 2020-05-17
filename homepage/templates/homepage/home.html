@@ -249,13 +249,19 @@
 		<tbody>
 		<tr class="chapter-row header">
 			<th class="chapter-n"></th>
-			<th class="chapter-name">Title</th>
+			<th class="chapter-name">Title
+				<span id="season-selector">
+					<a class="manga-link selected" onclick="toggleAdaptedSeasons(this)">All</a>
+					<a class="manga-link" onclick="toggleAdaptedSeasons(this, 1)">Season 1</a>
+					<a class="manga-link" onclick="toggleAdaptedSeasons(this, 2)">Season 2</a>
+				</span>
+			</th>
 			<th class="chapter-date" onclick="chapter_listing.children[1].reverseChildren(); event.target.classList.toggle('desc')">Upload date</th>
 		</tr>
 		</tbody>
 		<tbody>
 		((~it :value:index))
-		<tr class="chapter-row ((? window.adapted.has(value[3]) ))adapted((?))((? +value[3] in s2_anime_map )) s2((?))">
+		<tr class="chapter-row ((? window.adapted.has(value[3]) ))adapted((?))((? +value[3] in s2_anime_map )) s2((?))((? +value[3] in s1_anime_map )) s1((?))">
 			<td class="chapter-n">((=value[1]))</td>
 			<td class="chapter-name"><a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[3]))/1">((=value[2]))</a>((? window.adapted.has(value[3]) ))<span data-anime="((=getAnimeString(+value[3]) ))">((? +value[3] in s2_anime_map ))Season 2!((??))Adapted((?))</span>((?))</td>
 			<td class="chapter-date">((= value[5][0] ))-((= zpad(1+value[5][1]) ))-((= zpad(value[5][2]) ))</td>
@@ -291,6 +297,22 @@ var chaps_asc = msd.chapter_list.reverse();
 	function zpad(n){
 		if(n < 10) return '0'+n;
 		return n;
+	}
+
+	function toggleAdaptedSeasons(element, season) {
+		document.getElementById("season-selector").children.forEach(e => e.classList.remove("selected"));
+		element.classList.add("selected");
+		chapter_listing.children[1].children.forEach(e => {
+			if (season) {
+				if (e.classList.contains(`s${season}`)) {
+					e.classList.remove("hidden");
+				} else {
+					e.classList.add("hidden");
+				}
+			} else {
+				e.classList.remove("hidden");
+			}
+		});
 	}
 </script>
 

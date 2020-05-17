@@ -594,6 +594,16 @@ main a {
 	filter: brightness(0.8);
 }
 
+.manga-link.selected {
+	filter: brightness(1.3);
+	background-color: #ffffff08;
+	border-color: #6db4ff87;
+}
+
+.hidden {
+	display: none;
+}
+
 .manga-link.full {
 	flex-grow: 1;
 	flex-shrink: 1;
