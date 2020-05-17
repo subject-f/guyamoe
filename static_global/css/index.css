@@ -794,7 +794,7 @@ main a {
 	color: #bbb;
 }
 .chapter-listing th.chapter-name {
-	
+	padding-left: 0;
 }
 .chapter-listing th.chapter-date {
 	cursor: pointer;
