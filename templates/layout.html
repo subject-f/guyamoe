@@ -4,35 +4,25 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="canonical" href="https://guya.moe/{{ relative_url }}" />
 	<link defer rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 	<link rel="stylesheet" href="{% static 'css/index.css' %}{{ version_query }}">
 	<link defer rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link defer rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
-	<script src="{% static 'js/jquery.min.js' %}">
-	</script>
-	<script src="{% static 'js/alg_lib.js' %}{{ version_query }}">
-	</script>
-	<script defer src="{% static 'js/bootstrap.min.js' %}">
-	</script>
-	<link rel="manifest" href="{% static 'manifest.json' %}">
-	<link rel="icon" sizes="128x128" href="{% static 'logo_small.png' %}" />
-	<link rel="icon" sizes="512x512" href="{% static 'logo.png' %}" />
-	<link rel="apple-touch-icon" sizes="128x128" href="{% static 'safari-touch-128x128.png' %}" />
-	<link rel="apple-touch-icon" sizes="256x256" href="{% static 'safari-touch-256x256.png' %}" />
-	<link rel="apple-touch-icon" sizes="512x512" href="{% static 'safari-touch-512x512.png' %}" />
+	<script src="{% static 'js/jquery.min.js' %}"></script>
+	<script src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
+	<script defer src="{% static 'js/bootstrap.min.js' %}"></script>
+	<link rel="canonical" href="https://guya.moe/{{ relative_url }}" />
+	<link rel="manifest" href="{% static 'manifest.json' %}{{ version_query }}">
+	<link rel="shortcut icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" defer />
+	<link rel="icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" />
+	<link rel="icon" sizes="512x512" type="image/png" href="{% static 'logo.png' %}{{ version_query }}" />
+	<link rel="apple-touch-icon" sizes="128x128" href="{% static 'safari-touch-128x128.png' %}{{ version_query }}" />
+	<link rel="apple-touch-icon" sizes="256x256" href="{% static 'safari-touch-256x256.png' %}{{ version_query }}" />
+	<link rel="apple-touch-icon" sizes="512x512" href="{% static 'safari-touch-512x512.png' %}{{ version_query }}" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<meta name="format-detection" content="telephone=no">
 	<meta name="theme-color" content="#2b2f33" /> 
+	<meta name="format-detection" content="telephone=no">
 	{% block head %} {% endblock %}
-	<style type="text/css">
-		.site-title,
-		.site-description {
-			position: absolute;
-			clip: rect(1px, 1px, 1px, 1px);
-		}
-	</style>
 	{% include "history.html" %}
 </head>
 

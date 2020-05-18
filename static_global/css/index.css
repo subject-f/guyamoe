@@ -20,20 +20,18 @@
 }
 
 html {
-  scroll-behavior: smooth;
+	scroll-behavior: smooth;
 }
 
 body {
 	background-attachment: fixed;
-  background-position: 50% 10%;
-  	background-size: 1500px;
-  	background-image: url('/static/img/bg_box.png');
+	background-position: 50% 10%;
+	background-size: 1500px;
+	background-image: url('/static/img/bg_box.png');
 	background-color:black;
+	padding-top: 5em;
 }
 
-body {
-	padding-top: 5rem;
-}
 
 header {
 	background: linear-gradient(0deg,rgba(0,0,0,0.65) 0%, rgb(0, 0, 0) 100%);
@@ -318,7 +316,7 @@ header {
 }
 
 .navbar .nav-item textarea:focus::placeholder {
-    font-family: inherit;
+	font-family: inherit;
 }
 
 .navbar .nav-item textarea:hover::placeholder,
@@ -460,9 +458,9 @@ main a {
 .manga-card:first-child {
 	min-height: 30em;
 	background-attachment: fixed;
-  	background-position: 50% 0;
-  	background-size: 1500px;
-  	background-position: 50% 10%;
+	background-position: 50% 0;
+	background-size: 1500px;
+	background-position: 50% 10%;
 }
 .manga-card:first-child picture img { 
 	height: 30em;
@@ -672,22 +670,22 @@ main a {
 
 @keyframes shake {
   10%, 90% {
-  	filter: hue-rotate(0deg);
-    transform: translate3d(-10px, 0, 0);
+	filter: hue-rotate(0deg);
+	transform: translate3d(-10px, 0, 0);
   }
   
   20%, 80% {
-    transform: translate3d(20px, -25px, 0);
+	transform: translate3d(20px, -25px, 0);
   }
 
   30%, 50%, 70% {
-  	filter: hue-rotate(180deg);
-    transform: translate3d(-40px, 0, 0);
+	filter: hue-rotate(180deg);
+	transform: translate3d(-40px, 0, 0);
   }
 
   40%, 60% {
-    transform: translate3d(34px, 12px, 0);
-    filter: hue-rotate(360deg);
+	transform: translate3d(34px, 12px, 0);
+	filter: hue-rotate(360deg);
   }
 }
 .manga-link.after-anime {
@@ -959,26 +957,26 @@ main a {
 .page-series .series-content {
   border-radius: 4px;
   background-color: #1a1a1a;
-        background-attachment: fixed;
-     background-position: 50% 10%;
-      background-size: 1500px;
-      background-image: url('/static/img/bg_box_blur_smol.png');
+		background-attachment: fixed;
+	 background-position: 50% 10%;
+	  background-size: 1500px;
+	  background-image: url('/static/img/bg_box_blur_smol.png');
   padding: 0;
 }
 
 .page-series .sidecard {
   background-color: #1a1a1a;
-        background-attachment: fixed;
-     background-position: 50% 10%;
-      background-size: 1500px;
-      background-image: url('/static/img/bg_box_blur_smol.png');
+		background-attachment: fixed;
+	 background-position: 50% 10%;
+	  background-size: 1500px;
+	  background-image: url('/static/img/bg_box_blur_smol.png');
 
 }
 
 .page-series .side-cover .media {
 	border-top-left-radius: 3px;
-    overflow: hidden;
-    border-top-right-radius: 3px;
+	overflow: hidden;
+	border-top-right-radius: 3px;
 }
 
 .page-series article {
@@ -1113,7 +1111,7 @@ main a {
 }
 .page-series .btn-group .btn.s {
 	border-bottom: 1px solid #bbb !important;
-    box-shadow: 0px -34px 20px -40px #bbb inset !important;
+	box-shadow: 0px -34px 20px -40px #bbb inset !important;
 	color: white;
 }
 .page-series .btn-group .btn:not(.s):hover {
@@ -1207,24 +1205,24 @@ main a {
 .yeet {
 	position: relative;
 	display: none;
-    font-size: 1.2em !important;
-    /* padding-right: 1em; */
-    font-style: italic;
-    padding-left: 2.2em;
-    margin-top: 1em !important;
+	font-size: 1.2em !important;
+	/* padding-right: 1em; */
+	font-style: italic;
+	padding-left: 2.2em;
+	margin-top: 1em !important;
 }
 
 .yeet:before {
-    content: '“';
-    font-family: Vollkorn;
-    font-size: 4em;
-    position: relative;
-    float: left;
-    top: -18px;
-    opacity: 0.6;
-    height: 1em;
-    margin-right: 16px;
-    font-style: italic;
+	content: '“';
+	font-family: Vollkorn;
+	font-size: 4em;
+	position: relative;
+	float: left;
+	top: -18px;
+	opacity: 0.6;
+	height: 1em;
+	margin-right: 16px;
+	font-style: italic;
 }
 
 @media (max-width: 768px) {
