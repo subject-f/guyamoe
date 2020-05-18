@@ -585,8 +585,13 @@ main a {
 	height: 1em;
 }
 
+.season-selector {
+	display: inline-block;
+}
+
 .manga-link.season {
 	padding: 0.4em 1em;
+	margin-top: 0;
 }
 
 .manga-link:hover {
