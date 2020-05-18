@@ -109,8 +109,7 @@ def upload_new_chapter(request, series_slug):
             reupload = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
             if reupload:
                 reupload.delete()
-            else:
-                uid = existing_chapter.folder
+            uid = existing_chapter.folder
         Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid)
         group_folder = str(group.id)

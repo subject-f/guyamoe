@@ -592,12 +592,12 @@ main a {
 .manga-link.season {
 	padding: 0.4em 1em;
 	margin-top: 0;
+	cursor: default;
 }
 
 .manga-link:hover {
 	filter: brightness(1.3);
 	background-color: #ffffff08;
-	cursor: default;
 }
 .manga-link:hover:before {
 	filter: brightness(0.8);
