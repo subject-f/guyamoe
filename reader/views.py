@@ -306,7 +306,6 @@ def md_proxy(request, md_series_id):
     data = md_series_page_data(md_series_id)
     if data:
         data["version_query"] = STATIC_VERSION
-        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
@@ -316,7 +315,6 @@ def md_chapter(request, md_series_id, chapter, page):
     data = md_series_data(md_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"read/md_proxy/{md_series_id}/{chapter}/{page}"
-        data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
@@ -328,7 +326,6 @@ def nh_proxy(request, nh_series_id):
     data = nh_series_page_data(nh_series_id)
     if data:
         data["version_query"] = STATIC_VERSION
-        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
@@ -338,7 +335,6 @@ def nh_chapter(request, nh_series_id, chapter, page):
     data = nh_series_data(nh_series_id)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"read/nh_proxy/{nh_series_id}/{chapter}/{page}"
-        data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)
@@ -350,7 +346,6 @@ def fs_proxy(request, encoded_url):
     data = fs_series_page_data(encoded_url)
     if data:
         data["version_query"] = STATIC_VERSION
-        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
@@ -360,7 +355,6 @@ def fs_chapter(request, encoded_url, chapter, page):
     data = fs_series_data(encoded_url)
     if data and chapter.replace("-", ".") in data["chapters"]:
         data["relative_url"] = f"read/fs_proxy/{encoded_url}/{chapter}/{page}"
-        data["hide_referrer"] = True
         data["version_query"] = STATIC_VERSION
         data["series_name"] = data["title"]
         return render(request, 'reader/reader.html', data)

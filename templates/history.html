@@ -1,7 +1,5 @@
 {% load static %}
-{% if hide_referrer %}
-<meta name="referrer" content="no-referrer" />
-{% endif %}
+<meta name="referrer" content="same-origin" />
 <script src="{% static 'js/remotestorage.min.js' %}"></script>
 <script src="{% static 'js/widget.min.js' %}"></script>
 <script>
