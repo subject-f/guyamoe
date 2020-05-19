@@ -52,6 +52,8 @@ def series_data(series_slug):
                     str(chapter.group.id): int(chapter.uploaded_on.timestamp())
                 }
             }
+            if chapter.wo and chapter.wo != 0:
+                chapters_dict[ch_clean]["wo"] = chapter.wo
             if chapter.preferred_sort:
                 try:
                     chapters_dict[ch_clean]["preferred_sort"] = json.loads(chapter.preferred_sort)
