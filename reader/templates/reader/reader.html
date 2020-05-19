@@ -21,9 +21,6 @@
 		{% endif %}
 		<meta property="og:url" content="/read/manga/{{ slug }}">
 		<meta name="viewport" content="width=device-width">
-		{% if hide_referrer %}
-			<meta name="referrer" content="no-referrer">
-		{% endif %}
 		<link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>

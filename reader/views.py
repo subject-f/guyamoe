@@ -306,6 +306,7 @@ def md_proxy(request, md_series_id):
     data = md_series_page_data(md_series_id)
     if data:
         data["version_query"] = STATIC_VERSION
+        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
@@ -327,6 +328,7 @@ def nh_proxy(request, nh_series_id):
     data = nh_series_page_data(nh_series_id)
     if data:
         data["version_query"] = STATIC_VERSION
+        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
@@ -348,6 +350,7 @@ def fs_proxy(request, encoded_url):
     data = fs_series_page_data(encoded_url)
     if data:
         data["version_query"] = STATIC_VERSION
+        data["hide_referrer"] = True
         return render(request, 'reader/series.html', data)
     else:
         return HttpResponse(status=500)
