@@ -879,7 +879,7 @@ function UI_Reader(o) {
 		.attach('nextVo', ['Period'], e => this.nextVolume())
 		.attach('fit', ['KeyF'], e => Settings.cycle('lyt.fit'))
 		.attach('layout', ['KeyD'], e => Settings.cycle('lyt.direction'))
-		.attach('opacity', ['KeyO'], e => this.$.classList.toggle('o'))
+		.attach('hide', ['KeyH'], e => this.$.classList.toggle('o'))
 		.attach('sidebar', ['KeyS'], s => Settings.cycle('apr.sidebar'))
 		.attach('pageSelector', ['KeyN'], s => Settings.cycle('apr.selPinned'))
 		.attach('preload', ['KeyL'], s => Settings.cycle('bhv.preload'))
@@ -891,7 +891,7 @@ function UI_Reader(o) {
 			if(this.SCP.page == this.SCP.lastPage)
 				this.nextChapter();
 		})
-		.attach('enter', ['Ctrl+Enter'], e => Loda.display('settings'))
+		.attach('options', ['KeyO'], e => Loda.display('settings'))
 
 		
 	new KeyListener(document.body)
