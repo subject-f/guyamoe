@@ -882,6 +882,21 @@ main a {
 	text-indent: 0;
 	line-height: 1.5;
 }
+.chapter-listing.anime-order-sorted .s2.adapted .chapter-name span,
+.chapter-listing.anime-order-sorted .adapted .chapter-name span {
+	line-height: 0;
+	color: transparent;
+	text-indent: -1000px;
+	user-select: none;
+}
+.chapter-listing.anime-order-sorted .s2.adapted .chapter-name span:before,
+.chapter-listing.anime-order-sorted .adapted .chapter-name span:before {
+	content: attr(data-anime);
+	display: block;
+	color: #ddd;
+	text-indent: 0;
+	line-height: 1.5;
+}
 .chapter-listing .s2.adapted .chapter-name span {
 	color: #ddd;
 	border-color: #6bb5f7;
