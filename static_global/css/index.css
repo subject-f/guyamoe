@@ -606,10 +606,6 @@ main a {
 .manga-link.selected {
 	filter: brightness(1.3);
 	background-color: #ffffff08;
-	border-color: #6db4ff87;
-}
-
-#anime-order .manga-link.selected {
 	border-color: #f00c;
 }
 
