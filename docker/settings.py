@@ -23,7 +23,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 """
 
-
+import subprocess
 import os
 import json
 from django.core.exceptions import ImproperlyConfigured
@@ -168,7 +168,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static_global"), 
 ]
-STATIC_VERSION = "?v=1.54"
+STATIC_VERSION = f"?v={subprocess.check_output('git rev-parse --short HEAD', shell=True, text=True)}"
 #STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
