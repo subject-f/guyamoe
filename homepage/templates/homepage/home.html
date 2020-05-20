@@ -251,18 +251,34 @@
 			<th class="chapter-n"></th>
 			<th class="chapter-name">
 				<span id="season-selector">
-					<a class="manga-link season selected" onclick="toggleAdaptedSeasons(this, {})">All</a>
+					<a class="manga-link season selected" onmousedown="toggleAdaptedSeasons(this, {})">All</a>
 					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 1})">S1</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 2})">S2</a>
+					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 1, showAnimeOrder: true})">S1</a>
+					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 2, showAnimeOrder: true})">S2</a>
+				</span>
+				<span id="anime-order" class="hidden">
+					<a class="manga-link season" onmousedown="toggleAnimeOrderSort(this)">Anime Order</a>
 				</span>
 			</th>
-			<th class="chapter-date" onclick="chapter_listing.children[1].reverseChildren(); event.target.classList.toggle('desc')">Date</th>
+			<th class="chapter-date" onmousedown="if (!chapter_listing.classList.contains('anime-order-sorted')) {event.target.classList.toggle('desc'); chapter_listing.orderDate()}">Date</th>
 		</tr>
 		</tbody>
 		<tbody>
 		((~it :value:index))
-		<tr class="chapter-row ((? window.adapted.has(value[3]) ))adapted((?))((? +value[3] in s2_anime_map )) s2((?))((? +value[3] in s1_anime_map )) s1((?))">
+		<tr class="chapter-row
+			((? window.adapted.has(value[3]) )) adapted((?))
+			((? +value[3] in s2_anime_map )) s2((?))
+			((? +value[3] in s1_anime_map )) s1((?))"
+			((? +value[3] in s2_anime_map )) season="2"
+				((? 0 in s2_anime_map[+value[3]] )) episode="((=s2_anime_map[+value[3]][0]))"((?))
+				((? 1 in s2_anime_map[+value[3]] )) part="((=s2_anime_map[+value[3]][1]))"((?))
+			((?))
+			((? +value[3] in s1_anime_map )) season="1"
+				((? 0 in s1_anime_map[+value[3]] )) episode="((=s1_anime_map[+value[3]][0]))"((?))
+				((? 1 in s1_anime_map[+value[3]] )) part="((=s1_anime_map[+value[3]][1]))"((?))
+			((?))
+			chapter="((=value[1]))"
+		>
 			<td class="chapter-n">((=value[1]))</td>
 			<td class="chapter-name"><a target="_blank" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[3]))/1">((=value[2]))</a>((? window.adapted.has(value[3]) ))<span data-anime="((=getAnimeString(+value[3]) ))">((? +value[3] in s2_anime_map ))Season 2((??))Season 1((?))</span>((?))</td>
 			<td class="chapter-date">((= value[5][0] ))-((= zpad(1+value[5][1]) ))-((= zpad(value[5][2]) ))</td>
@@ -278,6 +294,43 @@ var chaps_asc = msd.chapter_list.reverse();
 	s2_anime_map = {30:[1,0],36:[5,2],48:[1,1],51:[1,3],52:[2,0],53:[2,1],54:[2,2],56:[3,0],57:[1,2],58:[4,0],59:[3,1],60:[3,2],61:[4,1],63:[5,0],64:[5,1],65:[4,2],66:[5,3],67:[6,0],68:[6,1],69:[6,2],70:[7,0],71:[7,1],73:[7,2],74:[7,3],81:[],88:[]};
 	adapted = new Set([...Object.keys(s1_anime_map), ...Object.keys(s2_anime_map)]);
 	chapter_listing.innerHTML = chapterList(chaps_asc);
+
+	chapter_listing.orderDate = function () {
+		let elements = [...this.children[1].children];
+		let sortFunc = (this.querySelector("th.chapter-date").classList.contains("desc")) ?
+		(f, s) => Number(s.getAttribute("chapter")) - Number(f.getAttribute("chapter")):
+		(f, s) => Number(f.getAttribute("chapter")) - Number(s.getAttribute("chapter"));
+		elements.sort(sortFunc);
+		elements.forEach(e => this.children[1].appendChild(e));
+	};
+
+	chapter_listing.orderSeason = function () {
+		let seasons = [];
+		let unsorted = [];
+		this.children[1].children.forEach((e) => {
+			if (e.hasAttribute("season") && e.hasAttribute("episode")) {
+				if (!seasons[e.getAttribute("season")]) {
+					seasons[e.getAttribute("season")] = [];
+				}
+				if (!seasons[e.getAttribute("season")][e.getAttribute("episode")]) {
+					seasons[e.getAttribute("season")][e.getAttribute("episode")] = [];
+				}
+				seasons[e.getAttribute("season")][e.getAttribute("episode")][e.getAttribute("part")] = e;
+			} else {
+				unsorted.push(e);
+			}
+		});
+		let expander = (e) => {
+			if (e) {
+				if (Array.isArray(e)) {
+					e.forEach((e) => expander(e));
+				} else {
+					this.children[1].appendChild(e);
+				}
+			}
+		};
+		[...seasons, ...unsorted].forEach(e => expander(e));
+	};
 
 	function getAnimeString(num) {
 		let map, season;
@@ -300,18 +353,36 @@ var chaps_asc = msd.chapter_list.reverse();
 		return n;
 	}
 
+	function toggleAnimeOrderSort(element) {
+		chapter_listing.classList.toggle("anime-order-sorted");
+		element.classList.toggle("selected");
+		if (chapter_listing.classList.contains("anime-order-sorted")) {
+			chapter_listing.orderSeason();
+		} else {
+			chapter_listing.orderDate();
+		}
+	}
+
 	function toggleAdaptedSeasons(element, options) {
 		document.getElementById("season-selector").children.forEach(e => e.classList.remove("selected"));
 		element.classList.add("selected");
+		if (options.showAnimeOrder) {
+			document.getElementById("anime-order").classList.remove("hidden");
+		} else {
+			document.getElementById("anime-order").classList.add("hidden");
+			if (chapter_listing.classList.contains("anime-order-sorted")) {
+				toggleAnimeOrderSort(document.getElementById("anime-order").firstChild);
+			}
+		}
 		chapter_listing.children[1].children.forEach(e => {
 			if (options.season) {
-				if (e.classList.contains(`s${options.season}`)) {
+				if (e.getAttribute("season") === options.season.toString()) {
 					e.classList.remove("hidden");
 				} else {
 					e.classList.add("hidden");
 				}
 			} else if (options.notAdapted) {
-				if (e.classList.contains("adapted")) {
+				if (e.hasAttribute("season")) {
 					e.classList.add("hidden");
 				} else {
 					e.classList.remove("hidden");

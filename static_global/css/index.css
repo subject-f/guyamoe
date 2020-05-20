@@ -591,7 +591,7 @@ main a {
 
 .manga-link.season {
 	padding: 0.4em 1em;
-	margin-top: 0;
+	margin-top: 5px; /* For mobile */
 	cursor: default;
 }
 
@@ -607,6 +607,10 @@ main a {
 	filter: brightness(1.3);
 	background-color: #ffffff08;
 	border-color: #6db4ff87;
+}
+
+#anime-order .manga-link.selected {
+	border-color: #f00c;
 }
 
 .hidden {
@@ -805,6 +809,15 @@ main a {
 .chapter-listing th.chapter-name {
 	padding-left: 0;
 	transform: translateX(-7.2ch);
+}
+.chapter-listing.anime-order-sorted th.chapter-date {
+	cursor: default;
+}
+.chapter-listing.anime-order-sorted th.chapter-date:before {
+	content: "";
+}
+.chapter-listing.anime-order-sorted th.chapter-date.desc:before {
+	content: "";
 }
 .chapter-listing th.chapter-date {
 	cursor: pointer;
