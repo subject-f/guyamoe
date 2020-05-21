@@ -104,6 +104,15 @@ function ReaderAPI(o) {
 				}
 			}
 		}
+		//We'll need to get this from the server as a field later.
+		if(data.slug == 'Kaguya-Wants-To-Be-Confessed-To') 
+			data.countdown = true;
+		var lastChapter = Object.keys(data.chapters).sort((a,b) => b - a)[0];
+
+		data.chapters[+lastChapter+1] = Object.assign({}, data.chapters[lastChapter]);
+		data.chapters[+lastChapter+1].notice = true;
+		data.chapters[+lastChapter+1].title = '[Not yet released]';
+		
 		return data;
 	}
 
@@ -965,7 +974,7 @@ function UI_Reader(o) {
 				.attach('previews', ['KeyP'], s => Settings.cycle('apr.previews'))
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
-			document.querySelector("[class='rdr-previews']").style.display = 'none';
+			document.querySelector(".rdr-previews").style.display = 'none';
 			this.plusOne = () => {};
 		}
 	}
@@ -1037,8 +1046,13 @@ function UI_Reader(o) {
 				this.bootstrapChapter(page);
 			});
 		} else if (this.SCP.chapterObject.loaded[this.SCP.group]) {
-			this.SCP.pageCount = this.SCP.chapterObject.images[this.SCP.group].length;
-			this.SCP.lastPage = this.SCP.pageCount - 1;
+			if(this.SCP.chapterObject.notice) {
+				this.SCP.pageCount = 1;
+				this.SCP.lastPage = 0;				
+			}else{
+				this.SCP.pageCount = this.SCP.chapterObject.images[this.SCP.group].length;
+				this.SCP.lastPage = this.SCP.pageCount - 1;
+			}
 			this.loadingChapter = false;
 			this.bootstrapChapter(page);
 		}
@@ -1061,17 +1075,7 @@ function UI_Reader(o) {
 		return group;
 	}
 
-	this.bootstrapChapter = function(page) {
-		this.shuffleRandomChapter();
-
-		this.drawGroups();
-		this.drawPreviews();
-
-		this.imageView.drawImages(this.SCP.chapterObject.images[this.SCP.group], this.SCP.chapterObject.wides[this.SCP.group]);
-
-		this.selector_chap.set(this.SCP.chapter, true);
-		this.selector_vol.set(this.SCP.volume, true);
-
+	this.boostrapChapterInterface = function(page) {
 		if(this.SCP.chapter == this.SCP.lastChapter) {
 			this._.chap_next.classList.add('disabled');
 			this.$.classList.add('last-chapter');
@@ -1097,6 +1101,30 @@ function UI_Reader(o) {
 
 		this._.page_selector.classList.add('vis')
 		setTimeout(() => this._.page_selector.classList.remove('vis'), 3000);
+	}
+
+	this.bootstrapChapter = function(page) {
+		this.shuffleRandomChapter();
+		if(this.SCP.chapterObject.notice) {
+			this.imageView.displayNotice();
+			this.selector_chap.set(this.SCP.chapter, true);
+			this.selector_vol.set(this.SCP.volume, true);
+			this.boostrapChapterInterface();
+			this.selector_page.clearPreload();
+			this.displayPage(0);
+			this.drawGroups(true);
+			this.drawPreviews(false);
+			return this;
+		}
+		this.drawGroups();
+		this.drawPreviews();
+
+		this.imageView.drawImages(this.SCP.chapterObject.images[this.SCP.group], this.SCP.chapterObject.wides[this.SCP.group]);
+
+		this.selector_chap.set(this.SCP.chapter, true);
+		this.selector_vol.set(this.SCP.volume, true);
+
+		this.boostrapChapterInterface();
 
 		this.selector_page.clearPreload();
 		this.imageView.updateScrollPosition();
@@ -1106,8 +1134,9 @@ function UI_Reader(o) {
 		return this;
 	}
 
-	this.drawGroups = () => {
+	this.drawGroups = (clear) => {
 		this.groupList.clear();
+		if(clear) return; 
 	let groupElements = {};
 		for(let grp in this.SCP.chapterObject.groups) {
 			groupElements[grp] = new UI_SimpleListItem({
@@ -1135,9 +1164,9 @@ function UI_Reader(o) {
 	}
 
 	this.drawPreviews = (state) => {
-		state = state || Settings.query({'apr.previews':true});
+		state = state==undefined?Settings.get('apr.previews'):state;
+		this.previews.clear();
 		if(state == true) {
-			this.previews.clear();
 			this.current.chapters[this.SCP.chapter].previews[this.SCP.group].forEach(
 				preview => {
 					this.previews.add(new UI_Dummy({
@@ -1147,7 +1176,6 @@ function UI_Reader(o) {
 			)
 			this.previews.select(this.SCP.page, undefined, undefined, true);
 		}
-
 	}
 
 	this.selectVolume = function(vol) {
@@ -2026,6 +2054,18 @@ const SCROLL_X = 3;
 		}
 	}
 
+	this.displayNotice = function() {
+		this.imageContainer.clear();
+		this.imageWrappersMask = [[0]];
+		this.imageWrappersMap = {0: 0};
+
+	var notice = new UI_ReaderNoticeWrapper({});
+		this.wrappers = []
+		this.imageWrappers = [notice];
+		this.imageList = notice.get();
+		this.imageContainer.add(this.imageWrappers);
+	}
+
 	this.$.onmousedown = e => this.mouseHandler(e);
 	this.$.onmousemove = e => this.mouseHandler(e);
 	this.$.onclick = e => this.mouseHandler(e);
@@ -2095,6 +2135,77 @@ function UI_ReaderImageWrapper(o) {
 	this.S.mapIn({
 		'imageWidth': this.checkTooWide
 	})
+	this.S.proxyOut('loaded');
+}
+
+
+function UI_ReaderNoticeWrapper(o) {
+	o=be(o);
+	UI_List.call(this, {
+		node: o.node,
+		kind: ['ReaderImageWrapper'].concat(o.kind || []),
+		html: o.html || '<div tabindex="-1"></div>'
+	});
+	Linkable.call(this);
+
+	this.imageInstances = [];
+	this.totalWidth = 0;
+	function countdown(time) {
+		time = new Date(time * 1000);
+		var t = time.getTime() - Date.now()
+		var times = [
+			Math.round( t/(1000*60*60*24) ) + ' days',
+			Math.floor( (t/(1000*60*60)) % 24 ) + ' hours',
+			Math.floor( (t/1000/60) % 60 ) + ' minutes'
+		].slice(0,-1);
+		for(var i=0; i<times.length; i++) {
+			if(times[i][0] == 0) {
+				times.shift();
+				i--;
+				continue;
+			}
+			break;
+		}
+		times = times.slice(0,2);
+		times = times.map(item => {
+			if(parseInt(item) == 1) return item.replace(/s$/, '');
+			else
+			return item;
+		});
+		if(t < 0) return 'Should be soon!';
+		return times.join(' ');
+	}
+var release =
+Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]];
+
+	release += 7 * 24 * 60 * 60;
+	//TOFIX: done too fast, check impl
+var notice = new UI_Dummy({
+		html: `<div class="ReaderNotice">
+			<h2>You're caught up!</h2>
+			<p>Next chapter will come out in about:</p>
+			<div class="timer">${countdown(release)}</div>
+			<a href="https://discord.gg/BDpCRUJ" target="_blank">Discuss the chapter in our Discord</a>
+			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>
+		</div>`
+	});
+	notice.parentWrapper = this;
+	notice.load = () => {};
+	this.imageInstances.push(notice);
+	this.add(notice);
+
+	this.load = function() {};
+	this.getIndices = function() {return [1]}
+	this.checkTooWide = width => {}
+
+	this.destroy = () => {
+		var children = this.$.children.slice()
+		for(var i=0; i<children.length; i++) {
+			if(children[i]._struct) children[i]._struct.destroy();
+		}
+		alg.discardElement(this.$);
+		if(this.S) this.S.destroy();
+	}
 	this.S.proxyOut('loaded');
 }
 
@@ -2219,6 +2330,8 @@ function URLChanger(o) {
 	this.recentState = {};
 
 	this.updateURL = function(SCP) {
+		if(Reader.SCP.chapterObject.notice)
+			return;
 		if(this.recentState.chapter == SCP.chapter && this.recentState.page == SCP.page)
 			return;
 	var pathName = location.pathname
