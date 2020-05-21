@@ -2791,6 +2791,7 @@ input[type=range]::-ms-thumb {
   align-items: center;
   padding: 1rem;
   text-align: center;
+  box-sizing: border-box;
 }
 
 /* TOFIX: done too fast, check impl */
