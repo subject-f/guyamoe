@@ -105,14 +105,14 @@ function ReaderAPI(o) {
 			}
 		}
 		//We'll need to get this from the server as a field later.
-		if(data.slug == 'Kaguya-Wants-To-Be-Confessed-To') 
+		if(data.slug == 'Kaguya-Wants-To-Be-Confessed-To') { 
 			data.countdown = true;
-		var lastChapter = Object.keys(data.chapters).sort((a,b) => b - a)[0];
+			var lastChapter = Object.keys(data.chapters).sort((a,b) => b - a)[0];
 
-		data.chapters[+lastChapter+1] = Object.assign({}, data.chapters[lastChapter]);
-		data.chapters[+lastChapter+1].notice = true;
-		data.chapters[+lastChapter+1].title = '[Not yet released]';
-		
+			data.chapters[+lastChapter+1] = Object.assign({}, data.chapters[lastChapter]);
+			data.chapters[+lastChapter+1].notice = true;
+			data.chapters[+lastChapter+1].title = '[Not yet released]';
+		}
 		return data;
 	}
 
