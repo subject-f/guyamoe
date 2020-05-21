@@ -1226,7 +1226,9 @@ function UI_Reader(o) {
 	let nextWrapperIndex = this.imageView.imageWrappersMap[this.SCP.page] + 1;
 
 		//if last page
-		if(HAS_LOCALSTORAGE && nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1){
+		if(HAS_LOCALSTORAGE
+		&& nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1
+		&& !this.SCP.chapterObject.notice){
 			let source = window.location.pathname.split("/").filter((e) => e.includes("proxy"));
 			source = (source.length) ? source[0] : undefined;
 			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
@@ -2177,7 +2179,6 @@ function UI_ReaderNoticeWrapper(o) {
 	}
 var release =
 Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]];
-
 	release += 7 * 24 * 60 * 60;
 	//TOFIX: done too fast, check impl
 var notice = new UI_Dummy({

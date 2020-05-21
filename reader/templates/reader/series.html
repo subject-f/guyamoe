@@ -197,6 +197,14 @@ var reading_button = null;
 			if(read[0] == this.chL[0] || (this.chL[1] && read[0] == this.chL[1])) {
 				return this.setButton('last', this.chL[0]);
 			}
+			try{
+				if(+read[0] > +this.chL[0]) {
+				let slug = "{{ slug }}";
+				let source = "{{ reader_modifier }}";
+					globalHistoryHandler.removeChapter(slug, source, read[0]);
+					return this.setButton('last', this.chL[0]);
+				}
+			}catch(e) {}
 		var streak = 0; 
 		var index = 0;
 			for(var i=0; i < read.length; i++) {
@@ -218,6 +226,10 @@ var reading_button = null;
 		}
 
 		this.setButton = (mode, chapter) => {
+			if(chapter === undefined) {
+				chapter = chapterList.map(ch => ch[0]).sort((a,b) => b - a)[0];
+				mode = 'last';
+			}
 			switch(mode) {
 				case 'start':
 					this.$.classList.add('no-chapter');
