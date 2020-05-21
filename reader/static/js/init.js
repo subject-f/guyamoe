@@ -2154,7 +2154,7 @@ function UI_ReaderNoticeWrapper(o) {
 		time = new Date(time * 1000);
 		var t = time.getTime() - Date.now()
 		var times = [
-			Math.round( t/(1000*60*60*24) ) + ' days',
+			Math.floor( t/(1000*60*60*24) ) + ' days',
 			Math.floor( (t/(1000*60*60)) % 24 ) + ' hours',
 			Math.floor( (t/1000/60) % 60 ) + ' minutes'
 		].slice(0,-1);
