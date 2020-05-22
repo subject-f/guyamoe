@@ -167,6 +167,51 @@ def create_preview_pages(chapter_folder, group_folder, page_file):
     blur = blur.filter(ImageFilter.GaussianBlur(radius=2))
     blur.save(os.path.join(chapter_folder, f"{group_folder}_shrunk_blur", page_file), "JPEG", quality=100, optimize=True, progressive=True)
 
+def index_chapter(chapter):
+    if hasattr(settings, "OCR_SCRIPT_PATH") and os.path.exists(settings.OCR_SCRIPT_PATH):
+        ch_slug = chapter.slug_chapter_number()
+        group_folder = str(chapter.group.id)
+        curr_chap_index_priority = settings.PREFERRED_SORT.index(str(chapter.group.id))
+        all_chap_versions = [ch.group.id for ch in Chapter.objects.filter(chapter_number=chapter.chapter_number, series=chapter.series)]
+        for version in all_chap_versions:
+            try:
+                if settings.PREFERRED_SORT.index(str(version)) <= curr_chap_index_priority:
+                    break
+            except ValueError:
+                continue
+        else:
+            return
+        print("Deleting old chapter index from db.")
+        for index in ChapterIndex.objects.filter(series=chapter.series):
+            if ch_slug in index.chapter_and_pages:
+                print(index.word, index.chapter_and_pages[ch_slug])
+                del index.chapter_and_pages[ch_slug]
+                index.save()
+        print("Finished deleting old chapter index from db.")
+        print("Indexing chapter pages...")
+        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder)
+        subprocess.Popen(f'bash {settings.OCR_SCRIPT_PATH} {chapter_folder}/{group_folder} {chapter.clean_chapter_number()} {chapter.clean_chapter_number()}_{chapter.series.id} {chapter.series.slug}'.split())
+
+def chapter_post_process(chapter, update_version=True):
+    print(chapter.series, chapter.chapter_number)
+    chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder)
+    group = str(chapter.group.id)
+    shrunk = os.path.join(chapter_folder, f"{group}_shrunk")
+    blur = os.path.join(chapter_folder, f"{group}_shrunk_blur")
+    os.makedirs(shrunk, exist_ok=True)
+    os.makedirs(blur, exist_ok=True)
+    [os.remove(os.path.join(chapter_folder, shrunk, f)) for f in os.listdir(shrunk)]
+    [os.remove(os.path.join(chapter_folder, blur, f)) for f in os.listdir(blur)]
+    all_pages = os.listdir(os.path.join(chapter_folder, group))
+    for idx, page in enumerate(all_pages):
+        create_preview_pages(chapter_folder, group, page)
+    zip_chapter(chapter.series.slug, chapter.chapter_number, chapter.group)
+    if update_version:
+        chapter.version = chapter.version + 1 if chapter.version else 2
+        chapter.save()
+    clear_pages_cache()
+    index_chapter(chapter)
+
 def clear_series_cache(series_slug):
     cache.delete(f"series_api_data_{series_slug}")
     cache.delete(f"series_page_data_{series_slug}")
@@ -216,19 +261,11 @@ def zip_volume(series_slug, volume):
         zip_file = fh.read()
     return zip_file, zip_filename
 
-def zip_chapter(series_slug, chapter):
-    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter).first()
+def zip_chapter(series_slug, chapter, group):
+    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter, group=group).first()
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
-    groups = os.listdir(chapter_dir)
-    chapter_group = None
-    for group in settings.PREFERRED_SORT:
-        if group in groups:
-            chapter_group = group
-            break
-    else:
-        return None
-    chapter_pages = [os.path.join(chapter_dir, chapter_group, f) for f in os.listdir(os.path.join(chapter_dir, chapter_group))]
-    zip_filename = f"{ch_obj.slug_chapter_number()}.zip"
+    chapter_pages = [os.path.join(chapter_dir, str(group.id), f) for f in os.listdir(os.path.join(chapter_dir, str(group.id)))]
+    zip_filename = f"{ch_obj.group.id}_{ch_obj.slug_chapter_number()}.zip"
     zf = zipfile.ZipFile(os.path.join(chapter_dir, zip_filename), "w")
     for fpath in chapter_pages:
         _, fname = os.path.split(fpath)

@@ -1,3 +1,5 @@
+from ast import literal_eval
+import asyncio
 import os
 import hashlib
 import json
@@ -6,14 +8,14 @@ import zipfile
 from datetime import datetime, timezone
 
 from discord import Embed, Webhook, RequestsWebhookAdapter
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from reader.users_cache_lib import get_user_ip
-from .api import all_chapter_data_etag, chapter_data_etag, md_series_data, md_chapter_data, series_data_cache, all_groups, random_chars, create_preview_pages, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data, fs_series_data, fs_chapter_data, fs_encode_url, fs_encode_slug, ENCODE_STR_SLASH
+from .api import all_chapter_data_etag, chapter_data_etag, md_series_data, md_chapter_data, series_data_cache, all_groups, random_chars, chapter_post_process, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data, fs_series_data, fs_chapter_data, fs_encode_url, fs_encode_slug, ENCODE_STR_SLASH
 from django.views.decorators.csrf import csrf_exempt
 import requests
 
@@ -80,19 +82,47 @@ def download_volume(request, series_slug, volume):
     resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
     return resp
 
-def download_chapter(request, series_slug, chapter):
+def download_chapter(request):
+    series_slug = request.GET.get("series", None)
+    chapter = request.GET.get("chapter", None)
+    group = request.GET.get("group", None)
+    if not (series_slug and chapter):
+        return HttpResponseBadRequest()
     chapter_number = float(chapter.replace("-", "."))
-    ch_obj = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter_number).first()
+    if not group:
+        ch_qs = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter_number)
+        if not ch_qs:
+            return HttpResponseBadRequest()
+        preferred_sort = None
+        for ch_obj in ch_qs:
+            if ch_obj.preferred_sort:
+                try:
+                    preferred_sort = literal_eval(ch_obj.preferred_sort)
+                    break
+                except:
+                    pass
+        if preferred_sort:
+            ch_obj = ch_qs.get(series__slug=series_slug, chapter_number=chapter_number, group__id=int(preferred_sort[0]))
+        else:
+            for group in settings.PREFERRED_SORT:
+                ch_obj = ch_qs.filter(group__id=int(group)).first()
+                if ch_obj:
+                    break
+            if not ch_obj:
+                ch_obj = ch_qs.first()
+    else:
+        ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter_number, group__id=int(group))
+    group = str(ch_obj.group.id)
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
-    zip_path = os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip")
+    zip_chapter_file = f"{group}_{ch_obj.slug_chapter_number()}.zip"
+    zip_path = os.path.join(chapter_dir, zip_chapter_file)
     if os.path.exists(zip_path) and not (time.time() - os.stat(zip_path).st_mtime > (3600 * 8)):
-        zip_filename = f"{ch_obj.slug_chapter_number()}.zip"
-        with open(os.path.join(chapter_dir, f"{ch_obj.slug_chapter_number()}.zip"), "rb") as f:
+        with open(os.path.join(chapter_dir, zip_chapter_file), "rb") as f:
             zip_file = f.read()
     else:
-        zip_file, zip_filename, _ = zip_chapter(series_slug, chapter_number)
+        zip_file, _, _ = zip_chapter(series_slug, chapter_number, ch_obj.group)
     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
-    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+    resp['Content-Disposition'] = f'attachment; filename={ch_obj.slug_chapter_number()}.zip'
     return resp
 
 def upload_new_chapter(request, series_slug):
@@ -106,18 +136,18 @@ def upload_new_chapter(request, series_slug):
         if not existing_chapter:
             uid = chapter_folder_numb + random_chars()
         else:
-            reupload = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
-            if reupload:
-                reupload.delete()
+            reupload = False
+            old_chap = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
+            if old_chap:
+                old_chap.delete()
+                reupload = True
             uid = existing_chapter.folder
-        Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
+        ch_obj = Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
         chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid)
         group_folder = str(group.id)
         if os.path.exists(os.path.join(chapter_folder, group_folder)):
             return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
         os.makedirs(os.path.join(chapter_folder, group_folder))
-        os.makedirs(os.path.join(chapter_folder, f"{group_folder}_shrunk"))
-        os.makedirs(os.path.join(chapter_folder, f"{group_folder}_shrunk_blur"))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
             all_pages = sorted(zip_file.namelist())
             padding = len(str(len(all_pages)))
@@ -126,8 +156,7 @@ def upload_new_chapter(request, series_slug):
                 page_file = f"{str(idx+1).zfill(padding)}.{extension}"
                 with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                     f.write(zip_file.read(page))
-                create_preview_pages(chapter_folder, group_folder, page_file)
-                zip_chapter(series.slug, chapter_number)
+        chapter_post_process(ch_obj, reupload)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
     else:
         return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
@@ -141,7 +170,6 @@ def get_volume_covers(request, series_slug):
             volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
             covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers if cover[1]]}
             cache.set(f"vol_covers_{series_slug}", covers)
-            print(covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")

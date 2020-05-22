@@ -266,7 +266,7 @@ var reading_button = null;
 			{% endif %}
 		];
 		chapterList.forEach((chapter, idx) => {
-			let chapterDate = new Date(Date.UTC(chapter[5][0], chapter[5][1], chapter[5][2], chapter[5][3], chapter[5][5], chapter[5][5], 0));
+			let chapterDate = new Date(Date.UTC(chapter[5][0], chapter[5][1], chapter[5][2], chapter[5][3], chapter[5][4], chapter[5][5], 0));
 			if (isNaN(chapterDate.getUTCSeconds())) {
 				return;
 			}
@@ -624,7 +624,7 @@ var reading_button = null;
 								<td scope="row" class="detailed-chapter-download-chapter">
 									<a class="text-muted" data-toggle="tooltip" data-placement="top"
 										title="Download this chapter"
-										href="/api/download_chapter/{{ slug }}/{{ ch_slug }}"><i class="fa fa-download"></i>
+										href="/api/download_chapter?series={{ slug }}&chapter={{ ch_slug }}"><i class="fa fa-download"></i>
 									</a>
 								</td>
 								{% endif %}
