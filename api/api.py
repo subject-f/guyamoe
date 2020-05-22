@@ -55,11 +55,11 @@ def series_data(series_slug):
             }
             if chapter.wo and chapter.wo != 0:
                 chapters_dict[ch_clean]["wo"] = chapter.wo
-            if chapter.preferred_sort:
-                try:
-                    chapters_dict[ch_clean]["preferred_sort"] = literal_eval(chapter.preferred_sort)
-                except:
-                    pass
+        if chapter.preferred_sort:
+            try:
+                chapters_dict[ch_clean]["preferred_sort"] = literal_eval(chapter.preferred_sort)
+            except:
+                pass
     vols = Volume.objects.filter(series=series).order_by('-volume_number')
     cover_vol_url = ""
     for vol in vols:
