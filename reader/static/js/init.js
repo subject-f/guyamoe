@@ -38,17 +38,19 @@ function LoadHandler(o) {
 	o=be(o);
 	Linkable.call(this);
 
-	this.parseSCP = function(url) {
-		url = url.split('/');
+	this.parseSCP = function() {
+	let url = document.location.pathname.split('/');
+	let group = (document.location.hash.match(/#(\d+)/) || [null, null])[1];
 		return {
 			series: url[url.length - 4],
 			chapter: url[url.length - 3].replace('-','.'),
 			page: parseInt(url[url.length - 2] - 1),
+			group: group
 		}
 	}
 
 	this.onload = () => {
-	var SCP = this.parseSCP(document.location.pathname);
+	var SCP = this.parseSCP();
 		API.requestSeries(SCP.series)
 			.then(data => {
 				Reader.setSCP(SCP);
@@ -986,7 +988,7 @@ function UI_Reader(o) {
 	}
 	this.displaySCP = function(SCP) {
 		this.drawReader(SCP.series);
-		this.initChapter(SCP.chapter, SCP.page);
+		this.initChapter(SCP.chapter, SCP.page, SCP.group);
 		this.S.out('init');
 	}
 
@@ -1028,13 +1030,16 @@ function UI_Reader(o) {
 		this.initChapter();
 	}
 
-	this.initChapter = function(chapter, page) {
+	this.initChapter = function(chapter, page, group) {
 		if (chapter) this.SCP.chapter = chapter;
 		this.loadingChapter = true;
 		this.SCP.chapterObject = this.current.chapters[this.SCP.chapter];
 		this.SCP.volume = this.SCP.chapterObject.volume;
 		this.SCP.chapterName = this.SCP.chapterObject.title;
-		this.SCP.group = this.getGroup(chapter);
+		if(group !== undefined && group !== null && this.SCP.chapterObject.groups[group])
+			this.SCP.group = group;
+		else
+			this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
 			this.SCP.chapterObject.pageRequest[this.SCP.group]().then((count) => {
@@ -1058,21 +1063,26 @@ function UI_Reader(o) {
 		}
 	}
 
-	this.getGroup = function(chapter) {
-		let group = Settings.get('misc.groupPreference');
-
+	this.getGroup = function(chapter, getDefault) {
 		let chapterObj = this.current.chapters[chapter || this.SCP.chapter];
 
-		if (group === undefined || chapterObj.groups[group] === undefined) {
-			if (this.current.preferred_sort 
-				&& chapterObj.groups[this.current.preferred_sort[0]] !== undefined) {
-				group = this.current.preferred_sort[0];
-			} else {
-				group = Object.keys(chapterObj.groups)[0];
-			}
+		if(!getDefault) {
+			if(Settings.get('misc.groupPreference') !== undefined
+			&& chapterObj.groups[Settings.get('misc.groupPreference')] !== undefined)
+				return Settings.get('misc.groupPreference');
 		}
 
-		return group;
+		if(chapterObj.preferred_sort
+		&& chapterObj.preferred_sort[0] !== undefined
+		&& chapterObj.groups[chapterObj.preferred_sort[0]] !== undefined)
+			return chapterObj.preferred_sort[0];
+
+		if(this.current.preferred_sort
+		&& this.current.preferred_sort[0] !== undefined
+		&& chapterObj.groups[this.current.preferred_sort[0]] !== undefined)
+			return this.current.preferred_sort[0];
+
+		return Object.keys(chapterObj.groups)[0];
 	}
 
 	this.boostrapChapterInterface = function(page) {
@@ -1260,9 +1270,10 @@ function UI_Reader(o) {
 
 	this.copyShortLink = function() { 
 		// TODO: hard-coded values is meh
-		let url = document.location.href;
+		let url = document.location.href + document.location.hash;
+	var chapter = '' + (this.SCP.chapterObject.notice? +this.SCP.chapter-1 : this.SCP.chapter);
 		if (document.location.pathname.includes("Kaguya-Wants-To-Be-Confessed-To/")) {
-			url = document.location.origin + '/' + this.SCP.chapter.replace('.', '-') + '/'+ (this.SCP.page+1);	
+			url = document.location.origin + '/' + chapter.replace('.', '-') + '/'+ (this.SCP.page+1) + document.location.hash;
 		}
 		navigator.clipboard.writeText(url)
 		.then(function() {
@@ -2340,6 +2351,8 @@ function URLChanger(o) {
 			.slice(0, 3)
 			.concat([SCP.series, SCP.chapter.replace('.', '-'), SCP.page + 1, ''])
 			.join('/');
+		if(Reader.getGroup(undefined, true) !== Reader.SCP.group)
+			pathName += '#' + Reader.SCP.group;
 
 		switch(Settings.get('bhv.historyUpdate')) {
 			case 'none':
