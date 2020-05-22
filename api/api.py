@@ -1,3 +1,4 @@
+from ast import literal_eval
 import random
 import os
 import json
@@ -56,7 +57,7 @@ def series_data(series_slug):
                 chapters_dict[ch_clean]["wo"] = chapter.wo
             if chapter.preferred_sort:
                 try:
-                    chapters_dict[ch_clean]["preferred_sort"] = json.loads(chapter.preferred_sort)
+                    chapters_dict[ch_clean]["preferred_sort"] = literal_eval(chapter.preferred_sort)
                 except:
                     pass
     vols = Volume.objects.filter(series=series).order_by('-volume_number')
