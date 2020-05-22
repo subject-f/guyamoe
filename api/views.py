@@ -82,12 +82,8 @@ def download_volume(request, series_slug, volume):
     resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
     return resp
 
-def download_chapter(request):
-    series_slug = request.GET.get("series", None)
-    chapter = request.GET.get("chapter", None)
+def download_chapter(request, series_slug, chapter):
     group = request.GET.get("group", None)
-    if not (series_slug and chapter):
-        return HttpResponseBadRequest()
     chapter_number = float(chapter.replace("-", "."))
     if not group:
         ch_qs = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter_number)
@@ -111,6 +107,8 @@ def download_chapter(request):
             if not ch_obj:
                 ch_obj = ch_qs.first()
     else:
+        if not group.isdigit():
+            return HttpResponseBadRequest()
         ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter_number, group__id=int(group))
     group = str(ch_obj.group.id)
     chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
