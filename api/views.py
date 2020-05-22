@@ -125,6 +125,7 @@ def download_chapter(request, series_slug, chapter):
 
 def upload_new_chapter(request, series_slug):
     if request.method == "POST" and request.user and request.user.is_staff:
+        reupload = False
         group = Group.objects.get(name=request.POST["scanGroup"])
         series = Series.objects.get(slug=series_slug)
         chapter_number = float(request.POST["chapterNumber"])
@@ -134,7 +135,6 @@ def upload_new_chapter(request, series_slug):
         if not existing_chapter:
             uid = chapter_folder_numb + random_chars()
         else:
-            reupload = False
             old_chap = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
             if old_chap:
                 old_chap.delete()
@@ -154,7 +154,7 @@ def upload_new_chapter(request, series_slug):
                 page_file = f"{str(idx+1).zfill(padding)}.{extension}"
                 with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
                     f.write(zip_file.read(page))
-        chapter_post_process(ch_obj, reupload)
+        chapter_post_process(ch_obj, update_version=reupload)
         return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
     else:
         return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
