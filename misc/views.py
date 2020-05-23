@@ -4,7 +4,9 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.core.cache import cache
 from django.db.models import F
+from django.template import Context, Template
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
 from django.utils.decorators import decorator_from_middleware
 import json
 import re
@@ -34,6 +36,7 @@ def hit_count(request):
     return HttpResponse(json.dumps({}), content_type='application/json')
 
 
+@cache_page(3600 * 1)
 @decorator_from_middleware(OnlineNowMiddleware)
 def content(request, page_url):
     try:
@@ -43,23 +46,29 @@ def content(request, page_url):
     content = page.content
     for var in page.variable.all():
         content = content.replace("{{%s}}" % var.key, var.value)
-    return render(request, 'misc/misc.html', {
+    template_tags = {
         'content': content,
         'page_url': page.page_url,
         'page_title': page.page_title,
         'date': int(page.date.timestamp()) if page.date else "",
         'cover_image_url': page.cover_image_url,
         'template': 'misc_pages_list',
+        'static_dir': f"/media/pages/{page.page_url}/static/",
         'relative_url': f'pages/{page_url}/',
         "version_query": STATIC_VERSION
-    })
+    }
+    if page.standalone:
+        template = Template(page.content)
+        return HttpResponse(template.render(Context(template_tags)), content_type='text/html')
+    else:
+        return render(request, 'misc/misc.html', template_tags)
 
 
 @decorator_from_middleware(OnlineNowMiddleware)
 def misc_pages(request):
     pages = cache.get("misc_pages")
     if not pages:
-        pages = Page.objects.all().order_by('-date')
+        pages = Page.objects.filter(hidden=False).order_by('-date')
         cache.set("misc_pages", pages, 3600 * 8)
     for page in pages:
         page.date = int(page.date.timestamp()) if page.date else ""
