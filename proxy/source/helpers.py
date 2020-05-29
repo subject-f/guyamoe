@@ -4,7 +4,6 @@ import requests
 ENCODE_STR_SLASH = "%FF-"
 ENCODE_STR_QUESTION = "%DE-"
 GLOBAL_HEADERS = {
-    "Referer": "https://mangadex.org",
     "User-Agent": "Mozilla Firefox Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0.",
 }
 
@@ -18,11 +17,11 @@ def naive_decode(url):
 
 
 def get_wrapper(url, *, headers={}, **kwargs):
-    return requests.get(url, headers={**headers, **GLOBAL_HEADERS}, **kwargs)
+    return requests.get(url, headers={**GLOBAL_HEADERS, **headers}, **kwargs)
 
 
 def post_wrapper(url, headers={}, **kwargs):
-    return requests.post(url, headers={**headers, **GLOBAL_HEADERS}, **kwargs)
+    return requests.post(url, headers={**GLOBAL_HEADERS, **headers}, **kwargs)
 
 
 def api_cache(*, prefix, time):
