@@ -26,7 +26,11 @@
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 		{% include "history.html" %}
 	</head>
-	
+	<script>
+		// Seed the values from the template for the reader API calls
+		const BASE_API_PATH = "{{ api_path }}";
+		const IS_FIRST_PARTY = {{ first_party|yesno:"true,false,false" }};
+	</script>
 <body>
 	{% include "tracking.html" %}
 	<main id="rdr-main" class="" tabindex="-1">
@@ -80,6 +84,10 @@
 						<div class="ico-btn expander"></div>
 					</div>
 					<div data-bind='previews' class="rdr-previews-gallery">
+					</div>
+				</section>
+				<section class="rdr-description">
+					<div data-bind="image_description">
 					</div>
 				</section>
 <!-- 				<section class="rdr-aside-overlay hidden" data-bind="aside_views">

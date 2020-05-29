@@ -18,14 +18,11 @@ from datetime import datetime, timedelta, timezone
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
 from bs4 import BeautifulSoup
-import requests
 import re
-from api.api import all_chapter_data_etag, chapter_data_etag, md_series_data, get_md_data, nh_series_data, fs_decode_url, fs_series_data, ENCODE_STR_SLASH
+from api.api import all_chapter_data_etag, chapter_data_etag
 from guyamoe.settings import CANONICAL_ROOT_DOMAIN, STATIC_VERSION
-
 import os
 import json
-import requests
 
 
 @csrf_exempt
@@ -110,154 +107,10 @@ def series_page_data(series_slug):
                 "root_domain": CANONICAL_ROOT_DOMAIN,
                 "relative_url":f"read/manga/{series.slug}/",
                 "available_features": ["detailed", "compact", "volumeCovers", "rss", "download"],
-                "reader_modifier": "manga"
+                "reader_modifier": "reader/manga"
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
-
-def md_series_page_data(series_id):
-    md_series_page_dt = cache.get(f"md_series_page_dt_{series_id}")
-    if not md_series_page_dt:
-        resp = get_md_data(f"https://mangadex.org/api/?id={series_id}&type=manga")
-        if resp.status_code == 200:
-            data = resp.text
-            api_data = json.loads(data)
-            chapter_list = []
-            latest_chap_id = next(iter(api_data["chapter"]))
-            date = datetime.utcfromtimestamp(api_data["chapter"][latest_chap_id]["timestamp"])
-            last_updated = (api_data["chapter"][latest_chap_id]["chapter"], datetime.utcfromtimestamp(api_data["chapter"][latest_chap_id]["timestamp"]).strftime('%Y-%m-%d'))
-            chapter_dict = {}
-            for ch in api_data["chapter"]:
-                if api_data["chapter"][ch]["lang_code"] == "gb":
-                    chapter_id = api_data["chapter"][ch]["chapter"]
-                    chapter_list_id = api_data["chapter"][ch]["chapter"]
-                    try:
-                        float(api_data["chapter"][ch]["chapter"])
-                    except ValueError:
-                        chapter_id = f"0.0{str(api_data['chapter'][ch]['timestamp'])}"
-                        chapter_list_id = ""
-                    date = datetime.utcfromtimestamp(api_data["chapter"][ch]["timestamp"])
-                    if api_data["chapter"][ch]["chapter"] in chapter_dict:
-                        chapter_dict[chapter_id] = [chapter_list_id, chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), "Multiple Groups", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
-                    else:
-                        chapter_dict[chapter_id] = [chapter_list_id, chapter_id, api_data["chapter"][ch]["title"], chapter_id.replace(".", "-"), api_data["chapter"][ch]["group_name"], [date.year, date.month-1, date.day, date.hour, date.minute, date.second], api_data["chapter"][ch]["volume"]]
-            chapter_list = [x[1] for x in sorted(chapter_dict.items(), key=lambda m: float(m[0]), reverse=True)]
-            md_series_page_dt = {
-                "series": api_data["manga"]["title"],
-                "alt_titles": [],
-                "alt_titles_str": None,
-                "slug": series_id,
-                "cover_vol_url": "https://mangadex.org" + api_data["manga"]["cover_url"],
-                "metadata": [
-                    ["Author", api_data["manga"]["author"]], 
-                    ["Artist", api_data["manga"]["artist"]],
-                    ["Last Updated", f"Ch. {last_updated[0]} - {last_updated[1]}"]
-                ],
-                "synopsis": api_data["manga"]["description"], 
-                "author": api_data["manga"]["author"],
-                "chapter_list": chapter_list,
-                "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url": f"read/md_proxy/{series_id}",
-                "original_url": f"https://mangadex.org/title/{series_id}",
-                "available_features": ["detailed"],
-                "reader_modifier": "md_proxy"
-            }
-            cache.set(f"md_series_page_dt_{series_id}", md_series_page_dt, 60 * 5)
-        else:
-            return None
-    return md_series_page_dt
-
-def fs_series_page_data(encoded_url):
-    fs_series_page_dt = cache.get(f"fs_series_page_dt_{encoded_url}")
-    if not fs_series_page_dt:
-        try:
-            resp = requests.post(f"https://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        except requests.exceptions.ConnectionError:
-            resp = requests.post(f"http://{fs_decode_url(encoded_url)}/", data={"adult":"true"})
-        if resp.status_code == 200:
-            data = resp.text
-            soup = BeautifulSoup(data, "html.parser")
-
-            comic_info = soup.find("div", class_="large comic")
-
-            title = comic_info.find("h1", class_="title").get_text().replace("\n", "").strip()
-            description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": encoded_url.split(ENCODE_STR_SLASH)[0]}
-            cover_div = soup.find("div", class_="thumbnail")
-            if cover_div and cover_div.find("img")["src"]:
-                cover = cover_div.find("img")["src"]
-            else:
-                cover = ""
-
-            chapter_list = []
-
-            for a in soup.find_all("div", class_="element"):
-                link = a.find("div", class_="title").find("a")
-                chapter_regex = re.search(r'(Chapter |Ch.)([\d.]+)', link.get_text())
-                chapter_number = "0"
-                if chapter_regex:
-                    chapter_number = chapter_regex.group(2)
-                volume_regex = re.search(r'(Volume |Vol.)([\d.]+)', link.get_text())
-                volume_number = "1"
-                if volume_regex:
-                    volume_number = volume_regex.group(2)
-                chapter_title = link.get_text()
-                upload_info = list(map(lambda e: e.strip(), a.find("div", class_="meta_r").get_text().replace("by", "").split(",")))
-                chapter_list.append([chapter_number, chapter_number, chapter_title, chapter_number.replace(".", "-"), upload_info[0], upload_info[1], ""])
-
-            fs_series_page_dt = {
-                "series": title,
-                "alt_titles": [],
-                "alt_titles_str": None,
-                "slug": encoded_url,
-                "cover_vol_url": cover,
-                "metadata": [],
-                "synopsis": description,
-                "author": "FoolSlide",
-                "chapter_list": chapter_list,
-                "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url": f"read/fs_proxy/{encoded_url}",
-                "original_url": f"https://{fs_decode_url(encoded_url)}",
-                "available_features": ["detailed"],
-                "reader_modifier": "fs_proxy"
-            }
-            cache.set(f"fs_series_page_dt_{encoded_url}", fs_series_page_dt, 60 * 5)
-        else:
-            return None
-    return fs_series_page_dt
-
-def nh_series_page_data(series_id):
-    nh_series_page_dt = cache.get(f"nh_series_page_dt_{series_id}")
-    if not nh_series_page_dt:
-        data = nh_series_data(series_id)
-        if data:
-            date = datetime.utcfromtimestamp(data["timestamp"])
-            chapter_list = [
-                ["", "1", data["title"], "1", data["group"] or "NHentai", [date.year, date.month-1, date.day, date.hour, date.minute, date.second], ""]
-            ]
-            nh_series_page_dt = {
-                "series": data["title"],
-                "alt_titles": [],
-                "alt_titles_str": None,
-                "slug": data["slug"],
-                "cover_vol_url": data["cover"],
-                "metadata": [
-                    ["Author", data["artist"]],
-                    ["Language", data["lang"]]
-                ],
-                "synopsis": f"{data['description']}\n\n{' - '.join(data['tags'])}",
-                "author": data["artist"],
-                "chapter_list": chapter_list,
-                "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url": f"read/nh_proxy/{series_id}",
-                "original_url": f"https://nhentai.net/g/{series_id}",
-                "available_features": ["detailed"],
-                "reader_modifier": "nh_proxy"
-            }
-            cache.set(f"nh_series_page_dt_{series_id}", nh_series_page_dt, 3600 * 24)
-        else:
-            return None
-    return nh_series_page_dt
 
 @cache_control(max_age=60)
 @condition(etag_func=chapter_data_etag)
@@ -293,6 +146,7 @@ def reader(request, series_slug, chapter, page=None):
         data = get_all_metadata(series_slug)
         if chapter in data:
             data[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
+            data[chapter]["api_path"] = f"/api/series/"
             data[chapter]["version_query"] = STATIC_VERSION
             data[chapter]["first_party"] = True
             return render(request, 'reader/reader.html', data[chapter])
@@ -300,63 +154,3 @@ def reader(request, series_slug, chapter, page=None):
             return render(request, 'homepage/how_cute_404.html', status=404)
     else:
         return redirect('reader-manga-chapter', series_slug, chapter, "1")
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def md_proxy(request, md_series_id):
-    data = md_series_page_data(md_series_id)
-    if data:
-        data["version_query"] = STATIC_VERSION
-        return render(request, 'reader/series.html', data)
-    else:
-        return HttpResponse(status=500)
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def md_chapter(request, md_series_id, chapter, page):
-    data = md_series_data(md_series_id)
-    if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"read/md_proxy/{md_series_id}/{chapter}/{page}"
-        data["version_query"] = STATIC_VERSION
-        data["series_name"] = data["title"]
-        return render(request, 'reader/reader.html', data)
-    else:
-        return HttpResponse(status=500)
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def nh_proxy(request, nh_series_id):
-    data = nh_series_page_data(nh_series_id)
-    if data:
-        data["version_query"] = STATIC_VERSION
-        return render(request, 'reader/series.html', data)
-    else:
-        return HttpResponse(status=500)
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def nh_chapter(request, nh_series_id, chapter, page):
-    data = nh_series_data(nh_series_id)
-    if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"read/nh_proxy/{nh_series_id}/{chapter}/{page}"
-        data["version_query"] = STATIC_VERSION
-        data["series_name"] = data["title"]
-        return render(request, 'reader/reader.html', data)
-    else:
-        return HttpResponse(status=500)
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def fs_proxy(request, encoded_url):
-    data = fs_series_page_data(encoded_url)
-    if data:
-        data["version_query"] = STATIC_VERSION
-        return render(request, 'reader/series.html', data)
-    else:
-        return HttpResponse(status=500)
-
-@decorator_from_middleware(OnlineNowMiddleware)
-def fs_chapter(request, encoded_url, chapter, page):
-    data = fs_series_data(encoded_url)
-    if data and chapter.replace("-", ".") in data["chapters"]:
-        data["relative_url"] = f"read/fs_proxy/{encoded_url}/{chapter}/{page}"
-        data["version_query"] = STATIC_VERSION
-        data["series_name"] = data["title"]
-        return render(request, 'reader/reader.html', data)
-    else:
-        return HttpResponse(status=500)

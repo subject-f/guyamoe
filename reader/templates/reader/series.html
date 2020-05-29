@@ -75,7 +75,7 @@ var reading_button = null;
 	async function markAll(e) {
 		let chapters = document.querySelectorAll("tr[data-chapter]").map(e => e.getAttribute("data-chapter"));
 		let slug = "{{ slug }}";
-		let source = "{{ reader_modifier }}";
+		let source = "{{ reader_modifier }}".split("/")[1];
 		if (e.classList.contains("all-read")) {
 			await globalHistoryHandler.removeAllChapters(slug, source);
 			e.classList.remove("all-read");
@@ -89,7 +89,7 @@ var reading_button = null;
 	// This function assumes we've applied read already, so we skip a remote trip
 	async function updateRead(chapter, standalone = true, markRead) {
 		let slug = "{{ slug }}";
-		let source = "{{ reader_modifier }}";
+		let source = "{{ reader_modifier }}".split("/")[1];
 		if (standalone) {
 			let read = document.querySelectorAll("tr.is-read[data-chapter]").map(e => e.getAttribute("data-chapter"));
 			if (read.includes(chapter)) {
@@ -111,7 +111,7 @@ var reading_button = null;
 
 	async function updateAllRead() {
 		let slug = "{{ slug }}";
-		let source = "{{ reader_modifier }}";
+		let source = "{{ reader_modifier }}".split("/")[1];
 		let read = await globalHistoryHandler.getReadChapters(slug, source);
 
 		if (document.querySelectorAll("tr[data-chapter]").length === read.length) {
@@ -180,7 +180,7 @@ var reading_button = null;
 
 		this.draw = () => {
 			let slug = "{{ slug }}";
-			let source = "{{ reader_modifier }}";
+			let source = "{{ reader_modifier }}".split("/")[1];
 			this.chL = chapterList.map(ch => ch[0]).sort((a,b) => b - a);;
 			globalHistoryHandler.getReadChapters(slug, source)
 				.then(this.handleReads)
@@ -200,7 +200,7 @@ var reading_button = null;
 			try{
 				if(+read[0] > +this.chL[0]) {
 				let slug = "{{ slug }}";
-				let source = "{{ reader_modifier }}";
+				let source = "{{ reader_modifier }}".split("/")[1];
 					globalHistoryHandler.removeChapter(slug, source, read[0]);
 					return this.setButton('last', this.chL[0]);
 				}
@@ -266,6 +266,9 @@ var reading_button = null;
 			{% endif %}
 		];
 		chapterList.forEach((chapter, idx) => {
+			if (!Array.isArray(chapter[5])) {
+				return;
+			}
 			let chapterDate = new Date(Date.UTC(chapter[5][0], chapter[5][1], chapter[5][2], chapter[5][3], chapter[5][4], chapter[5][5], 0));
 			if (isNaN(chapterDate.getUTCSeconds())) {
 				return;
@@ -350,7 +353,7 @@ var reading_button = null;
 		}
 	})(updateAllRead);
 	
-	window.addEventListener("load", () => {
+	window.addEventListener("DOMContentLoaded", () => {
 		listMode("detailed");
 		prettifyLastUpdatedTable();
 		initSearchHandler();
@@ -608,7 +611,7 @@ var reading_button = null;
 							<tr class="table-default" data-chapter="{{ chapter }}">
 								<td scope="row" class="read-icon" onclick="updateRead('{{ chapter }}')"></td>
 								<td scope="row" class="chapter-title">
-									<a href="/read/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
+									<a href="/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
 										{% if chapter_list_value %}
 										{{ chapter_list_value }}
 										{% endif %}

@@ -551,6 +551,15 @@ aside header > .guya {
 	color: #eee;
  }
 
+.rdr-description div {
+	margin: 2em 0.8em 2em 0.8em;
+	line-height: 1.8;
+	white-space: pre-wrap;
+	font-size: 0.7em;
+	max-height: 50vh;
+	overflow-y: auto;
+}
+
 .rdr-previews {
 	display: flex;
 	flex-direction: column;
