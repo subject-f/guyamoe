@@ -25,7 +25,7 @@ class Imgur(ProxySource):
             )
 
         return [
-            re_path(r"^a/(?P<album_hash>[\d\w]+)/$", handler),
+            re_path(r"^(?:a|gallery)/(?P<album_hash>[\d\w]+)/$", handler),
         ]
 
     @api_cache(prefix="imgur_series_dt", time=3600 * 6)
@@ -47,10 +47,16 @@ class Imgur(ProxySource):
                     "volume": "1",
                     "title": title,
                     "groups": {
-                        "1": [{"description": obj["description"] or "", "src": obj["link"]} for obj in api_data["data"]["images"]]
+                        "1": [
+                            {
+                                "description": obj["description"] or "",
+                                "src": obj["link"],
+                            }
+                            for obj in api_data["data"]["images"]
+                        ]
                     },
                 }
-            }   
+            }
             return SeriesAPI(
                 slug=meta_id,
                 title=title,
