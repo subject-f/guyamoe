@@ -31,9 +31,29 @@ class NHentai(ProxySource):
                     f"reader-{self.get_reader_prefix()}-series-page", series_id
                 )
 
+        def series(request, series_id):
+            return redirect(f"reader-{self.get_reader_prefix()}-series-page", series_id)
+
+        def series_chapter(request, series_id, chapter, page="1"):
+            return redirect(
+                f"reader-{self.get_reader_prefix()}-chapter-page",
+                series_id,
+                chapter,
+                page,
+            )
+
         return [
             re_path(r"^g/(?P<series_id>[\d]{1,9})/$", handler),
             re_path(r"^g/(?P<series_id>[\d]{1,9})/(?P<page>[\d]{1,9})/$", handler),
+            re_path(r"^(?:read|reader)/nh_proxy/(?P<series_id>[\w\d.%-]+)/$", series),
+            re_path(
+                r"^(?:read|reader)/nh_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/$",
+                series_chapter,
+            ),
+            re_path(
+                r"^(?:read|reader)/nh_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/(?P<page>[\d]+)/$$",
+                series_chapter,
+            ),
         ]
 
     @api_cache(prefix="nh_series_common_dt", time=3600)

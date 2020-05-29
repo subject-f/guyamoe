@@ -21,6 +21,14 @@ class MangaDex(ProxySource):
         def series(request, series_id):
             return redirect(f"reader-{self.get_reader_prefix()}-series-page", series_id)
 
+        def series_chapter(request, series_id, chapter, page="1"):
+            return redirect(
+                f"reader-{self.get_reader_prefix()}-chapter-page",
+                series_id,
+                chapter,
+                page,
+            )
+
         def chapter(request, chapter_id, page="1"):
             data = self.chapter_api_handler(chapter_id)
             if data:
@@ -42,6 +50,15 @@ class MangaDex(ProxySource):
             re_path(r"^chapter/(?P<chapter_id>[\d]{1,9})/$", chapter),
             re_path(
                 r"^chapter/(?P<chapter_id>[\d]{1,9})/(?P<page>[\d]{1,9})/$", chapter
+            ),
+            re_path(r"^(?:read|reader)/md_proxy/(?P<series_id>[\d]+)/$", series),
+            re_path(
+                r"^(?:read|reader)/md_proxy/(?P<series_id>[\d]+)/(?P<chapter>[\d]+)/$",
+                series_chapter,
+            ),
+            re_path(
+                r"^(?:read|reader)/md_proxy/(?P<series_id>[\d]+)/(?P<chapter>[\d]+)/(?P<page>[\d]+)/$$",
+                series_chapter,
             ),
         ]
 

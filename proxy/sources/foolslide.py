@@ -2,11 +2,19 @@ import json
 import re
 from ..source import ProxySource
 from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import naive_encode, naive_decode, post_wrapper, get_wrapper, api_cache
+from ..source.helpers import (
+    naive_encode,
+    naive_decode,
+    post_wrapper,
+    get_wrapper,
+    api_cache,
+)
 from django.urls import re_path
 from django.shortcuts import redirect
 from datetime import datetime
 from bs4 import BeautifulSoup
+import requests
+
 
 class FoolSlide(ProxySource):
     def get_chapter_api_prefix(self):
@@ -47,8 +55,28 @@ class FoolSlide(ProxySource):
             else:
                 return HttpResponse(status=400)
 
+        def series(request, series_id):
+            return redirect(f"reader-{self.get_reader_prefix()}-series-page", series_id)
+
+        def series_chapter(request, series_id, chapter, page="1"):
+            return redirect(
+                f"reader-{self.get_reader_prefix()}-chapter-page",
+                series_id,
+                chapter,
+                page,
+            )
+
         return [
             re_path(r"^fs/(?P<raw_url>[\w\d\/:.-]+)", handler),
+            re_path(r"^(?:read|reader)/fs_proxy/(?P<series_id>[\w\d.%-]+)/$", series),
+            re_path(
+                r"^(?:read|reader)/fs_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/$",
+                series_chapter,
+            ),
+            re_path(
+                r"^(?:read|reader)/fs_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/(?P<page>[\d]+)/$$",
+                series_chapter,
+            ),
         ]
 
     def encode_slug(self, url):
