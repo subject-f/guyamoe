@@ -11,4 +11,4 @@ register = template.Library()
 @register.filter()
 @stringfilter
 def convert_to_markdown(value):
-    return markdown.markdown(value, extensions=['markdown.extensions.extra'])
+    return markdown.markdown(value, extensions=["markdown.extensions.extra"])

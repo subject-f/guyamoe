@@ -24,6 +24,17 @@ def post_wrapper(url, headers={}, **kwargs):
     return requests.post(url, headers={**GLOBAL_HEADERS, **headers}, **kwargs)
 
 
+def cache_control(*, seconds):
+    def wrapper(f):
+        def inner(request):
+            request.cache_control = seconds
+            return request
+
+        return inner
+
+    return wrapper
+
+
 def api_cache(*, prefix, time):
     def wrapper(f):
         def inner(self, meta_id):

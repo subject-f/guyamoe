@@ -1,1 +1,1 @@
-default_app_config = 'reader.apps.ReaderConfig'
+default_app_config = "reader.apps.ReaderConfig"

@@ -19,30 +19,41 @@ from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from homepage.sitemaps import StaticViewSitemap, SeriesViewSitemap, ChapterViewSitemap, PagesListViewSitemap, PageViewSitemap
+from homepage.sitemaps import (
+    StaticViewSitemap,
+    SeriesViewSitemap,
+    ChapterViewSitemap,
+    PagesListViewSitemap,
+    PageViewSitemap,
+)
 from proxy import sources
 
 sitemaps = {
-    'static': StaticViewSitemap,
-    'series': SeriesViewSitemap,
-    'chapter': ChapterViewSitemap,
-    'pageslist': PagesListViewSitemap,
-    'page': PageViewSitemap
+    "static": StaticViewSitemap,
+    "series": SeriesViewSitemap,
+    "chapter": ChapterViewSitemap,
+    "pageslist": PagesListViewSitemap,
+    "page": PageViewSitemap,
 }
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('homepage.urls')),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
-    path('read/', include('reader.urls')),
-    path('reader/', include('reader.urls')),
-    path('api/', include('api.urls')),
-    path('pages/', include('misc.urls')),
-    path('proxy/', include('proxy.urls')),
-    path('', include([route for source in sources for route in source.register_shortcut_routes()]))
+    path("admin/", admin.site.urls),
+    path("", include("homepage.urls")),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
+    path("read/", include("reader.urls")),
+    path("reader/", include("reader.urls")),
+    path("api/", include("api.urls")),
+    path("pages/", include("misc.urls")),
+    path("proxy/", include("proxy.urls")),
+    path(
+        "",
+        include(
+            [route for source in sources for route in source.register_shortcut_routes()]
+        ),
+    ),
 ]
 
-handler404 = 'homepage.views.handle404'
+handler404 = "homepage.views.handle404"
 
 if settings.DEBUG:
     # import debug_toolbar

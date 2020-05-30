@@ -6,7 +6,7 @@ from reader.models import Series, Chapter
 
 
 class CorrectMimeTypeFeed(DefaultFeed):
-    content_type = 'application/xml; charset=utf-8'
+    content_type = "application/xml; charset=utf-8"
 
 
 class AllChaptersFeed(Feed):
@@ -16,7 +16,7 @@ class AllChaptersFeed(Feed):
     description = "Latest chapter updates"
 
     def items(self):
-        return Chapter.objects.order_by('-uploaded_on')
+        return Chapter.objects.order_by("-uploaded_on")
 
     def item_title(self, item):
         return f"{item.series.name} - Chapter {Chapter.clean_chapter_number(item)}"
@@ -55,5 +55,4 @@ class SeriesChaptersFeed(Feed):
         return f"Group: {obj.group.name} - Title {obj.title}"
 
     def items(self, obj):
-        return Chapter.objects.filter(series=obj).order_by('-uploaded_on')
-
+        return Chapter.objects.filter(series=obj).order_by("-uploaded_on")

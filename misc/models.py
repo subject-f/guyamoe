@@ -9,8 +9,10 @@ class Variable(models.Model):
     def __str__(self):
         return self.key
 
+
 def path_file_name(instance, filename):
     return os.path.join("pages", instance.page.page_url, "static/", filename)
+
 
 class Page(models.Model):
     content = models.TextField(blank=True, null=True)
@@ -26,7 +28,8 @@ class Page(models.Model):
         return self.page_title
 
     def get_absolute_url(self):
-        return f'/pages/{self.page_url}/'
+        return f"/pages/{self.page_url}/"
+
 
 class Static(models.Model):
     static_file = models.FileField(upload_to=path_file_name)

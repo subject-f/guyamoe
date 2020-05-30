@@ -16,8 +16,9 @@ from PIL import ImageFilter, Image
 import zipfile
 import traceback
 
+
 class Command(BaseCommand):
-    help = 'Create shrunk and blurred versions of chapter pages'
+    help = "Create shrunk and blurred versions of chapter pages"
 
     def handle(self, *args, **options):
         for chapter in Chapter.objects.all():

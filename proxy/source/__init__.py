@@ -8,6 +8,7 @@ from typing import List
 from .data import *
 from .helpers import *
 
+
 class ProxySource(metaclass=abc.ABCMeta):
     # /proxy/api/:chapter_api_prefix/payload
     @abc.abstractmethod

@@ -993,7 +993,7 @@ function UI_Reader(o) {
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
 		let path = window.location.pathname.split("/").map(e => unescape(e));
-		this._.title.innerHTML = `<a href="${path.splice(0, path.indexOf(this.current.slug)).join("/")}/${this.current.slug}">${this.current.title}</a>`;
+		this._.title.innerHTML = `<a href="${path.splice(0, path.indexOf(this.current.slug)).join("/")}/${this.current.slug}/">${this.current.title}</a>`;
 		this.$.querySelector('aside').classList.remove('unload');
 	var chapterElements = [];
 	var volElements = {};
@@ -1197,7 +1197,7 @@ function UI_Reader(o) {
 			formData.append("series", this.SCP.series)
 			formData.append("group", this.SCP.group)
 			formData.append("chapter", this.SCP.chapter)
-			fetch('/reader/update_view_count/', {
+			fetch('/read/update_view_count/', {
 				method: 'POST',
 				body: formData
 			})

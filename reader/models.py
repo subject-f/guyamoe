@@ -6,11 +6,12 @@ from datetime import datetime, timezone
 import os
 import json
 
+
 class HitCount(models.Model):
-    content = GenericForeignKey('content_type', 'object_id')
+    content = GenericForeignKey("content_type", "object_id")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
-    hits = models.PositiveIntegerField(('Hits'), default=0)
+    hits = models.PositiveIntegerField(("Hits"), default=0)
 
 
 class Person(models.Model):
@@ -31,8 +32,20 @@ class Group(models.Model):
 class Series(models.Model):
     name = models.CharField(max_length=200, db_index=True)
     slug = models.SlugField(unique=True, max_length=200)
-    author = models.ForeignKey(Person, blank=True, null=True, on_delete=models.SET_NULL, related_name='series_author')
-    artist = models.ForeignKey(Person, blank=True, null=True, on_delete=models.SET_NULL, related_name='series_artist')
+    author = models.ForeignKey(
+        Person,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="series_author",
+    )
+    artist = models.ForeignKey(
+        Person,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="series_artist",
+    )
     synopsis = models.TextField(blank=True, null=True)
     alternative_titles = models.TextField(blank=True, null=True)
 
@@ -40,22 +53,34 @@ class Series(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return f'/read/manga/{self.slug}/'
+        return f"/read/manga/{self.slug}/"
 
     class Meta:
-        ordering = ('name',)
+        ordering = ("name",)
 
 
 def path_file_name(instance, filename):
-    return os.path.join("manga", instance.series.slug, "volume_covers", str(instance.volume_number), filename)
+    return os.path.join(
+        "manga",
+        instance.series.slug,
+        "volume_covers",
+        str(instance.volume_number),
+        filename,
+    )
+
 
 class Volume(models.Model):
     volume_number = models.PositiveIntegerField(blank=False, null=False, db_index=True)
-    series = models.ForeignKey(Series, blank=False, null=False, on_delete=models.CASCADE)
+    series = models.ForeignKey(
+        Series, blank=False, null=False, on_delete=models.CASCADE
+    )
     volume_cover = models.ImageField(blank=True, upload_to=path_file_name)
 
     class Meta:
-        unique_together = ('volume_number', 'series',)
+        unique_together = (
+            "volume_number",
+            "series",
+        )
 
 
 class Chapter(models.Model):
@@ -63,22 +88,34 @@ class Chapter(models.Model):
     title = models.CharField(max_length=200, blank=True)
     chapter_number = models.FloatField(blank=False, null=False, db_index=True)
     folder = models.CharField(max_length=255, blank=True, null=True)
-    volume = models.PositiveSmallIntegerField(blank=True, null=True, default=None, db_index=True)
+    volume = models.PositiveSmallIntegerField(
+        blank=True, null=True, default=None, db_index=True
+    )
     group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
-    uploaded_on = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
+    uploaded_on = models.DateTimeField(
+        default=None, blank=True, null=True, db_index=True
+    )
     version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     preferred_sort = models.CharField(max_length=200, blank=True, null=True)
-    wo = models.PositiveSmallIntegerField(blank=True, null=True, default=0, db_index=True)
+    wo = models.PositiveSmallIntegerField(
+        blank=True, null=True, default=0, db_index=True
+    )
 
     def clean_chapter_number(self):
-        return str(int(self.chapter_number)) if self.chapter_number % 1 == 0 else str(self.chapter_number)
+        return (
+            str(int(self.chapter_number))
+            if self.chapter_number % 1 == 0
+            else str(self.chapter_number)
+        )
 
     def slug_chapter_number(self):
         return self.clean_chapter_number().replace(".", "-")
 
     def get_chapter_time(self):
         upload_date = self.uploaded_on
-        upload_time = (datetime.utcnow().replace(tzinfo=timezone.utc) - upload_date).total_seconds()
+        upload_time = (
+            datetime.utcnow().replace(tzinfo=timezone.utc) - upload_date
+        ).total_seconds()
         days = int(upload_time // (24 * 3600))
         upload_time = upload_time % (24 * 3600)
         hours = int(upload_time // 3600)
@@ -102,11 +139,15 @@ class Chapter(models.Model):
         return f"{self.chapter_number} - {self.title} | {self.group}"
 
     def get_absolute_url(self):
-        return f'/read/manga/{self.series.slug}/{Chapter.slug_chapter_number(self)}/1'
+        return f"/read/manga/{self.series.slug}/{Chapter.slug_chapter_number(self)}/1"
 
     class Meta:
-        ordering = ('chapter_number',)
-        unique_together = ('chapter_number', 'series', 'group',)
+        ordering = ("chapter_number",)
+        unique_together = (
+            "chapter_number",
+            "series",
+            "group",
+        )
 
 
 class ChapterIndex(models.Model):
@@ -118,4 +159,7 @@ class ChapterIndex(models.Model):
         return self.word
 
     class Meta:
-        unique_together = ('word', 'series',)
+        unique_together = (
+            "word",
+            "series",
+        )
