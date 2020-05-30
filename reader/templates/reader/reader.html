@@ -19,9 +19,9 @@
 		<meta property="og:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
 		<meta name="twitter:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
 		{% endif %}
-		<meta property="og:url" content="/read/manga/{{ slug }}">
+		<meta property="og:url" content="/read/manga/{{ slug }}/">
 		<meta name="viewport" content="width=device-width">
-		<link rel="canonical" href="https://guya.moe/{{ relative_url }}"/>
+		<link rel="canonical" href="https://guya.moe/{{ relative_url }}/"/>
 		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
 		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 		{% include "history.html" %}
@@ -39,7 +39,7 @@
 			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual ico-btn"></div></div>
 			<header>
 				<a href="/" class="ico-btn guya"></a>
-				<h1 data-bind='title'><a href="/read/manga/{{ slug }}">{{ series_name }}</a></h1>
+				<h1 data-bind='title'><a href="/read/manga/{{ slug }}/">{{ series_name }}</a></h1>
 				<button class="ico-btn"></button>
 			</header>
 			<div class="rdr-aside-buffer" data-bind="rdr_aside_buffer"></div>

@@ -245,7 +245,7 @@ var reading_button = null;
 					this.$.querySelector('.manga-link-text').innerHTML = 'Read the latest chapter ›'; 
 					break;
 			}
-			this.$.href = `./${chapter.replace('.','-')}/1`
+			this.$.href = `./${chapter.replace('.','-')}/1/`
 		}
 
 		this.$ = document.createElement('div');
@@ -571,7 +571,7 @@ var reading_button = null;
 						<div class="row mb-0 pt-0">
 							{% for chapter in data %}
 							<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 col-3" data-chapter="{{ chapter.0 }}">
-								<a href="/read/manga/{{ slug }}/{{ chapter.1 }}/1" class="chapter-box">
+								<a href="/read/manga/{{ slug }}/{{ chapter.1 }}/1/" class="chapter-box">
 									<p class="text-center mb-1 chapter-number">
 										{{ chapter.0 }}
 									</p>
@@ -611,7 +611,7 @@ var reading_button = null;
 							<tr class="table-default" data-chapter="{{ chapter }}">
 								<td scope="row" class="read-icon" onclick="updateRead('{{ chapter }}')"></td>
 								<td scope="row" class="chapter-title">
-									<a href="/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1">
+									<a href="/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1/">
 										{% if chapter_list_value %}
 										{{ chapter_list_value }}
 										{% endif %}

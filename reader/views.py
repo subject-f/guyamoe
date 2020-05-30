@@ -35,27 +35,40 @@ def hit_count(request):
             cache.set(page_id, page_id, 60)
             series_slug = request.POST["series"]
             series_id = Series.objects.get(slug=series_slug).id
-            series = ContentType.objects.get(app_label='reader', model='series')
-            hit, _ = HitCount.objects.get_or_create(content_type=series, object_id=series_id)
-            hit.hits = F('hits') + 1
+            series = ContentType.objects.get(app_label="reader", model="series")
+            hit, _ = HitCount.objects.get_or_create(
+                content_type=series, object_id=series_id
+            )
+            hit.hits = F("hits") + 1
             hit.save()
             if "chapter" in request.POST:
                 chapter_number = request.POST["chapter"]
                 group_id = request.POST["group"]
-                chapter = ContentType.objects.get(app_label='reader', model='chapter')
-                hit, _ = HitCount.objects.get_or_create(content_type=chapter, object_id=Chapter.objects.get(chapter_number=float(chapter_number), group__id=group_id, series__id=series_id).id)
-                hit.hits = F('hits') + 1
+                chapter = ContentType.objects.get(app_label="reader", model="chapter")
+                hit, _ = HitCount.objects.get_or_create(
+                    content_type=chapter,
+                    object_id=Chapter.objects.get(
+                        chapter_number=float(chapter_number),
+                        group__id=group_id,
+                        series__id=series_id,
+                    ).id,
+                )
+                hit.hits = F("hits") + 1
                 hit.save()
-        
-    return HttpResponse(json.dumps({}), content_type='application/json')
 
+    return HttpResponse(json.dumps({}), content_type="application/json")
+
+
+@cache_control(public=True, max_age=60, s_maxage=60)
 def series_page_data(series_slug):
     series_page_dt = cache.get(f"series_page_dt_{series_slug}")
     if not series_page_dt:
         series = get_object_or_404(Series, slug=series_slug)
-        chapters = Chapter.objects.filter(series=series).select_related('series', 'group')
-        latest_chapter = chapters.latest('uploaded_on')
-        vols = Volume.objects.filter(series=series).order_by('-volume_number')
+        chapters = Chapter.objects.filter(series=series).select_related(
+            "series", "group"
+        )
+        latest_chapter = chapters.latest("uploaded_on")
+        vols = Volume.objects.filter(series=series).order_by("-volume_number")
         cover_vol_url = ""
         cover_vol_url_webp = ""
         for vol in vols:
@@ -63,8 +76,10 @@ def series_page_data(series_slug):
                 cover_vol_url = f"/media/{vol.volume_cover}"
                 cover_vol_url_webp = cover_vol_url.rsplit(".", 1)[0] + ".webp"
                 break
-        content_series = ContentType.objects.get(app_label='reader', model='series')
-        hit, _ = HitCount.objects.get_or_create(content_type=content_series, object_id=series.id)
+        content_series = ContentType.objects.get(app_label="reader", model="series")
+        hit, _ = HitCount.objects.get_or_create(
+            content_type=content_series, object_id=series.id
+        )
         chapter_list = []
         volume_dict = defaultdict(list)
         chapter_dict = OrderedDict()
@@ -80,66 +95,108 @@ def series_page_data(series_slug):
         for ch in chapter_dict:
             chapter, multiple_groups = chapter_dict[ch]
             u = chapter.uploaded_on
-            chapter_list.append([chapter.clean_chapter_number(), chapter.clean_chapter_number(), chapter.title, chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second], chapter.volume])
-            volume_dict[chapter.volume].append([chapter.clean_chapter_number(), chapter.slug_chapter_number(), chapter.group.name if not multiple_groups else "Multiple Groups", [u.year, u.month-1, u.day, u.hour, u.minute, u.second]])
+            chapter_list.append(
+                [
+                    chapter.clean_chapter_number(),
+                    chapter.clean_chapter_number(),
+                    chapter.title,
+                    chapter.slug_chapter_number(),
+                    chapter.group.name if not multiple_groups else "Multiple Groups",
+                    [u.year, u.month - 1, u.day, u.hour, u.minute, u.second],
+                    chapter.volume,
+                ]
+            )
+            volume_dict[chapter.volume].append(
+                [
+                    chapter.clean_chapter_number(),
+                    chapter.slug_chapter_number(),
+                    chapter.group.name if not multiple_groups else "Multiple Groups",
+                    [u.year, u.month - 1, u.day, u.hour, u.minute, u.second],
+                ]
+            )
         volume_list = []
         for key, value in volume_dict.items():
-            volume_list.append([key, sorted(value, key=lambda x: float(x[0]), reverse=True)])
+            volume_list.append(
+                [key, sorted(value, key=lambda x: float(x[0]), reverse=True)]
+            )
         chapter_list.sort(key=lambda x: float(x[0]), reverse=True)
         series_page_dt = {
-                "series": series.name,
-                "alt_titles": series.alternative_titles.split(", ") if series.alternative_titles else [],
-                "alt_titles_str": f" Alternative titles: {series.alternative_titles}." if series.alternative_titles else "",
-                "series_id": series.id,
-                "slug": series.slug,
-                "cover_vol_url": cover_vol_url,
-                "cover_vol_url_webp": cover_vol_url_webp,
-                "metadata": [
-                    ["Author", series.author.name], 
-                    ["Artist", series.artist.name], 
-                    ["Views", hit.hits + 1],
-                    ["Last Updated", f"Ch. {latest_chapter.clean_chapter_number()} - {datetime.utcfromtimestamp(latest_chapter.uploaded_on.timestamp()).strftime('%Y-%m-%d')}"]
+            "series": series.name,
+            "alt_titles": series.alternative_titles.split(", ")
+            if series.alternative_titles
+            else [],
+            "alt_titles_str": f" Alternative titles: {series.alternative_titles}."
+            if series.alternative_titles
+            else "",
+            "series_id": series.id,
+            "slug": series.slug,
+            "cover_vol_url": cover_vol_url,
+            "cover_vol_url_webp": cover_vol_url_webp,
+            "metadata": [
+                ["Author", series.author.name],
+                ["Artist", series.artist.name],
+                ["Views", hit.hits + 1],
+                [
+                    "Last Updated",
+                    f"Ch. {latest_chapter.clean_chapter_number()} - {datetime.utcfromtimestamp(latest_chapter.uploaded_on.timestamp()).strftime('%Y-%m-%d')}",
                 ],
-                "synopsis": series.synopsis, 
-                "author": series.author.name,
-                "chapter_list": chapter_list,
-                "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
-                "root_domain": CANONICAL_ROOT_DOMAIN,
-                "relative_url":f"read/manga/{series.slug}/",
-                "available_features": ["detailed", "compact", "volumeCovers", "rss", "download"],
-                "reader_modifier": "reader/manga"
+            ],
+            "synopsis": series.synopsis,
+            "author": series.author.name,
+            "chapter_list": chapter_list,
+            "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
+            "root_domain": CANONICAL_ROOT_DOMAIN,
+            "relative_url": f"read/manga/{series.slug}/",
+            "available_features": [
+                "detailed",
+                "compact",
+                "volumeCovers",
+                "rss",
+                "download",
+            ],
+            "reader_modifier": "read/manga",
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
 
-@cache_control(max_age=60)
+
+@cache_control(public=True, max_age=60, s_maxage=60)
 @condition(etag_func=chapter_data_etag)
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
     data["version_query"] = STATIC_VERSION
-    return render(request, 'reader/series.html', data)
+    return render(request, "reader/series.html", data)
+
 
 @staff_member_required
+@cache_control(public=True, max_age=60, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
     data["version_query"] = STATIC_VERSION
     data["available_features"].append("admin")
-    return render(request, 'reader/series.html', data)
+    return render(request, "reader/series.html", data)
+
 
 def get_all_metadata(series_slug):
     series_metadata = cache.get(f"series_metadata_{series_slug}")
     if not series_metadata:
         series = Series.objects.get(slug=series_slug)
-        chapters = Chapter.objects.filter(series=series).select_related('series')
+        chapters = Chapter.objects.filter(series=series).select_related("series")
         series_metadata = {}
         for chapter in chapters:
-            series_metadata[chapter.slug_chapter_number()] = {"series_name": chapter.series.name, "slug": chapter.series.slug, "chapter_number": chapter.clean_chapter_number(), "chapter_title": chapter.title}
+            series_metadata[chapter.slug_chapter_number()] = {
+                "series_name": chapter.series.name,
+                "slug": chapter.series.slug,
+                "chapter_number": chapter.clean_chapter_number(),
+                "chapter_title": chapter.title,
+            }
         cache.set(f"series_metadata_{series_slug}", series_metadata, 3600 * 12)
     return series_metadata
 
-@cache_control(max_age=120)
+
+@cache_control(public=True, max_age=60, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def reader(request, series_slug, chapter, page=None):
     if page:
@@ -149,8 +206,8 @@ def reader(request, series_slug, chapter, page=None):
             data[chapter]["api_path"] = f"/api/series/"
             data[chapter]["version_query"] = STATIC_VERSION
             data[chapter]["first_party"] = True
-            return render(request, 'reader/reader.html', data[chapter])
+            return render(request, "reader/reader.html", data[chapter])
         else:
-            return render(request, 'homepage/how_cute_404.html', status=404)
+            return render(request, "homepage/how_cute_404.html", status=404)
     else:
-        return redirect('reader-manga-chapter', series_slug, chapter, "1")
+        return redirect("reader-manga-chapter", series_slug, chapter, "1")

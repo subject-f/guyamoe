@@ -12,12 +12,26 @@ from django.http import HttpResponse, HttpResponseBadRequest, StreamingHttpRespo
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
+from django.views.decorators.cache import cache_control
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from reader.users_cache_lib import get_user_ip
-from .api import all_chapter_data_etag, chapter_data_etag, series_data_cache, all_groups, random_chars, chapter_post_process, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
+from .api import (
+    all_chapter_data_etag,
+    chapter_data_etag,
+    series_data_cache,
+    all_groups,
+    random_chars,
+    chapter_post_process,
+    clear_series_cache,
+    clear_pages_cache,
+    zip_volume,
+    zip_chapter,
+)
 from django.views.decorators.csrf import csrf_exempt
 
+
+@cache_control(public=True, max_age=30, s_maxage=30)
 @condition(etag_func=chapter_data_etag)
 def get_series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
@@ -25,6 +39,8 @@ def get_series_data(request, series_slug):
         series_api_data = series_data_cache(series_slug)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
 
+
+@cache_control(public=True, max_age=900, s_maxage=900)
 @condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):
     all_series_data = cache.get(f"all_series_data")
@@ -32,45 +48,73 @@ def get_all_series(request):
         all_series = Series.objects.all().select_related("author", "artist")
         all_series_data = {}
         for series in all_series:
-            vols = Volume.objects.filter(series=series).order_by('-volume_number')
+            vols = Volume.objects.filter(series=series).order_by("-volume_number")
             cover_vol_url = ""
             for vol in vols:
                 if vol.volume_cover:
                     cover_vol_url = f"/media/{vol.volume_cover}"
                     break
-            all_series_data[series.name] = {"author": series.author.name, "artist": series.artist.name, "description": series.synopsis, "slug": series.slug, "cover": cover_vol_url, "groups": all_groups()}
+            all_series_data[series.name] = {
+                "author": series.author.name,
+                "artist": series.artist.name,
+                "description": series.synopsis,
+                "slug": series.slug,
+                "cover": cover_vol_url,
+                "groups": all_groups(),
+            }
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
 
+
+@cache_control(public=True, max_age=7200, s_maxage=7200)
 @condition(etag_func=chapter_data_etag)
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
-        groups_data = {str(ch.group.id) : ch.group.name for ch in Chapter.objects.filter(series__slug=series_slug).select_related('group')}
+        groups_data = {
+            str(ch.group.id): ch.group.name
+            for ch in Chapter.objects.filter(series__slug=series_slug).select_related(
+                "group"
+            )
+        }
         cache.set(f"groups_data_{series_slug}", groups_data, 3600 * 12)
-    return HttpResponse(json.dumps({"groups": groups_data}), content_type="application/json")
+    return HttpResponse(
+        json.dumps({"groups": groups_data}), content_type="application/json"
+    )
 
+
+@cache_control(public=True, max_age=7200, s_maxage=7200)
 @condition(etag_func=all_chapter_data_etag)
 def get_all_groups(request):
     return HttpResponse(json.dumps(all_groups()), content_type="application/json")
 
+
+@cache_control(public=True, max_age=43200, s_maxage=43200)
 def download_volume(request, series_slug, volume):
     zip_filename = f"{series_slug}_vol_{volume}.zip"
     zip_path = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename)
-    if os.path.exists(zip_path) and not (time.time() - os.stat(zip_path).st_mtime > (3600 * 8)):
-        with open(os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb") as fh:
+    if os.path.exists(zip_path) and not (
+        time.time() - os.stat(zip_path).st_mtime > (3600 * 8)
+    ):
+        with open(
+            os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb"
+        ) as fh:
             zip_file = fh.read()
     else:
         zip_file, zip_filename = zip_volume(series_slug, volume)
     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
-    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+    resp["Content-Disposition"] = "attachment; filename=%s" % zip_filename
     return resp
 
+
+@cache_control(public=True, max_age=21600, s_maxage=21600)
 def download_chapter(request, series_slug, chapter):
     group = request.GET.get("group", None)
     chapter_number = float(chapter.replace("-", "."))
     if not group:
-        ch_qs = Chapter.objects.filter(series__slug=series_slug, chapter_number=chapter_number)
+        ch_qs = Chapter.objects.filter(
+            series__slug=series_slug, chapter_number=chapter_number
+        )
         if not ch_qs:
             return HttpResponseBadRequest()
         preferred_sort = None
@@ -82,7 +126,11 @@ def download_chapter(request, series_slug, chapter):
                 except:
                     pass
         if preferred_sort:
-            ch_obj = ch_qs.get(series__slug=series_slug, chapter_number=chapter_number, group__id=int(preferred_sort[0]))
+            ch_obj = ch_qs.get(
+                series__slug=series_slug,
+                chapter_number=chapter_number,
+                group__id=int(preferred_sort[0]),
+            )
         else:
             for group in settings.PREFERRED_SORT:
                 ch_obj = ch_qs.filter(group__id=int(group)).first()
@@ -93,19 +141,30 @@ def download_chapter(request, series_slug, chapter):
     else:
         if not group.isdigit():
             return HttpResponseBadRequest()
-        ch_obj = Chapter.objects.get(series__slug=series_slug, chapter_number=chapter_number, group__id=int(group))
+        ch_obj = Chapter.objects.get(
+            series__slug=series_slug,
+            chapter_number=chapter_number,
+            group__id=int(group),
+        )
     group = str(ch_obj.group.id)
-    chapter_dir = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder)
+    chapter_dir = os.path.join(
+        settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder
+    )
     zip_chapter_file = f"{group}_{ch_obj.slug_chapter_number()}.zip"
     zip_path = os.path.join(chapter_dir, zip_chapter_file)
-    if os.path.exists(zip_path) and not (time.time() - os.stat(zip_path).st_mtime > (3600 * 8)):
+    if os.path.exists(zip_path) and not (
+        time.time() - os.stat(zip_path).st_mtime > (3600 * 8)
+    ):
         with open(os.path.join(chapter_dir, zip_chapter_file), "rb") as f:
             zip_file = f.read()
     else:
         zip_file, _, _ = zip_chapter(series_slug, chapter_number, ch_obj.group)
     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
-    resp['Content-Disposition'] = f'attachment; filename={ch_obj.slug_chapter_number()}.zip'
+    resp[
+        "Content-Disposition"
+    ] = f"attachment; filename={ch_obj.slug_chapter_number()}.zip"
     return resp
+
 
 def upload_new_chapter(request, series_slug):
     if request.method == "POST" and request.user and request.user.is_staff:
@@ -113,22 +172,46 @@ def upload_new_chapter(request, series_slug):
         group = Group.objects.get(name=request.POST["scanGroup"])
         series = Series.objects.get(slug=series_slug)
         chapter_number = float(request.POST["chapterNumber"])
-        existing_chapter = Chapter.objects.filter(chapter_number=chapter_number, series=series).first()
+        existing_chapter = Chapter.objects.filter(
+            chapter_number=chapter_number, series=series
+        ).first()
         chapter_folder_numb = f"{int(chapter_number):04}"
-        chapter_folder_numb += f"-{str(chapter_number).rsplit('.')[1]}_" if not str(chapter_number).endswith("0") else "_"
+        chapter_folder_numb += (
+            f"-{str(chapter_number).rsplit('.')[1]}_"
+            if not str(chapter_number).endswith("0")
+            else "_"
+        )
         if not existing_chapter:
             uid = chapter_folder_numb + random_chars()
         else:
-            old_chap = Chapter.objects.filter(chapter_number=chapter_number, series=series, group=group).first()
+            old_chap = Chapter.objects.filter(
+                chapter_number=chapter_number, series=series, group=group
+            ).first()
             if old_chap:
                 old_chap.delete()
                 reupload = True
             uid = existing_chapter.folder
-        ch_obj = Chapter.objects.create(chapter_number=chapter_number, group=group, series=series, folder=uid, title=request.POST["chapterTitle"], volume=request.POST["volumeNumber"], uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc))
-        chapter_folder = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid)
+        ch_obj = Chapter.objects.create(
+            chapter_number=chapter_number,
+            group=group,
+            series=series,
+            folder=uid,
+            title=request.POST["chapterTitle"],
+            volume=request.POST["volumeNumber"],
+            uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc),
+        )
+        chapter_folder = os.path.join(
+            settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid
+        )
         group_folder = str(group.id)
         if os.path.exists(os.path.join(chapter_folder, group_folder)):
-            return HttpResponse(JsonResponse({"response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."}))
+            return HttpResponse(
+                JsonResponse(
+                    {
+                        "response": "Error: This chapter by this group already exists but wasn't recorded in the database. Chapter has been recorded but not uploaded."
+                    }
+                )
+            )
         os.makedirs(os.path.join(chapter_folder, group_folder))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
             all_pages = sorted(zip_file.namelist())
@@ -136,25 +219,48 @@ def upload_new_chapter(request, series_slug):
             for idx, page in enumerate(all_pages):
                 extension = page.rsplit(".", 1)[1]
                 page_file = f"{str(idx+1).zfill(padding)}.{extension}"
-                with open(os.path.join(chapter_folder, group_folder, page_file), "wb") as f:
+                with open(
+                    os.path.join(chapter_folder, group_folder, page_file), "wb"
+                ) as f:
                     f.write(zip_file.read(page))
         chapter_post_process(ch_obj, update_version=reupload)
-        return HttpResponse(json.dumps({"response": "success"}), content_type="application/json")
+        return HttpResponse(
+            json.dumps({"response": "success"}), content_type="application/json"
+        )
     else:
-        return HttpResponse(json.dumps({"response": "failure"}), content_type="application/json")
+        return HttpResponse(
+            json.dumps({"response": "failure"}), content_type="application/json"
+        )
+
 
 @csrf_exempt
+@cache_control(public=True, max_age=21600, s_maxage=21600)
 def get_volume_covers(request, series_slug):
     if request.method == "POST":
         covers = cache.get(f"vol_covers_{series_slug}")
         if not covers:
             series = Series.objects.get(slug=series_slug)
-            volume_covers = Volume.objects.filter(series=series).order_by('volume_number').values_list('volume_number', 'volume_cover')
-            covers = {"covers": [[cover[0], f"/media/{str(cover[1])}", f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp"] for cover in volume_covers if cover[1]]}
+            volume_covers = (
+                Volume.objects.filter(series=series)
+                .order_by("volume_number")
+                .values_list("volume_number", "volume_cover")
+            )
+            covers = {
+                "covers": [
+                    [
+                        cover[0],
+                        f"/media/{str(cover[1])}",
+                        f"/media/{str(cover[1]).rsplit('.', 1)[0]}.webp",
+                    ]
+                    for cover in volume_covers
+                    if cover[1]
+                ]
+            }
             cache.set(f"vol_covers_{series_slug}", covers)
         return HttpResponse(json.dumps(covers), content_type="application/json")
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
+
 
 @csrf_exempt
 def search_index(request, series_slug):
@@ -163,7 +269,9 @@ def search_index(request, series_slug):
         search_query = request.POST["searchQuery"]
         search_results = {}
         for word in set(search_query.split()[:20]):
-            word_query = ChapterIndex.objects.filter(word__startswith=word.upper(), series=series)
+            word_query = ChapterIndex.objects.filter(
+                word__startswith=word.upper(), series=series
+            )
             search_results[word] = {}
             for word_obj in word_query:
                 chapter_and_pages = word_obj.chapter_and_pages
@@ -172,6 +280,7 @@ def search_index(request, series_slug):
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
 
+
 @csrf_exempt
 def clear_cache(request):
     if request.method == "POST" and request.user and request.user.is_staff:
@@ -179,14 +288,17 @@ def clear_cache(request):
             clear_pages_cache()
             response = "Cleared all cache"
         elif request.POST["clear_type"] == "chapter":
-            for series_slug in Series.objects.all().values_list('slug'):
+            for series_slug in Series.objects.all().values_list("slug"):
                 clear_series_cache(series_slug)
             response = "Cleared series cache"
         else:
             response = "Not a valid option"
-        return HttpResponse(json.dumps({"response": response}), content_type="application/json")
+        return HttpResponse(
+            json.dumps({"response": response}), content_type="application/json"
+        )
     else:
         return HttpResponse(json.dumps({}), content_type="application/json")
+
 
 @csrf_exempt
 def black_hole_mail(request):
@@ -199,15 +311,34 @@ def black_hole_mail(request):
         else:
             user_sent_count += 1
             if user_sent_count > 4:
-                return HttpResponse(json.dumps({"error": "Error: sending mail too frequently."}), content_type="application/json")
+                return HttpResponse(
+                    json.dumps({"error": "Error: sending mail too frequently."}),
+                    content_type="application/json",
+                )
             else:
                 cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 30)
         if len(text) > 2000:
-            return HttpResponse(json.dumps({"error": "Error: message too long. can only send 2000 characters."}), content_type="application/json")
+            return HttpResponse(
+                json.dumps(
+                    {"error": "Error: message too long. can only send 2000 characters."}
+                ),
+                content_type="application/json",
+            )
         try:
-            webhook = Webhook.partial(settings.MAIL_DISCORD_WEBHOOK_ID, settings.MAIL_DISCORD_WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
-            em = Embed(color=0x000000, title="Black Hole", description=f"⚫ You've got guyamail! 📬\n\n{text}", timestamp=datetime.utcnow())
-            em.set_footer(text=f"IP hash: {hashlib.md5(user_ip.encode()).hexdigest()[:32]}")
+            webhook = Webhook.partial(
+                settings.MAIL_DISCORD_WEBHOOK_ID,
+                settings.MAIL_DISCORD_WEBHOOK_TOKEN,
+                adapter=RequestsWebhookAdapter(),
+            )
+            em = Embed(
+                color=0x000000,
+                title="Black Hole",
+                description=f"⚫ You've got guyamail! 📬\n\n{text}",
+                timestamp=datetime.utcnow(),
+            )
+            em.set_footer(
+                text=f"IP hash: {hashlib.md5(user_ip.encode()).hexdigest()[:32]}"
+            )
             webhook.send(content=None, embed=em, username="Guya.moe")
         except (AttributeError, NameError) as e:
             feedback_folder = os.path.join(settings.MEDIA_ROOT, "feedback")
@@ -215,4 +346,7 @@ def black_hole_mail(request):
             feedback_file = str(int(datetime.utcnow().timestamp()))
             with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
                 f.write(text)
-        return HttpResponse(json.dumps({"success": "Mail successfully crossed the event horizon"}), content_type="application/json")
+        return HttpResponse(
+            json.dumps({"success": "Mail successfully crossed the event horizon"}),
+            content_type="application/json",
+        )

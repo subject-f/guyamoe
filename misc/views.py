@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.db.models import F
 from django.template import Context, Template
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control
 from django.utils.decorators import decorator_from_middleware
 import json
 import re
@@ -28,15 +28,17 @@ def hit_count(request):
             cache.set(page_id, page_id, 60)
             page_url = request.POST["page_url"]
             page_id = Page.objects.get(page_url=page_url).id
-            page = ContentType.objects.get(app_label='misc', model='page')
-            hit, _ = HitCount.objects.get_or_create(content_type=page, object_id=page_id)
-            hit.hits = F('hits') + 1
+            page = ContentType.objects.get(app_label="misc", model="page")
+            hit, _ = HitCount.objects.get_or_create(
+                content_type=page, object_id=page_id
+            )
+            hit.hits = F("hits") + 1
             hit.save()
-        
-    return HttpResponse(json.dumps({}), content_type='application/json')
+
+    return HttpResponse(json.dumps({}), content_type="application/json")
 
 
-@cache_page(3600 * 1)
+@cache_control(public=True, max_age=3600, s_maxage=3600)
 @decorator_from_middleware(OnlineNowMiddleware)
 def content(request, page_url):
     try:
@@ -47,29 +49,41 @@ def content(request, page_url):
     for var in page.variable.all():
         content = content.replace("{{%s}}" % var.key, var.value)
     template_tags = {
-        'content': content,
-        'page_url': page.page_url,
-        'page_title': page.page_title,
-        'date': int(page.date.timestamp()) if page.date else "",
-        'cover_image_url': page.cover_image_url,
-        'template': 'misc_pages_list',
-        'static_dir': f"/media/pages/{page.page_url}/static/",
-        'relative_url': f'pages/{page_url}/',
-        "version_query": STATIC_VERSION
+        "content": content,
+        "page_url": page.page_url,
+        "page_title": page.page_title,
+        "date": int(page.date.timestamp()) if page.date else "",
+        "cover_image_url": page.cover_image_url,
+        "template": "misc_pages_list",
+        "static_dir": f"/media/pages/{page.page_url}/static/",
+        "relative_url": f"pages/{page_url}/",
+        "version_query": STATIC_VERSION,
     }
     if page.standalone:
         template = Template(page.content)
-        return HttpResponse(template.render(Context(template_tags)), content_type='text/html')
+        return HttpResponse(
+            template.render(Context(template_tags)), content_type="text/html"
+        )
     else:
-        return render(request, 'misc/misc.html', template_tags)
+        return render(request, "misc/misc.html", template_tags)
 
 
+@cache_control(public=True, max_age=300, s_maxage=300)
 @decorator_from_middleware(OnlineNowMiddleware)
 def misc_pages(request):
     pages = cache.get("misc_pages")
     if not pages:
-        pages = Page.objects.filter(hidden=False).order_by('-date')
+        pages = Page.objects.filter(hidden=False).order_by("-date")
         cache.set("misc_pages", pages, 3600 * 8)
     for page in pages:
         page.date = int(page.date.timestamp()) if page.date else ""
-    return render(request, 'misc/misc_pages.html', {'pages': pages, 'template': 'misc_page', 'relative_url': 'pages/', "version_query": STATIC_VERSION})
+    return render(
+        request,
+        "misc/misc_pages.html",
+        {
+            "pages": pages,
+            "template": "misc_page",
+            "relative_url": "pages/",
+            "version_query": STATIC_VERSION,
+        },
+    )
