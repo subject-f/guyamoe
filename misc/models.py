@@ -18,7 +18,7 @@ class Page(models.Model):
     hidden = models.BooleanField(default=False)
     page_title = models.CharField(max_length=300, blank=False, null=False, unique=True)
     page_url = models.CharField(max_length=300, blank=False, null=False, unique=True)
-    cover_image_url = models.CharField(max_length=300)
+    cover_image_url = models.CharField(max_length=512, blank=True, null=True)
     date = models.DateTimeField(default=None, blank=True, null=True, db_index=True)
     variable = models.ManyToManyField(Variable, blank=True)
 
