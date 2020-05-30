@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'reader.apps.ReaderConfig',
     'homepage.apps.HomepageConfig',
     'misc.apps.MiscConfig',
+    'proxy.apps.ProxyConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -178,3 +179,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MAIL_DISCORD_WEBHOOK_ID = 1 
 MAIL_DISCORD_WEBHOOK_TOKEN = ""
+
+IMGUR_CLIENT_ID = ""

@@ -7,7 +7,7 @@ from django.views.decorators.http import condition
 from django.core.cache import cache
 from django.conf import settings
 
-from api.api import all_chapter_data_etag, md_chapter_data, fs_encode_slug
+from api.api import all_chapter_data_etag
 from guyamoe.settings import STATIC_VERSION
 from reader.middleware import OnlineNowMiddleware
 from reader.users_cache_lib import get_user_ip
@@ -15,7 +15,6 @@ from homepage.middleware import ForwardParametersMiddleware
 from reader.models import Series, Volume, Chapter
 from reader.views import series_page_data
 
-import requests
 
 @staff_member_required
 def admin_home(request):
@@ -76,58 +75,6 @@ def latest(request):
         latest_chap = Chapter.objects.order_by('-chapter_number').filter(series__slug="Kaguya-Wants-To-Be-Confessed-To")[0].slug_chapter_number()
         cache.set("latest_chap", latest_chap, 3600 * 96)
     return redirect('reader-manga-chapter', "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1")
-
-@decorator_from_middleware(ForwardParametersMiddleware)
-def md_series(request, md_series_id):
-    return redirect('reader-md-proxy', md_series_id)
-
-@decorator_from_middleware(ForwardParametersMiddleware)
-def md_chapter(request, md_chapter_id, page=1):
-    chapter_info = md_chapter_data(md_chapter_id)
-    return redirect('reader-md-chapter', chapter_info["series_id"], str(chapter_info["chapter"]).replace(".", "-"), page)
-
-@decorator_from_middleware(ForwardParametersMiddleware)
-def nh_series(request, nh_series_id, page=None):
-    if page:
-        return redirect('reader-nh-chapter', nh_series_id, 1, page)
-    else:
-        return redirect('reader-nh-proxy', nh_series_id)
-
-@decorator_from_middleware(ForwardParametersMiddleware)
-def fs_gateway(request, raw_url):
-    if raw_url.endswith("/"):
-        raw_url = raw_url[:-1]
-    if "/read/" in raw_url:
-        params = [n for n in raw_url.split("/") if n]
-        # ~~Translator~~ Developer's note: "en" means only english FS sites work
-        lang_idx = params.index("en")
-        chapter = params[lang_idx + 2]
-        if len(params) - 1 > lang_idx + 2 and params[lang_idx + 3] != "page":
-            chapter += f"-{params[lang_idx + 3]}"
-        page = "1"
-        if "/page/" in raw_url:
-            page_idx = params.index("page")
-            page = params[page_idx + 1]
-        return redirect('reader-fs-chapter', fs_encode_slug(raw_url), chapter, page)
-    elif "/series/" in raw_url:
-        return redirect('reader-fs-proxy', fs_encode_slug(raw_url))
-    else:
-        return HttpResponse(status=400)
-
-def referral(request):
-    if request.method == "POST":
-        ip = get_user_ip(request)
-        referral_metadata = cache.get(f"referral_{ip}")
-        if referral_metadata and not referral_metadata["consumed"]:
-            if request.POST["rid"] == referral_metadata["rid"]:
-                cache.set(f"referral_{ip}", {"consumed": True}, 1800)
-                try:
-                    requests.post(settings.REFERRAL_SERVICE, referral_metadata)
-                except:
-                    pass
-        return HttpResponse(status=200)
-    else:
-        return handle404(request, "")
 
 # def latest_releases(request):
 #     latest_releases = cache.get("latest_releases")

@@ -303,10 +303,14 @@
       let coverUrl = "";
       {% endif %}
 
+      {% if reader_modifier %}
+      let source = "{{ reader_modifier }}".split("/")[1];
+      {% else %}
       let source = window.location.pathname
         .split("/")
         .filter(e => e)[1]
         .replace("_", " ");
+      {% endif %}
 
       {% if slug %}
       let slug = "{{ slug }}";
@@ -315,7 +319,7 @@
       {% endif %}
 
       {% if relative_url %}
-      let url = "{{ relative_url }}".split(slug)[0] + slug;
+      let url = "/{{ relative_url }}".split(slug)[0] + slug;
       {% else %}
       let url = "";
       {% endif %}

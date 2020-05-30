@@ -15,30 +15,14 @@ from django.core.cache import cache
 from django.views.decorators.http import condition
 from reader.models import Series, Volume, Chapter, Group, ChapterIndex
 from reader.users_cache_lib import get_user_ip
-from .api import all_chapter_data_etag, chapter_data_etag, md_series_data, md_chapter_data, series_data_cache, all_groups, random_chars, chapter_post_process, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter, nh_series_data, fs_series_data, fs_chapter_data, fs_encode_url, fs_encode_slug, ENCODE_STR_SLASH
+from .api import all_chapter_data_etag, chapter_data_etag, series_data_cache, all_groups, random_chars, chapter_post_process, clear_series_cache, clear_pages_cache, zip_volume, zip_chapter
 from django.views.decorators.csrf import csrf_exempt
-import requests
 
 @condition(etag_func=chapter_data_etag)
 def get_series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
         series_api_data = series_data_cache(series_slug)
-    return HttpResponse(json.dumps(series_api_data), content_type="application/json")
-
-def get_md_series_data(request, series_id):
-    series_api_data = md_series_data(series_id)
-    return HttpResponse(json.dumps(series_api_data), content_type="application/json")
-
-def get_md_chapter_pages(request, chapter_id):
-    chapter_pages = md_chapter_data(chapter_id)
-    if chapter_pages:
-        return HttpResponse(json.dumps(chapter_pages["pages"]), content_type="application/json")
-    else:
-        return HttpResponse(status=503)
-
-def get_nh_series_data(request, series_id):
-    series_api_data = nh_series_data(series_id)
     return HttpResponse(json.dumps(series_api_data), content_type="application/json")
 
 @condition(etag_func=all_chapter_data_etag)
@@ -232,23 +216,3 @@ def black_hole_mail(request):
             with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
                 f.write(text)
         return HttpResponse(json.dumps({"success": "Mail successfully crossed the event horizon"}), content_type="application/json")
-
-def get_fs_series_data(request, encoded_url):
-    if ENCODE_STR_SLASH in encoded_url:
-        series_api_data = fs_series_data(encoded_url)
-        return HttpResponse(json.dumps(series_api_data), content_type="application/json")
-    else:
-        return HttpResponse(status=400)
-
-def get_fs_chapter_pages(request, encoded_url):
-    if ENCODE_STR_SLASH in encoded_url:
-        chapter_pages = fs_chapter_data(encoded_url)
-        if chapter_pages:
-            return HttpResponse(json.dumps(chapter_pages), content_type="application/json")
-        else:
-            return HttpResponse(status=503)
-    else:
-        return HttpResponse(status=400)
-
-def get_fs_encoded_url(request, raw_url):
-    return HttpResponse(json.dumps({"url": fs_encode_url(raw_url)}), content_type="application/json")

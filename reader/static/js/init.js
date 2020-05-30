@@ -68,15 +68,9 @@ function ReaderAPI(o) {
 	
 	this.url = o.url || '/api/';
 	
-	this.firstParty = true;
+	this.firstParty = IS_FIRST_PARTY;
 
-	if (window.location.pathname.includes("proxy")) {
-		this.seriesUrl = this.url + window.location.pathname.split("/")
-			.filter((e) => e.includes("proxy"))[0].replace("proxy", "series") + "/";
-		this.firstParty = false;
-	} else {
-		this.seriesUrl = `${this.url}series/`;
-	}
+	this.seriesUrl = BASE_API_PATH;
 
 	this.mediaURL = o.mediaURL || '/media/manga/';
 
@@ -87,6 +81,7 @@ function ReaderAPI(o) {
 		for(var num in data.chapters) {
 		let chapter = data.chapters[num];
 			chapter.images = {};
+			chapter.descriptions = {};
 			chapter.loaded = {};
 			chapter.blurs = {};
 			chapter.previews = {};
@@ -96,6 +91,7 @@ function ReaderAPI(o) {
 			chapter.id = num;
 			for(let group in chapter.groups) {
 				chapter.images[group] = [];
+				chapter.descriptions[group] = [];
 				chapter.blurs[group] = [];
 				chapter.previews[group] = [];
 				chapter.wides[group] = [];
@@ -996,7 +992,8 @@ function UI_Reader(o) {
 		if(slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		this._.title.innerHTML = `<a href="${window.location.pathname.split("/").splice(0, 3).join("/")}/${this.current.slug}">${this.current.title}</a>`;
+		let path = window.location.pathname.split("/").map(e => unescape(e));
+		this._.title.innerHTML = `<a href="${path.splice(0, path.indexOf(this.current.slug)).join("/")}/${this.current.slug}">${this.current.title}</a>`;
 		this.$.querySelector('aside').classList.remove('unload');
 	var chapterElements = [];
 	var volElements = {};
@@ -1239,8 +1236,8 @@ function UI_Reader(o) {
 		if(HAS_LOCALSTORAGE
 		&& nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1
 		&& !this.SCP.chapterObject.notice){
-			let source = window.location.pathname.split("/").filter((e) => e.includes("proxy"));
-			source = (source.length) ? source[0] : undefined;
+			let source = window.location.pathname.split("/");
+			source = source[source.indexOf(this.SCP.series) - 1];
 			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
 		}
 		
@@ -1345,7 +1342,10 @@ function UI_Reader(o) {
 	this.eventRouter = function(event){
 		({
 			'nextPage': () => this.nextPage(),
-			'prevPage': () => this.prevPage()
+			'prevPage': () => this.prevPage(),
+			'newPageIndex': (page) => {
+				this._.image_description.textContent = this.current.chapters[this.SCP.chapter].descriptions[this.SCP.group][page];
+			}
 		})[event.type](event.data)
 	}
 
@@ -1700,6 +1700,7 @@ function UI_ReaderImageView(o) {
 		if(this.imageList[index+1]) {
 			Reader.enqueuePreload(this.imageList[index+1].url);
 		}
+		this.S.out('event', {type: 'newPageIndex', data: index})
 	}
 
 	this.prev = () => {
@@ -2346,9 +2347,9 @@ function URLChanger(o) {
 			return;
 		if(this.recentState.chapter == SCP.chapter && this.recentState.page == SCP.page)
 			return;
-	var pathName = location.pathname
-			.split('/')
-			.slice(0, 3)
+	var pathSplit = location.pathname.split("/");
+		pathSplit = pathSplit.slice(0, pathSplit.indexOf(SCP.series));
+	var pathName = pathSplit
 			.concat([SCP.series, SCP.chapter.replace('.', '-'), SCP.page + 1, ''])
 			.join('/');
 		if(Reader.getGroup(undefined, true) !== Reader.SCP.group)
@@ -3055,7 +3056,12 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 function thirdPartySeriesHandler(url, chapter, group) {
 	if (Array.isArray(chapter.groups[group])) {
 		for (let image of chapter.groups[group]) {
-			chapter.images[group].push(image);
+			if (typeof image === 'string' || image instanceof String) {
+				chapter.images[group].push(image);
+			} else {
+				chapter.descriptions[group].push(image.description);
+				chapter.images[group].push(image.src);
+			}
 		}
 		chapter.loaded[group] = true;
 	} else {
@@ -3065,10 +3071,14 @@ function thirdPartySeriesHandler(url, chapter, group) {
 			let images = chapter.images[group];
 			try {
 				// Each group/chapter pair has a unique ID, returned by API
-				let pages = await fetch(`${url.replace("series", "chapter_pages")}${chapter.groups[group]}/`)
+				let pages = await fetch(`${chapter.groups[group]}`)
 								.then(r => r.json());
 				pages.forEach(p => {
-					images.push(p);
+					if (typeof p === 'string' || p instanceof String) {
+						images.push(p);
+					} else {
+						images.push(p.src);
+					}
 				});
 				return pages.length;
 			} catch (e) {

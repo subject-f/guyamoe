@@ -20,6 +20,7 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from homepage.sitemaps import StaticViewSitemap, SeriesViewSitemap, ChapterViewSitemap, PagesListViewSitemap, PageViewSitemap
+from proxy import sources
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -37,6 +38,8 @@ urlpatterns = [
     path('reader/', include('reader.urls')),
     path('api/', include('api.urls')),
     path('pages/', include('misc.urls')),
+    path('proxy/', include('proxy.urls')),
+    path('', include([route for source in sources for route in source.register_shortcut_routes()]))
 ]
 
 handler404 = 'homepage.views.handle404'
