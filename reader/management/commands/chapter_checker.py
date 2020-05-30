@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
-import subprocess
 from datetime import datetime
 import pytz
 import re
@@ -238,7 +237,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         loop = asyncio.get_event_loop()
         if options['update'] and options['group']:
-            chapter = Chapter.objects.get(chapter_number=float(options['update']), group=options['group'])
+            chapter = Chapter.objects.get(series__slug=options['series'], chapter_number=float(options['update']), group=options['group'])
             chapter_post_process(chapter)
         elif options['dl'] == 'jb' and options['series'] and options['latest_chap']:
             latest_volume = Volume.objects.filter(series__slug=options['series']).order_by('-volume_number')[0].volume_number

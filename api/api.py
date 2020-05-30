@@ -5,12 +5,13 @@ import json
 import zipfile
 import re
 import base64
+import subprocess
 from datetime import datetime
 from io import BytesIO;
 from PIL import ImageFilter, Image
 from django.conf import settings
 from django.core.cache import cache
-from reader.models import Series, Volume, Chapter, Group
+from reader.models import Series, Volume, Chapter, ChapterIndex, Group
 
 def all_chapter_data_etag(request):
     etag = cache.get("all_chapter_data_etag")
