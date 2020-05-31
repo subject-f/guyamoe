@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.postgres.fields import JSONField
 from datetime import datetime, timezone
 import os
 import json
@@ -152,7 +151,7 @@ class Chapter(models.Model):
 
 class ChapterIndex(models.Model):
     word = models.CharField(max_length=48, db_index=True)
-    chapter_and_pages = JSONField()
+    chapter_and_pages = models.TextField()
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
 
     def __str__(self):

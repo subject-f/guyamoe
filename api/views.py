@@ -274,7 +274,7 @@ def search_index(request, series_slug):
             )
             search_results[word] = {}
             for word_obj in word_query:
-                chapter_and_pages = word_obj.chapter_and_pages
+                chapter_and_pages = json.loads(word_obj.chapter_and_pages)
                 search_results[word][word_obj.word] = chapter_and_pages
         return HttpResponse(json.dumps(search_results), content_type="application/json")
     else:
