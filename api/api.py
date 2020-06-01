@@ -182,9 +182,11 @@ def index_chapter(chapter):
             return
         print("Deleting old chapter index from db.")
         for index in ChapterIndex.objects.filter(series=chapter.series):
-            if ch_slug in index.chapter_and_pages:
-                print(index.word, index.chapter_and_pages[ch_slug])
-                del index.chapter_and_pages[ch_slug]
+            word_dict = json.loads(index.chapter_and_pages)
+            if ch_slug in word_dict:
+                print(index.word, word_dict[ch_slug])
+                del word_dict[ch_slug]
+                index.chapter_and_pages = json.dumps(word_dict)
                 index.save()
         print("Finished deleting old chapter index from db.")
         print("Indexing chapter pages...")
