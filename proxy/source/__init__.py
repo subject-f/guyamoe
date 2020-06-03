@@ -2,6 +2,7 @@ import abc
 import json
 from django.shortcuts import render, redirect
 from django.urls import path, re_path
+from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
 from guyamoe.settings import STATIC_VERSION
 from typing import List
@@ -44,6 +45,7 @@ class ProxySource(metaclass=abc.ABCMeta):
     def wrap_chapter_meta(self, meta_id):
         return f"/proxy/api/{self.get_chapter_api_prefix()}/{meta_id}/"
 
+    @cache_control(public=True, max_age=60, s_maxage=60)
     def reader_view(self, request, meta_id, chapter, page=None):
         if page:
             data = self.series_api_handler(meta_id)
@@ -61,6 +63,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                 f"reader-{self.get_reader_prefix()}-chapter-page", meta_id, chapter, "1"
             )
 
+    @cache_control(public=True, max_age=60, s_maxage=60)
     def series_view(self, request, meta_id):
         data = self.series_page_handler(meta_id)
         if data:
@@ -72,6 +75,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         else:
             return HttpResponse(status=500)
 
+    @cache_control(public=True, max_age=60, s_maxage=60)
     def series_api_view(self, request, meta_id):
         data = self.series_api_handler(meta_id)
         if data:
@@ -80,6 +84,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         else:
             return HttpResponse(status=500)
 
+    @cache_control(public=True, max_age=60, s_maxage=60)
     def chapter_api_view(self, request, meta_id):
         data = self.chapter_api_handler(meta_id)
         if data:

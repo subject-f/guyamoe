@@ -85,7 +85,7 @@ def home(request):
     )
 
 
-@cache_control(public=True, max_age=3600, s_maxage=3600)
+@cache_control(public=True, max_age=3600, s_maxage=300)
 @decorator_from_middleware(OnlineNowMiddleware)
 def about(request):
     return render(

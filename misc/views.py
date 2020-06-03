@@ -38,7 +38,7 @@ def hit_count(request):
     return HttpResponse(json.dumps({}), content_type="application/json")
 
 
-@cache_control(public=True, max_age=3600, s_maxage=3600)
+@cache_control(public=True, max_age=3600, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def content(request, page_url):
     try:
@@ -68,7 +68,7 @@ def content(request, page_url):
         return render(request, "misc/misc.html", template_tags)
 
 
-@cache_control(public=True, max_age=300, s_maxage=300)
+@cache_control(public=True, max_age=300, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def misc_pages(request):
     pages = cache.get("misc_pages")

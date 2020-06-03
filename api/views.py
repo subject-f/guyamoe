@@ -234,7 +234,7 @@ def upload_new_chapter(request, series_slug):
 
 
 @csrf_exempt
-@cache_control(public=True, max_age=21600, s_maxage=21600)
+@cache_control(public=True, max_age=3600, s_maxage=3600)
 def get_volume_covers(request, series_slug):
     if request.method == "POST":
         covers = cache.get(f"vol_covers_{series_slug}")
