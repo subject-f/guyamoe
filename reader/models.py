@@ -47,6 +47,10 @@ class Series(models.Model):
     )
     synopsis = models.TextField(blank=True, null=True)
     alternative_titles = models.TextField(blank=True, null=True)
+    next_release_page = models.BooleanField(default=False)
+    next_release_time = models.DateTimeField(
+        default=None, blank=True, null=True, db_index=True
+    )
 
     def __str__(self):
         return self.name
