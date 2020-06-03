@@ -214,7 +214,11 @@ def upload_new_chapter(request, series_slug):
             )
         os.makedirs(os.path.join(chapter_folder, group_folder))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
-            all_pages = sorted(zip_file.namelist())
+            zipped_pages = zip_file.namelist()
+            if all([x.split(" ", 1)[0].split(".", 1)[0].isdigit() for x in zipped_pages]):
+                all_pages = sorted(zipped_pages, key=lambda x: int(x.split(" ", 1)[0].split(".", 1)[0]))
+            else:
+                all_pages = sorted(zipped_pages)
             padding = len(str(len(all_pages)))
             for idx, page in enumerate(all_pages):
                 extension = page.rsplit(".", 1)[1]
