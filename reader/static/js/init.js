@@ -2192,6 +2192,8 @@ function UI_ReaderNoticeWrapper(o) {
 var release =
 Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]];
 	release += 7 * 24 * 60 * 60;
+	if(Reader.SCP.chapterObject.wo)
+		release += Reader.SCP.chapterObject.wo * 7 * 24 * 60 * 60;
 	//TOFIX: done too fast, check impl
 var notice = new UI_Dummy({
 		html: `<div class="ReaderNotice">
