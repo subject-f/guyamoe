@@ -8,13 +8,6 @@ docker-compose up
 ``` 
 in this directory and you're done. 
 
-## `settings.py`
-
-Since we're bind mounting the settings within a bind mount, things get a bit wonky with the settings. If you modify the actual settings file, it'll shadow the bind mount and you'll have to restart your containers to revert it.
-
-So uh, don't change the base settings.py until you're happy with what you need to do. Make your changes in `docker/settings.py` in the meantime.
-
-
 ## nginx
 
 If you want to run with Nginx (which you really shouldn't unless you change a bunch of the configurations), use: 

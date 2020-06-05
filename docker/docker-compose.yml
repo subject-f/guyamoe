@@ -13,13 +13,11 @@ services:
       - type: bind
         source: ../
         target: /guya
-      - type: bind
-        source: ./settings.py
-        target: /guya/guyamoe/settings.py
     ports:
       - 8000:8000
     environment:
       - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=docker.settings
     depends_on:
       - memcached
       - postgres
