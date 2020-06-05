@@ -20,7 +20,7 @@ from collections import OrderedDict, defaultdict
 from bs4 import BeautifulSoup
 import re
 from api.api import all_chapter_data_etag, chapter_data_etag
-from guyamoe.settings import CANONICAL_ROOT_DOMAIN, STATIC_VERSION
+from django.conf import settings
 import os
 import json
 
@@ -145,7 +145,7 @@ def series_page_data(series_slug):
             "author": series.author.name,
             "chapter_list": chapter_list,
             "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
-            "root_domain": CANONICAL_ROOT_DOMAIN,
+            "root_domain": settings.CANONICAL_ROOT_DOMAIN,
             "relative_url": f"read/manga/{series.slug}/",
             "available_features": [
                 "detailed",
@@ -165,7 +165,7 @@ def series_page_data(series_slug):
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)
-    data["version_query"] = STATIC_VERSION
+    data["version_query"] = settings.STATIC_VERSION
     return render(request, "reader/series.html", data)
 
 
@@ -174,7 +174,7 @@ def series_info(request, series_slug):
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info_admin(request, series_slug):
     data = series_page_data(series_slug)
-    data["version_query"] = STATIC_VERSION
+    data["version_query"] = settings.STATIC_VERSION
     data["available_features"].append("admin")
     return render(request, "reader/series.html", data)
 
@@ -196,7 +196,7 @@ def get_all_metadata(series_slug):
     return series_metadata
 
 
-@cache_control(public=True, max_age=60, s_maxage=60)
+@cache_control(public=True, max_age=30, s_maxage=30)
 @decorator_from_middleware(OnlineNowMiddleware)
 def reader(request, series_slug, chapter, page=None):
     if page:
@@ -204,7 +204,7 @@ def reader(request, series_slug, chapter, page=None):
         if chapter in data:
             data[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
             data[chapter]["api_path"] = f"/api/series/"
-            data[chapter]["version_query"] = STATIC_VERSION
+            data[chapter]["version_query"] = settings.STATIC_VERSION
             data[chapter]["first_party"] = True
             return render(request, "reader/reader.html", data[chapter])
         else:

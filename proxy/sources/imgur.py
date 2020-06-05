@@ -5,7 +5,7 @@ from ..source.helpers import get_wrapper, api_cache
 from django.urls import re_path
 from django.shortcuts import redirect
 from datetime import datetime
-from guyamoe.settings import IMGUR_CLIENT_ID
+from django.conf import settings
 
 
 class Imgur(ProxySource):
@@ -32,7 +32,7 @@ class Imgur(ProxySource):
     def series_api_handler(self, meta_id):
         resp = get_wrapper(
             f"https://api.imgur.com/3/album/{meta_id}",
-            headers={"Authorization": f"Client-ID {IMGUR_CLIENT_ID}"},
+            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
@@ -77,7 +77,7 @@ class Imgur(ProxySource):
     def series_page_handler(self, meta_id):
         resp = get_wrapper(
             f"https://api.imgur.com/3/album/{meta_id}",
-            headers={"Authorization": f"Client-ID {IMGUR_CLIENT_ID}"},
+            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)

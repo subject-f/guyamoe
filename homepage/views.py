@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.conf import settings
 
 from api.api import all_chapter_data_etag
-from guyamoe.settings import STATIC_VERSION
+from django.conf import settings
 from reader.middleware import OnlineNowMiddleware
 from reader.users_cache_lib import get_user_ip
 from homepage.middleware import ForwardParametersMiddleware
@@ -28,7 +28,7 @@ def admin_home(request):
             "online": len(online),
             "peak_traffic": peak_traffic,
             "template": "home",
-            "version_query": STATIC_VERSION,
+            "version_query": settings.STATIC_VERSION,
         },
     )
 
@@ -80,7 +80,7 @@ def home(request):
             ][2],
             "relative_url": "",
             "template": "home",
-            "version_query": STATIC_VERSION,
+            "version_query": settings.STATIC_VERSION,
         },
     )
 
@@ -94,7 +94,7 @@ def about(request):
         {
             "relative_url": "about/",
             "template": "about",
-            "version_query": STATIC_VERSION,
+            "version_query": settings.STATIC_VERSION,
         },
     )
 

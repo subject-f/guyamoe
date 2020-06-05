@@ -15,7 +15,7 @@ from reader.middleware import OnlineNowMiddleware
 from reader.models import HitCount
 from reader.users_cache_lib import get_user_ip
 from .models import Page
-from guyamoe.settings import STATIC_VERSION
+from django.conf import settings
 
 
 @csrf_exempt
@@ -57,7 +57,7 @@ def content(request, page_url):
         "template": "misc_pages_list",
         "static_dir": f"/media/pages/{page.page_url}/static/",
         "relative_url": f"pages/{page_url}/",
-        "version_query": STATIC_VERSION,
+        "version_query": settings.STATIC_VERSION,
     }
     if page.standalone:
         template = Template(page.content)
@@ -84,6 +84,6 @@ def misc_pages(request):
             "pages": pages,
             "template": "misc_page",
             "relative_url": "pages/",
-            "version_query": STATIC_VERSION,
+            "version_query": settings.STATIC_VERSION,
         },
     )

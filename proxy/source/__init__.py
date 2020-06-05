@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.urls import path, re_path
 from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
-from guyamoe.settings import STATIC_VERSION
+from django.conf import settings
 from typing import List
 from .data import *
 from .helpers import *
@@ -52,7 +52,7 @@ class ProxySource(metaclass=abc.ABCMeta):
             if data:
                 data = data.objectify()
                 if chapter.replace("-", ".") in data["chapters"]:
-                    data["version_query"] = STATIC_VERSION
+                    data["version_query"] = settings.STATIC_VERSION
                     data["relative_url"] = f"proxy/{self.get_reader_prefix()}/{meta_id}"
                     data["api_path"] = f"/proxy/api/{self.get_series_api_prefix()}/"
                     data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
@@ -68,7 +68,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         data = self.series_page_handler(meta_id)
         if data:
             data = data.objectify()
-            data["version_query"] = STATIC_VERSION
+            data["version_query"] = settings.STATIC_VERSION
             data["relative_url"] = f"proxy/{self.get_reader_prefix()}/{meta_id}"
             data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
             return render(request, "reader/series.html", data)
