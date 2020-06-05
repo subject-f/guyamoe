@@ -99,7 +99,9 @@ def series_data(series_slug):
         "preferred_sort": settings.PREFERRED_SORT,
         "chapters": chapters_dict,
         "next_release_page": series.next_release_page,
-        "next_release_time": series.next_release_time.timestamp() if series.next_release_time else None,
+        "next_release_time": series.next_release_time.timestamp()
+        if series.next_release_time
+        else None,
     }
 
 

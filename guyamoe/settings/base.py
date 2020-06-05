@@ -15,7 +15,8 @@ from pathlib import Path
 import subprocess
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+REPO_DIR = Path(__file__).resolve(strict=True).parent.parent
+BASE_DIR = REPO_DIR.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "o kawaii koto")
 
@@ -52,9 +53,9 @@ INTERNAL_IPS = ("127.0.0.1",)
 ROOT_URLCONF = "guyamoe.urls"
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 
@@ -140,14 +141,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static_global"),
 ]
 
-STATIC_VERSION = (
-    f"?v={subprocess.check_output('git rev-parse --short HEAD', shell=True, text=True)}"
+STATIC_VERSION = "?v=" + subprocess.check_output(
+    f"git -C {REPO_DIR} rev-parse --short HEAD", shell=True, text=True
 )
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
-IMGUR_CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID', '')
-MAIL_DISCORD_WEBHOOK_ID = int(os.environ.get('MAIL_DISCORD_WEBHOOK_ID', 1))
-MAIL_DISCORD_WEBHOOK_TOKEN = os.environ.get('MAIL_DISCORD_WEBHOOK_TOKEN', '')
+IMGUR_CLIENT_ID = os.environ.get("IMGUR_CLIENT_ID", "")
+MAIL_DISCORD_WEBHOOK_ID = int(os.environ.get("MAIL_DISCORD_WEBHOOK_ID", 1))
+MAIL_DISCORD_WEBHOOK_TOKEN = os.environ.get("MAIL_DISCORD_WEBHOOK_TOKEN", "")
