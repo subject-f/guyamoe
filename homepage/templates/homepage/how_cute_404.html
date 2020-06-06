@@ -5,39 +5,69 @@
 <style>
   body {
     background: #000000;
-	color: white;
+    color: white;
     display: flex;
     align-items: center;
     align-content: center;
     justify-content: center;
     font-family: "Open Sans", sans-serif;
     font-weight: 200;
-	/* margin: 0 0 0 0; */
   }
   p {
-	margin-top: 1rem;
-	margin-bottom: 0.4rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
   }
   .container {
-	font-size: 2rem;
-	max-width: 400px;
+    font-size: 2rem;
+    max-width: 400px;
   }
-  .cute { 
-	font-style: italic;
+  .image-container {
+    position: relative;
+    display: inline-block;
+  }
+  .image-container .txt {
+    font-size: 36px;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px;
+    text-align: center;
+    transform: rotate(-20deg) translate(-23%, -20%);
+    color: #000000;
+    animation: fade 3.8s ease-in;
+  }
+  .cute {
+    font-style: italic;
   }
   a {
-	font-size: 1.5rem;
+    font-size: 1.5rem;
     display: block;
     color: red;
     margin-top: 1rem;
+    animation: fade 3.8s ease-in;
   }
   img {
-	  width: 100%;
+    width: 100%;
+  }
+  @keyframes fade {
+    0% {
+      opacity: 0;
+    }
+    85% {
+      opacity: 0;
+    }
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 </style>
 <html>
   <head>
-	<meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
     <title>404 :: Guya.moe</title>
     <meta
       name="twitter:description"
@@ -54,13 +84,17 @@
   </head>
   <body>
     <div class="container">
-      <img src="{% static 'img/guya-dance-loop.gif' %}" />
-        <p>
-          You were trying to visit a page
-          that doesn't even exist?
-        </p>
-        <p class="cute">How cute.</p>
-        <a href="/">Return to main page</a>
+      <div class="image-container">
+        <img src="{% static 'img/guya-dance.gif' %}" />
+        <div class="txt">
+          404
+        </div>
+      </div>
+      <p>
+        You were trying to visit a page that doesn't even exist?
+      </p>
+      <p class="cute">How cute.</p>
+      <a href="/">Return to main page</a>
     </div>
   </body>
 </html>
