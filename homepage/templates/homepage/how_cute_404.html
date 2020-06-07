@@ -7,9 +7,8 @@
     background: #000000;
     color: white;
     display: flex;
-    align-items: center;
-    align-content: center;
     justify-content: center;
+    margin: 0 26px 0 26px;
     font-family: "Open Sans", sans-serif;
     font-weight: 200;
   }
@@ -18,51 +17,34 @@
     margin-bottom: 0.4rem;
   }
   .container {
+    margin-top: 10vh;
     font-size: 2rem;
-    max-width: 400px;
+    max-width: 600px;
+    z-index: 999;
+  }
+  .cute {
+    font-size: 1.5rem;
   }
   .image-container {
-    position: relative;
-    display: inline-block;
-  }
-  .image-container .txt {
-    font-size: 36px;
-    font-weight: bold;
-    position: absolute;
-    left: 0;
+    position: fixed;
     right: 0;
-    top: 40px;
-    text-align: center;
-    transform: rotate(-20deg) translate(-23%, -20%);
-    color: #000000;
-    animation: fade 3.8s ease-in;
+    bottom: 0;
+  }
+  video {
+    width: 800px;
+    max-width: 100vw;
+  }
+  video::-internal-media-controls-overlay-cast-button {
+    display: none;
   }
   .cute {
     font-style: italic;
   }
   a {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     display: block;
     color: red;
     margin-top: 1rem;
-    animation: fade 3.8s ease-in;
-  }
-  img {
-    width: 100%;
-  }
-  @keyframes fade {
-    0% {
-      opacity: 0;
-    }
-    85% {
-      opacity: 0;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      opacity: 1;
-    }
   }
 </style>
 <html>
@@ -84,17 +66,16 @@
   </head>
   <body>
     <div class="container">
-      <div class="image-container">
-        <img src="{% static 'img/guya-dance.gif' %}" />
-        <div class="txt">
-          404
-        </div>
-      </div>
       <p>
         You were trying to visit a page that doesn't even exist?
       </p>
       <p class="cute">How cute.</p>
       <a href="/">Return to main page</a>
+    </div>
+    <div class="image-container">
+      <video playsinline muted autoplay>
+        <source src="{% static 'img/9_2.mp4' %}" type="video/mp4">
+      </video>
     </div>
   </body>
 </html>
