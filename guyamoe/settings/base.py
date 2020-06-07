@@ -15,8 +15,8 @@ from pathlib import Path
 import subprocess
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-REPO_DIR = Path(__file__).resolve(strict=True).parent.parent
-BASE_DIR = REPO_DIR.parent
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+PARENT_DIR = BASE_DIR.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "o kawaii koto")
 
@@ -142,7 +142,7 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_VERSION = "?v=" + subprocess.check_output(
-    f"git -C {REPO_DIR} rev-parse --short HEAD", shell=True, text=True
+    f"git -C {BASE_DIR} rev-parse --short HEAD", shell=True, text=True
 )
 
 MEDIA_URL = "/media/"

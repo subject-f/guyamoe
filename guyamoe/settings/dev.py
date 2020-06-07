@@ -28,5 +28,5 @@ DATABASES = {
     }
 }
 
-OCR_SCRIPT_PATH = os.path.join(BASE_DIR, "ocr_tool.sh")
-SCRAPER_BLACKLIST_FILE = os.path.join(BASE_DIR, "scraper_blacklist.json")
+OCR_SCRIPT_PATH = os.path.join(PARENT_DIR, "ocr_tool.sh")
+SCRAPER_BLACKLIST_FILE = os.path.join(PARENT_DIR, "scraper_blacklist.json")
