@@ -28,6 +28,10 @@ admin.site.register(Series)
 
 
 class VolumeAdmin(admin.ModelAdmin):
+    search_fields = (
+        "volume_number",
+        "series__name",
+    )
     ordering = ("volume_number",)
     list_display = (
         "volume_number",
@@ -48,6 +52,12 @@ admin.site.register(Volume, VolumeAdmin)
 
 
 class ChapterAdmin(admin.ModelAdmin):
+    search_fields = (
+        "chapter_number",
+        "title",
+        "series__name",
+        "volume",
+    )
     ordering = ("chapter_number",)
     list_display = (
         "chapter_number",

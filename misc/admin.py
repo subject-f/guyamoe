@@ -5,6 +5,10 @@ from .models import Page, Variable, Static
 
 
 class PageAdmin(admin.ModelAdmin):
+    search_fields = (
+        "page_title",
+        "page_url",
+    )
     ordering = ("date",)
     list_display = (
         "page_title",
@@ -16,6 +20,7 @@ class PageAdmin(admin.ModelAdmin):
 
 
 class StaticAdmin(admin.ModelAdmin):
+    search_fields = ("page__page_title",)
     list_display = (
         "static_file",
         "page",
