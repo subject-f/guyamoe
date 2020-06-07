@@ -201,7 +201,6 @@ class Command(BaseCommand):
                 chapters[chapter] = self.get_chapter_pages(
                     self.mangadex_manga_id[series_slug], chapter
                 )
-            break
         self.mangadex_download(chapters, series, group, latest_volume)
 
     def jaiminis_box_checker(
