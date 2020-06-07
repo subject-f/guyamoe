@@ -47,6 +47,17 @@
     margin-top: 1rem;
   }
 </style>
+<script>
+  (() => {
+    let video = document.querySelector("video");
+    let fire = () => {
+      if (video.paused) {
+        video.play();
+      }
+    };
+    window.addEventListener("click", fire);
+  })();
+</script>
 <html>
   <head>
     <meta name="viewport" content="initial-scale=1.0, width=device-width" />
