@@ -46,24 +46,21 @@ class Command(BaseCommand):
         elif options["delete"]:
             chapter_number = float(options["delete"])
             series = Series.objects.get(slug=options["series"])
-            ch_obj = Chapter.objects.filter(
-                chapter_number=chapter_number,
-                series__slug=options["series"],
-                series=series,
-            ).first()
-            if ch_obj:
-                ch_slug = ch_obj.slug_chapter_number()
-                print("Deleting chapter index from db.")
-                for index in ChapterIndex.objects.filter(series=series):
-                    word_dict = json.loads(index.chapter_and_pages)
-                    if ch_slug in word_dict:
-                        print(index.word, word_dict[ch_slug])
-                        del word_dict[ch_slug]
-                        index.chapter_and_pages = json.dumps(word_dict)
-                        index.save()
-                print("Finished deleting chapter index from db.")
-            else:
-                print("Chapter does not exist.")
+            ch_slug = (
+                str(int(chapter_number))
+                if chapter_number % 1 == 0
+                else str(chapter_number)
+            ).replace(".", "-")
+            print("Deleting chapter index from db.")
+            for index in ChapterIndex.objects.filter(series=series):
+                word_dict = json.loads(index.chapter_and_pages)
+                if ch_slug in word_dict:
+                    print(index.word, word_dict[ch_slug])
+                    del word_dict[ch_slug]
+                    index.chapter_and_pages = json.dumps(word_dict)
+                    index.save()
+            print("Finished deleting chapter index from db.")
+
         elif options["list"]:
             chapter_number = float(options["list"])
             series = Series.objects.get(slug=options["series"])
