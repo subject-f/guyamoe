@@ -1,18 +1,13 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
 from django.utils.decorators import decorator_from_middleware
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_page, cache_control
-from django.views.decorators.http import condition
+from django.views.decorators.cache import cache_control
 from django.core.cache import cache
 from django.conf import settings
 
-from api.api import all_chapter_data_etag
-from django.conf import settings
 from reader.middleware import OnlineNowMiddleware
-from reader.users_cache_lib import get_user_ip
 from homepage.middleware import ForwardParametersMiddleware
-from reader.models import Series, Volume, Chapter
+from reader.models import Volume, Chapter
 from reader.views import series_page_data
 
 
@@ -34,7 +29,6 @@ def admin_home(request):
 
 
 @cache_control(public=True, max_age=300, s_maxage=300)
-@condition(etag_func=all_chapter_data_etag)
 @decorator_from_middleware(OnlineNowMiddleware)
 def home(request):
     home_screen_series = {

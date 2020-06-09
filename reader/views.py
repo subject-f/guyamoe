@@ -1,27 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings
-from django.http import HttpResponseNotFound
-from django.views.decorators.http import condition
-from django.views.generic import DetailView, TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_page, cache_control
+from django.views.decorators.cache import cache_control
 from django.core.cache import cache
 from django.db.models import F
 from django.contrib.contenttypes.models import ContentType
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import condition
 from django.utils.decorators import decorator_from_middleware
 from .middleware import OnlineNowMiddleware
 from .models import HitCount, Series, Volume, Chapter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from .users_cache_lib import get_user_ip
 from collections import OrderedDict, defaultdict
-from bs4 import BeautifulSoup
-import re
-from api.api import all_chapter_data_etag, chapter_data_etag
-from django.conf import settings
-import os
 import json
 
 
@@ -161,7 +152,6 @@ def series_page_data(series_slug):
 
 
 @cache_control(public=True, max_age=60, s_maxage=60)
-@condition(etag_func=chapter_data_etag)
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(series_slug)

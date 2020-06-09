@@ -2,14 +2,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
-from django.core.cache import cache
 from django.db.models import F
 from django.template import Context, Template
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_control
 from django.utils.decorators import decorator_from_middleware
 import json
-import re
 
 from reader.middleware import OnlineNowMiddleware
 from reader.models import HitCount

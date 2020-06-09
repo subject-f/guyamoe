@@ -32,7 +32,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 @cache_control(public=True, max_age=30, s_maxage=30)
-@condition(etag_func=chapter_data_etag)
 def get_series_data(request, series_slug):
     series_api_data = cache.get(f"series_api_data_{series_slug}")
     if not series_api_data:
@@ -41,7 +40,6 @@ def get_series_data(request, series_slug):
 
 
 @cache_control(public=True, max_age=900, s_maxage=900)
-@condition(etag_func=all_chapter_data_etag)
 def get_all_series(request):
     all_series_data = cache.get(f"all_series_data")
     if not all_series_data:
@@ -67,7 +65,6 @@ def get_all_series(request):
 
 
 @cache_control(public=True, max_age=7200, s_maxage=7200)
-@condition(etag_func=chapter_data_etag)
 def get_groups(request, series_slug):
     groups_data = cache.get(f"groups_data_{series_slug}")
     if not groups_data:
@@ -84,7 +81,6 @@ def get_groups(request, series_slug):
 
 
 @cache_control(public=True, max_age=7200, s_maxage=7200)
-@condition(etag_func=all_chapter_data_etag)
 def get_all_groups(request):
     return HttpResponse(json.dumps(all_groups()), content_type="application/json")
 
