@@ -56,6 +56,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                     data["relative_url"] = f"proxy/{self.get_reader_prefix()}/{meta_id}"
                     data["api_path"] = f"/proxy/api/{self.get_series_api_prefix()}/"
                     data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
+                    data["chapter_number"] = chapter.replace("-", ".")
                     return render(request, "reader/reader.html", data)
             return HttpResponse(status=500)
         else:
