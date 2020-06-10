@@ -2,169 +2,181 @@
 <!DOCTYPE html>
 <html>
 <head>
-		<meta charset="UTF-8">
-		<meta name="theme-color" content="#2b2f33" />
-		<title>{{ series_name }} :: Chapter {{ chapter_number }} | Guya.moe</title>
-	    <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-	    <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-	    <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
-		{% if first_party %}
-		<meta property="og:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
-	    <meta name="twitter:description" content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
-	    <meta name="twitter:card" content="Everything Kaguya-sama">
-		<meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
-	    <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
-	    <meta name="author" content="Akasaka Aka">
-		{% else %}
-		<meta property="og:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
-		<meta name="twitter:description" content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
-		{% endif %}
-		<meta property="og:url" content="/read/manga/{{ slug }}/">
-		<meta name="viewport" content="width=device-width">
-		<link rel="canonical" href="https://guya.moe/{{ relative_url }}/"/>
-		<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
-		<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
-		{% include "history.html" %}
-	</head>
-	<script>
-		// Seed the values from the template for the reader API calls
-		const BASE_API_PATH = "{{ api_path }}";
-		const IS_FIRST_PARTY = {{ first_party|yesno:"true,false,false" }};
-	</script>
-<body>
-	{% include "tracking.html" %}
-	<main id="rdr-main" class="" tabindex="-1">
-		<img class="preload-entity" id="scan_line" data-bind="preload_entity">
-		<aside class="unload">
-			<div class="hide-side" data-bind="sidebar_button"><div class="hide-side-actual ico-btn"></div></div>
-			<header>
-				<a href="/" class="ico-btn guya"></a>
-				<h1 data-bind='title'><a href="/read/manga/{{ slug }}/">{{ series_name }}</a></h1>
-				<button class="ico-btn"></button>
-			</header>
-			<div class="rdr-aside-buffer" data-bind="rdr_aside_buffer"></div>
-			<div class="rdr-aside-content" data-bind="rdr_aside_content">
-				<section class="rdr-selector" data-bind="rdr_selector">
-					<div class="rdr-selector-top">
-						<button data-bind='vol_next' class="rdr-selector-vol ico-btn prev" data-tip="Previous volume"></button>
-						<div class="flex-spacer" data-bind='message'></div>
-						
-						<a data-bind='share_button' data-tip="Short link to current page" class="rdr-share ico-btn "></a>
-						<!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment ico-btn"></a> -->
-						<button data-bind='search' class="ico-btn search"></button>
-					</div>
-					<div class="rdr-selector-mid">
-						<button data-bind='chap_prev' class="rdr-selector-chap ico-btn prev"></button>
-						<div class="rdr-vol-wrap" data-bind='selector_vol'>
-							<label></label>
-							<select id="rdr-vol"></select>
-						</div>
-						<div class="rdr-chap-wrap" data-bind='selector_chap'>
-							<label></label>
-							<select id="rdr-chap"></select>
-						</div>
-						<button data-bind='chap_next' class="rdr-selector-chap ico-btn next"></button>
-					</div>
-					<div class="rdr-selector-bot">
-						<button data-bind='vol_prev' class="rdr-selector-vol ico-btn next" data-tip="Next volume"></button>
-						<div class="flex-spacer"></div>
-						<button data-bind='preload_button' class="ico-btn hidden"></button>
-						<button data-bind='fit_button' class="ico-btn"></button>
-						<button data-bind='layout_button' class="ico-btn"></button>
-						<button data-bind='spread_button' class="ico-btn"></button>
-						<button data-bind='sel_pin_button' class="ico-btn"></button>
-						<button data-bind='settings_button' class="ico-btn"></button>
-					</div>
-				</section>
-				<section class="rdr-groups" data-bind='groups'>
-				</section>
-				<section class="rdr-previews">
-					<div class="header" data-bind="previews_button">
-						<span>Previews</span>
-						<div class="ico-btn expander"></div>
-					</div>
-					<div data-bind='previews' class="rdr-previews-gallery">
-					</div>
-				</section>
-				<section class="rdr-description">
-					<div data-bind="image_description">
-					</div>
-				</section>
-<!-- 				<section class="rdr-aside-overlay hidden" data-bind="aside_views">
-					<div class="rdr-aside-view fit_view UI Dummy ButtonGroup" data-bind="aside_views_fit">
-						<div class="header">Fit mode</div>
-						<div class="t-row">
-							<div class="t-1">
-								<div class="ToggleButton UI Button" data-bind="none" data-tip="Images are displayed in natural resolution."><div class="ico-btn fitter none"></div><span>Original size</span></div>
-							</div>
-						</div>
-						<div class="t-row">
-							<div class="t-tooltip">
-								Limit
-							</div>
-							<div class="t-1">
-								<div class="ToggleButton UI Button" data-bind="all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="ico-btn fitter all_limit"></div><span>All</span></div>
-								<div class="ToggleButton UI Button" data-bind="width_limit" data-tip="Natural image size that does not exceed max width."><div class="ico-btn fitter width_limit"></div><span>Width</span></div>
-								<div class="ToggleButton UI Button" data-bind="height_limit" data-tip="Natural image size that does not exceed max height."><div class="ico-btn fitter height_limit"></div><span>Height</span></div>
-							</div>
-						</div>
-						<div class="t-row">
-							<div class="t-tooltip">
-								Stretch
-							</div>
-							<div class="t-1">
-								<div class="ToggleButton UI Button" data-bind="all" data-tip="Images scale to width or height."><div class="ico-btn fitter all"></div><span>All</span></div>
-								<div class="ToggleButton UI Button" data-bind="width" data-tip="Images scale to max width."><div class="ico-btn fitter width"></div><span>Width</span></div>
-								<div class="ToggleButton UI Button" data-bind="height" data-tip="Images scale to max height."><div class="ico-btn fitter height"></div><span>Height</span></div>
-							</div>
-						</div>
-					</div>
-				</section>
- -->			</div>
-		</aside>
-		<div class="rdr-page-selector vis" data-bind="page_selector">
-			<div class="rdr-page-selector-counter" data-bind="page_keys_count">
-				
-			</div>
-			<div class="rdr-page-selector-keys" data-bind="page_keys">
-			</div>
-		</div>
-		<content data-bind='image_viewer' class="rdr-area">
-			<div class="rdr-image-wrap" data-bind='image_container' tabindex="-1">
-			</div>
-			<div class="zoom-level refresh-chapter is-hidden" data-bind="random_chapter">
-				<div class="refresh-chapter-note">This is the Blu-ray extras "random chapter".<br>Click this button to reshuffle the chapter.</div>
-				<div class="ico-btn" data-bind="random_chapter_button">↻</div>
-			</div>
-			<div class="hover-prev" data-bind="hover_prev">
-				<div class="hover-wrap">
-					<div class="hover-arrow"></div>
-					<div class="hover-sub"></div>
-				</div>
-			</div>
-			<div class="hover-next" data-bind="hover_next">
-				<div class="hover-wrap">
-					<div class="hover-arrow"></div>
-					<div class="hover-sub"></div>
-				</div>
-			</div>
-		</content>
-		<div class="zoom-level vis" data-bind="zoom_level">
-			<div class="ico-btn" data-bind="zoom_level_plus"></div>
-			<div class="ico-btn" data-bind="zoom_level_minus"></div>
-		</div>
-	</main>
-	<div class="Tooltippy"></div>
-	<div class="LodaManager hidden" tabindex="-1">
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#2b2f33" />
+  <title>{{ series_name }} :: Chapter {{ chapter_number }} | Guya.moe</title>
+  <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
+  <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
+  <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
+  {% if first_party %}
+  <meta property="og:description"
+    content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
+  <meta name="twitter:description"
+    content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
+  <meta name="twitter:card" content="Everything Kaguya-sama">
+  <meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
+  <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
+  <meta name="author" content="Akasaka Aka">
+  {% else %}
+  <meta property="og:description"
+    content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+  <meta name="twitter:description"
+    content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+  {% endif %}
+  <meta property="og:url" content="/read/manga/{{ slug }}/">
+  <meta name="viewport" content="width=device-width">
+  <link rel="canonical" href="https://guya.moe/{{ relative_url }}/" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
+  <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
+  {% include "history.html" %}
+</head>
+<script>
+  // Seed the values from the template for the reader API calls
+  const BASE_API_PATH = "{{ api_path }}";
+  const IS_FIRST_PARTY = {{ first_party|yesno:"true,false,false" }};
+</script>
 
-	</div>
+<body>
+  {% include "tracking.html" %}
+  <main id="rdr-main" class="" tabindex="-1">
+    <img class="preload-entity" id="scan_line" data-bind="preload_entity">
+    <aside class="unload">
+      <div class="hide-side" data-bind="sidebar_button">
+        <div class="hide-side-actual ico-btn"></div>
+      </div>
+      <header>
+        <a href="/" class="ico-btn guya"></a>
+        <h1 data-bind='title'><a href="/read/manga/{{ slug }}/">{{ series_name }}</a></h1>
+        <button class="ico-btn"></button>
+      </header>
+      <div class="rdr-aside-buffer" data-bind="rdr_aside_buffer"></div>
+      <div class="rdr-aside-content" data-bind="rdr_aside_content">
+        <section class="rdr-selector" data-bind="rdr_selector">
+          <div class="rdr-selector-top">
+            <button data-bind='vol_next' class="rdr-selector-vol ico-btn prev"
+              data-tip="Previous volume"></button>
+            <div class="flex-spacer" data-bind='message'></div>
+
+            <a data-bind='share_button' data-tip="Short link to current page"
+              class="rdr-share ico-btn "></a>
+            <!-- <a data-bind='comment_button' data-tip="Comments" class="rdr-comment ico-btn"></a> -->
+            <button data-bind='search' class="ico-btn search"></button>
+          </div>
+          <div class="rdr-selector-mid">
+            <button data-bind='chap_prev' class="rdr-selector-chap ico-btn prev"></button>
+            <div class="rdr-vol-wrap" data-bind='selector_vol'>
+              <label></label>
+              <select id="rdr-vol"></select>
+            </div>
+            <div class="rdr-chap-wrap" data-bind='selector_chap'>
+              <label></label>
+              <select id="rdr-chap"></select>
+            </div>
+            <button data-bind='chap_next' class="rdr-selector-chap ico-btn next"></button>
+          </div>
+          <div class="rdr-selector-bot">
+            <button data-bind='vol_prev' class="rdr-selector-vol ico-btn next"
+              data-tip="Next volume"></button>
+            <div class="flex-spacer"></div>
+            <button data-bind='preload_button' class="ico-btn hidden"></button>
+            <button data-bind='fit_button' class="ico-btn"></button>
+            <button data-bind='layout_button' class="ico-btn"></button>
+            <button data-bind='spread_button' class="ico-btn"></button>
+            <button data-bind='sel_pin_button' class="ico-btn"></button>
+            <button data-bind='settings_button' class="ico-btn"></button>
+          </div>
+        </section>
+        <section class="rdr-groups" data-bind='groups'>
+        </section>
+        <section class="rdr-previews">
+          <div class="header" data-bind="previews_button">
+            <span>Previews</span>
+            <div class="ico-btn expander"></div>
+          </div>
+          <div data-bind='previews' class="rdr-previews-gallery">
+          </div>
+        </section>
+        <section class="rdr-description">
+          <div data-bind="image_description">
+          </div>
+        </section>
+        <!-- 				<section class="rdr-aside-overlay hidden" data-bind="aside_views">
+          <div class="rdr-aside-view fit_view UI Dummy ButtonGroup" data-bind="aside_views_fit">
+            <div class="header">Fit mode</div>
+            <div class="t-row">
+              <div class="t-1">
+                <div class="ToggleButton UI Button" data-bind="none" data-tip="Images are displayed in natural resolution."><div class="ico-btn fitter none"></div><span>Original size</span></div>
+              </div>
+            </div>
+            <div class="t-row">
+              <div class="t-tooltip">
+                Limit
+              </div>
+              <div class="t-1">
+                <div class="ToggleButton UI Button" data-bind="all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="ico-btn fitter all_limit"></div><span>All</span></div>
+                <div class="ToggleButton UI Button" data-bind="width_limit" data-tip="Natural image size that does not exceed max width."><div class="ico-btn fitter width_limit"></div><span>Width</span></div>
+                <div class="ToggleButton UI Button" data-bind="height_limit" data-tip="Natural image size that does not exceed max height."><div class="ico-btn fitter height_limit"></div><span>Height</span></div>
+              </div>
+            </div>
+            <div class="t-row">
+              <div class="t-tooltip">
+                Stretch
+              </div>
+              <div class="t-1">
+                <div class="ToggleButton UI Button" data-bind="all" data-tip="Images scale to width or height."><div class="ico-btn fitter all"></div><span>All</span></div>
+                <div class="ToggleButton UI Button" data-bind="width" data-tip="Images scale to max width."><div class="ico-btn fitter width"></div><span>Width</span></div>
+                <div class="ToggleButton UI Button" data-bind="height" data-tip="Images scale to max height."><div class="ico-btn fitter height"></div><span>Height</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+ -->
+      </div>
+    </aside>
+    <div class="rdr-page-selector vis" data-bind="page_selector">
+      <div class="rdr-page-selector-counter" data-bind="page_keys_count">
+
+      </div>
+      <div class="rdr-page-selector-keys" data-bind="page_keys">
+      </div>
+    </div>
+    <content data-bind='image_viewer' class="rdr-area">
+      <div class="rdr-image-wrap" data-bind='image_container' tabindex="-1">
+      </div>
+      <div class="zoom-level refresh-chapter is-hidden" data-bind="random_chapter">
+        <div class="refresh-chapter-note">This is the Blu-ray extras "random chapter".<br>Click this button to
+          reshuffle the chapter.</div>
+        <div class="ico-btn" data-bind="random_chapter_button">↻</div>
+      </div>
+      <div class="hover-prev" data-bind="hover_prev">
+        <div class="hover-wrap">
+          <div class="hover-arrow"></div>
+          <div class="hover-sub"></div>
+        </div>
+      </div>
+      <div class="hover-next" data-bind="hover_next">
+        <div class="hover-wrap">
+          <div class="hover-arrow"></div>
+          <div class="hover-sub"></div>
+        </div>
+      </div>
+    </content>
+    <div class="zoom-level vis" data-bind="zoom_level">
+      <div class="ico-btn" data-bind="zoom_level_plus"></div>
+      <div class="ico-btn" data-bind="zoom_level_minus"></div>
+    </div>
+  </main>
+  <div class="Tooltippy"></div>
+  <div class="LodaManager hidden" tabindex="-1">
+
+  </div>
 </body>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/init.js' %}{{ version_query }}"></script>
 <script type="text/javascript">
-	// History tagging
-	tag();
+  // History tagging
+  tag();
 </script>
 </html>
