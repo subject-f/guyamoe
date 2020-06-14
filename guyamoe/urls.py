@@ -44,13 +44,13 @@ urlpatterns = [
     path("reader/", include("reader.urls")),
     path("api/", include("api.urls")),
     path("pages/", include("misc.urls")),
-    path("proxy/", include("proxy.urls")),
     path(
         "",
         include(
             [route for source in sources for route in source.register_shortcut_routes()]
         ),
     ),
+    path("proxy/", include("proxy.urls")),
 ]
 
 handler404 = "homepage.views.handle404"
