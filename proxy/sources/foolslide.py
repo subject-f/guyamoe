@@ -1,5 +1,6 @@
 import json
 import re
+import base64
 from ..source import ProxySource
 from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
 from ..source.helpers import (
@@ -56,9 +57,15 @@ class FoolSlide(ProxySource):
                 return HttpResponse(status=400)
 
         def series(request, series_id):
+            # A hacky bandaid that shouldn't be here, but it'll otherwise redirect since we're
+            # masking the canonnical route and it'll keep matching the regex path
+            if "%" in series_id:
+                series_id = self.encode_slug(naive_decode(series_id))
             return redirect(f"reader-{self.get_reader_prefix()}-series-page", series_id)
 
         def series_chapter(request, series_id, chapter, page="1"):
+            if "%" in series_id:
+                series_id = self.encode_slug(naive_decode(series_id))
             return redirect(
                 f"reader-{self.get_reader_prefix()}-chapter-page",
                 series_id,
@@ -74,9 +81,17 @@ class FoolSlide(ProxySource):
                 series_chapter,
             ),
             re_path(
-                r"^(?:read|reader)/fs_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/(?P<page>[\d]+)/$$",
+                r"^(?:read|reader)/fs_proxy/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d]+)/(?P<page>[\d]+)/$",
                 series_chapter,
             ),
+            re_path(
+                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]+)/$",
+                series,
+            ),
+            re_path(
+                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d-]+)/(?P<page>[\d]+)/$",
+                series_chapter,
+            )
         ]
 
     def encode_slug(self, url):
@@ -87,16 +102,24 @@ class FoolSlide(ProxySource):
         )
         split = url.split("/")
         url = "/".join(split[0 : split.index("series") + 2])
-        return naive_encode(url)
+        return self.encode(url)
+
+    @staticmethod
+    def decode(url: str):
+        return str(base64.urlsafe_b64decode(url.encode()), "utf-8")
+
+    @staticmethod
+    def encode(url: str):
+        return str(base64.urlsafe_b64encode(url.encode()), "utf-8")
 
     def fs_scrape_common(self, meta_id):
         try:
             resp = post_wrapper(
-                f"https://{naive_decode(meta_id)}/", data={"adult": "true"}
+                f"https://{self.decode(meta_id)}/", data={"adult": "true"}
             )
         except requests.exceptions.ConnectionError:
             resp = post_wrapper(
-                f"http://{naive_decode(meta_id)}/", data={"adult": "true"}
+                f"http://{self.decode(meta_id)}/", data={"adult": "true"}
             )
         if resp.status_code == 200:
             data = resp.text
@@ -111,7 +134,7 @@ class FoolSlide(ProxySource):
                 .strip()
             )
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": naive_decode(meta_id).split("/")[0]}
+            groups_dict = {"1": self.decode(meta_id).split("/")[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -144,7 +167,7 @@ class FoolSlide(ProxySource):
                     minor_chapter = chp[1]
                 deconstructed_url = link["href"].split("/read/")
                 chapter_url = self.wrap_chapter_meta(
-                    naive_encode(
+                    self.encode(
                         f"{deconstructed_url[0]}/api/reader/chapter?comic_stub={deconstructed_url[1].split('/')[0]}&chapter={major_chapter}&subchapter={minor_chapter}"
                     )
                 )
@@ -210,7 +233,7 @@ class FoolSlide(ProxySource):
 
     @api_cache(prefix="fs_chapter_dt", time=3600)
     def chapter_api_handler(self, meta_id):
-        resp = get_wrapper(naive_decode(meta_id))
+        resp = get_wrapper(self.decode(meta_id))
         if resp.status_code == 200:
             data = json.loads(resp.text)
             return ChapterAPI(
@@ -233,7 +256,7 @@ class FoolSlide(ProxySource):
                 synopsis=data["description"],
                 author=data["artist"],
                 chapter_list=data["chapter_list"],
-                original_url=f"https://{naive_decode(meta_id)}/",
+                original_url=f"https://{self.decode(meta_id)}/",
             )
         else:
             return None
