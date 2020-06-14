@@ -20,7 +20,7 @@ def admin_home(request):
         request,
         "homepage/admin_home.html",
         {
-            "online": len(online),
+            "online": len(online) if online else 0,
             "peak_traffic": peak_traffic,
             "template": "home",
             "version_query": settings.STATIC_VERSION,
