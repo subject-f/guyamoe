@@ -85,11 +85,11 @@ class FoolSlide(ProxySource):
                 series_chapter,
             ),
             re_path(
-                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]+)/$",
+                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]*%[\w\d.%-]*)/$",
                 series,
             ),
             re_path(
-                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]+)/(?P<chapter>[\d-]+)/(?P<page>[\d]+)/$",
+                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]*%[\w\d.%-]*)/(?P<chapter>[\d-]+)/(?P<page>[\d]+)/$",
                 series_chapter,
             )
         ]
