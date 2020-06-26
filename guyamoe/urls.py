@@ -40,8 +40,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("homepage.urls")),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
-    path("read/", include("reader.urls")),
     path("reader/", include("reader.urls")),
+    path("read/", include("reader.urls")),
     path("api/", include("api.urls")),
     path("pages/", include("misc.urls")),
     path(
