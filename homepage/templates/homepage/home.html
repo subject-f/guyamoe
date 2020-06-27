@@ -177,11 +177,13 @@
 				</span>
 			</div>
 		</article>
-		<div  id="chapter_listing_exp" class="chapter-listing-expander" onmousedown="
-			event.stopImmediatePropagation();
-			document.getElementById('chapter_listing').classList.toggle('vis');
-			event.currentTarget.classList.toggle('vis');
-		"><span>List of chapters</span></div>
+		<span id="chapter_listing_exp" style="padding-top: 60px; margin-top: -60px">
+			<div  class="chapter-listing-expander" onmousedown="
+				event.stopImmediatePropagation();
+				document.getElementById('chapter_listing').classList.toggle('vis');
+				event.currentTarget.classList.toggle('vis');
+			"><span>List of chapters</span></div>
+		</span>
 		<table id="chapter_listing" class="chapter-listing hidden">
 		</table>
 	</div>
