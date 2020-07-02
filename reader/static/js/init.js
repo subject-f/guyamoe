@@ -755,19 +755,21 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'bhv.historyUpdate',
 		prettyName: 'Browser history/back button behavior',
-		options: ['none','replace','chap','jump'],
+		options: ['none','replace','chap','jump', 'all'],
 		default: 'replace',
 		strings: {
 			'none': "Don't touch browser history",
 			'replace': "Only change page title",
 			'chap': "Add every chapter to history",
 			'jump': "Add every chapter and page&nbsp;skips",
+			'all': "Add every move to history."
 		},
 		help: {
 			'none': "Page URL and title won't update at all.",
 			'replace': "When you go to next chapter, page title and URL changes.",
 			'chap': "Remembers chapters in browser history so you can go back with browser buttons.",
 			'jump': "Also adds out-of-order page skips to history in addition to chapters.",
+			'all': "Add every page flip to browser history."
 		},
 		type: SETTING_MULTI,
 		global: false
@@ -2378,6 +2380,13 @@ function URLChanger(o) {
 				break;
 			case 'jump':
 				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
+					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+					document.title = title;
+				}
+				break;
+			case 'all':
+				if(this.page != SCP.page || SCP.chapter != this.chapter) {
 					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
 					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
 					document.title = title;
