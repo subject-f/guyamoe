@@ -762,7 +762,7 @@ function SettingsHandler(){
 			'replace': "Only change page title",
 			'chap': "Add every chapter to history",
 			'jump': "Add every chapter and page&nbsp;skips",
-			'all': "Add every move to history."
+			'all': "Add every move to history"
 		},
 		help: {
 			'none': "Page URL and title won't update at all.",
