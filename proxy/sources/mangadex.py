@@ -158,7 +158,6 @@ class MangaDex(ProxySource):
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
-            print(api_data)
             chapter_list = []
             latest_chap_id = next(iter(api_data["chapter"]))
             date = datetime.utcfromtimestamp(
