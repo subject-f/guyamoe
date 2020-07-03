@@ -62,6 +62,13 @@ class MangaDex(ProxySource):
             ),
         ]
 
+    def handle_oneshot_chapters(self, resp):
+        """This expects a chapter API response object."""
+        try:
+            return str(float(resp["chapter"])), str(float(resp["chapter"]))
+        except ValueError:
+            return "Oneshot", f"0.0{str(resp['timestamp'])}"
+
     @api_cache(prefix="md_series_dt", time=600)
     def series_api_handler(self, meta_id):
         resp = get_wrapper(f"https://mangadex.org/api/?id={meta_id}&type=manga")
@@ -96,11 +103,7 @@ class MangaDex(ProxySource):
                             chapter
                         )
                     else:
-                        chapters_dict[
-                            api_data["chapter"][chapter]["chapter"]
-                            if api_data["chapter"][chapter]["chapter"]
-                            else f"0.0{str(api_data['chapter'][chapter]['timestamp'])}"
-                        ] = {
+                        chapters_dict[self.handle_oneshot_chapters(api_data["chapter"][chapter])[1]] = {
                             "volume": api_data["chapter"][chapter]["volume"],
                             "title": api_data["chapter"][chapter]["title"],
                             "groups": {
@@ -141,7 +144,7 @@ class MangaDex(ProxySource):
             return ChapterAPI(
                 pages=chapter_pages,
                 series=api_data["manga_id"],
-                chapter=api_data["chapter"] or str(api_data["timestamp"]),
+                chapter=self.handle_oneshot_chapters(api_data)[1],
             )
         else:
             return None
@@ -155,6 +158,7 @@ class MangaDex(ProxySource):
         if resp.status_code == 200:
             data = resp.text
             api_data = json.loads(data)
+            print(api_data)
             chapter_list = []
             latest_chap_id = next(iter(api_data["chapter"]))
             date = datetime.utcfromtimestamp(
@@ -169,13 +173,7 @@ class MangaDex(ProxySource):
             chapter_dict = {}
             for ch in api_data["chapter"]:
                 if api_data["chapter"][ch]["lang_code"] == "gb":
-                    chapter_id = api_data["chapter"][ch]["chapter"]
-                    chapter_list_id = api_data["chapter"][ch]["chapter"]
-                    try:
-                        float(api_data["chapter"][ch]["chapter"])
-                    except ValueError:
-                        chapter_id = f"0.0{str(api_data['chapter'][ch]['timestamp'])}"
-                        chapter_list_id = ""
+                    chapter_list_id, chapter_id = self.handle_oneshot_chapters(api_data["chapter"][ch])
                     date = datetime.utcfromtimestamp(
                         api_data["chapter"][ch]["timestamp"]
                     )
