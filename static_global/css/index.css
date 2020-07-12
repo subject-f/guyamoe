@@ -749,6 +749,29 @@ main a {
 	background-image: url('../img/shu.png');
 }
 
+.jump-chap,.jump-page {
+	width: 6em;
+	background-color: transparent;
+	color: #fff;
+}
+
+.jump-search {
+	border-color: #f00c;
+	background-color: #c608082e !important;
+}
+ 
+ /* Fix for ugly spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox fix for fixing number spinners*/
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .chapter-listing-expander {
 	border-top: 1px solid rgba(255,255,255,0.5);
 	width: 100%;

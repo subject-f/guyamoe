@@ -162,6 +162,11 @@
 						document.getElementById('chapter_listing_exp').classList.add('vis');
 					" class="manga-link after-anime">Where to start after the anime ›</a><a href="//tachiyomi.org/extensions/#Guya" class="manga-link tachiyom">Tachiyomi plugin</a>
 				</span>
+				<span class="jump">
+					<input type="number" min="1" placeholder="Chap." class="jump-chap manga-link">
+					<input type="number" min="1" placeholder="Page" class="jump-page manga-link">
+					<a class="jump-search manga-link">Jump</a>
+				</span>
 			</div>
 			<p>All’s fair when love is war!</p>
 			<p>Two geniuses. Two brains. Two hearts. One battle.</p>
@@ -246,6 +251,33 @@
 	document.getElementById("quote-block").innerHTML = `<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`;
 
 	let msd = {{ main_series_data|safe }};
+	function jump() {
+		let chap=document.querySelector(".jump-chap");
+		let page=document.querySelector(".jump-page");
+		[chap, page].forEach(el => {
+			el.addEventListener('focus', (e) => {
+				e.target.style.borderColor = "rgba(255,255,255,0.2)";
+			});
+		});
+		if(chap.value >= 1 && chap.value <= msd.chapter_list.length) {
+			if(!page.value || (page.value >= 1 && page.value <= 50)) {
+				if(!page.value) window.open(`https://guya.moe/${chap.value}/1/`, "_blank");
+				else window.open(`https://guya.moe/${chap.value}/${page.value}/`, "_blank");
+				chap.value="";
+				page.value="";
+			} else {
+				page.style.borderColor = "#f00c";
+				page.blur();
+			}
+		} else {
+			chap.style.borderColor = "#f00c";
+			chap.blur();
+		}
+	}
+	document.querySelector('.jump-search').addEventListener('click', jump);
+	window.addEventListener('keydown', e => {
+		if(e.keyCode === 13) jump();
+	});
 
 	var chapterList = doT.template(`
 		<tbody>
