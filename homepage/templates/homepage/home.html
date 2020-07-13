@@ -255,7 +255,7 @@
 		let chap = document.querySelector(".jump-chap");
 		let page = document.querySelector(".jump-page");
 		let pageErr = !(!page.value || (page.value >= 1 && page.value <= 40));
-		let chapErr = !(chap.value >= 1 && chap.value <= msd.chapter_list.length);
+		let chapErr = !(chap.value >= 1 && chap.value <= parseInt(msd.chapter_list[msd.chapter_list.length-1][0]));
 		page.blur(); chap.blur();
 
 		if(!chapErr && !pageErr) {
