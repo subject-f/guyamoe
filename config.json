@@ -1,5 +1,5 @@
 {
-    "secret_key": "^a@$ju!+&6(r)hm4$nwsbca%975p!i+!h86qxommwd*zn1x2^p",
-    "db_user": "admin",
-    "db_pass": "admin"
+    "secret_key": "",
+    "db_user": "",
+    "db_pass": ""
 }
