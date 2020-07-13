@@ -758,6 +758,7 @@ main a {
 .jump-search {
 	border-color: #f00c;
 	background-color: #c608082e !important;
+	cursor: pointer;
 }
  
  /* Fix for ugly spinners */
