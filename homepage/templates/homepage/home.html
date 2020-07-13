@@ -266,14 +266,13 @@
 			if (pageErr) page.classList.add("red-border");				
 			if (chapErr) chap.classList.add("red-border");		
 			[chap, page].forEach(el => {
-				el.addEventListener('focus', function _listener() {
+				el.addEventListener('focus', function _listener(e) {
 					e.target.classList.remove("red-border");
 					e.target.removeEventListener('click', _listener, true);
 				});
 			});
 			document.addEventListener('click', function _listener(e) {
 				if((page.classList.contains("red-border") || chap.classList.contains("red-border")) && e.target.className !== "jump-search manga-link") {
-					console.log(e);
 					page.classList.remove("red-border");
 					chap.classList.remove("red-border");
 					document.removeEventListener('click', _listener, true);
