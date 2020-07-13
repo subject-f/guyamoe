@@ -252,26 +252,33 @@
 
 	let msd = {{ main_series_data|safe }};
 	function jump() {
-		let chap=document.querySelector(".jump-chap");
-		let page=document.querySelector(".jump-page");
-		[chap, page].forEach(el => {
-			el.addEventListener('focus', (e) => {
-				e.target.style.borderColor = "rgba(255,255,255,0.2)";
-			});
-		});
-		if(chap.value >= 1 && chap.value <= msd.chapter_list.length) {
-			if(!page.value || (page.value >= 1 && page.value <= 50)) {
+		let chap = document.querySelector(".jump-chap");
+		let page = document.querySelector(".jump-page");
+		let pageErr = !(!page.value || (page.value >= 1 && page.value <= 40));
+		let chapErr = !(chap.value >= 1 && chap.value <= msd.chapter_list.length);
+		page.blur(); chap.blur();
+
+		if(!chapErr && !pageErr) {
 				if(!page.value) window.open(`https://guya.moe/${chap.value}/1/`, "_blank");
 				else window.open(`https://guya.moe/${chap.value}/${page.value}/`, "_blank");
-				chap.value="";
-				page.value="";
-			} else {
-				page.style.borderColor = "#f00c";
-				page.blur();
-			}
+				chap.value = page.value = "";
 		} else {
-			chap.style.borderColor = "#f00c";
-			chap.blur();
+			if (pageErr) page.classList.add("red-border");				
+			if (chapErr) chap.classList.add("red-border");		
+			[chap, page].forEach(el => {
+				el.addEventListener('focus', function _listener() {
+					e.target.classList.remove("red-border");
+					e.target.removeEventListener('click', _listener, true);
+				});
+			});
+			document.addEventListener('click', function _listener(e) {
+				if((page.classList.contains("red-border") || chap.classList.contains("red-border")) && e.target.className !== "jump-search manga-link") {
+					console.log(e);
+					page.classList.remove("red-border");
+					chap.classList.remove("red-border");
+					document.removeEventListener('click', _listener, true);
+				}
+			});
 		}
 	}
 	document.querySelector('.jump-search').addEventListener('click', jump);

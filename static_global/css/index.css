@@ -1686,6 +1686,11 @@ input[type=number] {
 		border-top-right-radius: 6px;
 	}
 }
+
+.red-border {
+	border: 1px solid #f00c;
+}
+
 @media (max-width: 992px) {
 	.light-mode-toggle {
 		position: fixed;
