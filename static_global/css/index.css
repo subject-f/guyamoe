@@ -1672,3 +1672,15 @@ main a {
 		z-index: 11000;
 	}
 }
+
+.splash-notice {
+    padding: 1rem;
+    text-align: center;
+    border: 2px dashed rgba(255, 255, 255, 0.74);
+    flex-grow: 1;
+    margin: 1rem 0;
+    background: #e16a6a38;
+    font-size: 1.1rem;
+    color: white;
+    border-radius: 6px;
+}
