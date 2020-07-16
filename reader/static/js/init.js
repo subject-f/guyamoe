@@ -755,21 +755,19 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'bhv.historyUpdate',
 		prettyName: 'Browser history/back button behavior',
-		options: ['none','replace','chap','jump', 'all'],
+		options: ['none','replace','chap','jump'],
 		default: 'replace',
 		strings: {
 			'none': "Don't touch browser history",
 			'replace': "Only change page title",
 			'chap': "Add every chapter to history",
 			'jump': "Add every chapter and page&nbsp;skips",
-			'all': "Add every move to history"
 		},
 		help: {
 			'none': "Page URL and title won't update at all.",
 			'replace': "When you go to next chapter, page title and URL changes.",
 			'chap': "Remembers chapters in browser history so you can go back with browser buttons.",
 			'jump': "Also adds out-of-order page skips to history in addition to chapters.",
-			'all': "Add every page flip to browser history."
 		},
 		type: SETTING_MULTI,
 		global: false
@@ -901,6 +899,7 @@ function UI_Reader(o) {
 				this.nextChapter();
 		})
 		.attach('options', ['KeyO'], e => Loda.display('settings'))
+		.attach('jump', ['Ctrl+KeyJ'], e => Loda.display('jump'))
 
 		
 	new KeyListener(document.body)
@@ -1428,6 +1427,7 @@ function UI_Reader(o) {
 	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom', undefined, true);
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
+	this._.jump.onclick = e => Loda.display('jump');
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -1450,6 +1450,7 @@ function UI_Reader(o) {
 		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
+		.attach(this._.jump, 'Open jump window [Ctrl]+[J]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
@@ -2385,13 +2386,6 @@ function URLChanger(o) {
 					document.title = title;
 				}
 				break;
-			case 'all':
-				if(this.page != SCP.page || SCP.chapter != this.chapter) {
-					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
-					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
-					document.title = title;
-				}
-				break;
 		}
 		this.page = SCP.page;
 		this.chapter = SCP.chapter;
@@ -2543,7 +2537,8 @@ function UI_LodaManager(o) {
 	this.library = {
 		test: new UI_Loda().S.link(this),
 		search: new UI_Loda_Search().S.link(this),
-		settings: new UI_Loda_Settings().S.link(this)
+		settings: new UI_Loda_Settings().S.link(this),
+		jump: new UI_Loda_Jump().S.link(this)
 	}
 
 	this.scrollTop = 0;
@@ -2673,6 +2668,58 @@ function UI_Loda_Search(o) {
 			this.tabs.select(1);
 			this.tabs.get(1).update('Loading...');
 		})
+
+}
+
+function UI_Loda_Jump(o) {
+	o=be(o);
+	UI_Loda.call(this, {
+		node: o.node,
+		kind: ['Loda_Jump'].concat(o.kind || []),
+		name: 'Jump',
+		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
+				<div class="Jump-Wrapper">
+					<input type="number" data-bind="input_chap" placeholder="Chap." />
+					<input type="number" data-bind="input_page" placeholder="Page" />
+					<button class="Jump-Btn" data-bind="btn"></button>
+				</div>
+			</content></div>`
+	});
+	this.manager = o.manager;
+	this.name = 'Jumper';
+	this.noPropagation = true;
+	this.focusElement = this._.input_chap;
+
+	this.btn = new UI_Button({
+		node: this._.btn,
+		text: 'Go'
+	});
+
+	this.input_chap = new UI_Input({
+		node: this._.input_chap
+		}).S.link(this.btn)
+
+	this.input_page = new UI_Input({
+		node: this._.input_page
+		}).S.link(this.btn)
+
+	this.jump = () => {
+		let chap = this._.input_chap.value;
+		let page = this._.input_page.value || 1;
+		try {
+			Reader.initChapter(chap, page-1);
+			this._.input_chap.value="";
+			this._.input_page.value="";
+			Loda.close('jump'); 
+		}
+		catch (err) {
+			Tooltippy.set('Please enter valid chapter and page!');
+		}
+	}
+
+	this._.btn.onclick = this.jump;
+	[this._.input_chap, this._.input_page].forEach(el => { new KeyListener(el)
+	.attach('Jump', ['Enter'], this.jump)});
 
 }
 
@@ -3177,6 +3224,7 @@ function debug() {
 	el.id = 'test_element';
 	document.getElementsByClassName('rdr-image-wrap')[0].appendChild(el)
 }
+
 
 // This is a hacky fix that prevents the last div of a
 // flexbox from not receiving the scroll event from a
