@@ -2706,19 +2706,18 @@ function UI_Loda_Jump(o) {
 
 	this.input_chap = new UI_Input({
 		node: this._.input_chap
-		}).S.link(this.btn)
+		})
 
 	this.input_page = new UI_Input({
 		node: this._.input_page
-		}).S.link(this.btn)
+		})
 
 	this.jump = () => {
-		let chap = this._.input_chap.value;
-		let page = this._.input_page.value || 1;
+		let chap = this._.input_chap.value, page = this._.input_page.value || 1;
 		try {
+			if (page > 40) throw err
 			Reader.initChapter(chap, page-1);
-			this._.input_chap.value="";
-			this._.input_page.value="";
+			this._.input_chap.value = this._.input_page.value = "";
 			Loda.close('jump'); 
 		}
 		catch (err) {
@@ -2726,6 +2725,10 @@ function UI_Loda_Jump(o) {
 		}
 	}
 
+	this._.input_chap.onkeyup = (e) => { 
+		if(this._.input_chap.value.length === 3 && e.keyCode !== 38 && e.keyCode !== 40) 
+			this._.input_page.focus(); 
+	}
 	this._.btn.onclick = this.jump;
 	[this._.input_chap, this._.input_page].forEach(el => { new KeyListener(el)
 	.attach('Jump', ['Enter'], this.jump)});
