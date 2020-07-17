@@ -1029,6 +1029,33 @@ function UI_Reader(o) {
 		this.initChapter();
 	}
 
+	this.fetchChapter = function(chapter, group) {
+		return new Promise((resolve, reject) => {
+			if (!chapter) {
+				reject("Chapter is a required parameter.");
+				return;
+			}
+			this.loadingChapter = true;
+			let targetChapter = this.current.chapters[chapter];
+			// In case group is 0.
+			if (group === undefined || group === null) {
+				group = this.getGroup(chapter);
+			}
+			// TODO there's a possible race condition here
+			if (!targetChapter.loaded[group]
+				&& targetChapter.pageRequest[group]) {
+				targetChapter.pageRequest[group]().then(() => {
+					delete targetChapter.pageRequest[group];
+					targetChapter.loaded[group] = true;
+					this.loadingChapter = false;
+					resolve();
+				});
+			} else {
+				resolve();
+			}
+		});
+	}
+
 	this.initChapter = function(chapter, page, group) {
 		if (chapter) this.SCP.chapter = chapter;
 		this.loadingChapter = true;
@@ -1041,6 +1068,7 @@ function UI_Reader(o) {
 			this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
+			// TODO This code is now redundant, it should be part of a bigger refactor
 			this.SCP.chapterObject.pageRequest[this.SCP.group]().then((count) => {
 				delete this.SCP.chapterObject.pageRequest[this.SCP.group]; // Save some memory, :kaguyaSmug:
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
