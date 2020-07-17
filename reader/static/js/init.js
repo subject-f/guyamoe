@@ -2690,7 +2690,7 @@ function UI_Loda_Jump(o) {
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<div class="Jump-Wrapper">
 					<input type="text" maxlength="3" data-bind="input_chap" placeholder="Chap." />
-					<input type="text" maxlength="3" data-bind="input_page" placeholder="Page" />
+					<input type="text" maxlength="2" data-bind="input_page" placeholder="Page" />
 					<button class="Jump-Btn" data-bind="btn"></button>
 				</div>
 			</content></div>`
@@ -2731,7 +2731,7 @@ function UI_Loda_Jump(o) {
 		if(e.code === "Enter") this.jump();
 		if(isNaN(e.key)) return false;
 		//Don't touch this condition, firefox has a bug
-		if(el.value.length > 2 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
+		if(el.value.length > el.maxLength-1 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
 				this._.input_page.select();
 				if(this._.input_page.value) return false
 		}
