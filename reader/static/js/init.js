@@ -975,6 +975,7 @@ function UI_Reader(o) {
 				.attach('previews', ['KeyP'], s => Settings.cycle('apr.previews'))
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
+			document.querySelector("[data-bind='jump']").style.display = 'none';
 			document.querySelector(".rdr-previews").style.display = 'none';
 			this.plusOne = () => {};
 		}
@@ -2688,8 +2689,8 @@ function UI_Loda_Jump(o) {
 		name: 'Jump',
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<div class="Jump-Wrapper">
-					<input type="number" data-bind="input_chap" placeholder="Chap." />
-					<input type="number" data-bind="input_page" placeholder="Page" />
+					<input type="text" maxlength="3" data-bind="input_chap" placeholder="Chap." />
+					<input type="text" maxlength="3" data-bind="input_page" placeholder="Page" />
 					<button class="Jump-Btn" data-bind="btn"></button>
 				</div>
 			</content></div>`
@@ -2715,7 +2716,7 @@ function UI_Loda_Jump(o) {
 	this.jump = () => {
 		let chap = this._.input_chap.value, page = this._.input_page.value || 1;
 		try {
-			if (page > 40) throw err
+			if (page > 40) throw "Invalid Page"
 			Reader.initChapter(chap, page-1);
 			this._.input_chap.value = this._.input_page.value = "";
 			Loda.close('jump'); 
@@ -2724,14 +2725,24 @@ function UI_Loda_Jump(o) {
 			Tooltippy.set('Please enter valid chapter and page!');
 		}
 	}
-
-	this._.input_chap.onkeyup = (e) => { 
-		if(this._.input_chap.value.length === 3 && e.keyCode !== 38 && e.keyCode !== 40) 
-			this._.input_page.focus(); 
+	//This is too much purification >_<
+	this.prejump = (e, el) => {
+		if(e.code === "Tab" || e.code === "Backspace" || e.ctrlKey || e.code.includes('Arrow')) return true;
+		if(e.code === "Enter") this.jump();
+		if(isNaN(e.key)) return false;
+		//Don't touch this condition, firefox has a bug
+		if(el.value.length > 2 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
+				this._.input_page.select();
+				if(this._.input_page.value) return false
+		}
 	}
+
 	this._.btn.onclick = this.jump;
-	[this._.input_chap, this._.input_page].forEach(el => { new KeyListener(el)
-	.attach('Jump', ['Enter'], this.jump)});
+	[this._.input_chap, this._.input_page].forEach(el => { 
+		el.onkeydown = e => {
+		 return this.prejump(e, el); 
+		}
+	}); 
 
 }
 
