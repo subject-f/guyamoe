@@ -1031,7 +1031,6 @@ function UI_Reader(o) {
 		this.initChapter();
 	}
 
-
 	this.fetchChapter = function(chapter, group) {
 		return new Promise((resolve, reject) => {
 			if (!chapter) {
