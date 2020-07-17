@@ -1031,6 +1031,34 @@ function UI_Reader(o) {
 		this.initChapter();
 	}
 
+
+	this.fetchChapter = function(chapter, group) {
+		return new Promise((resolve, reject) => {
+			if (!chapter) {
+				reject("Chapter is a required parameter.");
+				return;
+			}
+			this.loadingChapter = true;
+			let targetChapter = this.current.chapters[chapter];
+			// In case group is 0.
+			if (group === undefined || group === null) {
+				group = this.getGroup(chapter);
+			}
+			// TODO there's a possible race condition here
+			if (!targetChapter.loaded[group]
+				&& targetChapter.pageRequest[group]) {
+				targetChapter.pageRequest[group]().then(() => {
+					delete targetChapter.pageRequest[group];
+					targetChapter.loaded[group] = true;
+					this.loadingChapter = false;
+					resolve();
+				});
+			} else {
+				resolve();
+			}
+		});
+	}
+
 	this.initChapter = function(chapter, page, group) {
 		if (chapter) this.SCP.chapter = chapter;
 		this.loadingChapter = true;
@@ -1043,6 +1071,7 @@ function UI_Reader(o) {
 			this.SCP.group = this.getGroup(chapter);
 
 		if (!this.SCP.chapterObject.loaded[this.SCP.group] && this.SCP.chapterObject.images[this.SCP.group].length === 0) {
+			// TODO This code is now redundant, it should be part of a bigger refactor
 			this.SCP.chapterObject.pageRequest[this.SCP.group]().then((count) => {
 				delete this.SCP.chapterObject.pageRequest[this.SCP.group]; // Save some memory, :kaguyaSmug:
 				this.SCP.chapterObject.loaded[this.SCP.group] = true;
@@ -2689,8 +2718,8 @@ function UI_Loda_Jump(o) {
 		name: 'Jump',
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<div class="Jump-Wrapper">
-					<input type="text" maxlength="3" data-bind="input_chap" placeholder="Chap." />
-					<input type="text" maxlength="2" data-bind="input_page" placeholder="Page" />
+					<input type="text" data-bind="input_chap" placeholder="Chap." />
+					<input type="text" data-bind="input_page" placeholder="Page" />
 					<button class="Jump-Btn" data-bind="btn"></button>
 				</div>
 			</content></div>`
@@ -2713,10 +2742,11 @@ function UI_Loda_Jump(o) {
 		node: this._.input_page
 		})
 
+
 	this.jump = () => {
 		let chap = this._.input_chap.value, page = this._.input_page.value || 1;
 		try {
-			if (page > 40) throw "Invalid Page"
+			if (page > Reader.current.chapters[chap].images[Reader.getGroup(chap)].length) throw "Invalid Chapter or Page!"
 			Reader.initChapter(chap, page-1);
 			this._.input_chap.value = this._.input_page.value = "";
 			Loda.close('jump'); 
@@ -2730,11 +2760,7 @@ function UI_Loda_Jump(o) {
 		if(e.code === "Tab" || e.code === "Backspace" || e.ctrlKey || e.code.includes('Arrow')) return true;
 		if(e.code === "Enter") this.jump();
 		if(isNaN(e.key)) return false;
-		//Don't touch this condition, firefox has a bug
-		if(el.value.length > el.maxLength-1 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
-				this._.input_page.select();
-				if(this._.input_page.value) return false
-		}
+		if(el.value.length > Reader.SCP.lastChapter.length-1 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) this._.input_page.select();
 	}
 
 	this._.btn.onclick = this.jump;
