@@ -1507,7 +1507,8 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .Loda.Loda_Jump {
-	max-width: 10ch;
+	max-width: 35ch;
+	min-width: 27ch;
 	margin-top: 0;
 	align-self: center;
 }
@@ -1532,14 +1533,18 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	overflow: hidden;
 }
 
+.Loda_Jump input::placeholder {
+	font-size: 0.7em;
+}
 .Loda_Jump input {
 	background: rgba(255,255,255,.1);
-	width: 30%;
+	width: 0%;
+	text-align: center;
 	line-height: 2.5rem;
 	padding: 0 1rem;
 	box-sizing: border-box;
 	border: none;
-	font-size: 1rem;
+	font-size: 1.4rem;
 	color: rgba(255, 255, 255, 0.9);
 	box-shadow: 0px 3.5px 6px rgba(0,0,0,0.2);
 	flex-grow: 1;
