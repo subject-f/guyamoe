@@ -1480,7 +1480,7 @@ function UI_Reader(o) {
 		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
-		.attach(this._.jump, 'Open jump window [Ctrl]+[J]')
+		.attach(this._.jump, 'Open jump window [J]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
