@@ -2732,7 +2732,7 @@ function UI_Loda_Jump(o) {
 			this._.input_page.setSelectionRange(this.cursorPrev,this.cursorPrev); 
 		}
 
-		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
+		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement && this._.input_chap.value.length > this.chapPrev.length) {
 			this._.input_page.value = el.value.charAt(el.value.length-1);
 			el.value = el.value.substring(0, el.value.length-1);
 			this._.input_page.focus();
