@@ -1507,41 +1507,54 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .Loda.Loda_Jump {
-	max-width: 33vw;
-	min-width: 33vw;
+	max-width: 10ch;
+	margin-top: 0;
+	align-self: center;
+}
+
+.Loda_Jump .close {
+	right: auto;
+	top: -3rem;
+	text-shadow: 0px 1px 3px black;
+}
+
+.Loda_Jump header {
+	display: none;
 }
 
 .Jump-Wrapper {
 	display: flex;
-	margin-bottom: 30px;
-	justify-content: center;
+	justify-content: stretch;
+	height: 3.5rem;
+	align-items: stretch;
+	align-content: stretch;
+	border-radius: 4px;
+	overflow: hidden;
 }
 
 .Loda_Jump input {
 	background: rgba(255,255,255,.1);
 	width: 30%;
-	margin-right: 15px;
-	height: 2.5rem;
 	line-height: 2.5rem;
 	padding: 0 1rem;
 	box-sizing: border-box;
 	border: none;
 	font-size: 1rem;
-	font-weight: 600;
 	color: rgba(255, 255, 255, 0.9);
 	box-shadow: 0px 3.5px 6px rgba(0,0,0,0.2);
+	flex-grow: 1;
+	height: auto;
+	font-family: 'Open Sans';
 }
 
 .Loda_Jump .Button {
 	display: inline-block;
 	color: #333;
-	height: 2.5rem;
-	font-size: 1rem;
-	font-weight: 600;
-	padding: 1px 15px;
-	background-color: rgb(178, 223, 251, 1);
-	border-radius: 3px;
 	box-shadow: 0px 3.5px 6px rgba(0,0,0,0.2);
+	font-family: 'Open Sans';
+	height: auto;
+	font-size: 1.5em;
+	color: rgb(178, 223, 251, 1);
 }
 
 .Loda_Settings {
@@ -2882,14 +2895,14 @@ input[type=range]::-ms-thumb {
 }
 
 .ReaderNotice a {
-    color: #b2dffb;
-    text-decoration: none;
-    font-size: 0.9em;
-    margin-top: 0.8em;
-    display: inline-block;
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 4px;
-    padding: 0.4em 1em;
+	color: #b2dffb;
+	text-decoration: none;
+	font-size: 0.9em;
+	margin-top: 0.8em;
+	display: inline-block;
+	border: 1px solid rgba(255,255,255,0.3);
+	border-radius: 4px;
+	padding: 0.4em 1em;
 }
 
  /* Fix for ugly spinners */

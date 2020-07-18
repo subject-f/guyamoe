@@ -901,7 +901,7 @@ function UI_Reader(o) {
 				this.nextChapter();
 		})
 		.attach('options', ['KeyO'], e => Loda.display('settings'))
-		.attach('jump', ['Ctrl+KeyJ'], e => Loda.display('jump'))
+		.attach('jump', ['KeyJ'], e => Loda.display('jump'))
 
 		
 	new KeyListener(document.body)
@@ -2716,9 +2716,9 @@ function UI_Loda_Jump(o) {
 		name: 'Jump',
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<div class="Jump-Wrapper">
-					<input type="tel" data-bind="input_chap" placeholder="Chap." />
-					<input type="tel" data-bind="input_page" placeholder="Page" />
-					<button class="Jump-Btn" data-bind="btn"></button>
+					<input type="tel" data-bind="input_chap" class="UI Input" placeholder="Chapter">
+					<input type="tel" data-bind="input_page" placeholder="Page" class="UI Input">
+					<button data-bind="btn" class="Jump-Btn UI Button ico-btn"></button>
 				</div>
 			</content></div>`
 	});
