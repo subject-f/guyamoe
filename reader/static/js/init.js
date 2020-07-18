@@ -2742,7 +2742,7 @@ function UI_Loda_Jump(o) {
 
 
 	this.jump = async () => {
-		let chap = this._.input_chap.value, page = parseInt(this._.input_page.value) || "1";
+		let chap = this._.input_chap.value || Reader.SCP.chapter, page = parseInt(this._.input_page.value) || 1;
 		try {
 			await Reader.fetchChapter(chap);
 			if (page > Reader.current.chapters[chap].images[Reader.getGroup(chap)].length) throw "Invalid Chapter or Page!"
