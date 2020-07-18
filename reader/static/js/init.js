@@ -1196,6 +1196,16 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.page;
 		}
 
+		//if last page
+		if(HAS_LOCALSTORAGE
+		&& this.imageView.visiblePages
+		&& this.imageView.visiblePages.includes(this.SCP.lastPage)
+		&& !this.SCP.chapterObject.notice){
+			let source = window.location.pathname.split("/");
+			source = source[source.indexOf(this.SCP.series) - 1];
+			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
+		}
+
 		this.imageView.selectPage(this.SCP.page, dry);
 		this.SCP.visiblePages = this.imageView.visiblePages;
 		this.S.out('SCP', this.SCP);
@@ -1262,15 +1272,6 @@ function UI_Reader(o) {
 	this.nextPage = function() {
 		if (this.loadingChapter) return;
 	let nextWrapperIndex = this.imageView.imageWrappersMap[this.SCP.page] + 1;
-
-		//if last page
-		if(HAS_LOCALSTORAGE
-		&& nextWrapperIndex >= this.imageView.imageWrappersMask.length - 1
-		&& !this.SCP.chapterObject.notice){
-			let source = window.location.pathname.split("/");
-			source = source[source.indexOf(this.SCP.series) - 1];
-			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
-		}
 		
 		if(nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
@@ -1724,11 +1725,12 @@ function UI_ReaderImageView(o) {
 			toPreload = this.imageList.length;
 		}
 		toPreload = toPreload * Settings.get('adv.spreadCount');
-		for (var i = index - 1; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
+		for (var i = index - 3; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
 			//	Reader.enqueuePreload(this.imageList[i].url);
-			}
+			}else if(this.imageList.length < i)
+				break;
 		}
 		if(this.imageList[index+1]) {
 			Reader.enqueuePreload(this.imageList[index+1].url);
@@ -1841,50 +1843,7 @@ const SCROLL_X = 3;
 		}else{
 			this.touch.imagePosition = 0;
 		}
-		//this.touch.a = requestAnimationFrame(this.touch.anim);
 	}
-	
-	// this.touch.anim = () => {
-	// 	this.touch.a = requestAnimationFrame(this.touch.anim);
-	// 	if(this.touch.gesture == SCROLL) return cancelAnimationFrame(this.touch.a);
-	// 	if(Settings.get('lyt.direction') == 'ttb') return cancelAnimationFrame(this.touch.a);
-
-	// 	this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
-	// 	if(this.touch.imagePosition == 0
-	// 	|| this.touch.imagePosition == 1 && this.touch.delta > 0
-	// 	|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
-	// 		this.touch.gesture = SCROLL_X;
-	// 		return cancelAnimationFrame(this.touch.a);
-	// 	}
-	// 	this.touch.deltaY = this.touch.y - this.touch.startY;
-
-	// 	if(Settings.get('lyt.direction') == 'rtl'){
-	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
-	// 		|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
-	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
-	// 		}
-	// 	}else{
-	// 		if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
-	// 		|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
-	// 			this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
-	// 		}
-	// 	}
-
-	// 	this.touch.time = Date.now();
-	// 	this.moveWrappers(this.touch.delta);
-
-	// 	if(this.touch.gesture == SWIPE) return; 
-
-	// 	if(Math.abs(this.touch.delta) > 0.025) {
-	// 		this.touch.gesture = SWIPE;
-	// 		return;
-	// 	}
-	// 	if(Math.abs(this.touch.deltaY) > this.touch.em * 1.1) {
-	// 		this.touch.gesture = SCROLL;
-	// 		this.moveWrappers(0);
-	// 		cancelAnimationFrame(this.touch.a);
-	// 	}
-	// }
 	
 	this.touch.moveHandler = e => {
 		if(this.touch.transitionTimer) return;
@@ -2120,6 +2079,9 @@ const SCROLL_X = 3;
 
 	this.resizeSensor = new ResizeSensor(this.$, this.updateWides);
 
+	// this.S.mapIn({
+	// 	'imageWidth': this.
+	// })
 }
 
 
@@ -2183,6 +2145,7 @@ function UI_ReaderImageWrapper(o) {
 		'imageWidth': this.checkTooWide
 	})
 	this.S.proxyOut('loaded');
+	this.S.proxyOut('imageHeight');
 }
 
 
@@ -2280,10 +2243,11 @@ function UI_ReaderImage(o) {
 		//if(this.fore) this._.image.style.background = 'url('+this.fore+') no-repeat scroll 0% 0% / 0%';
 	}
 
-	this.watchImageWidth = () => {
-		this.RAF = requestAnimationFrame(this.watchImageWidth);
+	this.watchImageDimensions = () => {
+		this.RAF = requestAnimationFrame(this.watchImageDimensions);
 		if(this.$.naturalWidth > 0) {
 			this.S.out('imageWidth', this.$.offsetWidth);
+			this.S.out('imageHeight', this.$.offsetHeight);
 			cancelAnimationFrame(this.RAF);
 			this.RAF = null;
 			return;
@@ -2292,7 +2256,7 @@ function UI_ReaderImage(o) {
 
 	this.load = function() {
 		if(this.loaded) return;
-		this.RAF = requestAnimationFrame(this.watchImageWidth);
+		this.RAF = requestAnimationFrame(this.watchImageDimensions);
 		this.$.loading = 'eager';
 		this.$.src = this.url;
 		this.$.onload = e => this.onloadHandler(e);
@@ -2746,9 +2710,9 @@ function UI_Loda_Jump(o) {
 		try {
 			await Reader.fetchChapter(chap);
 			if (page > Reader.current.chapters[chap].images[Reader.getGroup(chap)].length) throw "Invalid Chapter or Page!"
-			Reader.initChapter(chap, page-1);
 			this._.input_chap.value = this._.input_page.value = "";
-			Loda.close('jump'); 
+			Loda.close();
+			Reader.initChapter(chap, page-1);
 		}
 		catch (err) {
 			Tooltippy.set('Please enter valid chapter and page!');
@@ -2990,8 +2954,9 @@ function UI_ChapterUnit(o) {
 			pageButton.$.onclick = e => {
 				e.stopPropagation();
 				e.preventDefault();
-				Reader.initChapter(this.chapter.id, +e.target.innerHTML-1);
+			var pg = +e.target.innerHTML-1;
 				Loda.close();
+				Reader.initChapter(this.chapter.id, pg);
 				return false;
 			}
 			this.pageList.add(pageButton);
