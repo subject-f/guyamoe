@@ -1547,6 +1547,11 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	font-family: 'Open Sans';
 }
 
+.Loda_Jump input:focus {
+	outline: none;
+	border: none;
+}
+
 
 .Loda_Jump input:first-child {
 	border-bottom-left-radius: 4px;
