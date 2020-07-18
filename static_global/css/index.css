@@ -749,6 +749,7 @@ main a {
 	background-image: url('../img/shu.png');
 }
 
+
 .chapter-listing-expander {
 	border-top: 1px solid rgba(255,255,255,0.5);
 	width: 100%;
@@ -1663,6 +1664,7 @@ main a {
 		border-top-right-radius: 6px;
 	}
 }
+
 @media (max-width: 992px) {
 	.light-mode-toggle {
 		position: fixed;

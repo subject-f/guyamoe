@@ -247,6 +247,14 @@ aside header > .guya {
 	content: "";
 }
 
+.ico-btn.jump {
+	cursor: pointer;
+}
+.ico-btn.jump:before {
+	content: "\2ba0";
+	transform: scale(-1, 1);
+}
+
 .rdr-aside-content {
 	display: flex;
 	width: 100%;
@@ -1481,7 +1489,11 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 .Loda_Search input::-webkit-input-placeholder,
 .Loda_Search input::-moz-placeholder,
 .Loda_Search input:-ms-input-placeholder, 
-.Loda_Search input:-moz-placeholder {
+.Loda_Search input:-moz-placeholder,
+.Loda_Jump input::-webkit-input-placeholder,
+.Loda_Jump input::-moz-placeholder,
+.Loda_Jump input:-ms-input-placeholder, 
+.Loda_Jump input:-moz-placeholder {
   font-family: 'guya';
   opacity: 0.5;
 }
@@ -1492,6 +1504,44 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 
 .Loda_Search .list:empty {
 	padding: 0;
+}
+
+.Loda.Loda_Jump {
+	max-width: 33vw;
+	min-width: 33vw;
+}
+
+.Jump-Wrapper {
+	display: flex;
+	margin-bottom: 30px;
+	justify-content: center;
+}
+
+.Loda_Jump input {
+	background: rgba(255,255,255,.1);
+	width: 30%;
+	margin-right: 15px;
+	height: 2.5rem;
+	line-height: 2.5rem;
+	padding: 0 1rem;
+	box-sizing: border-box;
+	border: none;
+	font-size: 1rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.9);
+	box-shadow: 0px 3.5px 6px rgba(0,0,0,0.2);
+}
+
+.Loda_Jump .Button {
+	display: inline-block;
+	color: #333;
+	height: 2.5rem;
+	font-size: 1rem;
+	font-weight: 600;
+	padding: 1px 15px;
+	background-color: rgb(178, 223, 251, 1);
+	border-radius: 3px;
+	box-shadow: 0px 3.5px 6px rgba(0,0,0,0.2);
 }
 
 .Loda_Settings {
@@ -2381,8 +2431,8 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 		color: #111;
 	}*/
 	.Loda {
-		min-width: 96vw;
-		max-width: 96vw;
+		min-width: 96vw !important;
+		max-width: 96vw !important;
 	}
 	.rdr-image-wrap {
 /*		transition: transform 0.02s linear; */
@@ -2841,4 +2891,18 @@ input[type=range]::-ms-thumb {
     border-radius: 4px;
     padding: 0.4em 1em;
 }
+
+ /* Fix for ugly spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox fix for fixing number spinners*/
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
 

@@ -901,6 +901,7 @@ function UI_Reader(o) {
 				this.nextChapter();
 		})
 		.attach('options', ['KeyO'], e => Loda.display('settings'))
+		.attach('jump', ['Ctrl+KeyJ'], e => Loda.display('jump'))
 
 		
 	new KeyListener(document.body)
@@ -1456,6 +1457,7 @@ function UI_Reader(o) {
 	this._.zoom_level_minus.onmousedown = e => Settings.prev('lyt.zoom', undefined, true);
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
+	this._.jump.onclick = e => Loda.display('jump');
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -1478,6 +1480,7 @@ function UI_Reader(o) {
 		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
 		.attach(this._.search, 'Open search window [Ctrl]+[F]')
+		.attach(this._.jump, 'Open jump window [Ctrl]+[J]')
 		.attach(this._.spread_button, 'Change page spread type [Q]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
@@ -2571,7 +2574,8 @@ function UI_LodaManager(o) {
 	this.library = {
 		test: new UI_Loda().S.link(this),
 		search: new UI_Loda_Search().S.link(this),
-		settings: new UI_Loda_Settings().S.link(this)
+		settings: new UI_Loda_Settings().S.link(this),
+		jump: new UI_Loda_Jump().S.link(this)
 	}
 
 	this.scrollTop = 0;
@@ -2701,6 +2705,95 @@ function UI_Loda_Search(o) {
 			this.tabs.select(1);
 			this.tabs.get(1).update('Loading...');
 		})
+
+}
+
+function UI_Loda_Jump(o) {
+	o=be(o);
+	UI_Loda.call(this, {
+		node: o.node,
+		kind: ['Loda_Jump'].concat(o.kind || []),
+		name: 'Jump',
+		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
+				<div class="Jump-Wrapper">
+					<input type="tel" data-bind="input_chap" placeholder="Chap." />
+					<input type="tel" data-bind="input_page" placeholder="Page" />
+					<button class="Jump-Btn" data-bind="btn"></button>
+				</div>
+			</content></div>`
+	});
+	this.manager = o.manager;
+	this.name = 'Jumper';
+	this.noPropagation = true;
+	this.focusElement = this._.input_chap;
+
+	this.btn = new UI_Button({
+		node: this._.btn,
+		text: 'Go'
+	});
+
+	this.input_chap = new UI_Input({
+		node: this._.input_chap
+		})
+
+	this.input_page = new UI_Input({
+		node: this._.input_page
+		})
+
+
+	this.jump = async () => {
+		let chap = this._.input_chap.value || Reader.SCP.chapter, page = parseInt(this._.input_page.value) || 1;
+		try {
+			await Reader.fetchChapter(chap);
+			if (page > Reader.current.chapters[chap].images[Reader.getGroup(chap)].length) throw "Invalid Chapter or Page!"
+			Reader.initChapter(chap, page-1);
+			this._.input_chap.value = this._.input_page.value = "";
+			Loda.close('jump'); 
+		}
+		catch (err) {
+			Tooltippy.set('Please enter valid chapter and page!');
+		}
+	}
+
+	this.chapPrev = "", this.pagePrev = "", this.cursorPrev = "";
+
+	this.prejump = (e, el) => {
+		if(isNaN(this._.input_chap.value)) {
+			this._.input_chap.value = this.chapPrev;
+			this._.input_chap.setSelectionRange(this.cursorPrev,this.cursorPrev); 
+		}
+
+		if(this._.input_page.value.includes(".") || isNaN(this._.input_page.value)) {
+			this._.input_page.value = this.pagePrev;
+			this._.input_page.setSelectionRange(this.cursorPrev,this.cursorPrev); 
+		}
+
+		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
+			this._.input_page.value = el.value.charAt(el.value.length-1);
+			el.value = el.value.substring(0, el.value.length-1);
+			this._.input_page.focus();
+		}
+
+		this.chapPrev = this._.input_chap.value;
+		this.pagePrev = this._.input_page.value;
+	}
+
+	this._.btn.onclick = this.jump;
+	[this._.input_chap, this._.input_page].forEach(el => { 
+		el.oninput = e => {
+		 this.prejump(e, el); 
+		}
+	});
+
+	[this._.input_chap, this._.input_page].forEach(el => { 
+		el.onkeydown = e => {
+			this.cursorPrev = el.selectionEnd;		  
+		}
+	}); 
+
+	[this._.input_chap, this._.input_page].forEach(el => { new KeyListener(el)
+		.attach('Jump', ['Enter'], e => this.jump())
+	});
 
 }
 
@@ -3205,6 +3298,7 @@ function debug() {
 	el.id = 'test_element';
 	document.getElementsByClassName('rdr-image-wrap')[0].appendChild(el)
 }
+
 
 // This is a hacky fix that prevents the last div of a
 // flexbox from not receiving the scroll event from a
