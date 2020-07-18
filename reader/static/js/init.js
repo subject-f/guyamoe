@@ -2716,8 +2716,8 @@ function UI_Loda_Jump(o) {
 		name: 'Jump',
 		html: o.html || `<div class="Loda-window" tabindex="-1"><header data-bind="header"></header><button class="ico-btn close" data-bind="close"></button><content data-bind="content">
 				<div class="Jump-Wrapper">
-					<input type="text" data-bind="input_chap" placeholder="Chap." />
-					<input type="text" data-bind="input_page" placeholder="Page" />
+					<input type="tel" data-bind="input_chap" placeholder="Chap." />
+					<input type="tel" data-bind="input_page" placeholder="Page" />
 					<button class="Jump-Btn" data-bind="btn"></button>
 				</div>
 			</content></div>`
@@ -2754,21 +2754,46 @@ function UI_Loda_Jump(o) {
 			Tooltippy.set('Please enter valid chapter and page!');
 		}
 	}
-	//O Kawaii koto >_<
+
+	this.chapPrev = "", this.pagePrev = "", this.cursorPrev = "";
+
 	this.prejump = (e, el) => {
-		if(e.code === "Tab" || e.code === "Backspace" || e.ctrlKey || e.code.includes('Arrow')) return true;
-		if(e.code === "Enter") this.jump();
-		if(isNaN(el.value + e.key)) return false;
-		//This condition is very important and no workarounds.
-		if(parseInt(el.value + e.key) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) this._.input_page.select();
+		if(isNaN(this._.input_chap.value)) {
+			this._.input_chap.value = this.chapPrev;
+			this._.input_chap.setSelectionRange(this.cursorPrev,this.cursorPrev); 
+		}
+
+		if(this._.input_page.value.includes(".") || isNaN(this._.input_page.value)) {
+			this._.input_page.value = this.pagePrev;
+			this._.input_page.setSelectionRange(this.cursorPrev,this.cursorPrev); 
+		}
+
+		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) {
+			this._.input_page.value = el.value.charAt(el.value.length-1);
+			el.value = el.value.substring(0, el.value.length-1);
+			this._.input_page.focus();
+		}
+
+		this.chapPrev = this._.input_chap.value;
+		this.pagePrev = this._.input_page.value;
 	}
 
 	this._.btn.onclick = this.jump;
 	[this._.input_chap, this._.input_page].forEach(el => { 
+		el.oninput = e => {
+		 this.prejump(e, el); 
+		}
+	});
+
+	[this._.input_chap, this._.input_page].forEach(el => { 
 		el.onkeydown = e => {
-		 return this.prejump(e, el); 
+			this.cursorPrev = el.selectionEnd;		  
 		}
 	}); 
+
+	[this._.input_chap, this._.input_page].forEach(el => { new KeyListener(el)
+		.attach('Jump', ['Enter'], e => this.jump())
+	});
 
 }
 
