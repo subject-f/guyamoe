@@ -975,7 +975,6 @@ function UI_Reader(o) {
 				.attach('previews', ['KeyP'], s => Settings.cycle('apr.previews'))
 		} else {
 			document.querySelector("[data-bind='search']").style.display = 'none';
-			document.querySelector("[data-bind='jump']").style.display = 'none';
 			document.querySelector(".rdr-previews").style.display = 'none';
 			this.plusOne = () => {};
 		}
@@ -2742,9 +2741,10 @@ function UI_Loda_Jump(o) {
 		})
 
 
-	this.jump = () => {
-		let chap = this._.input_chap.value, page = this._.input_page.value || 1;
+	this.jump = async () => {
+		let chap = this._.input_chap.value, page = parseInt(this._.input_page.value) || "1";
 		try {
+			await Reader.fetchChapter(chap);
 			if (page > Reader.current.chapters[chap].images[Reader.getGroup(chap)].length) throw "Invalid Chapter or Page!"
 			Reader.initChapter(chap, page-1);
 			this._.input_chap.value = this._.input_page.value = "";
@@ -2754,12 +2754,13 @@ function UI_Loda_Jump(o) {
 			Tooltippy.set('Please enter valid chapter and page!');
 		}
 	}
-	//This is too much purification >_<
+	//O Kawaii koto >_<
 	this.prejump = (e, el) => {
 		if(e.code === "Tab" || e.code === "Backspace" || e.ctrlKey || e.code.includes('Arrow')) return true;
 		if(e.code === "Enter") this.jump();
-		if(isNaN(e.key)) return false;
-		if(el.value.length > Reader.SCP.lastChapter.length-1 && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) this._.input_page.select();
+		if(isNaN(el.value + e.key)) return false;
+		//This condition is very important and no workarounds.
+		if(parseInt(el.value + e.key) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement) this._.input_page.select();
 	}
 
 	this._.btn.onclick = this.jump;
