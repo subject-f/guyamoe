@@ -2721,7 +2721,8 @@ function UI_Loda_Jump(o) {
 
 	this.chapPrev = "", this.pagePrev = "", this.cursorPrev = "";
 
-	this.prejump = (e, el) => {
+	this.prejump = (el) => {
+
 		if(isNaN(this._.input_chap.value)) {
 			this._.input_chap.value = this.chapPrev;
 			this._.input_chap.setSelectionRange(this.cursorPrev,this.cursorPrev); 
@@ -2732,7 +2733,8 @@ function UI_Loda_Jump(o) {
 			this._.input_page.setSelectionRange(this.cursorPrev,this.cursorPrev); 
 		}
 
-		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement && this._.input_chap.value.length > this.chapPrev.length) {
+		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && this.chapPrev.length <= Reader.SCP.lastChapter.length && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement && el.value.length > this.chapPrev.length && !el.value.endsWith(".")) {
+			console.log(this.chapPrev.length, Reader.SCP.lastChapter.length);
 			this._.input_page.value = el.value.charAt(el.value.length-1);
 			el.value = el.value.substring(0, el.value.length-1);
 			this._.input_page.focus();
@@ -2745,7 +2747,7 @@ function UI_Loda_Jump(o) {
 	this._.btn.onclick = this.jump;
 	[this._.input_chap, this._.input_page].forEach(el => { 
 		el.oninput = e => {
-		 this.prejump(e, el); 
+		 this.prejump(el); 
 		}
 	});
 
