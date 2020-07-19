@@ -2734,7 +2734,6 @@ function UI_Loda_Jump(o) {
 		}
 
 		if(parseInt(el.value) > parseInt(Reader.SCP.lastChapter) && this.chapPrev.length <= Reader.SCP.lastChapter.length && el.selectionStart === el.value.length && !el.value.substring(el.selectionStart, el.selectionEnd) && this._.input_chap === document.activeElement && el.value.length > this.chapPrev.length && !el.value.endsWith(".")) {
-			console.log(this.chapPrev.length, Reader.SCP.lastChapter.length);
 			this._.input_page.value = el.value.charAt(el.value.length-1);
 			el.value = el.value.substring(0, el.value.length-1);
 			this._.input_page.focus();
