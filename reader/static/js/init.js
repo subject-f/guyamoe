@@ -1367,8 +1367,10 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
-	this.enqueuePreload = url => {
-		this._.preload_entity.src = url;
+	this.enqueuePreload = images => {
+		images.filter(item => item !== undefined)
+			.slice(0,4)
+			.forEach((img, i) => this._.preload_entity.children[i].src = img.url);
 	}
 
 	this.eventRouter = function(event){
@@ -1720,20 +1722,30 @@ function UI_ReaderImageView(o) {
 			//this.getScrollElement().focus();
 			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
+	var spreadCount = Settings.get('adv.spreadCount');
 	var toPreload = Settings.get('bhv.preload');
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
-		toPreload = toPreload * Settings.get('adv.spreadCount');
+		toPreload = toPreload * spreadCount;
 		for (var i = index - 3; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
-			//	Reader.enqueuePreload(this.imageList[i].url);
 			}else if(this.imageList.length < i)
 				break;
 		}
-		if(this.imageList[index+1]) {
-			Reader.enqueuePreload(this.imageList[index+1].url);
+		if(spreadCount == 2) {
+			Reader.enqueuePreload([
+				this.imageList[index-2],
+				this.imageList[index-1],
+				this.imageList[index+2],
+				this.imageList[index+3]
+			]);
+		}else{
+			Reader.enqueuePreload([
+				this.imageList[index-1],
+				this.imageList[index+1]
+			]);
 		}
 		this.S.out('event', {type: 'newPageIndex', data: index})
 	}
