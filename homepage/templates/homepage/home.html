@@ -161,9 +161,11 @@
 					<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/" class="manga-link full guya">Read the manga ›</a>
 				</span>
 				<span>
-					<a href="#chapter_listing_exp" onclick="
+					<a id="list_exp" href="#chapter_listing_exp" onclick="
 						document.getElementById('chapter_listing').classList.add('vis');
 						document.getElementById('chapter_listing_exp').classList.add('vis');
+						document.getElementsByClassName('chapter-listing-expander')[0].classList.add('vis');
+						toggleHash(event);
 					" class="manga-link after-anime">Where to start after the anime ›</a><a href="//tachiyomi.org/extensions/#Guya" class="manga-link tachiyom">Tachiyomi plugin</a>
 				</span>
 			</div>
@@ -186,6 +188,7 @@
 				event.stopImmediatePropagation();
 				document.getElementById('chapter_listing').classList.toggle('vis');
 				event.currentTarget.classList.toggle('vis');
+				toggleHash(event);
 			"><span>List of chapters</span></div>
 		</span>
 		<table id="chapter_listing" class="chapter-listing hidden">
@@ -250,6 +253,17 @@
 	document.getElementById("quote-block").innerHTML = `<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`;
 
 	let msd = {{ main_series_data|safe }};
+	let hash = false;
+
+	function toggleHash(e) {
+		if (e.target===document.getElementById('list_exp')) {
+			hash=true;
+			return
+		}
+		if(hash) history.replaceState('', '/', window.location.pathname);
+		if(!hash) history.replaceState(null, null, '#chapter_listing_exp');
+		hash = !hash;
+	}
 
 	var chapterList = doT.template(`
 		<tbody>
@@ -538,6 +552,8 @@ window.addEventListener("load", () => {
 	if(window.location.hash == '#chapter_listing_exp') {
 		document.getElementById('chapter_listing').classList.add('vis');
 		document.getElementById('chapter_listing_exp').classList.add('vis');
+		document.getElementsByClassName('chapter-listing-expander')[0].classList.add('vis');
+		hash = true;
 	}
 });
 </script>
