@@ -164,7 +164,8 @@
 					<a id="list_exp" href="#chapter_listing_exp" onclick="
 						document.getElementById('chapter_listing').classList.add('vis');
 						document.getElementById('chapter_listing_exp').classList.add('vis');
-						toggleHash(this);
+						document.getElementsByClassName('chapter-listing-expander')[0].classList.add('vis');
+						toggleHash(event);
 					" class="manga-link after-anime">Where to start after the anime ›</a><a href="//tachiyomi.org/extensions/#Guya" class="manga-link tachiyom">Tachiyomi plugin</a>
 				</span>
 			</div>
@@ -187,7 +188,7 @@
 				event.stopImmediatePropagation();
 				document.getElementById('chapter_listing').classList.toggle('vis');
 				event.currentTarget.classList.toggle('vis');
-				toggleHash(this);
+				toggleHash(event);
 			"><span>List of chapters</span></div>
 		</span>
 		<table id="chapter_listing" class="chapter-listing hidden">
@@ -551,6 +552,7 @@ window.addEventListener("load", () => {
 	if(window.location.hash == '#chapter_listing_exp') {
 		document.getElementById('chapter_listing').classList.add('vis');
 		document.getElementById('chapter_listing_exp').classList.add('vis');
+		document.getElementsByClassName('chapter-listing-expander')[0].classList.add('vis');
 		hash = true;
 	}
 });
