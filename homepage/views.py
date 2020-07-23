@@ -9,6 +9,7 @@ from reader.middleware import OnlineNowMiddleware
 from homepage.middleware import ForwardParametersMiddleware
 from reader.models import Volume, Chapter
 from reader.views import series_page_data
+import random as r
 
 
 @staff_member_required
@@ -119,6 +120,27 @@ def latest(request):
         cache.set("latest_chap", latest_chap, 3600 * 96)
     return redirect(
         "reader-manga-chapter", "Kaguya-Wants-To-Be-Confessed-To", latest_chap, "1"
+    )
+
+
+@decorator_from_middleware(ForwardParametersMiddleware)
+def random(request):
+    random_opts = cache.get("random_opts")
+    if not random_opts:
+        random_opts = [
+            ch.slug_chapter_number()
+            for ch in (
+                Chapter.objects.order_by("-chapter_number").filter(
+                    series__slug="Kaguya-Wants-To-Be-Confessed-To"
+                )
+            )
+        ]
+        cache.set("random_opts", random_opts, 3600 * 96)
+    return redirect(
+        "reader-manga-chapter",
+        "Kaguya-Wants-To-Be-Confessed-To",
+        r.choice(random_opts),
+        "1",
     )
 
 

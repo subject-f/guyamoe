@@ -18,4 +18,5 @@ urlpatterns = [
         name="site-main-series-page",
     ),
     path("latest/", views.latest, name="site-main-series-latest"),
+    path("random/", views.random, name="site-main-series-random"),
 ]
