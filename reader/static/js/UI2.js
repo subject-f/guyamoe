@@ -973,6 +973,60 @@ function UI_Input(o) {
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
 }
 
+function UI_ColorPicker(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ColorPicker'].concat(o.kind || []),
+		html: o.html || `<input type="text" readonly=""/>`,
+	});
+	Linkable.call(this);
+
+	if(o.type) this.$.type = o.type;
+	this.setting = o.setting;
+	this.$.value = this.$.style.backgroundColor = this.setting.setting;
+
+	this.handler = function (e) {
+		this.value = this.$.value;
+		this.S.out('settingsPacket',
+				new SettingsPacket(
+					'set',
+					this.setting.addr,
+					this.$.value
+				)
+			);
+	}
+
+	const pickr = new Pickr({
+	  el: this.$,
+	  useAsButton: true,
+	  default: this.$.value,
+	  theme: 'nano',
+	  autoReposition: true,
+	  components: {
+	    preview: true,
+	    opacity: true,
+	    hue: true,
+
+	    interaction: {
+	      hex: false,
+	      rgba: false,
+	      hsva: false,
+	      input: true,
+	      save: true
+	    }
+	  }
+	}).on('init', pickr => {
+	  this.$.value = pickr.getSelectedColor().toRGBA().toString(0);
+	}).on('save', color => {
+	  this.$.value = color.toHEXA().toString(0);
+	  this.handler();
+	  pickr.hide();
+	}).on('change', (color, instance) => {
+	    this.$.value = this.$.style.backgroundColor = color.toHEXA().toString(0)})
+
+}
+
 function UI_Button(o) {
 	o=be(o);
 	UI.call(this, {
@@ -1441,3 +1495,5 @@ toUI.sort((a,b) => {
 toUI.forEach(item => {
 	new window[item.node.getAttribute('data-ui')]({node: item.node})
 });
+
+

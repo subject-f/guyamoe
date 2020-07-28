@@ -160,6 +160,7 @@ const SETTING_HIDDEN = -1;
 const SETTING_CUSTOM = 1;
 const SETTING_BOOLEAN = 10;
 const SETTING_MULTI = 20;
+const SETTING_COLOR = 1;
 const SETTING_MULTI_DROPDOWN = 21;
 const SETTING_VALUE = 30;
 const SETTING_VALUE_STEPPED = 31;
@@ -291,6 +292,7 @@ function Setting(o) {
 			case SETTING_MULTI:
 			case SETTING_MULTI_DROPDOWN:
 			case SETTING_VALUE:
+			case SETTING_COLOR:
 			case SETTING_VALUE_STEPPED:
 				classList.remove.apply(classList, [].filter.call(classList, cl => cl.indexOf(this.name) == 0));
 				classList.add(this.classString());
@@ -339,6 +341,7 @@ function SettingsHandler(){
 		apr: new SettingsCategory('Appearance', false),
 		bhv: new SettingsCategory('Behavior', false),
 		adv: new SettingsCategory('Advanced', false),
+		thm: new SettingsCategory('Themes', false),
 		misc: new SettingsCategory('Miscellaneous', true),
 	};
 	this.all = {};
@@ -449,21 +452,21 @@ function SettingsHandler(){
 	}
 
 	this.refreshAll = function() {
-		for(var key in this.all) {
-		let setting = this.all[key];
-			setting.refresh();
-			if(setting.condition) {
-			var result = this.query(setting.condition);
-				if(result) {
-					if(!setting.disabled) return;
-					setting.enable();
-				}else{
-					if(setting.disabled) return;
-					setting.disable();
-				}
-			}
-		}
-	}
+    	var settings = Object.keys(this.all).map(setting => this.all[setting]);
+        settings.forEach(setting => setting.refresh());
+        settings.forEach(setting => {
+            if(setting.condition) {
+            var result = this.query(setting.condition);
+                if(result) {
+                    if(!setting.disabled) return;
+                    setting.enable();
+                }else{
+                    if(setting.disabled) return;
+                    setting.disable();
+                }
+            }
+        });
+    }
 
 	this.settingUpdated = function(e) {
 		if(e.type == 'change') {
@@ -589,6 +592,46 @@ function SettingsHandler(){
 			rtl: 'Right-to-left reading mode.'
 		},
 		type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: 'thm.theme',
+		prettyName: 'Reader Theme',
+		options: ['Dark', 'Light', 'Custom'],
+		default: 'Dark',
+		strings: {
+			Dark: 'Dark',
+			Light: 'Light',
+			Custom: 'Custom'
+		},
+		type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: 'thm.primaryCol',
+		prettyName: 'Primary Color',
+		default: '#3a3f44',
+		condition: {'thm.theme': ['Custom']},
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.readerBg',
+		prettyName: 'Reader Background',
+		default: '#272b30',
+		condition: {'thm.theme': ['Custom']},
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.accentCol',
+		prettyName: 'Accent Color',
+		default: '#b2dffb',
+		condition: {'thm.theme': ['Custom']},
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.textCol',
+		prettyName: 'Text Color',
+		default: '#eeeeee',
+		condition: {'thm.theme': ['Custom']},
+		type: SETTING_COLOR
 	})
 	.newSetting({
 		addr: 'lyt.spread',
@@ -782,6 +825,7 @@ function SettingsHandler(){
 		global: false
 	})
 	.deserialize();
+	this.sendInit();
 }
 
 function SettingsPacket(type, settingAddr, value, silent) {
@@ -1367,6 +1411,24 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
+	this.themeHandler = function() {
+		let theme = Settings.get('thm.theme');
+		if(theme === 'Custom')	setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
+		else if (theme === 'Dark')	setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Light') setTheme('#5C97D2', '#EFF4FB', '#FDF888','#eeeeee');
+		function setTheme(sidebar, reader, accent, text) {
+			document.documentElement.style.setProperty("--readerBg", reader);
+			document.documentElement.style.setProperty("--sidebarCol", sidebar);
+			document.documentElement.style.setProperty("--accentCol", accent);
+			document.documentElement.style.setProperty("--accentCol", accent);
+			document.documentElement.style.setProperty("--textCol", text);
+			document.documentElement.style.setProperty("--icoCol", text);
+			document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -25));
+			document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -10));
+			
+		}
+	}
+
 	this.enqueuePreload = url => {
 		this._.preload_entity.src = url;
 	}
@@ -1397,6 +1459,11 @@ function UI_Reader(o) {
 			'apr.sidebar': o => this.toggleSidebar(o),
 			'apr.selPinned': o => this.setLayout(o, true),
 			'apr.previews': o => this.drawPreviews(o),
+			'thm.theme' : o => this.themeHandler(),
+			'thm.primaryCol' : o => this.themeHandler(),
+			'thm.readerBg' : o => this.themeHandler(),
+			'thm.accentCol' : o => this.themeHandler(),
+			'thm.textCol' : o => this.themeHandler(),
 			'misc.groupPreference': o => {},
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
@@ -3095,6 +3162,11 @@ function UI_SettingDisplay(o) {
 				setting: this.setting
 			}).S.biLink(Settings);
 			break;
+		case SETTING_COLOR:
+			this.entity = new UI_ColorPicker({
+				setting: this.setting
+			}).S.link(Settings);
+			break;
 	}
 
 
@@ -3104,7 +3176,13 @@ function UI_SettingDisplay(o) {
 }
 
 
-
+// html: `<div>
+// 			<div class="slider-wrap">
+// 				<input type="color" data-bind="slider" class="theme-col slider-control"/>
+// 				<div class="ticks" data-bind="ticks"></div>
+// 			</div>
+// 			<input data-bind="number" class="slider-value" type="text" />
+// 		</div>`
 
 
 
@@ -3232,6 +3310,21 @@ function UI_About(o) {
 
 	return this;
 }
+
+/*Theme setup*/
+
+
+qs('.LodaManager').addEventListener('focusin', function _listener(e) {
+			try {
+				qsa('.theme-col')[0].value = localStorage.getItem('sidebarCol');
+				qsa('.theme-col')[1].value = localStorage.getItem('readerBg');
+				qsa('.theme-col')[2].value = localStorage.getItem('accentCol');
+				qs('.LodaManager').removeEventListener('focusin', _listener);
+			}
+			catch(err) {}
+		});
+
+/*Theme done...*/
 
 alg.createBin();
 
