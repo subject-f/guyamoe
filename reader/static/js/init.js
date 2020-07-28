@@ -3176,15 +3176,6 @@ function UI_SettingDisplay(o) {
 }
 
 
-// html: `<div>
-// 			<div class="slider-wrap">
-// 				<input type="color" data-bind="slider" class="theme-col slider-control"/>
-// 				<div class="ticks" data-bind="ticks"></div>
-// 			</div>
-// 			<input data-bind="number" class="slider-value" type="text" />
-// 		</div>`
-
-
 
 
 function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
@@ -3310,21 +3301,6 @@ function UI_About(o) {
 
 	return this;
 }
-
-/*Theme setup*/
-
-
-qs('.LodaManager').addEventListener('focusin', function _listener(e) {
-			try {
-				qsa('.theme-col')[0].value = localStorage.getItem('sidebarCol');
-				qsa('.theme-col')[1].value = localStorage.getItem('readerBg');
-				qsa('.theme-col')[2].value = localStorage.getItem('accentCol');
-				qs('.LodaManager').removeEventListener('focusin', _listener);
-			}
-			catch(err) {}
-		});
-
-/*Theme done...*/
 
 alg.createBin();
 
