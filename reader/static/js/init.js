@@ -333,6 +333,30 @@ function SettingsCategory(name, hidden, icon) {
 	nonEnum(this, "icon", hidden);
 }
 
+function themeHandler() {
+	Linkable.call(this);
+	this.themeUpdated = () => {
+		let theme = Settings.get('thm.theme');
+		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
+		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Light') this.setTheme('#5C97D2', '#EFF4FB', '#FDF888','#eeeeee');
+	}
+	this.setTheme = (sidebar, reader, accent, text) => {
+		document.documentElement.style.setProperty("--readerBg", reader);
+		document.documentElement.style.setProperty("--sidebarCol", sidebar);
+		document.documentElement.style.setProperty("--accentCol", accent);
+		document.documentElement.style.setProperty("--accentCol", accent);
+		document.documentElement.style.setProperty("--textCol", text);
+		document.documentElement.style.setProperty("--icoCol", text);
+		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -25));
+		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -10));
+		
+	}
+	this.S.mapIn({
+		settingsPacket: this.themeUpdated,
+	})
+}
+
 function SettingsHandler(){
 	Linkable.call(this);
 
@@ -1411,24 +1435,6 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
-	this.themeHandler = function() {
-		let theme = Settings.get('thm.theme');
-		if(theme === 'Custom')	setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
-		else if (theme === 'Dark')	setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
-		else if (theme === 'Light') setTheme('#5C97D2', '#EFF4FB', '#FDF888','#eeeeee');
-		function setTheme(sidebar, reader, accent, text) {
-			document.documentElement.style.setProperty("--readerBg", reader);
-			document.documentElement.style.setProperty("--sidebarCol", sidebar);
-			document.documentElement.style.setProperty("--accentCol", accent);
-			document.documentElement.style.setProperty("--accentCol", accent);
-			document.documentElement.style.setProperty("--textCol", text);
-			document.documentElement.style.setProperty("--icoCol", text);
-			document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -25));
-			document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -10));
-			
-		}
-	}
-
 	this.enqueuePreload = url => {
 		this._.preload_entity.src = url;
 	}
@@ -1459,11 +1465,11 @@ function UI_Reader(o) {
 			'apr.sidebar': o => this.toggleSidebar(o),
 			'apr.selPinned': o => this.setLayout(o, true),
 			'apr.previews': o => this.drawPreviews(o),
-			'thm.theme' : o => this.themeHandler(),
-			'thm.primaryCol' : o => this.themeHandler(),
-			'thm.readerBg' : o => this.themeHandler(),
-			'thm.accentCol' : o => this.themeHandler(),
-			'thm.textCol' : o => this.themeHandler(),
+			'thm.theme' : o => ThemeManager.themeUpdated(),
+			'thm.primaryCol' : o => ThemeManager.themeUpdated(),
+			'thm.readerBg' : o => ThemeManager.themeUpdated(),
+			'thm.accentCol' : o => ThemeManager.themeUpdated(),
+			'thm.textCol' : o => ThemeManager.themeUpdated(),
 			'misc.groupPreference': o => {},
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
@@ -3256,6 +3262,7 @@ function thirdPartySeriesHandler(url, chapter, group) {
 	}
 }
 
+
 function UI_About(o) {
 	o=be(o);
 	UI.call(this, Object.assign(o, {
@@ -3317,14 +3324,19 @@ URLC = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
+ThemeManager = new themeHandler();
 
 Loda.library.settings.createCategory('About', new UI_About());
 
 API.S.link(Reader);
 Settings.S.link(Reader);
-Reader.S.link(URLC)
-Reader.S.link(Settings)
-Reader.$.focus()
+Reader.S.link(URLC);
+Reader.S.link(Settings);
+Reader.$.focus();
+ThemeManager.S.link(Settings);
+//Settings.sendInit();
+ThemeManager.themeUpdated();
+
 if(window.location.hash == '#s') Loda.display('search');
 
 
