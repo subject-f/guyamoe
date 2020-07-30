@@ -65,7 +65,7 @@ class ReadManhwa(ProxySource):
     def series_api_handler(self, meta_id):
         with futures.ThreadPoolExecutor(max_workers=2) as executor:
             result = executor.map(
-                lambda req: {"type": req["type"], "res": get_wrapper(req["url"])},
+                lambda req: {"type": req["type"], "res": get_wrapper(req["url"], headers={"X-NSFW": "true"})},
                 [
                     {
                         "type": "main",
@@ -134,7 +134,8 @@ class ReadManhwa(ProxySource):
     @api_cache(prefix="readmanhwa_chapter_dt", time=3600)
     def chapter_api_handler(self, meta_id):
         resp = get_wrapper(
-            f"https://readmanhwa.com/api/comics/{naive_decode(meta_id)}/images"
+            f"https://readmanhwa.com/api/comics/{naive_decode(meta_id)}/images",
+            headers={"X-NSFW": "true"}
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
@@ -151,7 +152,7 @@ class ReadManhwa(ProxySource):
     def series_page_handler(self, meta_id):
         with futures.ThreadPoolExecutor(max_workers=2) as executor:
             result = executor.map(
-                lambda req: {"type": req["type"], "res": get_wrapper(req["url"])},
+                lambda req: {"type": req["type"], "res": get_wrapper(req["url"], headers={"X-NSFW": "true"})},
                 [
                     {
                         "type": "main",
