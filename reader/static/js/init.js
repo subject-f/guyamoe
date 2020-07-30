@@ -2206,7 +2206,7 @@ Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.relea
 var notice = new UI_Dummy({
 		html: `<div class="ReaderNotice">
 			<h2>You're caught up!</h2>
-			<p>Next chapter will come out in about:</p>
+			<p>Next chapter should come out in about:</p>
 			<div class="timer">${countdown(release)}</div>
 			<a href="https://discord.gg/BDpCRUJ" target="_blank">Discuss the chapter in our Discord</a>
 			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>
