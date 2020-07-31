@@ -8,7 +8,11 @@ import zipfile
 from datetime import datetime, timezone
 
 from discord import Embed, Webhook, RequestsWebhookAdapter
-from django.http import HttpResponse, HttpResponseBadRequest, StreamingHttpResponse
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    StreamingHttpResponse,
+)
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
