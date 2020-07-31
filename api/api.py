@@ -102,6 +102,7 @@ def series_data(series_slug):
         "next_release_time": series.next_release_time.timestamp()
         if series.next_release_time
         else None,
+        "next_release_html": series.next_release_html,
     }
 
 
@@ -188,7 +189,6 @@ def index_chapter(chapter):
         for index in ChapterIndex.objects.filter(series=chapter.series):
             word_dict = json.loads(index.chapter_and_pages)
             if ch_slug in word_dict:
-                print(index.word, word_dict[ch_slug])
                 del word_dict[ch_slug]
                 index.chapter_and_pages = json.dumps(word_dict)
                 index.save()

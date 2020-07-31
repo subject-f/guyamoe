@@ -65,7 +65,11 @@ class MangaDex(ProxySource):
     def handle_oneshot_chapters(self, resp):
         """This expects a chapter API response object."""
         try:
-            parse = (lambda s: str(float(s))) if "." in resp["chapter"] else (lambda s: str(int(s)))
+            parse = (
+                (lambda s: str(float(s)))
+                if "." in resp["chapter"]
+                else (lambda s: str(int(s)))
+            )
             return parse(resp["chapter"]), parse(resp["chapter"])
         except ValueError:
             return "Oneshot", f"0.0{str(resp['timestamp'])}"
@@ -104,7 +108,11 @@ class MangaDex(ProxySource):
                             chapter
                         )
                     else:
-                        chapters_dict[self.handle_oneshot_chapters(api_data["chapter"][chapter])[1]] = {
+                        chapters_dict[
+                            self.handle_oneshot_chapters(api_data["chapter"][chapter])[
+                                1
+                            ]
+                        ] = {
                             "volume": api_data["chapter"][chapter]["volume"],
                             "title": api_data["chapter"][chapter]["title"],
                             "groups": {
@@ -173,7 +181,9 @@ class MangaDex(ProxySource):
             chapter_dict = {}
             for ch in api_data["chapter"]:
                 if api_data["chapter"][ch]["lang_code"] == "gb":
-                    chapter_list_id, chapter_id = self.handle_oneshot_chapters(api_data["chapter"][ch])
+                    chapter_list_id, chapter_id = self.handle_oneshot_chapters(
+                        api_data["chapter"][ch]
+                    )
                     date = datetime.utcfromtimestamp(
                         api_data["chapter"][ch]["timestamp"]
                     )

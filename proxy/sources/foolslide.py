@@ -85,13 +85,12 @@ class FoolSlide(ProxySource):
                 series_chapter,
             ),
             re_path(
-                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]*%[\w\d.%-]*)/$",
-                series,
+                r"^proxy/foolslide/(?P<series_id>[\w\d.%-]*%[\w\d.%-]*)/$", series,
             ),
             re_path(
                 r"^proxy/foolslide/(?P<series_id>[\w\d.%-]*%[\w\d.%-]*)/(?P<chapter>[\d-]+)/(?P<page>[\d]+)/$",
                 series_chapter,
-            )
+            ),
         ]
 
     def encode_slug(self, url):

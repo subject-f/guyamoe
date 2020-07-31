@@ -51,6 +51,7 @@ class Series(models.Model):
     next_release_time = models.DateTimeField(
         default=None, blank=True, null=True, db_index=True
     )
+    next_release_html = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
