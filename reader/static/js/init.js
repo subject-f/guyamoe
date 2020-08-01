@@ -339,18 +339,34 @@ function themeHandler() {
 		let theme = Settings.get('thm.theme');
 		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
 		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
-		else if (theme === 'Light') this.setTheme('#5C97D2', '#EFF4FB', '#FDF888','#eeeeee');
+		else if (theme === 'Light') this.setTheme('#EA4C4C', '#FAF4D0', '#F9DC5C','#eeeeee');
 	}
 	this.setTheme = (sidebar, reader, accent, text) => {
 		document.documentElement.style.setProperty("--readerBg", reader);
 		document.documentElement.style.setProperty("--sidebarCol", sidebar);
 		document.documentElement.style.setProperty("--accentCol", accent);
-		document.documentElement.style.setProperty("--accentCol", accent);
 		document.documentElement.style.setProperty("--textCol", text);
 		document.documentElement.style.setProperty("--icoCol", text);
-		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -25));
-		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -10));
+		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -15));
+		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -7));
+		document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
+
+		let [r, g, b] = hexToRgb(accent); 
+		var yiq = ((r*299)+(g*587)+(b*114))/1000;
+
+		document.documentElement.style.setProperty("--accentSelected", (yiq > 160?'#111111':'#ffffff')); // Play with 160 there if you want.
 		
+		[r, g, b] = hexToRgb(sidebar);
+		yiq = ((r*299)+(g*587)+(b*114))/1000;
+
+		if(yiq > 100) { //Tweaks if theme is light
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.4)");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
+		}
+		else {
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.7)");
+		}
 	}
 	this.S.mapIn({
 		settingsPacket: this.themeUpdated,

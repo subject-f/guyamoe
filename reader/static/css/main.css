@@ -7,6 +7,10 @@
 --textCol: #ddd;
 --sidebarColDark: #2b2f33;
 --prevCol: #34393d;
+--accentSelected: #ffffff;
+--sidebarColFocus: rgba(0, 0, 0, 0.3);
+--borderColor: rgba(0,0,0,0.7);
+--blackFlag: rgba(0,0,0,0.7);
 }
 
 @font-face {
@@ -566,7 +570,7 @@ aside header > .guya {
 }
 
 .rdr-groups div.is-active {
-	background: rgba(0,0,0,0.3);
+	background: var(--sidebarColFocus);
 	color: var(--icoCol);
  }
 
@@ -802,14 +806,14 @@ aside header > .guya {
 	font-family: guya;
 	font-size: 2em;
 	padding: 2rem 2rem 0rem 2rem;
-	text-shadow: 0px 2px 1px black, 0px 1px 3px black;
+	text-shadow: 0px 2px 1px rgba(0,0,0,0.8), 0px 1px 3px rgba(0,0,0,0.8);
 }
 
 .rdr-area .hover-sub {
 	color: white;
 	display: block;
 	margin-top: 0.1rem;
-	text-shadow: 0px 2px 1px black, 0px 1px 3px black;
+	text-shadow: 0px 2px 1px rgba(0,0,0,0.8), 0px 1px 3px rgba(0,0,0,0.8);
 	width: 100%;
 	font-size: 0.8em;
 	font-variant: small-caps;
@@ -1166,7 +1170,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	vertical-align: middle;
 	margin-right: 1.4ch;
 	height: 100%;
-	width: 3px;
+	width: 2px;
 	left: -4px;
 	background: #272b30;
 }
@@ -1180,17 +1184,17 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 
 .rdr-page-selector-keys div:hover {
 	border-left: 1px solid lightgray;
-	box-shadow: 100px 0px 20px -100px rgba(255,255,255,0.5) inset, 100px 0px 20px -100px black inset;
+	box-shadow: 100px 0px 20px -100px rgba(255,255,255,0.5) inset, 100px 0px 20px -100px rgba(0,0,0,0.55) inset;
 	left: 2px;
 	color: rgba(255,255,255,1);
-	text-shadow: 1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 0px 0px black, -1px 0px 0px black, 0px -1px 0px black, 0px 1px 0px black, 0px 0px 3px black;
+	text-shadow: 1px 1px 0px rgba(0,0,0,0.5), -1px -1px 0px rgba(0,0,0,0.5), 1px -1px 0px rgba(0,0,0,0.5), -1px 1px 0px rgba(0,0,0,0.5), 1px 0px 0px rgba(0,0,0,0.5), -1px 0px 0px rgba(0,0,0,0.5), 0px -1px 0px rgba(0,0,0,0.5), 0px 1px 0px rgba(0,0,0,0.5), 0px 0px 3px rgba(0,0,0,0.5);
 }
 
 .rdr-page-selector-keys div.shown {
 	border-left: 1px solid white;
 	color: white;
-	box-shadow: 100px 0px 20px -100px white inset, 100px 0px 20px -90px inset #272b30;
-	text-shadow: 1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 0px 0px black, -1px 0px 0px black, 0px -1px 0px black, 0px 1px 0px black, 0px 0px 3px black;
+	box-shadow: 100px 0px 20px -100px white inset, 100px 0px 20px -90px inset rgba(0,0,0,0.65);
+	text-shadow: 1px 1px 0px rgba(0,0,0,0.5), -1px -1px 0px rgba(0,0,0,0.5), 1px -1px 0px rgba(0,0,0,0.5), -1px 1px 0px rgba(0,0,0,0.5), 1px 0px 0px rgba(0,0,0,0.5), -1px 0px 0px rgba(0,0,0,0.5), 0px -1px 0px rgba(0,0,0,0.5), 0px 1px 0px rgba(0,0,0,0.5), 0px 0px 3px rgba(0,0,0,0.5);
 	left: 0;
 	
 }
@@ -1378,7 +1382,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 .Tooltippy {
 	position: absolute;
 	padding: 0.4em 0.8em;
-	background: rgba(20,20,20,0.95);
+	background: var(--sidebarColFocus);
 	border-radius: 2px;
 	box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
 	z-index: 3000;
@@ -1453,7 +1457,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 .Loda {
 	display: flex;
 	flex-direction: column;
-	background: var(--sidebarColDark);
+	background: var(--prevCol);
 	border-radius: 4px;
 	position: relative;
 	box-shadow: 0px 4px 7px 3px rgba(0,0,0,0.3);
@@ -1594,7 +1598,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 .Loda_Settings aside {
 	width: 11.2rem;
-	background: rgba(0,0,0,0.2);
+	background-color: var(--sidebarColDark);
 	padding-bottom: 2rem;
 }
 .Loda_Settings content {
@@ -1607,11 +1611,11 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	font-size: 0.9em;
 }
 .Loda_Settings .Tab:hover {
-	background: rgba(255,255,255,0.05);
+	background: rgba(255,255,255,0.15);
 	cursor: default;
 }
 .Loda_Settings .Tab.is-active {
-	background: rgba(0,0,0,0.3);
+	background: var(--sidebarColFocus);
 	padding: 0.5rem 1rem;
 	font-size: 0.9em;
 }
@@ -1944,15 +1948,15 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
  	background: rgba(0,0,0,0.2);
  	min-height: 1.1rem;
  	flex-grow: 1;
- 	border-left: 1px solid #131313;
-	border-top: 1px solid #131313;
+ 	border-left: 1px solid var(--borderColor);
+	border-top: 1px solid var(--borderColor);
 	margin-top: -1px;
 	margin-left: -1px;
 }
 
 .ToggleButton.s {
 	background: var(--accentCol);
-	color: black;
+	color: var(--accentSelected);
 }
 
 /*.ToggleButton:nth-child(2):not(:last-child),
@@ -1963,7 +1967,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 .ButtonGroup .t-1 {
 	flex-wrap: wrap;
 	max-width: 99.499%;
-	border: 1px solid #131313;
+	border: 1px solid var(--borderColor);
 	border-radius: 3px;
 	overflow: hidden;
 }
@@ -1994,7 +1998,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	height: 1px;
 	min-height: 3rem;
 	bottom: 0;
-	background: linear-gradient(0deg, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
+	background: linear-gradient(0deg, var(--blackFlag) 10%, rgba(0,0,0,0) 100%);
 			top: unset !important;
 }
 
@@ -2084,22 +2088,22 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 .selectorAnchor-bottom .rdr-page-selector-keys div:hover {
 	border-left: none;
 	border-bottom: 1px solid lightgray;
-	box-shadow: 0px -100px 20px -100px rgba(255,255,255,0.5) inset, 0px -100px 20px -100px black inset;
+	box-shadow: 0px -100px 20px -100px rgba(255,255,255,0.8) inset, 0px -100px 20px -100px black inset;
 	left: 0px;
 	bottom: 2px;
 }
 
 .selectorAnchor-bottom .rdr-page-selector-keys div.shown {
 	border-left: none;
-	border-bottom: 1px solid white;
-	box-shadow:  0px -100px 20px -100px white inset;
+	border-bottom: 3.5px solid var(--accentCol);
+	box-shadow:  0px -100px 20px -80px rgba(255,255,255,0.2) inset;
 }
 
 .selectorAnchor-bottom .rdr-page-selector-keys div.shown:hover {
 	bottom: 0 !important;
 }
 .selectorAnchor-bottom .rdr-page-selector .preloaded {
-	border-bottom-color: #6699b9;
+	border-bottom-color: var(--accentCol);
 }
 
 
@@ -2138,11 +2142,10 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	}
 
 	.sidebar-false .hide-side div::before {
-		filter: brightness(80%);
 		/*border-color: transparent  #3a3f44 transparent  transparent;*/
 	}
 	.sidebar-false .hide-side div:hover:before {
-		filter: brightness(50%);
+		filter: brightness(110%);
 		/*border-color: transparent #2b2f33 transparent  transparent;*/
 	}
 
