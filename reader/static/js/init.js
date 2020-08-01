@@ -102,8 +102,8 @@ function ReaderAPI(o) {
 				}
 			}
 		}
-		//We'll need to get this from the server as a field later.
-		if(data.slug == 'Kaguya-Wants-To-Be-Confessed-To') { 
+		
+		if(data.next_release_page) {
 			data.countdown = true;
 			var lastChapter = Object.keys(data.chapters).sort((a,b) => b - a)[0];
 
@@ -2172,6 +2172,7 @@ function UI_ReaderNoticeWrapper(o) {
 
 	this.imageInstances = [];
 	this.totalWidth = 0;
+
 	function countdown(time) {
 		time = new Date(time * 1000);
 		var t = time.getTime() - Date.now()
@@ -2197,21 +2198,20 @@ function UI_ReaderNoticeWrapper(o) {
 		if(t < 0) return 'Should be soon!';
 		return times.join(' ');
 	}
-var release =
-Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]];
-	release += 7 * 24 * 60 * 60;
-	if(Reader.SCP.chapterObject.wo)
-		release += Reader.SCP.chapterObject.wo * 7 * 24 * 60 * 60;
-	//TOFIX: done too fast, check impl
+	let release;
+		if(Reader.current.next_release_time)
+			release = Reader.current.next_release_time;
+		else
+			release = Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]] + 7 * 24 * 60 * 60;
 var notice = new UI_Dummy({
-		html: `<div class="ReaderNotice">
-			<h2>You're caught up!</h2>
+		html: ('<div class="ReaderNotice">' +
+			(Reader.current.next_release_html || `<h2>You're caught up!</h2>
 			<p>Next chapter should come out in about:</p>
-			<div class="timer">${countdown(release)}</div>
+			<div class="timer">$countdown</div>
 			<a href="https://discord.gg/BDpCRUJ" target="_blank">Discuss the chapter in the Kaguya Discord</a>
 			<a href="https://twitter.com/GuyaMoe" target="_blank">Follow our Twitter for updates</a>
-			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>
-		</div>`
+			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>`
+		) + '</div>').replace('$countdown', countdown(release))
 	});
 	notice.parentWrapper = this;
 	notice.load = () => {};
