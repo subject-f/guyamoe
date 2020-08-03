@@ -349,7 +349,6 @@ function themeHandler() {
 		document.documentElement.style.setProperty("--icoCol", text);
 		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -15));
 		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -7));
-		document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
 
 		let [r, g, b] = hexToRgb(accent); 
 		var yiq = ((r*299)+(g*587)+(b*114))/1000;
@@ -360,12 +359,28 @@ function themeHandler() {
 		yiq = ((r*299)+(g*587)+(b*114))/1000;
 
 		if(yiq > 100) { //Tweaks if theme is light
-			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.4)");
-			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
-		}
-		else {
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.1)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -24));
+			
+		} else {
 			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
+		}
+		[r, g, b] = hexToRgb(reader);
+		yiq = ((r*299)+(g*587)+(b*114))/1000;
+
+		if(yiq > 100) {
+			document.documentElement.style.setProperty("--rdrBorderL", "3px");
+			document.documentElement.style.setProperty("--rdr-wb", "1px");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.6)");
+		} else {
+			document.documentElement.style.setProperty("--rdrBorderL", "1px");
+			document.documentElement.style.setProperty("--rdr-wb", "2px");
 			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.35)");
 		}
 	}
 	this.S.mapIn({
