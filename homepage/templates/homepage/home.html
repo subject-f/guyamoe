@@ -439,7 +439,8 @@ let pinItem = async (event, element, source, slug) => {
 
 let proxyDestroyElements = () => {
 	document.querySelectorAll(".proxy").forEach(e => e.remove());
-	document.getElementById("rs-widget").remove();
+try { document.getElementById("rs-widget").remove(); } catch (err) { /* Do nothing, just die */ }
+	
 }
 
 let proxyInitElements = async () => {
@@ -533,10 +534,12 @@ window.addEventListener("load", () => {
 		clicked = 0;
 		if (enabled) {
 			globalHistoryHandler.toggle.disable();
-			location.reload();
+			proxyDestroyElements();
+			//location.reload();
 		} else {
 			globalHistoryHandler.toggle.enable();
-			location.reload();
+			proxyInitElements();
+			//location.reload();
 		}
 		enabled = !enabled;
 		}
