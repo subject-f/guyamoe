@@ -10,7 +10,7 @@ const TOGGLE = 2;
 function KeyListener(target, mode) {
 	this.target = target || document;
 	this.listeners = {};
-	this.pres = [];  
+	this.pres = [];
 	this.conditions = [];
 	this.exclusions = [];
 	this.mode = mode || 'keydown';
@@ -383,7 +383,7 @@ function Linkable(o) {
 	var inObj = {}
 		inObj[streamID] = callback;
 		this.S.link(new Linkable().S.mapIn(inObj));
-	 	return this;
+		return this;
 	}
 
 	//{'source_stream_id': 'target_stream_id'}
@@ -775,7 +775,7 @@ function UI_Selector(o) {
 		if(event.target !== this.$ && this.$.contains(event.target)) {
 			element = event.target;
 			do { 
-			    if (element.parentNode == this.$) break;
+				if (element.parentNode == this.$) break;
 			} while (element = element.parentNode);
 			//errhandle if not a struct
 			this.select(element._struct, TOGGLE);
@@ -978,53 +978,74 @@ function UI_ColorPicker(o) {
 	UI.call(this, {
 		node: o.node,
 		kind: ['ColorPicker'].concat(o.kind || []),
-		html: o.html || `<input type="text" readonly=""/>`,
+		html: o.html || `<button type="button" />`
 	});
 	Linkable.call(this);
 
 	if(o.type) this.$.type = o.type;
 	this.setting = o.setting;
-	this.$.value = this.$.style.backgroundColor = this.setting.setting;
+	this.init = false;
 
-	this.handler = function (e) {
-		this.value = this.$.value;
-		this.S.out('settingsPacket',
+	this.set = function(value, silent) {
+		this.value = value;
+		this.$.style.backgroundColor = value;
+		if(!this.init && value) {
+			this.pickr.setColor(value, true);
+			this.init = true;
+		}
+		if(silent != true) {
+			this.S.out('settingsPacket',
 				new SettingsPacket(
 					'set',
 					this.setting.addr,
-					this.$.value
+					this.value
 				)
 			);
+		}
 	}
 
-	const pickr = new Pickr({
-	  el: this.$,
-	  useAsButton: true,
-	  default: this.$.value,
-	  theme: 'nano',
-	  autoReposition: true,
-	  components: {
-	    preview: true,
-	    opacity: true,
-	    hue: true,
+	this.pickr = new Pickr({
+		el: this.$,
+		useAsButton: true,
+		default: this.value,
+		theme: 'nano',
+		default: '#ffffff',
+		autoReposition: true,
+		components: {
+			preview: true,
+			opacity: false,
+			hue: true,
+			interaction: {
+				hex: false,
+				rgba: false,
+				hsva: false,
+				input: true,
+				save: true
+			}
+		}
+	})
+	.on('save', color => {
+		this.colorBackup = color.toHEXA().toString(0);
+		this.pickr.hide();
+	})
+	.on('change', (color, instance) => {
+		this.set(color.toHEXA().toString(0))
+	})
+	.on('show', (color, instance) => {
+		this.colorBackup = this.value;
+	})
+	.on('hide', instance => {
+		this.set(this.colorBackup);
+	})
 
-	    interaction: {
-	      hex: false,
-	      rgba: false,
-	      hsva: false,
-	      input: true,
-	      save: true
-	    }
-	  }
-	}).on('init', pickr => {
-	  this.$.value = pickr.getSelectedColor().toRGBA().toString(0);
-	}).on('save', color => {
-	  this.$.value = color.toHEXA().toString(0);
-	  this.handler();
-	  pickr.hide();
-	}).on('change', (color, instance) => {
-	    this.$.value = this.$.style.backgroundColor = color.toHEXA().toString(0)})
+	this.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.setting == this.setting.addr)
+			this.set(settingsPacket.value, true);
+	}
 
+	this.S.mapIn({
+		settingsPacket: this.settingsPacketHandler
+	})
 }
 
 function UI_Button(o) {
@@ -1380,18 +1401,18 @@ function UI_Editable(o) {
 
 
 	this.filterNewlines = function filterNewlines(e) {
-	    if(e.which == 13) {
+		if(e.which == 13) {
 			e.preventDefault();
 			return false;
 		}
 		this.filterTags();
 	}
 	this.filterTags = function filterTags(e) {
-	    for(var i=0; i<this.$.children.length; i++) {
-    		this.$.children[0].parentNode.removeChild(this.$.children[0]);
-	    };
-	    if(this.$.innerHTML.length < 1)
-	    	this.$.innerHTML='<br>';
+		for(var i=0; i<this.$.children.length; i++) {
+			this.$.children[0].parentNode.removeChild(this.$.children[0]);
+		};
+		if(this.$.innerHTML.length < 1)
+			this.$.innerHTML='<br>';
 	}
 
 	this.edit = function edit(state) {
