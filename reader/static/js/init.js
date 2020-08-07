@@ -18,7 +18,7 @@ function shadowScroll() {
 	PROGRAMMATIC_SCROLL = true;
 	if(SCROLL_TIMER) clearTimeout(SCROLL_TIMER);
 	SCROLL_TIMER = setTimeout(() => {
-		PROGRAMMATIC_SCROLL = false;
+  		PROGRAMMATIC_SCROLL = false;
 	}, 50)
 } 
 
@@ -1196,6 +1196,9 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.page;
 		}
 
+		this.imageView.selectPage(this.SCP.page, dry);
+		this.SCP.visiblePages = this.imageView.visiblePages;
+
 		//if last page
 		if(HAS_LOCALSTORAGE
 		&& this.imageView.visiblePages
@@ -1205,9 +1208,6 @@ function UI_Reader(o) {
 			source = source[source.indexOf(this.SCP.series) - 1];
 			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
 		}
-
-		this.imageView.selectPage(this.SCP.page, dry);
-		this.SCP.visiblePages = this.imageView.visiblePages;
 		this.S.out('SCP', this.SCP);
 	}
 
