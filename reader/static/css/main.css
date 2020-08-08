@@ -3002,7 +3002,7 @@ body, button, button:before {
 	text-align: center;
 	text-transform: uppercase;
 	letter-spacing: 0.10em;
-	font-family: Arial;
+	font-family: "Open Sans";
 	text-shadow: var(--rescueShade);
 	border: 0.1px solid rgba(0,0,0,0.3);
 	border-radius: 2px;
