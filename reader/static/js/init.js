@@ -359,11 +359,11 @@ function themeHandler() {
 		var	luma = ((r*299)+(g*587)+(b*114))/1000;
 
 		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff'));
-		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
 		
 		[r, g, b] = hexToRgb(sidebar);
 		luma = ((r*299)+(g*587)+(b*114))/1000;
 
+		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
 		if(luma > 100) { //Tweaks if theme is light
 			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.2)");
 			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.05)");
@@ -391,7 +391,7 @@ function themeHandler() {
 
 		[r, g, b] = hexToRgb(reader);
 		luma = ((r*299)+(g*587)+(b*114))/1000;
-
+		
 		if(luma > 100) {
 			document.documentElement.style.setProperty("--rdrBorderL", "3px");
 			document.documentElement.style.setProperty("--rdr-wb", "1px");

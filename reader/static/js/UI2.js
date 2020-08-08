@@ -984,15 +984,12 @@ function UI_ColorPicker(o) {
 
 	if(o.type) this.$.type = o.type;
 	this.setting = o.setting;
-	this.init = false;
 
 	this.set = function(value, silent) {
+		if(this.value && value.toLowerCase() == this.value.toLowerCase()) return;
 		this.value = value;
 		this.$.style.backgroundColor = value;
-		if(!this.init && value) {
-			this.pickr.setColor(value, true);
-			this.init = true;
-		}
+		this.pickr.setColor(value, true);
 		if(silent != true) {
 			this.S.out('settingsPacket',
 				new SettingsPacket(

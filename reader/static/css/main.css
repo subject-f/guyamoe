@@ -2804,10 +2804,11 @@ input[type=range]::-ms-thumb {
 	flex-grow: 0;
 	flex-shrink: 1;
 	font-style: normal;
-	color: var(--accentSelectedInvert);
+	color: var(--textCol);
 	font-size: 0.6rem;
 	position: relative;
 	margin: 0 2ch;
+	opacity: 0.7;
 }
 .Slider .ticks i:last-child {
 	margin-right: 0;
@@ -2993,24 +2994,21 @@ body, button, button:before {
 	text-shadow: var(--rescueShade);
 }
 
-.reset-btn {
-	all: initial;
+.ResetButton {
 	margin-top: 1em;
-	width: 6.6em;
-	height: 3em;
 	font-size: 12px;
 	text-align: center;
 	text-transform: uppercase;
-	letter-spacing: 0.10em;
+	letter-spacing: 0.07em;
 	font-family: "Open Sans";
 	text-shadow: var(--rescueShade);
-	border: 0.1px solid rgba(0,0,0,0.3);
+	border: 1px solid var(--borderColor);
 	border-radius: 2px;
 	overflow: hidden;
-	box-shadow: 0 10px 20px 0 rgba(0,0,0,0.07), 0px 0px 0px 1px inset rgba(255,255,255,0.3);
-	color: #eeeeee;
+	box-shadow: 0 2px 3px -1px rgba(0,0,0,0.3);
+	color: var(--textCol);
 	background-color: var(--sidebarColDark);
-
+	padding: 0.4rem 1.6rem;
 }
 
 .pcr-app[data-theme=nano] .pcr-selection .pcr-color-chooser {
