@@ -1015,6 +1015,7 @@ function UI_ColorPicker(o) {
 			preview: true,
 			opacity: false,
 			hue: true,
+			preview: false, 
 			interaction: {
 				hex: false,
 				rgba: false,
@@ -1030,6 +1031,7 @@ function UI_ColorPicker(o) {
 	})
 	.on('change', (color, instance) => {
 		this.set(color.toHEXA().toString(0))
+
 	})
 	.on('show', (color, instance) => {
 		this.colorBackup = this.value;
@@ -1037,6 +1039,8 @@ function UI_ColorPicker(o) {
 	.on('hide', instance => {
 		this.set(this.colorBackup);
 	})
+
+	qsa('.pcr-result').forEach(el => {new KeyListener(el).solo(true);});
 
 	this.settingsPacketHandler = settingsPacket => {
 		if(settingsPacket.setting == this.setting.addr)
@@ -1046,6 +1050,7 @@ function UI_ColorPicker(o) {
 	this.S.mapIn({
 		settingsPacket: this.settingsPacketHandler
 	})
+
 }
 
 function UI_Button(o) {
@@ -1062,11 +1067,37 @@ function UI_Button(o) {
 	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
 
 	this.trigger = function trigger(event) {
-		this.S.out('click', this.data)
+		this.S.out('click', this.data);
 		return this;
 	}
 
 	this.$['on'+this.method] = event => this.trigger(event);
+}
+
+function UI_ResetButton(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ResetButton'].concat(o.kind || []),
+		html: o.html || '<div></div>',
+	});
+	Linkable.call(this);
+	this.method = o.method || 'mousedown';
+	this.data = o.data;
+	this.setting = o.setting;
+
+	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
+
+	this.activate = function trigger(value, silent) {
+		this.S.out('settingsPacket',
+			new SettingsPacket(
+				'set',
+				this.setting.addr,
+				value
+			)
+		);
+	}
+	this.$['on'+this.method] = () => this.activate('true');
 }
 
 function UI_ToggleButton(o) {

@@ -8,6 +8,7 @@
 --sidebarColDark: #2b2f33;
 --prevCol: #34393d;
 --accentSelected: #ffffff;
+--accentSelectedInvert: #333333;
 --sidebarColFocus: rgba(0, 0, 0, 0.3);
 --borderColor: rgba(0,0,0,0.7);
 --blackFlag: rgba(0,0,0,0.7);
@@ -1346,7 +1347,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .zoom-level .ico-btn {
-	background: rgba(0,0,0,0.7);
+	background: var(--sidebarCol);
 	width: 3rem;
 	height: 3rem;
 	border-top-left-radius: 4px;
@@ -1363,7 +1364,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .zoom-level .ico-btn:hover {
-	background: rgba(0,0,0,0.9);
+	background: var(--sidebarColDark);
 }
 
 .fit-width .zoom-level:hover,
@@ -2803,7 +2804,7 @@ input[type=range]::-ms-thumb {
 	flex-grow: 0;
 	flex-shrink: 1;
 	font-style: normal;
-	color: rgba(255, 255, 255, 0.7);
+	color: var(--accentSelectedInvert);
 	font-size: 0.6rem;
 	position: relative;
 	margin: 0 2ch;
@@ -2990,4 +2991,33 @@ input[type=number] {
 
 body, button, button:before {
 	text-shadow: var(--rescueShade);
+}
+
+.reset-btn {
+	all: initial;
+	margin-top: 1em;
+	width: 6.6em;
+	height: 3em;
+	font-size: 12px;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 0.10em;
+	font-family: Arial;
+	text-shadow: var(--rescueShade);
+	border: 0.1px solid rgba(0,0,0,0.3);
+	border-radius: 2px;
+	overflow: hidden;
+	box-shadow: 0 10px 20px 0 rgba(0,0,0,0.07), 0px 0px 0px 1px inset rgba(255,255,255,0.3);
+	color: #eeeeee;
+	background-color: var(--sidebarColDark);
+
+}
+
+.pcr-app[data-theme=nano] .pcr-selection .pcr-color-chooser {
+    grid-area: 2/1/2/span 2 !important; 
+}
+
+
+.pcr-app[data-theme=nano] .pcr-swatches {
+    display: none !important;
 }
