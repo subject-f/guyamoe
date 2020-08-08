@@ -160,7 +160,8 @@ const SETTING_HIDDEN = -1;
 const SETTING_CUSTOM = 1;
 const SETTING_BOOLEAN = 10;
 const SETTING_MULTI = 20;
-const SETTING_COLOR = 1;
+const SETTING_COLOR = 11;
+const SETTING_BUTTON = 12;
 const SETTING_MULTI_DROPDOWN = 21;
 const SETTING_VALUE = 30;
 const SETTING_VALUE_STEPPED = 31;
@@ -294,6 +295,7 @@ function Setting(o) {
 			case SETTING_MULTI_DROPDOWN:
 			case SETTING_VALUE:
 			case SETTING_COLOR:
+			case SETTING_BUTTON:
 			case SETTING_VALUE_STEPPED:
 				classList.remove.apply(classList, [].filter.call(classList, cl => cl.indexOf(this.name) == 0));
 				classList.add(this.classString());
@@ -337,10 +339,12 @@ function SettingsCategory(name, hidden, icon) {
 function themeHandler() {
 	Linkable.call(this);
 	this.themeUpdated = () => {
+		let reset = Settings.get('thm.reset');
 		let theme = Settings.get('thm.theme');
 		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
 		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
 		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
+		if(reset === 'true') this.resetCustom();
 	}
 	this.setTheme = (sidebar, reader, accent, text) => {
 		document.documentElement.style.setProperty("--readerBg", reader);
@@ -354,7 +358,8 @@ function themeHandler() {
 		let [r, g, b] = hexToRgb(accent);
 		var	luma = ((r*299)+(g*587)+(b*114))/1000;
 
-		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff')); // Play with 160 there if you want.
+		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff'));
+		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
 		
 		[r, g, b] = hexToRgb(sidebar);
 		luma = ((r*299)+(g*587)+(b*114))/1000;
@@ -399,6 +404,17 @@ function themeHandler() {
 			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.35)");
 		}
 	}
+
+	this.resetCustom = () => {
+		Settings.getByAddr('thm.reset').set('false');
+		if(Settings.get('thm.theme') === 'Custom') {
+			Settings.getByAddr('thm.primaryCol').set('#3A3F44');
+			Settings.getByAddr('thm.readerBg').set('#272B30');
+			Settings.getByAddr('thm.accentCol').set('#B2DFFB');
+			Settings.getByAddr('thm.textCol').set('#EEEEEE');
+		}
+	}
+	
 	this.S.mapIn({
 		settingsPacket: this.themeUpdated,
 	})
@@ -480,10 +496,14 @@ function SettingsHandler(){
 			var setting = this.getByAddr(key);
 				if(qu[key] instanceof Array) {
 					if(qu[key][0][0] == '!') {
-						if(qu[key][0].substr(1) == setting.get())
+						if(qu[key][0].substr(1) == setting.get()){
+							try { if(qu[key][1] === 'or') continue } catch(err) {};
 							return false;
-						else
+						}
+						else {
+							try { if(qu[key][1] === 'or') return true } catch(err) {};
 							continue;
+						}
 					}
 					if(qu[key].includes(setting.get())) continue;
 				}
@@ -494,6 +514,7 @@ function SettingsHandler(){
 				}
 			}
 		}
+		try { if(qu[key][1] === 'or') return false } catch(err) {};
 		return true;
 	}
 
@@ -679,7 +700,7 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.primaryCol',
 		prettyName: 'Primary Color',
-		default: '#3a3f44',
+		default: '#3A3F44',
 		condition: {'thm.theme': ['Custom']},
 		compact: true,
 		global: false,
@@ -688,7 +709,7 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.readerBg',
 		prettyName: 'Reader Background',
-		default: '#272b30',
+		default: '#272B30',
 		condition: {'thm.theme': ['Custom']},
 		compact: true,
 		global: false,
@@ -697,7 +718,7 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.accentCol',
 		prettyName: 'Accent Color',
-		default: '#b2dffb',
+		default: '#B2DFFB',
 		condition: {'thm.theme': ['Custom']},
 		compact: true,
 		global: false,
@@ -706,11 +727,20 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.textCol',
 		prettyName: 'Text Color',
-		default: '#eeeeee',
+		default: '#EEEEEE',
 		condition: {'thm.theme': ['Custom']},
 		compact: true,
 		global: false,
 		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.reset',
+		prettyName: '',
+		options: ['true','false'],
+		default: 'false',
+		compact: true,
+		condition: {'thm.theme': ['Custom'], 'thm.primaryCol': ['!#3A3F44', 'or'], 'thm.readerBg': ['!#272B30', 'or'], 'thm.accentCol': ['!#B2DFFB', 'or'], 'thm.textCol': ['!#EEEEEE', 'or']},
+		type: SETTING_BUTTON
 	})
 	.newSetting({
 		addr: 'lyt.spread',
@@ -1520,6 +1550,9 @@ function UI_Reader(o) {
 			'apr.sidebar': o => this.toggleSidebar(o),
 			'apr.selPinned': o => this.setLayout(o, true),
 			'apr.previews': o => this.drawPreviews(o),
+			'thm.reset' : o => {
+				ThemeManager.themeUpdated()
+			},
 			'thm.theme' : o => ThemeManager.themeUpdated(),
 			'thm.primaryCol' : o => ThemeManager.themeUpdated(),
 			'thm.readerBg' : o => ThemeManager.themeUpdated(),
@@ -3230,6 +3263,13 @@ function UI_SettingDisplay(o) {
 			this.entity = new UI_ColorPicker({
 				setting: this.setting
 			}).S.biLink(Settings);
+			break;
+		case SETTING_BUTTON: 
+			this.entity = new UI_ResetButton({
+				setting: this.setting,
+				html: `<button class="reset-btn"></button>`,
+				text: 'Reset'
+			}).S.link(Settings);
 			break;
 	}
 
