@@ -408,11 +408,10 @@ function themeHandler() {
 	this.resetCustom = () => {
 		Settings.getByAddr('thm.reset').set('false');
 		if(Settings.get('thm.theme') === 'Custom') {
-			Settings.getByAddr('thm.primaryCol').set('#3A3F44')
-			Settings.getByAddr('thm.readerBg').set('#272B30')
-			Settings.getByAddr('thm.accentCol').set('#B2DFFB')
-			Settings.getByAddr('thm.textCol').set('#EEEEEE')
-			this.setTheme('#3A3F44','#272B30', '#B2DFFB', '#EEEEEE');
+			Settings.getByAddr('thm.primaryCol').set('#3A3F44');
+			Settings.getByAddr('thm.readerBg').set('#272B30');
+			Settings.getByAddr('thm.accentCol').set('#B2DFFB');
+			Settings.getByAddr('thm.textCol').set('#EEEEEE');
 		}
 	}
 	
