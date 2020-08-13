@@ -68,7 +68,9 @@ def get_all_series(request):
                 "slug": series.slug,
                 "cover": cover_vol_url,
                 "groups": all_groups(),
-                "last_updated": int(datetime.timestamp(last_updated)),
+                "last_updated": int(datetime.timestamp(last_updated))
+                if last_updated
+                else 0,
             }
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")
