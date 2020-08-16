@@ -67,7 +67,9 @@ class ReadManhwa(ProxySource):
             result = executor.map(
                 lambda req: {
                     "type": req["type"],
-                    "res": get_wrapper(req["url"], headers={"X-NSFW": "true"}),
+                    "res": get_wrapper(
+                        req["url"], headers={"X-NSFW": "true"}, params={"nsfw": "true"}
+                    ),
                 },
                 [
                     {
@@ -139,6 +141,7 @@ class ReadManhwa(ProxySource):
         resp = get_wrapper(
             f"https://readmanhwa.com/api/comics/{naive_decode(meta_id)}/images",
             headers={"X-NSFW": "true"},
+            params={"nsfw": "true"},
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
@@ -157,7 +160,9 @@ class ReadManhwa(ProxySource):
             result = executor.map(
                 lambda req: {
                     "type": req["type"],
-                    "res": get_wrapper(req["url"], headers={"X-NSFW": "true"}),
+                    "res": get_wrapper(
+                        req["url"], headers={"X-NSFW": "true"}, params={"nsfw": "true"}
+                    ),
                 },
                 [
                     {
