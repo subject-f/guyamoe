@@ -6,6 +6,7 @@
 --icoCol: #eee;
 --textCol: #ddd;
 --sidebarColDark: #2b2f33;
+--sidebarColDarkA: #2b2f3300;
 --prevCol: #34393d;
 --accentSelected: #ffffff;
 --accentSelectedInvert: #333333;
@@ -542,7 +543,7 @@ aside header > .guya {
 	right: 0;
 	top: 0;
 	width: 2rem;
-	background: linear-gradient(90deg, #ffffff00 0%, var(--sidebarColDark) 100%);
+	background: linear-gradient(90deg, var(--sidebarColDarkA) 0%, var(--sidebarColDark) 100%);
 	pointer-events: none;
 }
 
@@ -661,7 +662,7 @@ aside header > .guya {
 
 .rdr-previews-gallery .is-active {
 	opacity: 0.7;
-	outline: 2px solid #6699b9;
+	outline: 2px solid var(--accentCol);
 }
 
 .unload .rdr-selector-chap.next {
@@ -1668,6 +1669,34 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	flex-grow: 1;
 	justify-content: flex-end;
 }
+
+.SettingUnit.compact .ToggleButton > * {
+	display: none;
+}
+
+.SettingUnit.compact .ToggleButton:before {
+	content: "";
+	display: inline-block;
+	font-family: Guya;
+	font-size: 1.7em;
+	line-height: 0;
+	margin-right: -0.2em;
+}
+
+.SettingUnit.compact .ToggleButton:last-child::before {
+	content: "";
+}
+
+.SettingUnit.compact .t-1 {
+	flex-grow: 0;
+	margin-left: 1rem;
+}
+
+.SettingUnit.compact .ButtonGroup {
+	justify-content: right;
+	margin-bottom: 0;
+}
+
 
 .IndexSearch:empty:before {
 	content: "Type your query and press Enter to search the entire manga contents.";
@@ -3011,6 +3040,8 @@ body, button, button:before {
 	padding: 0.4rem 1.6rem;
 }
 
+/* pcr-overrides */
+
 .pcr-app[data-theme=nano] .pcr-selection .pcr-color-chooser {
     grid-area: 2/1/2/span 2 !important; 
 }
@@ -3018,4 +3049,65 @@ body, button, button:before {
 
 .pcr-app[data-theme=nano] .pcr-swatches {
     display: none !important;
+}
+
+
+/* nano.min.css | https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css */
+
+.pcr-app {
+	background: #33383d;
+}
+
+.pcr-app .pcr-interaction .pcr-save {
+	background: #b2dffb;
+}
+
+.pcr-app .pcr-interaction .pcr-cancel, .pcr-app .pcr-interaction .pcr-clear, .pcr-app .pcr-interaction .pcr-save {
+	color: black;
+	font-family: "Open Sans";
+}
+
+.pcr-app .pcr-interaction input {
+	letter-spacing: unset; 
+	font-size: 0.8rem;
+	border-radius: unset; 
+	padding: unset; 
+	margin-top: unset; 
+	padding: .45em 1.1em;
+}
+
+.pcr-app .pcr-interaction > * {
+	margin: unset;
+}
+
+.pcr-app .pcr-interaction {
+	margin: unset;
+	align-items: stretch;
+	overflow: hidden;
+	border-bottom-right-radius: 4px;
+	border-bottom-left-radius: 4px;
+}
+
+.pcr-app[data-theme="nano"] .pcr-interaction {
+	padding: unset;
+	height: 2.1rem;
+	margin-bottom: -5px;
+}
+
+.pcr-app .pcr-interaction .pcr-result {
+	border-radius: unset;
+	background: #292d31;
+	color: #eee;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.pcr-app[data-theme="nano"] .pcr-selection .pcr-color-palette .pcr-palette {
+	border-radius: unset;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+
+.pcr-app[data-theme="nano"] .pcr-selection .pcr-color-chooser, .pcr-app[data-theme="nano"] .pcr-selection .pcr-color-opacity {
+	margin: .2em .8em;
 }

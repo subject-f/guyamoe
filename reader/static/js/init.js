@@ -156,6 +156,92 @@ function ReaderAPI(o) {
 	})
 }
 
+
+function themeHandler() {
+	Linkable.call(this);
+	this.themeUpdated = () => {
+		let reset = Settings.get('thm.reset');
+		let theme = Settings.get('thm.theme');
+		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
+		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
+		if(reset === true) this.resetCustom();
+	}
+	this.setTheme = (sidebar, reader, accent, text) => {
+		document.documentElement.style.setProperty("--readerBg", reader);
+		document.documentElement.style.setProperty("--sidebarCol", sidebar);
+		document.documentElement.style.setProperty("--accentCol", accent);
+		document.documentElement.style.setProperty("--textCol", text);
+		document.documentElement.style.setProperty("--icoCol", text);
+		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -15));
+		document.documentElement.style.setProperty("--sidebarColDarkA", colManipulate(sidebar, -15) + '00');
+		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -7));
+
+		let [r, g, b] = hexToRgb(accent);
+		var	luma = ((r*299)+(g*587)+(b*114))/1000;
+
+		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff'));
+		
+		[r, g, b] = hexToRgb(sidebar);
+		luma = ((r*299)+(g*587)+(b*114))/1000;
+
+		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
+		if(luma > 100) { //Tweaks if theme is light
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.05)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -24));
+		} else {
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
+		}
+		[r, g, b] = hexToRgb(sidebar)
+		let [rt, gt, bt] = hexToRgb(text)
+		if(Math.abs(r-rt) < 50
+		&& Math.abs(g-gt) < 50
+		&& Math.abs(b-bt) < 50) {
+			if(luma > 200) {
+				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(0,0,0,0.6),0px -1px 1px rgba(0,0,0,0.6),-1px 0px 1px rgba(0,0,0,0.6),1px 0px 1px rgba(0,0,0,0.6)');
+			}else{
+				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(255,255,255,0.6),0px -1px 1px rgba(255,255,255,0.6),-1px 0px 1px rgba(255,255,255,0.6),1px 0px 1px rgba(255,255,255,0.6)');
+			}
+			Tooltippy.set('Contrast ratio too low, safety outline enabled.')
+		}else{
+			document.documentElement.style.setProperty("--rescueShade", 'unset');
+			Tooltippy.reset();
+		}
+
+		[r, g, b] = hexToRgb(reader);
+		luma = ((r*299)+(g*587)+(b*114))/1000;
+		
+		if(luma > 100) {
+			document.documentElement.style.setProperty("--rdrBorderL", "3px");
+			document.documentElement.style.setProperty("--rdr-wb", "1px");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.6)");
+		} else {
+			document.documentElement.style.setProperty("--rdrBorderL", "1px");
+			document.documentElement.style.setProperty("--rdr-wb", "2px");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.35)");
+		}
+	}
+
+	this.resetCustom = () => {
+		Settings.set('thm.reset', false);
+		if(Settings.get('thm.theme') === 'Custom') {
+			Settings.set('thm.primaryCol', '#3A3F44');
+			Settings.set('thm.readerBg', '#272B30');
+			Settings.set('thm.accentCol', '#B2DFFB');
+			Settings.set('thm.textCol', '#EEEEEE');
+		}
+	}
+	
+	this.S.mapIn({
+		settingsPacket: this.themeUpdated,
+	})
+}
+
 const SETTING_HIDDEN = -1;
 const SETTING_CUSTOM = 1;
 const SETTING_BOOLEAN = 10;
@@ -216,7 +302,20 @@ function Setting(o) {
 	this.update = function() {
 		this.set(this.get());
 	}
-
+	this.get = function() {
+		return this.setting;
+	}
+	this.set = function(value, silent, notip) {
+		if(!this.checkOptionValidity(value)) return null;
+		this.setting = value;
+		if(this.global && !this.manual)
+			this.setClass();
+		this.S.out('settingEvent', {
+			type: 'change',
+			setting: this
+		})
+		return this.setting;
+	}
 	this.cycle = function(options, silent, notip) {
 		switch(this.type){
 			case SETTING_BOOLEAN:
@@ -229,31 +328,29 @@ function Setting(o) {
 			var index = options.indexOf(this.get());
 				return this.set(
 					(index+1 > options.length - 1)?options[0]:options[index+1],
-					silent,
-					notip
+					silent
 				);
 				break;
 		}
-		return false;
+		return null;
 	}
 	this.next = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) + 1;
 			if(targetIndex > this.options().length - 1) return;
-			this.set(this.options()[targetIndex], silent, notip)
+			return this.set(this.options()[targetIndex], silent, notip)
 		}
+		return null;
 	}
 	this.prev = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) - 1;
 			if(targetIndex < 0) return;
-			this.set(this.options()[targetIndex], silent, notip)
+			return this.set(this.options()[targetIndex], silent, notip)
 		}
-	}
-	this.get = function() {
-		return this.setting;
+		return null;
 	}
 	this.getFormatted = function(option) {
 		option = option===undefined?this.get():option;
@@ -302,31 +399,12 @@ function Setting(o) {
 				break;
 		}
 	}
-	this.set = function(value, silent, notip) {
-		if(!this.checkOptionValidity(value)) return false;
-		this.setting = value;
-		if(this.global && !this.manual)
-			this.setClass();
-		this.S.out('settingEvent', {
-			type: 'change',
-			setting: this,
-			silent: silent,
-			notip: notip
-		})
-	}
 	this.disable = () => {
 		this.disabled = true;
-		this.S.out('settingEvent', {
-			type: 'disable',
-			setting: this
-		})
+
 	}
 	this.enable = () => {
 		this.disabled = false;
-		this.S.out('settingEvent', {
-			type: 'enable',
-			setting: this
-		})
 	}
 }
 
@@ -336,99 +414,16 @@ function SettingsCategory(name, hidden, icon) {
 	nonEnum(this, "icon", hidden);
 }
 
-function themeHandler() {
-	Linkable.call(this);
-	this.themeUpdated = () => {
-		let reset = Settings.get('thm.reset');
-		let theme = Settings.get('thm.theme');
-		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
-		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
-		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
-		if(reset === 'true') this.resetCustom();
-	}
-	this.setTheme = (sidebar, reader, accent, text) => {
-		document.documentElement.style.setProperty("--readerBg", reader);
-		document.documentElement.style.setProperty("--sidebarCol", sidebar);
-		document.documentElement.style.setProperty("--accentCol", accent);
-		document.documentElement.style.setProperty("--textCol", text);
-		document.documentElement.style.setProperty("--icoCol", text);
-		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -15));
-		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -7));
-
-		let [r, g, b] = hexToRgb(accent);
-		var	luma = ((r*299)+(g*587)+(b*114))/1000;
-
-		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff'));
-		
-		[r, g, b] = hexToRgb(sidebar);
-		luma = ((r*299)+(g*587)+(b*114))/1000;
-
-		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
-		if(luma > 100) { //Tweaks if theme is light
-			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.2)");
-			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.05)");
-			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -24));
-		} else {
-			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.7)");
-			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.2)");
-			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
-		}
-		[r, g, b] = hexToRgb(sidebar)
-		let [rt, gt, bt] = hexToRgb(text)
-		if(Math.abs(r-rt) < 50
-		&& Math.abs(g-gt) < 50
-		&& Math.abs(b-bt) < 50) {
-			if(luma > 200) {
-				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(0,0,0,0.6),0px -1px 1px rgba(0,0,0,0.6),-1px 0px 1px rgba(0,0,0,0.6),1px 0px 1px rgba(0,0,0,0.6)');
-			}else{
-				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(255,255,255,0.6),0px -1px 1px rgba(255,255,255,0.6),-1px 0px 1px rgba(255,255,255,0.6),1px 0px 1px rgba(255,255,255,0.6)');
-			}
-			Tooltippy.set('Contrast ratio too low, safety outline enabled.')
-		}else{
-			document.documentElement.style.setProperty("--rescueShade", 'unset');
-			Tooltippy.reset();
-		}
-
-		[r, g, b] = hexToRgb(reader);
-		luma = ((r*299)+(g*587)+(b*114))/1000;
-		
-		if(luma > 100) {
-			document.documentElement.style.setProperty("--rdrBorderL", "3px");
-			document.documentElement.style.setProperty("--rdr-wb", "1px");
-			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
-			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.6)");
-		} else {
-			document.documentElement.style.setProperty("--rdrBorderL", "1px");
-			document.documentElement.style.setProperty("--rdr-wb", "2px");
-			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.7)");
-			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.35)");
-		}
-	}
-
-	this.resetCustom = () => {
-		Settings.getByAddr('thm.reset').set('false');
-		if(Settings.get('thm.theme') === 'Custom') {
-			Settings.getByAddr('thm.primaryCol').set('#3A3F44');
-			Settings.getByAddr('thm.readerBg').set('#272B30');
-			Settings.getByAddr('thm.accentCol').set('#B2DFFB');
-			Settings.getByAddr('thm.textCol').set('#EEEEEE');
-		}
-	}
-	
-	this.S.mapIn({
-		settingsPacket: this.themeUpdated,
-	})
-}
 
 function SettingsHandler(){
 	Linkable.call(this);
 
 	this.settings = {
-		lyt: new SettingsCategory('Layout', false),
-		apr: new SettingsCategory('Appearance', false),
+		lyt: new SettingsCategory('Reader', false),
 		bhv: new SettingsCategory('Behavior', false),
-		adv: new SettingsCategory('Advanced', false),
+		apr: new SettingsCategory('Layout', false),
 		thm: new SettingsCategory('Themes', false),
+		adv: new SettingsCategory('Advanced', false),
 		misc: new SettingsCategory('Miscellaneous', true),
 	};
 	this.all = {};
@@ -521,26 +516,57 @@ function SettingsHandler(){
 	this.getByAddr = function(addr) {
 		return this.all[addr];
 	}
-	this.get = function(settingID){
-		return this.getByAddr(settingID).get();
+	this.get = function(setting){
+		return this.getByAddr(setting).get();
 	}
-	this.set = function(settingID, value, silent, notip){
-		this.getByAddr(settingID).set(value, silent, notip);
+	this.set = function(setting, value, packet){
+		if(is(this.getByAddr(setting).set(value))){
+			this.update(setting, packet);
+		}
 	}
-	this.setClass = function(settingID){
-		this.getByAddr(settingID).setClass();
+	this.cycle = function(setting, options, packet){
+		if(is(this.getByAddr(setting).cycle(options))){
+			this.update(setting, packet);
+		}
 	}
-	this.cycle = function(settingID, options, silent, notip){
-		this.getByAddr(settingID).cycle(options, silent, notip);
+	this.setClass = function(setting){
+		this.getByAddr(setting).setClass();
 	}
-	this.next = function(settingID, silent, notip){
-		this.getByAddr(settingID).next(silent, notip);
+	this.next = function(setting, silent){
+		if(is(this.getByAddr(setting).next(silent))) {
+			this.update(setting);
+		}
 	}
-	this.prev = function(settingID, silent, notip){
-		this.getByAddr(settingID).prev(silent, notip);
+	this.prev = function(setting, silent){
+		if(is(this.getByAddr(setting).prev(silent))) {
+			this.update(setting);
+		}
 	}
-	this.update = function(settingID){
-		this.getByAddr(settingID).update();
+	this.disable = (setting) => {
+		setting.disable();
+		this.update(setting.addr, new SettingsPacket(
+			'disable',
+			setting.addr
+		));
+	}
+	this.enable = (setting) => {
+		setting.enable();
+		this.update(setting.addr, new SettingsPacket(
+			'enable',
+			setting.addr
+		));
+	}
+	this.update = function(setting, packet){
+		if(!packet) {
+			packet = new SettingsPacket(
+				'change',
+				setting,
+				this.getByAddr(setting).get()
+			);
+		}
+		if(packet.type == 'set') packet.type = 'change';
+		packet.handled = true;
+		this.S.out('settingsPacket', packet);
 	}
 
 	this.refreshAll = function() {
@@ -551,10 +577,10 @@ function SettingsHandler(){
             var result = this.query(setting.condition);
                 if(result) {
                     if(!setting.disabled) return;
-                    setting.enable();
+                    this.enable(setting);
                 }else{
                     if(setting.disabled) return;
-                    setting.disable();
+                    this.disable(setting);
                 }
             }
         });
@@ -566,28 +592,21 @@ function SettingsHandler(){
 			this.refreshAll(); //opt - update only linked setting
 			if(localStorage)
 				localStorage.setItem('settings', this.serialize())
+				this.S.out('message', e.setting.getHelp());
 		}
-		if(e.silent != true) {
-			this.S.out('settingsPacket',
-				new SettingsPacket(
-					e.type,
-					e.setting.addr,
-					e.setting.get(),
-				)
-			)
-			if(!e.notip)
-				if(e.type == 'change')
-					this.S.out('message', e.setting.getHelp());
-		}
+		// if(e.silent != true) {
+		// 	if(!e.notip)
+		// 		if(e.type == 'change')
+		// }
 	}
 
 	this.packetHandler = (packet) => {
 		switch(packet.type) {
 			case 'set':
-				this.set(packet.setting, packet.value, packet.silent); 
+				this.set(packet.setting, packet.value, packet);
 				break;
 			case 'cycle':
-				this.cycle(packet.setting, packet.value, packet.silent);
+				this.cycle(packet.setting, packet.value, packet);
 				break;
 		}
 	}
@@ -599,7 +618,7 @@ function SettingsHandler(){
 		settingEvent: this.settingUpdated
 	})
 
-	this.ver = '0.75';
+	this.ver = '0.79';
 
 	this.newSetting({
 		addr: 'lyt.fit',
@@ -699,26 +718,8 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'thm.primaryCol',
-		prettyName: 'Primary Color',
+		prettyName: 'Interface Color',
 		default: '#3A3F44',
-		condition: {'thm.theme': ['Custom']},
-		compact: true,
-		global: false,
-		type: SETTING_COLOR
-	})
-	.newSetting({
-		addr: 'thm.readerBg',
-		prettyName: 'Reader Background',
-		default: '#272B30',
-		condition: {'thm.theme': ['Custom']},
-		compact: true,
-		global: false,
-		type: SETTING_COLOR
-	})
-	.newSetting({
-		addr: 'thm.accentCol',
-		prettyName: 'Accent Color',
-		default: '#B2DFFB',
 		condition: {'thm.theme': ['Custom']},
 		compact: true,
 		global: false,
@@ -734,10 +735,28 @@ function SettingsHandler(){
 		type: SETTING_COLOR
 	})
 	.newSetting({
+		addr: 'thm.accentCol',
+		prettyName: 'Accent Color',
+		default: '#B2DFFB',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.readerBg',
+		prettyName: 'Reader Background',
+		default: '#272B30',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
 		addr: 'thm.reset',
 		prettyName: '',
-		options: ['true','false'],
-		default: 'false',
+		options: [true,false],
+		default: false,
 		compact: true,
 		condition: {'thm.theme': ['Custom'], 'thm.primaryCol': ['!#3A3F44', 'or'], 'thm.readerBg': ['!#272B30', 'or'], 'thm.accentCol': ['!#B2DFFB', 'or'], 'thm.textCol': ['!#EEEEEE', 'or']},
 		type: SETTING_BUTTON
@@ -755,7 +774,7 @@ function SettingsHandler(){
 		help: {
 			'1': 'Single page displayed.',
 			'2': 'Two pages at once.',
-			'2-odd': 'Two pages at once, shifted by one.'
+			'2-odd': 'Two pages at once, odd numbering.'
 		},
 		type: SETTING_MULTI,
 		postUpdate: value => {
@@ -819,60 +838,65 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'apr.selPinned',
-		prettyName: 'Page selector',
+		prettyName: 'Pin page selector',
 		default: false,
 		strings: {
-			true: 'Always visible',
-			false: `Only on ${IS_MOBILE?'tap':'hover'}`
+			true: 'Pinned',
+			false: `Shown on ${IS_MOBILE?'tap':'hover'}`
 		},
-		type: SETTING_BOOLEAN
+		compact: true,
+		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
 		addr: 'apr.selNum',
-		prettyName: 'Page number in page selector',
+		prettyName: 'Page selector: show page number',
 		default: true,
 		strings: {
 			true: 'Show page number',
 			false: 'Hide page number'
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
 		addr: 'apr.hoverinos',
-		prettyName: 'On-hover page hints (next, prev)',
+		prettyName: 'Mouseover reader hints (next, prev)',
 		default: true,
 		strings: {
 			true: 'Visible',
 			false: 'Hidden'
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.sidebar',
-		prettyName: 'Sidebar',
+		prettyName: 'Show sidebar',
 		default: true,
 		strings: {
 			true: 'Show sidebar',
 			false: 'Hide sidebar',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.previews',
-		prettyName: 'Previews',
+		prettyName: 'Show previews',
 		default: false,
 		strings: {
 			true: 'Show previews',
 			false: 'Hide previews',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'bhv.preload',
-		prettyName: 'Image preload',
+		prettyName: 'Page preload',
 		options: [1,2,3,4,5,6,7,8,9,100],
 		default: (IS_MOBILE)?2:3,
 		strings: i => `${i}`.replace('100', '∞'),
@@ -901,6 +925,7 @@ function SettingsHandler(){
 			true: 'On page switch, resets vertical scroll of the previous page.',
 			false: 'Vertical scroll on pages is saved.',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		global: false
 	})
@@ -911,7 +936,7 @@ function SettingsHandler(){
 		default: 'replace',
 		strings: {
 			'none': "Don't touch browser history",
-			'replace': "Only change page title",
+			'replace': "Just change the page title",
 			'chap': "Add every chapter to history",
 			'jump': "Add every chapter and page&nbsp;skips",
 			'all': "Add every move to history"
@@ -933,15 +958,15 @@ function SettingsHandler(){
 		hidden: true,
 		global: false
 	})
-	.deserialize();
+	this.deserialize();
 	this.sendInit();
 }
 
-function SettingsPacket(type, settingAddr, value, silent) {
+function SettingsPacket(type, settingAddr, value, source) {
 	this.type = type;
 	this.setting = settingAddr;
 	this.value = value;
-	this.silent = silent;
+	this.source = source;
 	return this;
 }
 
@@ -985,7 +1010,7 @@ function UI_Tooltippy(o) {
 
 	this.set = function(text) {
 		if(text.length < 1) return;
-		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
+		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>');
 		this.$.innerHTML = text;
 		if(!this.attached || IS_MOBILE) {
 			this.$.style.display = 'block';
@@ -1605,13 +1630,13 @@ function UI_Reader(o) {
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.settings_button.onmousedown = e => Loda.display('settings');
-	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
-	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
-	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'});
-	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'});
-	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
-	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
-	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
+	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'}).S.biLink(Settings);
 	// this._.fit_button.onmousedown = e => {
 	// 	this.asideViews.S.call('number', 0);
 	// }
@@ -1639,11 +1664,12 @@ function UI_Reader(o) {
 		.attach(this._.sel_pin_button, 'Pin page selector [N]')
 		.attach(this._.sidebar_button, 'Show/hide sidebar [S]', 'right')
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
-		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
-		.attach(this._.search, 'Open search window [Ctrl]+[F]')
-		.attach(this._.jump, 'Open jump window [J]')
-		.attach(this._.spread_button, 'Change page spread type [Q]')
+		.attach(this._.search, 'Search the manga... [Ctrl]+[F]')
+		.attach(this._.jump, 'Jump to chapter... [J]')
+		.attach(this._.spread_button, 'Change two-page mode [Q]')
+		.attach(this._.settings_button, 'Advanced settings... [O]')
+		//.attach(this._.comment_button, 'Go to comments [C]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
 		// .attach(this._.fit_width, 'Images expand to max width.')
@@ -2174,7 +2200,7 @@ const SCROLL_X = 3;
 				case 2:
 				case 3:
 					if(IS_MOBILE)
-						Settings.cycle('apr.selPinned', undefined, undefined, true);
+						Settings.cycle('apr.selPinned', undefined, undefined, true); //RMD: notip
 					break;
 				case 4:
 					(Settings.get('lyt.direction') == 'rtl')?
@@ -2529,10 +2555,11 @@ function URLChanger(o) {
 				document.title = title;
 				break;
 			case 'chap':
-				if(SCP.chapter == this.chapter) return;
-				title = `${SCP.chapter} - ${SCP.chapterName} - ${Reader.current.title} | ${this.hostname}`
-				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+				title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+				window.history.replaceState(null, title, pathName);
 				document.title = title;
+				if(SCP.chapter == this.chapter) return;
+				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
 				break;
 			case 'jump':
 				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
@@ -3367,10 +3394,10 @@ function UI_About(o) {
 		kind: ['About'].concat(o.kind || []),
 		html: `<div>
 			<img src="/static/img/Guya-moe.png">
-			<p class="muted">Version: v2.16.20200510</p>
+			<p class="muted">Version: v2.20.20200820</p>
 			<hr>
 			<p>Design, UX: Algoinde</p>
-			<p>Reader code: Algoinde, funkyhippo</p>
+			<p>Reader code: Algoinde, funkyhippo, Einlion</p>
 			<p>Backend: appu</p>
 			<hr>
 			<a href="https://github.com/appu1232/guyamoe" target="_blank">Github</a>

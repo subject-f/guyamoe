@@ -720,10 +720,18 @@ function exteprot(Child, Parent, newProto) {
 }
 
 function is(what) {
-	return !(what === undefined || what === null || what === false);
+	return !(what === undefined || what === null);
 }
 function be(who, what) {
 	return is(who)?who:(what)?what:{};
+}
+
+function merge(obj1, obj2) {
+	Object.assign(be(obj1), obj2)
+}
+
+function mixin(mixin, self, ) {
+
 }
 
 function insertAfter(newNode, referenceNode) {
