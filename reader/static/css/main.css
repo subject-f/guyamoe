@@ -24,7 +24,7 @@
 @font-face {
 	font-family: 'guya';
 	src:
-	url('../fonts/guya.woff?bsas2') format('woff');
+	url('../fonts/guya.woff?bssas2') format('woff');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -2609,23 +2609,23 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	.IconTab .ico-btn {
 		display: flex !important;
 	}
-	.IconTab[data-name="Layout"] .ico-btn:before {
+	.IconTab[data-name="Reader"] .ico-btn:before {
 		content: "\e936"
-	}
-	.IconTab[data-name="Appearance"] .ico-btn:before {
-		content: "\e908"
 	}
 	.IconTab[data-name="Behavior"] .ico-btn:before {
 		content: "\e934"
+	}
+	.IconTab[data-name="Layout"] .ico-btn:before {
+		content: "\e908"
+	}
+	.IconTab[data-name="Themes"] .ico-btn:before {
+		content: "\e937"
 	}
 	.IconTab[data-name="Advanced"] .ico-btn:before {
 		content: "\e935"
 	}
 	.IconTab[data-name="About"] .ico-btn:before {
 		content: "\e903"
-	}
-	.IconTab[data-name="Themes"] .ico-btn:before {
-		content: "\e937"
 	}
 	
 	.nomobile {
