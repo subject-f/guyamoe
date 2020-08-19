@@ -156,10 +156,98 @@ function ReaderAPI(o) {
 	})
 }
 
+
+function themeHandler() {
+	Linkable.call(this);
+	this.themeUpdated = () => {
+		let reset = Settings.get('thm.reset');
+		let theme = Settings.get('thm.theme');
+		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
+		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
+		if(reset === true) this.resetCustom();
+	}
+	this.setTheme = (sidebar, reader, accent, text) => {
+		document.documentElement.style.setProperty("--readerBg", reader);
+		document.documentElement.style.setProperty("--sidebarCol", sidebar);
+		document.documentElement.style.setProperty("--accentCol", accent);
+		document.documentElement.style.setProperty("--textCol", text);
+		document.documentElement.style.setProperty("--icoCol", text);
+		document.documentElement.style.setProperty("--sidebarColDark", colManipulate(sidebar, -15));
+		document.documentElement.style.setProperty("--sidebarColDarkA", colManipulate(sidebar, -15) + '00');
+		document.documentElement.style.setProperty("--prevCol", colManipulate(sidebar, -7));
+
+		let [r, g, b] = hexToRgb(accent);
+		var	luma = ((r*299)+(g*587)+(b*114))/1000;
+
+		document.documentElement.style.setProperty("--accentSelected", (luma > 160?'#111111':'#ffffff'));
+		
+		[r, g, b] = hexToRgb(sidebar);
+		luma = ((r*299)+(g*587)+(b*114))/1000;
+
+		document.documentElement.style.setProperty("--accentSelectedInvert", (luma < 160?'#444444':'#cccccc')); // Play with 160 there if you want.
+		if(luma > 100) { //Tweaks if theme is light
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.05)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -24));
+		} else {
+			document.documentElement.style.setProperty("--borderColor", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--blackLight", "rgba(0,0,0,0.2)");
+			document.documentElement.style.setProperty("--sidebarColFocus", colManipulate(sidebar, -27));
+		}
+		[r, g, b] = hexToRgb(sidebar)
+		let [rt, gt, bt] = hexToRgb(text)
+		if(Math.abs(r-rt) < 50
+		&& Math.abs(g-gt) < 50
+		&& Math.abs(b-bt) < 50) {
+			if(luma > 200) {
+				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(0,0,0,0.6),0px -1px 1px rgba(0,0,0,0.6),-1px 0px 1px rgba(0,0,0,0.6),1px 0px 1px rgba(0,0,0,0.6)');
+			}else{
+				document.documentElement.style.setProperty("--rescueShade", '0px 1px 1px rgba(255,255,255,0.6),0px -1px 1px rgba(255,255,255,0.6),-1px 0px 1px rgba(255,255,255,0.6),1px 0px 1px rgba(255,255,255,0.6)');
+			}
+			Tooltippy.set('Contrast ratio too low, safety outline enabled.')
+		}else{
+			document.documentElement.style.setProperty("--rescueShade", 'unset');
+			Tooltippy.reset();
+		}
+
+		[r, g, b] = hexToRgb(reader);
+		luma = ((r*299)+(g*587)+(b*114))/1000;
+		
+		if(luma > 100) {
+			document.documentElement.style.setProperty("--rdrBorderL", "3px");
+			document.documentElement.style.setProperty("--rdr-wb", "1px");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.3)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.6)");
+		} else {
+			document.documentElement.style.setProperty("--rdrBorderL", "1px");
+			document.documentElement.style.setProperty("--rdr-wb", "2px");
+			document.documentElement.style.setProperty("--blackFlag", "rgba(0,0,0,0.7)");
+			document.documentElement.style.setProperty("--rdrAncBottomWhite", "rgba(255,255,255,0.35)");
+		}
+	}
+
+	this.resetCustom = () => {
+		Settings.set('thm.reset', false);
+		if(Settings.get('thm.theme') === 'Custom') {
+			Settings.set('thm.primaryCol', '#3A3F44');
+			Settings.set('thm.readerBg', '#272B30');
+			Settings.set('thm.accentCol', '#B2DFFB');
+			Settings.set('thm.textCol', '#EEEEEE');
+		}
+	}
+	
+	this.S.mapIn({
+		settingsPacket: this.themeUpdated,
+	})
+}
+
 const SETTING_HIDDEN = -1;
 const SETTING_CUSTOM = 1;
 const SETTING_BOOLEAN = 10;
 const SETTING_MULTI = 20;
+const SETTING_COLOR = 11;
+const SETTING_BUTTON = 12;
 const SETTING_MULTI_DROPDOWN = 21;
 const SETTING_VALUE = 30;
 const SETTING_VALUE_STEPPED = 31;
@@ -192,6 +280,7 @@ function Setting(o) {
 	this.hidden = o.hidden;
 	this.condition = o.condition;
 	this.nomobile = o.nomobile;
+	this.compact = o.compact;
 	this.help = o.help;
 	this.disabled = o.disabled || false;
 
@@ -213,7 +302,20 @@ function Setting(o) {
 	this.update = function() {
 		this.set(this.get());
 	}
-
+	this.get = function() {
+		return this.setting;
+	}
+	this.set = function(value, silent, notip) {
+		if(!this.checkOptionValidity(value)) return null;
+		this.setting = value;
+		if(this.global && !this.manual)
+			this.setClass();
+		this.S.out('settingEvent', {
+			type: 'change',
+			setting: this
+		})
+		return this.setting;
+	}
 	this.cycle = function(options, silent, notip) {
 		switch(this.type){
 			case SETTING_BOOLEAN:
@@ -226,31 +328,29 @@ function Setting(o) {
 			var index = options.indexOf(this.get());
 				return this.set(
 					(index+1 > options.length - 1)?options[0]:options[index+1],
-					silent,
-					notip
+					silent
 				);
 				break;
 		}
-		return false;
+		return null;
 	}
 	this.next = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) + 1;
 			if(targetIndex > this.options().length - 1) return;
-			this.set(this.options()[targetIndex], silent, notip)
+			return this.set(this.options()[targetIndex], silent, notip)
 		}
+		return null;
 	}
 	this.prev = function(silent, notip) {
 		if(!this.options() instanceof Array) return;
 		if(this.options().includes(this.setting)) {
 		var targetIndex = this.options().indexOf(this.setting) - 1;
 			if(targetIndex < 0) return;
-			this.set(this.options()[targetIndex], silent, notip)
+			return this.set(this.options()[targetIndex], silent, notip)
 		}
-	}
-	this.get = function() {
-		return this.setting;
+		return null;
 	}
 	this.getFormatted = function(option) {
 		option = option===undefined?this.get():option;
@@ -291,37 +391,20 @@ function Setting(o) {
 			case SETTING_MULTI:
 			case SETTING_MULTI_DROPDOWN:
 			case SETTING_VALUE:
+			case SETTING_COLOR:
+			case SETTING_BUTTON:
 			case SETTING_VALUE_STEPPED:
 				classList.remove.apply(classList, [].filter.call(classList, cl => cl.indexOf(this.name) == 0));
 				classList.add(this.classString());
 				break;
 		}
 	}
-	this.set = function(value, silent, notip) {
-		if(!this.checkOptionValidity(value)) return false;
-		this.setting = value;
-		if(this.global && !this.manual)
-			this.setClass();
-		this.S.out('settingEvent', {
-			type: 'change',
-			setting: this,
-			silent: silent,
-			notip: notip
-		})
-	}
 	this.disable = () => {
 		this.disabled = true;
-		this.S.out('settingEvent', {
-			type: 'disable',
-			setting: this
-		})
+
 	}
 	this.enable = () => {
 		this.disabled = false;
-		this.S.out('settingEvent', {
-			type: 'enable',
-			setting: this
-		})
 	}
 }
 
@@ -331,13 +414,15 @@ function SettingsCategory(name, hidden, icon) {
 	nonEnum(this, "icon", hidden);
 }
 
+
 function SettingsHandler(){
 	Linkable.call(this);
 
 	this.settings = {
-		lyt: new SettingsCategory('Layout', false),
-		apr: new SettingsCategory('Appearance', false),
+		lyt: new SettingsCategory('Reader', false),
 		bhv: new SettingsCategory('Behavior', false),
+		apr: new SettingsCategory('Layout', false),
+		thm: new SettingsCategory('Themes', false),
 		adv: new SettingsCategory('Advanced', false),
 		misc: new SettingsCategory('Miscellaneous', true),
 	};
@@ -406,10 +491,14 @@ function SettingsHandler(){
 			var setting = this.getByAddr(key);
 				if(qu[key] instanceof Array) {
 					if(qu[key][0][0] == '!') {
-						if(qu[key][0].substr(1) == setting.get())
+						if(qu[key][0].substr(1) == setting.get()){
+							try { if(qu[key][1] === 'or') continue } catch(err) {};
 							return false;
-						else
+						}
+						else {
+							try { if(qu[key][1] === 'or') return true } catch(err) {};
 							continue;
+						}
 					}
 					if(qu[key].includes(setting.get())) continue;
 				}
@@ -420,50 +509,82 @@ function SettingsHandler(){
 				}
 			}
 		}
+		try { if(qu[key][1] === 'or') return false } catch(err) {};
 		return true;
 	}
 
 	this.getByAddr = function(addr) {
 		return this.all[addr];
 	}
-	this.get = function(settingID){
-		return this.getByAddr(settingID).get();
+	this.get = function(setting){
+		return this.getByAddr(setting).get();
 	}
-	this.set = function(settingID, value, silent, notip){
-		this.getByAddr(settingID).set(value, silent, notip);
+	this.set = function(setting, value, packet){
+		if(is(this.getByAddr(setting).set(value))){
+			this.update(setting, packet);
+		}
 	}
-	this.setClass = function(settingID){
-		this.getByAddr(settingID).setClass();
+	this.cycle = function(setting, options, packet){
+		if(is(this.getByAddr(setting).cycle(options))){
+			this.update(setting, packet);
+		}
 	}
-	this.cycle = function(settingID, options, silent, notip){
-		this.getByAddr(settingID).cycle(options, silent, notip);
+	this.setClass = function(setting){
+		this.getByAddr(setting).setClass();
 	}
-	this.next = function(settingID, silent, notip){
-		this.getByAddr(settingID).next(silent, notip);
+	this.next = function(setting, silent){
+		if(is(this.getByAddr(setting).next(silent))) {
+			this.update(setting);
+		}
 	}
-	this.prev = function(settingID, silent, notip){
-		this.getByAddr(settingID).prev(silent, notip);
+	this.prev = function(setting, silent){
+		if(is(this.getByAddr(setting).prev(silent))) {
+			this.update(setting);
+		}
 	}
-	this.update = function(settingID){
-		this.getByAddr(settingID).update();
+	this.disable = (setting) => {
+		setting.disable();
+		this.update(setting.addr, new SettingsPacket(
+			'disable',
+			setting.addr
+		));
+	}
+	this.enable = (setting) => {
+		setting.enable();
+		this.update(setting.addr, new SettingsPacket(
+			'enable',
+			setting.addr
+		));
+	}
+	this.update = function(setting, packet){
+		if(!packet) {
+			packet = new SettingsPacket(
+				'change',
+				setting,
+				this.getByAddr(setting).get()
+			);
+		}
+		if(packet.type == 'set') packet.type = 'change';
+		packet.handled = true;
+		this.S.out('settingsPacket', packet);
 	}
 
 	this.refreshAll = function() {
-		for(var key in this.all) {
-		let setting = this.all[key];
-			setting.refresh();
-			if(setting.condition) {
-			var result = this.query(setting.condition);
-				if(result) {
-					if(!setting.disabled) return;
-					setting.enable();
-				}else{
-					if(setting.disabled) return;
-					setting.disable();
-				}
-			}
-		}
-	}
+    	var settings = Object.keys(this.all).map(setting => this.all[setting]);
+        settings.forEach(setting => setting.refresh());
+        settings.forEach(setting => {
+            if(setting.condition) {
+            var result = this.query(setting.condition);
+                if(result) {
+                    if(!setting.disabled) return;
+                    this.enable(setting);
+                }else{
+                    if(setting.disabled) return;
+                    this.disable(setting);
+                }
+            }
+        });
+    }
 
 	this.settingUpdated = function(e) {
 		if(e.type == 'change') {
@@ -471,28 +592,21 @@ function SettingsHandler(){
 			this.refreshAll(); //opt - update only linked setting
 			if(localStorage)
 				localStorage.setItem('settings', this.serialize())
+				this.S.out('message', e.setting.getHelp());
 		}
-		if(e.silent != true) {
-			this.S.out('settingsPacket',
-				new SettingsPacket(
-					e.type,
-					e.setting.addr,
-					e.setting.get(),
-				)
-			)
-			if(!e.notip)
-				if(e.type == 'change')
-					this.S.out('message', e.setting.getHelp());
-		}
+		// if(e.silent != true) {
+		// 	if(!e.notip)
+		// 		if(e.type == 'change')
+		// }
 	}
 
 	this.packetHandler = (packet) => {
 		switch(packet.type) {
 			case 'set':
-				this.set(packet.setting, packet.value, packet.silent); 
+				this.set(packet.setting, packet.value, packet);
 				break;
 			case 'cycle':
-				this.cycle(packet.setting, packet.value, packet.silent);
+				this.cycle(packet.setting, packet.value, packet);
 				break;
 		}
 	}
@@ -504,7 +618,7 @@ function SettingsHandler(){
 		settingEvent: this.settingUpdated
 	})
 
-	this.ver = '0.75';
+	this.ver = '0.79';
 
 	this.newSetting({
 		addr: 'lyt.fit',
@@ -591,6 +705,63 @@ function SettingsHandler(){
 		type: SETTING_MULTI
 	})
 	.newSetting({
+		addr: 'thm.theme',
+		prettyName: 'Reader Theme',
+		options: ['Dark', 'Light', 'Custom'],
+		default: 'Dark',
+		strings: {
+			Dark: 'Dark',
+			Light: 'Light',
+			Custom: 'Custom'
+		},
+		type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: 'thm.primaryCol',
+		prettyName: 'Interface Color',
+		default: '#3A3F44',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.textCol',
+		prettyName: 'Text Color',
+		default: '#EEEEEE',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.accentCol',
+		prettyName: 'Accent Color',
+		default: '#B2DFFB',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.readerBg',
+		prettyName: 'Reader Background',
+		default: '#272B30',
+		condition: {'thm.theme': ['Custom']},
+		compact: true,
+		global: false,
+		type: SETTING_COLOR
+	})
+	.newSetting({
+		addr: 'thm.reset',
+		prettyName: '',
+		options: [true,false],
+		default: false,
+		compact: true,
+		condition: {'thm.theme': ['Custom'], 'thm.primaryCol': ['!#3A3F44', 'or'], 'thm.readerBg': ['!#272B30', 'or'], 'thm.accentCol': ['!#B2DFFB', 'or'], 'thm.textCol': ['!#EEEEEE', 'or']},
+		type: SETTING_BUTTON
+	})
+	.newSetting({
 		addr: 'lyt.spread',
 		prettyName: '2-page spread',
 		options: ['1', '2', '2-odd'],
@@ -603,7 +774,7 @@ function SettingsHandler(){
 		help: {
 			'1': 'Single page displayed.',
 			'2': 'Two pages at once.',
-			'2-odd': 'Two pages at once, shifted by one.'
+			'2-odd': 'Two pages at once, odd numbering.'
 		},
 		type: SETTING_MULTI,
 		postUpdate: value => {
@@ -667,60 +838,65 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'apr.selPinned',
-		prettyName: 'Page selector',
+		prettyName: 'Pin page selector',
 		default: false,
 		strings: {
-			true: 'Always visible',
-			false: `Only on ${IS_MOBILE?'tap':'hover'}`
+			true: 'Pinned',
+			false: `Shown on ${IS_MOBILE?'tap':'hover'}`
 		},
-		type: SETTING_BOOLEAN
+		compact: true,
+		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
 		addr: 'apr.selNum',
-		prettyName: 'Page number in page selector',
+		prettyName: 'Page selector: show page number',
 		default: true,
 		strings: {
 			true: 'Show page number',
 			false: 'Hide page number'
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
 		addr: 'apr.hoverinos',
-		prettyName: 'On-hover page hints (next, prev)',
+		prettyName: 'Mouseover reader hints (next, prev)',
 		default: true,
 		strings: {
 			true: 'Visible',
 			false: 'Hidden'
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.sidebar',
-		prettyName: 'Sidebar',
+		prettyName: 'Show sidebar',
 		default: true,
 		strings: {
 			true: 'Show sidebar',
 			false: 'Hide sidebar',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'apr.previews',
-		prettyName: 'Previews',
+		prettyName: 'Show previews',
 		default: false,
 		strings: {
 			true: 'Show previews',
 			false: 'Hide previews',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		nomobile: true
 	})
 	.newSetting({
 		addr: 'bhv.preload',
-		prettyName: 'Image preload',
+		prettyName: 'Page preload',
 		options: [1,2,3,4,5,6,7,8,9,100],
 		default: (IS_MOBILE)?2:3,
 		strings: i => `${i}`.replace('100', '∞'),
@@ -749,6 +925,7 @@ function SettingsHandler(){
 			true: 'On page switch, resets vertical scroll of the previous page.',
 			false: 'Vertical scroll on pages is saved.',
 		},
+		compact: true,
 		type: SETTING_BOOLEAN,
 		global: false
 	})
@@ -759,7 +936,7 @@ function SettingsHandler(){
 		default: 'replace',
 		strings: {
 			'none': "Don't touch browser history",
-			'replace': "Only change page title",
+			'replace': "Just change the page title",
 			'chap': "Add every chapter to history",
 			'jump': "Add every chapter and page&nbsp;skips",
 			'all': "Add every move to history"
@@ -781,14 +958,15 @@ function SettingsHandler(){
 		hidden: true,
 		global: false
 	})
-	.deserialize();
+	this.deserialize();
+	this.sendInit();
 }
 
-function SettingsPacket(type, settingAddr, value, silent) {
+function SettingsPacket(type, settingAddr, value, source) {
 	this.type = type;
 	this.setting = settingAddr;
 	this.value = value;
-	this.silent = silent;
+	this.source = source;
 	return this;
 }
 
@@ -832,7 +1010,7 @@ function UI_Tooltippy(o) {
 
 	this.set = function(text) {
 		if(text.length < 1) return;
-		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>')
+		text = text.replace(/\[(.|Ctrl|Shift|Meta|Alt)\]/g, '<span class="Tooltippy-key">$1</span>');
 		this.$.innerHTML = text;
 		if(!this.attached || IS_MOBILE) {
 			this.$.style.display = 'block';
@@ -1399,6 +1577,14 @@ function UI_Reader(o) {
 			'apr.sidebar': o => this.toggleSidebar(o),
 			'apr.selPinned': o => this.setLayout(o, true),
 			'apr.previews': o => this.drawPreviews(o),
+			'thm.reset' : o => {
+				ThemeManager.themeUpdated()
+			},
+			'thm.theme' : o => ThemeManager.themeUpdated(),
+			'thm.primaryCol' : o => ThemeManager.themeUpdated(),
+			'thm.readerBg' : o => ThemeManager.themeUpdated(),
+			'thm.accentCol' : o => ThemeManager.themeUpdated(),
+			'thm.textCol' : o => ThemeManager.themeUpdated(),
 			'misc.groupPreference': o => {},
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
@@ -1446,13 +1632,13 @@ function UI_Reader(o) {
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.settings_button.onmousedown = e => Loda.display('settings');
-	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'});
-	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'});
-	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'});
-	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'});
-	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'});
-	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'});
-	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'});
+	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.sel_pin_button, setting: 'apr.selPinned'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.sidebar_button, setting: 'apr.sidebar'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.previews_button, setting: 'apr.previews'}).S.biLink(Settings);
+	new UI_MultiStateButton({node: this._.spread_button, setting: 'lyt.spread'}).S.biLink(Settings);
 	// this._.fit_button.onmousedown = e => {
 	// 	this.asideViews.S.call('number', 0);
 	// }
@@ -1480,11 +1666,12 @@ function UI_Reader(o) {
 		.attach(this._.sel_pin_button, 'Pin page selector [N]')
 		.attach(this._.sidebar_button, 'Show/hide sidebar [S]', 'right')
 		.attach(this._.previews_button.querySelector('.expander'), 'Show previews [P]')
-		//.attach(this._.comment_button, 'Go to comments [C]')
 		.attach(this._.share_button, 'Copy short link [R]')
-		.attach(this._.search, 'Open search window [Ctrl]+[F]')
-		.attach(this._.jump, 'Open jump window [J]')
-		.attach(this._.spread_button, 'Change page spread type [Q]')
+		.attach(this._.search, 'Search the manga... [Ctrl]+[F]')
+		.attach(this._.jump, 'Jump to chapter... [J]')
+		.attach(this._.spread_button, 'Change two-page mode [Q]')
+		.attach(this._.settings_button, 'Advanced settings... [O]')
+		//.attach(this._.comment_button, 'Go to comments [C]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
 		// .attach(this._.fit_width, 'Images expand to max width.')
@@ -2025,7 +2212,7 @@ const SCROLL_X = 3;
 				case 2:
 				case 3:
 					if(IS_MOBILE)
-						Settings.cycle('apr.selPinned', undefined, undefined, true);
+						Settings.cycle('apr.selPinned', undefined, undefined, true); //RMD: notip
 					break;
 				case 4:
 					(Settings.get('lyt.direction') == 'rtl')?
@@ -2381,10 +2568,11 @@ function URLChanger(o) {
 				document.title = title;
 				break;
 			case 'chap':
-				if(SCP.chapter == this.chapter) return;
-				title = `${SCP.chapter} - ${SCP.chapterName} - ${Reader.current.title} | ${this.hostname}`
-				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
+				title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
+				window.history.replaceState(null, title, pathName);
 				document.title = title;
+				if(SCP.chapter == this.chapter) return;
+				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
 				break;
 			case 'jump':
 				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
@@ -3081,6 +3269,9 @@ function UI_SettingUnit(o) {
 	if(this.setting.nomobile)
 		this.$.classList.add('nomobile');
 
+	if(this.setting.compact)
+		this.$.classList.add('compact');
+
 	this.S.mapIn({
 		settingsPacket: this.packetHandler
 	})
@@ -3108,6 +3299,18 @@ function UI_SettingDisplay(o) {
 				setting: this.setting
 			}).S.biLink(Settings);
 			break;
+		case SETTING_COLOR:
+			this.entity = new UI_ColorPicker({
+				setting: this.setting
+			}).S.biLink(Settings);
+			break;
+		case SETTING_BUTTON: 
+			this.entity = new UI_ResetButton({
+				setting: this.setting,
+				html: `<button class="reset-btn"></button>`,
+				text: 'Reset'
+			}).S.link(Settings);
+			break;
 	}
 
 
@@ -3115,9 +3318,6 @@ function UI_SettingDisplay(o) {
 
 	return this;
 }
-
-
-
 
 
 
@@ -3200,16 +3400,17 @@ function thirdPartySeriesHandler(url, chapter, group) {
 	}
 }
 
+
 function UI_About(o) {
 	o=be(o);
 	UI.call(this, Object.assign(o, {
 		kind: ['About'].concat(o.kind || []),
 		html: `<div>
 			<img src="/static/img/Guya-moe.png">
-			<p class="muted">Version: v2.16.20200510</p>
+			<p class="muted">Version: v2.20.20200820</p>
 			<hr>
 			<p>Design, UX: Algoinde</p>
-			<p>Reader code: Algoinde, funkyhippo</p>
+			<p>Reader code: Algoinde, funkyhippo, Einlion</p>
 			<p>Backend: appu</p>
 			<hr>
 			<a href="https://github.com/appu1232/guyamoe" target="_blank">Github</a>
@@ -3261,14 +3462,19 @@ URLC = new URLChanger();
 Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
+ThemeManager = new themeHandler();
 
 Loda.library.settings.createCategory('About', new UI_About());
 
 API.S.link(Reader);
 Settings.S.link(Reader);
-Reader.S.link(URLC)
-Reader.S.link(Settings)
-Reader.$.focus()
+Reader.S.link(URLC);
+Reader.S.link(Settings);
+Reader.$.focus();
+ThemeManager.S.link(Settings);
+//Settings.sendInit();
+ThemeManager.themeUpdated();
+
 if(window.location.hash == '#s') Loda.display('search');
 
 

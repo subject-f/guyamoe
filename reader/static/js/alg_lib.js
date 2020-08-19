@@ -720,10 +720,18 @@ function exteprot(Child, Parent, newProto) {
 }
 
 function is(what) {
-	return !(what === undefined || what === null || what === false);
+	return !(what === undefined || what === null);
 }
 function be(who, what) {
 	return is(who)?who:(what)?what:{};
+}
+
+function merge(obj1, obj2) {
+	Object.assign(be(obj1), obj2)
+}
+
+function mixin(mixin, self, ) {
+
 }
 
 function insertAfter(newNode, referenceNode) {
@@ -998,3 +1006,12 @@ function promiseTimeout(ms, value) {
 	};
 	return p;
 }
+
+/* Hex to RGB pls */
+const hexToRgb = hex =>
+  hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+             ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map(x => parseInt(x, 16))
+
+const colManipulate = (color, amount) => '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));

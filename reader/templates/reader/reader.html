@@ -27,6 +27,7 @@
   {% endif %}
   <meta property="og:url" content="/read/manga/{{ slug }}/">
   <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
   <link rel="canonical" href="https://guya.moe/{{ relative_url }}/" />
   <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
   <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
@@ -145,6 +146,7 @@
 
   </div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>

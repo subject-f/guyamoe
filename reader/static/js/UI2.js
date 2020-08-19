@@ -10,7 +10,7 @@ const TOGGLE = 2;
 function KeyListener(target, mode) {
 	this.target = target || document;
 	this.listeners = {};
-	this.pres = [];  
+	this.pres = [];
 	this.conditions = [];
 	this.exclusions = [];
 	this.mode = mode || 'keydown';
@@ -315,8 +315,7 @@ function Linkable(o) {
 	//streams: {string: function}
 	this.S.mapIn = streams => {
 		for(let id in streams) {
-			this.S.inStreams[id] = streams[id].bind(this) || this.S.deadEnd;
-			if(streams[id]._raw) this.S.inStreams[id]._raw = true;
+			this.S.addIn(id, streams[id], streams[id]._raw);
 		}
 		return this;
 	}
@@ -327,41 +326,14 @@ function Linkable(o) {
 	})
 	*/
 
-	//Declares output stream names.
-	//This creates empty arrays (for functions), because no external objects yet requested things to be outputted to them.
-	//streamIDs: [streamID, streamID, ...]
-	// this.S.mapOut = streamIDs => {
-	// 	for (var i = 0; i < streamIDs.length; i++) {
-	// 		this.S.outStreams[streamIDs[i]] = [];
-	// 		this.S.outMappings[streamIDs[i]] = [];
-	// 	}
-	// 	return this;
-	// }
-
-	// this.S.addOut = streamID => {
-	// 	this.S.outStreams[streamID] = [];
-	// 	this.S.outMappings[streamID] = [];
-	// }
-
-	// this.S.delOut = streamID => {
-	// 	delete this.S.outStreams[streamID];	
-	// 	delete this.S.outMappings[streamID];	
-	// }
-
-	this.S.addIn = (streamID, func) => {
-		this.S.inStreams[streamID] = func.bind(this);
+	this.S.addIn = (streamID, func, raw) => {
+		this.S.inStreams[streamID] = func.bind(this) || this.S.deadEnd;
+		if(raw) this.S.inStreams[streamID]._raw = true;
 	}
 
 	this.S.delIn = streamID => {
 		delete this.S.inStreams[streamID];
 	}
-
-	/* Example:
-	this.S.mapOut([
-		number,
-		element
-	])
-	*/
 
 	this.S.link = targetStructure => {
 		if(!targetStructure.S) {
@@ -383,7 +355,7 @@ function Linkable(o) {
 	var inObj = {}
 		inObj[streamID] = callback;
 		this.S.link(new Linkable().S.mapIn(inObj));
-	 	return this;
+		return this;
 	}
 
 	//{'source_stream_id': 'target_stream_id'}
@@ -482,6 +454,36 @@ function Linkable(o) {
 		}
 	}*/
 }
+
+
+function SettingsInterface(setting, setter, getter) {
+	if(!this.S) Linkable.call(this);
+	this.SeI = {};
+	this.SeI.setting = setting;
+	this.SeI._setter = setter || this.set;
+	this.SeI._getter = getter || this.get;
+
+	this.SeI.send = (value) => {
+		this.S.out('settingsPacket',
+			new SettingsPacket(
+				'set',
+				this.SeI.setting.addr,
+				is(value)?value:this.SeI._getter.call(this),
+				this
+			)
+		)
+	}
+
+	this.SeI.settingsPacketHandler = settingsPacket => {
+		if(settingsPacket.source == this) return; //reject self-originated settings packets by default
+		if(settingsPacket.setting == this.SeI.setting.addr
+		&& settingsPacket.type == 'change')
+			this.SeI._setter.call(this, settingsPacket.value);
+	}
+
+	this.S.addIn('settingsPacket', this.SeI.settingsPacketHandler);
+}
+
 
 function Loadable(o) {
 	this.L = {};
@@ -775,7 +777,7 @@ function UI_Selector(o) {
 		if(event.target !== this.$ && this.$.contains(event.target)) {
 			element = event.target;
 			do { 
-			    if (element.parentNode == this.$) break;
+				if (element.parentNode == this.$) break;
 			} while (element = element.parentNode);
 			//errhandle if not a struct
 			this.select(element._struct, TOGGLE);
@@ -944,7 +946,6 @@ function UI_Input(o) {
 		kind: ['Input'].concat(o.kind || []),
 		html: o.html || '<input type="text" />',
 	});
-	Linkable.call(this);
 
 	if(o.placeholder) this.$.placeholder = o.placeholder;
 	if(o.type) this.$.type = o.type;
@@ -958,19 +959,80 @@ function UI_Input(o) {
 		this.S.out('quickText', this.value);
 	}
 	this.clear = function () {
-		this.value = this.$.value = '';
+		this.set('');
 		this.S.out('text', this.value);
 	}
-	this.set = function(value, silent) {
+	this.get = () => this.value;
+	this.set = function(value) {
 		this.value = this.$.value = value;
 		if(!silent) this.S.out('text', this.value);
 	}
+	SettingsInterface.call(this, o.setting);
 
 	this.$.oninput = this.quickHandler.bind(this);
 
 	this.keyl = new KeyListener(this.$, 'keypress')
 			.attach('submit', ['Enter'], e => this.handler(e))
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
+}
+
+function UI_ColorPicker(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ColorPicker'].concat(o.kind || []),
+		html: o.html || `<button type="button" />`
+	});
+	if(o.type) this.$.type = o.type;
+
+	this.get = () => this.value;
+	this.set = (value, local) => {
+		if(this.value && value.toLowerCase() == this.value.toLowerCase()) return;
+		this.value = value;
+		this.$.style.backgroundColor = value;
+		if(!local) this.pickr.setColor(value, true);
+	};
+	SettingsInterface.call(this, o.setting);
+
+	this.pickr = new Pickr({
+		el: this.$,
+		useAsButton: true,
+		default: this.value,
+		theme: 'nano',
+		default: '#ffffff',
+		autoReposition: false,
+		components: {
+			preview: true,
+			opacity: false,
+			hue: true,
+			preview: false, 
+			interaction: {
+				hex: false,
+				rgba: false,
+				hsva: false,
+				input: true,
+				save: true
+			}
+		}
+	})
+	.on('save', color => {
+		this.colorBackup = color.toHEXA().toString(0);
+		this.pickr.hide();
+	})
+	.on('change', (color, instance) => {
+		this.set(color.toHEXA().toString(0), true);
+		this.SeI.send();
+	})
+	.on('show', (color, instance) => {
+		this.colorBackup = this.value;
+		this.pickr.getRoot().app.focus();
+	})
+	.on('hide', instance => {
+		this.set(this.colorBackup);
+		this.SeI.send();
+	})
+	new KeyListener(this.pickr.getRoot().app, 'keydown').noPropagation(true);
+	this.pickr.getRoot().app.setAttribute("tabindex", "-1");
 }
 
 function UI_Button(o) {
@@ -987,11 +1049,29 @@ function UI_Button(o) {
 	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
 
 	this.trigger = function trigger(event) {
-		this.S.out('click', this.data)
+		this.S.out('click', this.data);
 		return this;
 	}
 
 	this.$['on'+this.method] = event => this.trigger(event);
+}
+
+function UI_ResetButton(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['ResetButton'].concat(o.kind || []),
+		html: o.html || '<div></div>',
+	});
+	Linkable.call(this);
+	this.method = o.method || 'mousedown';
+
+	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || '';
+	this.get = () => true;
+	this.set = () => {};
+	SettingsInterface.call(this, o.setting);
+
+	this.$['on'+this.method] = () => this.SeI.send();
 }
 
 function UI_ToggleButton(o) {
@@ -1038,17 +1118,33 @@ var customHTML = o.html;
 			</div>`
 	}));
 	Linkable.call(this);
-	this.unique = o.unique || true;
-	this.setting = o.setting;
+
+	this.get = () => this.value;
+	this.select = function(button, silent) {
+		if(Object.keys(this.buttonsMapping).length < 1) return;
+		if(!(button instanceof UI_ToggleButton)) {
+			button = this.buttonsMapping[button];
+		}
+		for (var i = 0; i < this.buttons.length; i++) {
+			if(this.buttons[i] == button)
+				this.buttons[i].on();
+			else
+				this.buttons[i].off();
+		}
+		this.value = button.option;
+		this.S.out('id', this.value);
+	}
+	SettingsInterface.call(this, o.setting, this.select);
 
 	if(!customHTML) {
-		this.setting.options().forEach(option => {
-		var button = new UI_ToggleButton({
-				setting: this.setting.addr,
-				text: this.setting.strings[option],
+		this.SeI.setting.options().forEach(option => {
+		let button = new UI_ToggleButton({
+				setting: this.SeI.setting.addr,
+				text: this.SeI.setting.strings[option],
 				option: option
 			});
-		var buttonElement = this._.buttons.appendChild(button.S.link(this).$);
+			button.S.link(this)
+			this._.buttons.appendChild(button.$);
 		})
 	}
 
@@ -1062,7 +1158,7 @@ var customHTML = o.html;
 			if(b._struct == undefined)
 				return new UI_ToggleButton({
 					node: b,
-					setting: this.setting.addr,
+					setting: this.SeI.setting.addr,
 					option: b.getAttribute('data-bind')
 				}).S.link(this);
 			else
@@ -1071,47 +1167,18 @@ var customHTML = o.html;
 		this.buttonsMapping = {};
 		this.buttons.forEach(b => {
 			this.buttonsMapping[b.$.getAttribute('data-bind')] = b;
-			Tooltippy.attach(b.$, this.setting.getHelp(b.$.getAttribute('data-bind')), undefined, 10)
+			Tooltippy.attach(b.$, this.SeI.setting.getHelp(b.$.getAttribute('data-bind')), undefined, 10)
 		});
 		return this;
 	}
 
-	this.select = function(button, silent) {
-		if(Object.keys(this.buttonsMapping).length < 1) return;
-		if(!(button instanceof UI_ToggleButton)) {
-			button = this.buttonsMapping[button];
-		}
-		for (var i = 0; i < this.buttons.length; i++) {
-			if(this.buttons[i] == button) {
-				this.buttons[i].on();
-			}else{
-				this.buttons[i].off();
-			}
-		}
-
-		this.S.out('id', button.$.getAttribute('data-bind'));
-		if(this.setting && !silent) {
-			this.S.out('settingsPacket',
-				new SettingsPacket(
-					'set',
-					this.setting.addr,
-					button.option
-				)
-			);	
-		}
-	}
-
 	this.buttonPacketHandler = rawPacket => {
 		this.select(rawPacket.source);
-	}
-	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.setting.addr)
-			this.select(settingsPacket.value, true);
+		this.SeI.send();
 	}
 
 	this.S.mapIn({
-		click: dpraw(this.buttonPacketHandler),
-		settingsPacket: this.settingsPacketHandler
+		click: dpraw(this.buttonPacketHandler)
 	})
 
 	this.refresh();
@@ -1123,43 +1190,24 @@ function UI_MultiStateButton(o) {
 	UI_Button.call(this, Object.assign(o, {
 		kind: ['MultiStateButton'].concat(o.kind || [])
 	}));
-	Linkable.call(this);
 	this.setting = Settings.getByAddr(o.setting);
 	this.options = o.options || this.setting.options();
-	this.disabled = o.disabled || false;
 
-	this.set = function(state, silent) {
+	this.get = () => this.state;
+	this.set = (state) => {
 		if(!this.options.includes(state)) return;
 		this.$.setAttribute('data-'+this.setting.addr, state);
 		this.state = state;
-		if(!silent && !this.disabled) {
-			this.S.out('settingsPacket',
-				new SettingsPacket(
-					'set',
-					this.setting.addr,
-					state
-				)
-			);
-		}
 	}
+	SettingsInterface.call(this, this.setting);
+
 
 	this.trigger = function(event) {
 	var idx = this.options.indexOf(this.state) + 1;
 		if(idx >= this.options.length) idx = 0;
 		this.set(this.options[idx]);
+		this.SeI.send();
 	}
-
-	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.setting.addr)
-			this.set(settingsPacket.value, true);
-	}
-
-	this.S.mapIn({
-		settingsPacket: this.settingsPacketHandler
-	})
-	
-	this.set(o.state || Settings.get(this.setting.addr), true);
-	this.S.biLink(Settings);
 }
 
 function UI_Slider(o) {
@@ -1178,7 +1226,7 @@ function UI_Slider(o) {
 	this.setting = o.setting;
 	this.disabled = o.disabled || false;
 
-	this.draw = () => {
+	this.draw = (value) => {
 		this._.slider.min = 0;
 		this._.slider.max = this.setting.options().length - 1;
 		this._.ticks.innerHTML = '';
@@ -1188,9 +1236,11 @@ function UI_Slider(o) {
 				tick.innerHTML = this.setting.getFormatted(option);
 			this._.ticks.appendChild(tick);
 		})
+		this.set(value);
 	}
 
-	this.set = function(state, silent) {
+	this.get = () => this.state;
+	this.set = function(state) {
 		if(!this.setting.options().includes(state)) return;
 		this._.slider.setAttribute('data-'+this.setting.addr, state);
 		this.state = state;
@@ -1198,96 +1248,31 @@ function UI_Slider(o) {
 		if(this._.slider.value != val)
 			this._.slider.value = val;
 		this._.number.value = this.setting.getFormatted(state);
-		if(!silent && !this.disabled) {
-			this.S.out('settingsPacket',
-				new SettingsPacket(
-					'set',
-					this.setting.addr,
-					state
-				)
-			);
-		}
 	}
+	SettingsInterface.call(this, o.setting, this.draw);
 
-	this.setByIndex = function(idx, silent) {
+	this.setByIndex = function(idx) {
 		if(+idx > this.setting.options().length - 1 || +idx < 0) return;
-		this.set(this.setting.options()[idx], silent);
+		this.set(this.setting.options()[idx]);
 	}
-
-	this.settingsPacketHandler = settingsPacket => {
-		if(settingsPacket.setting == this.setting.addr) {
-			if(settingsPacket.type == 'change') {
-				this.set(settingsPacket.value, true);
-				this.draw();
-			}
-		}
-	}
-
-	this.S.mapIn({
-		settingsPacket: this.settingsPacketHandler
-	})
 	
 	this._.slider.oninput = (e) => {
 		this.setByIndex(this._.slider.value);
+		this.SeI.send();
 	}
 	this._.number.onblur = (e) => {
 	let val = parseInt(this._.number.value);	
 		this.set(this.setting.options().reduce((p, c) => (
 			Math.abs(c - val) < Math.abs(p - val) ? c : p)
 		));
+		this.SeI.send();
 	}
 	new KeyListener(this._.number)
 		.attach('esc', ['Escape'], (e) => e.target.blur())
 		.attach('enter', ['Enter'], (e) => this._.number.onblur())
 		.noPropagation(true)
 	Tooltippy.attach(this._.slider, this.setting.getHelp(), undefined, 10);
-	this.draw();
-	this.set(o.state || Settings.get(this.setting.addr), true);
-	this.S.biLink(Settings);
 }
-	
-/* function UI_Button(o) {
-	o=be(o);
-	UI.call(this, {
-		node: o.node,
-		kind: ['Button'].concat(o.kind || []),
-		html: o.html || '<div></div>',
-	});
-	Linkable.call(this);
-	this.method = o.method || 'onclick';
-	this.functions = o.functions || {};
-	this.data = o.datas || {};
-
-	if(this.$.innerHTML.length < 1) this.$.innerHTML = o.text || 'Button';
-
-	
-	this.set = function(name, func, data) {
-		this.functions[name] = func.bind(this);
-		this.data[name] = data;
-		this.S.addOut(name);
-		this.S.addIn(name, func);
-		return this;
-	},
-	this.remove = function(name) {
-		delete this.functions[name];
-		this.S.delOut(name);
-		return this;
-	}
-
-	this.trigger = function trigger(eventObject) {
-		this.S.out('event', eventObject)
-		for(var fn in this.functions) {
-			this.functions[fn](this.data[fn], eventObject);
-			this.S.out(fn, this.data[fn])
-		}
-		return this;
-	}
-
-	this.S.mapOut(['event']);
-
-	this.$[this.method] = event => this.trigger(event);
-}
-*/
 
 function DataElement(o) {
 	o=be(o);
@@ -1326,18 +1311,18 @@ function UI_Editable(o) {
 
 
 	this.filterNewlines = function filterNewlines(e) {
-	    if(e.which == 13) {
+		if(e.which == 13) {
 			e.preventDefault();
 			return false;
 		}
 		this.filterTags();
 	}
 	this.filterTags = function filterTags(e) {
-	    for(var i=0; i<this.$.children.length; i++) {
-    		this.$.children[0].parentNode.removeChild(this.$.children[0]);
-	    };
-	    if(this.$.innerHTML.length < 1)
-	    	this.$.innerHTML='<br>';
+		for(var i=0; i<this.$.children.length; i++) {
+			this.$.children[0].parentNode.removeChild(this.$.children[0]);
+		};
+		if(this.$.innerHTML.length < 1)
+			this.$.innerHTML='<br>';
 	}
 
 	this.edit = function edit(state) {
@@ -1418,18 +1403,6 @@ function UI_Gallery(o) {
 	this._.next.onclick = () => this.move('right');
 }
 
-
-Util = {}
-
-Util.parseVKTags = function(text) {
-var matches = /\[([a-zA-Z0-9_]+)\|(.+)\]/g.exec(text);
-	if(matches != null) {
-		return text.replace(matches[0], '<a href="https://vk.com/'+matches[1]+'">'+matches[2]+'</a>')
-	}else{
-		return text;
-	}
-}
-
 var UIs = document.querySelectorAll('*[data-ui]');
 var toUI = [];
 UIs.forEach(node => {
@@ -1441,3 +1414,5 @@ toUI.sort((a,b) => {
 toUI.forEach(item => {
 	new window[item.node.getAttribute('data-ui')]({node: item.node})
 });
+
+
