@@ -1000,7 +1000,7 @@ function UI_ColorPicker(o) {
 		default: this.value,
 		theme: 'nano',
 		default: '#ffffff',
-		autoReposition: false,
+		autoReposition: true,
 		components: {
 			preview: true,
 			opacity: false,
