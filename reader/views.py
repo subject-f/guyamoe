@@ -58,7 +58,7 @@ def series_page_data(series_slug):
         chapters = Chapter.objects.filter(series=series).select_related(
             "series", "group"
         )
-        latest_chapter = chapters.latest("uploaded_on")
+        latest_chapter = chapters.latest("uploaded_on") if chapters else None
         vols = Volume.objects.filter(series=series).order_by("-volume_number")
         cover_vol_url = ""
         cover_vol_url_webp = ""
@@ -129,7 +129,7 @@ def series_page_data(series_slug):
                 ["Views", hit.hits + 1],
                 [
                     "Last Updated",
-                    f"Ch. {latest_chapter.clean_chapter_number()} - {datetime.utcfromtimestamp(latest_chapter.uploaded_on.timestamp()).strftime('%Y-%m-%d')}",
+                    f"Ch. {latest_chapter.clean_chapter_number() if latest_chapter else ''} - {datetime.utcfromtimestamp(latest_chapter.uploaded_on.timestamp()).strftime('%Y-%m-%d') if latest_chapter else ''}",
                 ],
             ],
             "synopsis": series.synopsis,
@@ -175,6 +175,7 @@ def get_all_metadata(series_slug):
         series = Series.objects.get(slug=series_slug)
         chapters = Chapter.objects.filter(series=series).select_related("series")
         series_metadata = {}
+        series_metadata["indexed"] = series.indexed
         for chapter in chapters:
             series_metadata[chapter.slug_chapter_number()] = {
                 "series_name": chapter.series.name,
@@ -196,6 +197,7 @@ def reader(request, series_slug, chapter, page=None):
             data[chapter]["api_path"] = f"/api/series/"
             data[chapter]["version_query"] = settings.STATIC_VERSION
             data[chapter]["first_party"] = True
+            data[chapter]["indexed"] = data["indexed"]
             return render(request, "reader/reader.html", data[chapter])
         else:
             return render(request, "homepage/how_cute_404.html", status=404)

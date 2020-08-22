@@ -37,6 +37,7 @@
   // Seed the values from the template for the reader API calls
   const BASE_API_PATH = "{{ api_path }}";
   const IS_FIRST_PARTY = {{ first_party|yesno:"true,false,false" }};
+  const IS_INDEXED = {{ indexed|yesno:"true,false,false" }};
 </script>
 
 <body>

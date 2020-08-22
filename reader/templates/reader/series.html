@@ -161,7 +161,7 @@ var reading_button = null;
 	function loadGroups(slug) {
 		let scanGroup = document.getElementById("scanGroup");
 		if (scanGroup.options.length === 0) {
-			fetch("https://raw.githubusercontent.com/appu1232/guyamoe/master/api/data_cache/all_groups.json")
+			fetch("/api/get_all_groups/")
 				.then(data => data.json())
 				.then(data => {
 					for (let group in data) {

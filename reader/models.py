@@ -52,6 +52,8 @@ class Series(models.Model):
         default=None, blank=True, null=True, db_index=True
     )
     next_release_html = models.TextField(blank=True, null=True)
+    indexed = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.name

@@ -2829,15 +2829,13 @@ function UI_Loda_Search(o) {
 	this.name = 'Indexer';
 	this.noPropagation = true;
 	this.focusElement = this._.input;
+	this.isIndexed = typeof(IS_INDEXED) !== "undefined" ? IS_INDEXED : false;
 	this.container = new UI_ContainerList({
 		node: this._.container
 	});
 
 	this.lookup = new UI_MangaSearch({
 		node: this._.lookup
-	})
-	this.indexer = new UI_IndexSearch({
-		node: this._.indexer
 	})
 
 	this.tabs = new UI_Tabs({
@@ -2846,30 +2844,42 @@ function UI_Loda_Search(o) {
 		.add(new UI_Tab({
 			text: 'Title search'
 		}))
-		.add(new UI_Tab({
-			text: 'Text search',
-			counterText: 'Press <span class="inline-icon">⮠</span>'
-		}))
 		.S.link(this.container)
 		.S.linkAnonymous('number', num => {
 			this._.input.focus();
 		});
-	this.tabs.get(1).$.onmousedown = e => {
-		this.input.handler(e);
-	}
+
 	this.tabs.select(0);
 
 	this.lookup.S.link(this.tabs.get(0));
-	this.indexer.S.link(this.tabs.get(1));
 	this.input = new UI_Input({
 		node: this._.input
 		})
 		.S.link(this.lookup)
-		.S.link(this.indexer)
+
+	if (this.isIndexed) {
+		this.indexer = new UI_IndexSearch({
+			node: this._.indexer
+		});
+
+		this.tabs.add(new UI_Tab({
+			text: 'Text search',
+			counterText: 'Press <span class="inline-icon">⮠</span>'
+		}))
+
+		this.tabs.get(1).$.onmousedown = e => {
+			this.input.handler(e);
+		}
+
+		this.indexer.S.link(this.tabs.get(1));
+
+
+		this.input.S.link(this.indexer)
 		.S.linkAnonymous('text', text => {
 			this.tabs.select(1);
 			this.tabs.get(1).update('Loading...');
 		})
+	}
 
 }
 
