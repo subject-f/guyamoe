@@ -18,7 +18,7 @@ function shadowScroll() {
 	PROGRAMMATIC_SCROLL = true;
 	if(SCROLL_TIMER) clearTimeout(SCROLL_TIMER);
 	SCROLL_TIMER = setTimeout(() => {
-		PROGRAMMATIC_SCROLL = false;
+  		PROGRAMMATIC_SCROLL = false;
 	}, 50)
 } 
 
@@ -102,8 +102,8 @@ function ReaderAPI(o) {
 				}
 			}
 		}
-		//We'll need to get this from the server as a field later.
-		if(data.slug == 'Kaguya-Wants-To-Be-Confessed-To') { 
+		
+		if(data.next_release_page) {
 			data.countdown = true;
 			var lastChapter = Object.keys(data.chapters).sort((a,b) => b - a)[0];
 
@@ -164,6 +164,7 @@ function themeHandler() {
 		let theme = Settings.get('thm.theme');
 		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
 		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Reaper') this.setTheme('#272836', '#121223', '#487DE4', '#EEEEEE');
 		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
 		if(reset === true) this.resetCustom();
 	}
@@ -707,14 +708,15 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.theme',
 		prettyName: 'Reader Theme',
-		options: ['Dark', 'Light', 'Custom'],
+		options: ['Dark', 'Reaper', 'Light', 'Custom'],
 		default: 'Dark',
 		strings: {
 			Dark: 'Dark',
+			Reaper: 'Reaper',
 			Light: 'Light',
 			Custom: 'Custom'
 		},
-		type: SETTING_MULTI
+		type: SETTING_MULTI_DROPDOWN
 	})
 	.newSetting({
 		addr: 'thm.primaryCol',
@@ -1374,6 +1376,9 @@ function UI_Reader(o) {
 			this.SCP.page = this.SCP.page;
 		}
 
+		this.imageView.selectPage(this.SCP.page, dry);
+		this.SCP.visiblePages = this.imageView.visiblePages;
+
 		//if last page
 		if(HAS_LOCALSTORAGE
 		&& this.imageView.visiblePages
@@ -1383,9 +1388,6 @@ function UI_Reader(o) {
 			source = source[source.indexOf(this.SCP.series) - 1];
 			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
 		}
-
-		this.imageView.selectPage(this.SCP.page, dry);
-		this.SCP.visiblePages = this.imageView.visiblePages;
 		this.S.out('SCP', this.SCP);
 	}
 
@@ -1545,8 +1547,10 @@ function UI_Reader(o) {
 		this.imageView.updateWides();
 	}
 
-	this.enqueuePreload = url => {
-		this._.preload_entity.src = url;
+	this.enqueuePreload = images => {
+		images.filter(item => item !== undefined)
+			.slice(0,4)
+			.forEach((img, i) => this._.preload_entity.children[i].src = img.url);
 	}
 
 	this.eventRouter = function(event){
@@ -1907,20 +1911,30 @@ function UI_ReaderImageView(o) {
 			//this.getScrollElement().focus();
 			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
+	var spreadCount = Settings.get('adv.spreadCount');
 	var toPreload = Settings.get('bhv.preload');
 		if(toPreload == 100) {
 			toPreload = this.imageList.length;
 		}
-		toPreload = toPreload * Settings.get('adv.spreadCount');
+		toPreload = toPreload * spreadCount;
 		for (var i = index - 3; i < index + Math.max(toPreload, Settings.get('adv.spreadCount')); i++) {
 			if(this.imageList[i]) {
 				this.imageList[i].load();
-			//	Reader.enqueuePreload(this.imageList[i].url);
 			}else if(this.imageList.length < i)
 				break;
 		}
-		if(this.imageList[index+1]) {
-			Reader.enqueuePreload(this.imageList[index+1].url);
+		if(spreadCount == 2) {
+			Reader.enqueuePreload([
+				this.imageList[index-2],
+				this.imageList[index-1],
+				this.imageList[index+2],
+				this.imageList[index+3]
+			]);
+		}else{
+			Reader.enqueuePreload([
+				this.imageList[index-1],
+				this.imageList[index+1]
+			]);
 		}
 		this.S.out('event', {type: 'newPageIndex', data: index})
 	}
@@ -2347,6 +2361,7 @@ function UI_ReaderNoticeWrapper(o) {
 
 	this.imageInstances = [];
 	this.totalWidth = 0;
+
 	function countdown(time) {
 		time = new Date(time * 1000);
 		var t = time.getTime() - Date.now()
@@ -2372,20 +2387,20 @@ function UI_ReaderNoticeWrapper(o) {
 		if(t < 0) return 'Should be soon!';
 		return times.join(' ');
 	}
-var release =
-Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]];
-	release += 7 * 24 * 60 * 60;
-	if(Reader.SCP.chapterObject.wo)
-		release += Reader.SCP.chapterObject.wo * 7 * 24 * 60 * 60;
-	//TOFIX: done too fast, check impl
+	let release;
+		if(Reader.current.next_release_time)
+			release = Reader.current.next_release_time;
+		else
+			release = Reader.SCP.chapterObject.release_date[Object.keys(Reader.SCP.chapterObject.release_date)[0]] + 7 * 24 * 60 * 60;
 var notice = new UI_Dummy({
-		html: `<div class="ReaderNotice">
-			<h2>You're caught up!</h2>
-			<p>Next chapter will come out in about:</p>
-			<div class="timer">${countdown(release)}</div>
-			<a href="https://discord.gg/BDpCRUJ" target="_blank">Discuss the chapter in our Discord</a>
-			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>
-		</div>`
+		html: ('<div class="ReaderNotice">' +
+			(Reader.current.next_release_html || `<h2>You're caught up!</h2>
+			<p>Next chapter should come out in about:</p>
+			<div class="timer">$countdown</div>
+			<a href="https://discord.gg/BDpCRUJ" target="_blank">Discuss the chapter in the Kaguya Discord</a>
+			<a href="https://twitter.com/GuyaMoe" target="_blank">Follow our Twitter for updates</a>
+			<a href="https://www.viz.com/read/manga/kaguya-sama-love-is-war/all" target="_blank">Buy the official volumes</a>`
+		) + '</div>').replace('$countdown', countdown(release))
 	});
 	notice.parentWrapper = this;
 	notice.load = () => {};
@@ -3298,6 +3313,13 @@ function UI_SettingDisplay(o) {
 				text: 'Reset'
 			}).S.link(Settings);
 			break;
+		case SETTING_MULTI_DROPDOWN:
+		this.entity = new UI_Dropdown({
+			setting: this.setting,
+			options: this.setting.optionsPrimitive,
+			disabled: false
+		}).S.link(Settings);
+		break;
 	}
 
 

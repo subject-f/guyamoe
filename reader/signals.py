@@ -25,7 +25,7 @@ def delete_chapter_folder(sender, instance, **kwargs):
     if instance.folder and instance.series:
         clear_pages_cache()
         folder_path = os.path.join(
-            settings.settings.MEDIA_ROOT,
+            settings.MEDIA_ROOT,
             "manga",
             instance.series.slug,
             "chapters",

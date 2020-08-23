@@ -28,7 +28,6 @@ class Command(BaseCommand):
                 with open(options["file"], encoding="utf-8-sig") as f:
                     data = json.load(f)["MentionedWordChapterLocation"]
                 for word in data:
-                    print(word)
                     index = ChapterIndex.objects.filter(
                         word=word, series=series
                     ).first()

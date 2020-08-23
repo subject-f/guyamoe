@@ -1676,11 +1676,13 @@ main a {
 }
 
 .splash-notice {
-    padding: 1rem;
+    padding: 0.4em 1em 0.6em 1em;
     text-align: center;
-    border: 2px dashed rgba(255, 255, 255, 0.74);
+    border: 1px dashed rgba(255, 255, 255, 0.74);
     flex-grow: 1;
-    margin: 1rem 0;
+    margin: 1rem auto;
+	display: inline-block;
+	max-width: 20em;
     background: #e16a6a38;
     font-size: 1.1rem;
     color: white;

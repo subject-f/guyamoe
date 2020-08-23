@@ -8,7 +8,11 @@ import zipfile
 from datetime import datetime, timezone
 
 from discord import Embed, Webhook, RequestsWebhookAdapter
-from django.http import HttpResponse, HttpResponseBadRequest, StreamingHttpResponse
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    StreamingHttpResponse,
+)
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -52,6 +56,11 @@ def get_all_series(request):
                 if vol.volume_cover:
                     cover_vol_url = f"/media/{vol.volume_cover}"
                     break
+            chapters = Chapter.objects.filter(series=series)
+            last_updated = None
+            for ch in chapters:
+                if not last_updated or ch.uploaded_on > last_updated:
+                    last_updated = ch.uploaded_on
             all_series_data[series.name] = {
                 "author": series.author.name,
                 "artist": series.artist.name,
@@ -59,6 +68,9 @@ def get_all_series(request):
                 "slug": series.slug,
                 "cover": cover_vol_url,
                 "groups": all_groups(),
+                "last_updated": int(datetime.timestamp(last_updated))
+                if last_updated
+                else 0,
             }
         cache.set("all_series_data", all_series_data, 3600 * 12)
     return HttpResponse(json.dumps(all_series_data), content_type="application/json")

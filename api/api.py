@@ -11,6 +11,7 @@ from io import BytesIO
 from PIL import ImageFilter, Image
 from django.conf import settings
 from django.core.cache import cache
+from django.http import Http404
 from reader.models import Series, Volume, Chapter, ChapterIndex, Group
 
 
@@ -31,7 +32,9 @@ def chapter_data_etag(request, series_slug):
 
 
 def series_data(series_slug):
-    series = Series.objects.get(slug=series_slug)
+    series = Series.objects.filter(slug=series_slug).first()
+    if not series:
+        raise Http404("Page not found.")
     chapters = Chapter.objects.filter(series=series).select_related("group")
     chapters_dict = {}
     groups_dict = {}
@@ -102,6 +105,7 @@ def series_data(series_slug):
         "next_release_time": series.next_release_time.timestamp()
         if series.next_release_time
         else None,
+        "next_release_html": series.next_release_html,
     }
 
 
@@ -188,7 +192,6 @@ def index_chapter(chapter):
         for index in ChapterIndex.objects.filter(series=chapter.series):
             word_dict = json.loads(index.chapter_and_pages)
             if ch_slug in word_dict:
-                print(index.word, word_dict[ch_slug])
                 del word_dict[ch_slug]
                 index.chapter_and_pages = json.dumps(word_dict)
                 index.save()

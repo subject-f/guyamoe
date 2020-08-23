@@ -27,6 +27,9 @@ class AllChaptersFeed(Feed):
     def item_description(self, item):
         return f"Group: {item.group.name} - Title {item.title}"
 
+    def item_pubdate(self, item):
+        return item.uploaded_on
+
 
 class SeriesChaptersFeed(Feed):
     feed_type = CorrectMimeTypeFeed
@@ -56,3 +59,6 @@ class SeriesChaptersFeed(Feed):
 
     def items(self, obj):
         return Chapter.objects.filter(series=obj).order_by("-uploaded_on")
+
+    def item_pubdate(self, item):
+        return item.uploaded_on

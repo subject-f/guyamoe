@@ -8,12 +8,12 @@
   <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
   <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
   <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
+  <meta name="twitter:card" content="summary">
   {% if first_party %}
   <meta property="og:description"
-    content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
+    content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
   <meta name="twitter:description"
-    content="Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga series. No ads. No bad reader. All guya.">
-  <meta name="twitter:card" content="Everything Kaguya-sama">
+    content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
   <meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
   <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
   <meta name="author" content="Akasaka Aka">
@@ -42,7 +42,6 @@
 <body>
   {% include "tracking.html" %}
   <main id="rdr-main" class="" tabindex="-1">
-    <img class="preload-entity" id="scan_line" data-bind="preload_entity">
     <aside class="unload">
       <div class="hide-side" data-bind="sidebar_button">
         <div class="hide-side-actual ico-btn"></div>
@@ -104,37 +103,6 @@
           <div data-bind="image_description">
           </div>
         </section>
-        <!-- 				<section class="rdr-aside-overlay hidden" data-bind="aside_views">
-          <div class="rdr-aside-view fit_view UI Dummy ButtonGroup" data-bind="aside_views_fit">
-            <div class="header">Fit mode</div>
-            <div class="t-row">
-              <div class="t-1">
-                <div class="ToggleButton UI Button" data-bind="none" data-tip="Images are displayed in natural resolution."><div class="ico-btn fitter none"></div><span>Original size</span></div>
-              </div>
-            </div>
-            <div class="t-row">
-              <div class="t-tooltip">
-                Limit
-              </div>
-              <div class="t-1">
-                <div class="ToggleButton UI Button" data-bind="all_limit" data-tip="Natural image size that does not exceed max width or height."><div class="ico-btn fitter all_limit"></div><span>All</span></div>
-                <div class="ToggleButton UI Button" data-bind="width_limit" data-tip="Natural image size that does not exceed max width."><div class="ico-btn fitter width_limit"></div><span>Width</span></div>
-                <div class="ToggleButton UI Button" data-bind="height_limit" data-tip="Natural image size that does not exceed max height."><div class="ico-btn fitter height_limit"></div><span>Height</span></div>
-              </div>
-            </div>
-            <div class="t-row">
-              <div class="t-tooltip">
-                Stretch
-              </div>
-              <div class="t-1">
-                <div class="ToggleButton UI Button" data-bind="all" data-tip="Images scale to width or height."><div class="ico-btn fitter all"></div><span>All</span></div>
-                <div class="ToggleButton UI Button" data-bind="width" data-tip="Images scale to max width."><div class="ico-btn fitter width"></div><span>Width</span></div>
-                <div class="ToggleButton UI Button" data-bind="height" data-tip="Images scale to max height."><div class="ico-btn fitter height"></div><span>Height</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
- -->
       </div>
     </aside>
     <div class="rdr-page-selector vis" data-bind="page_selector">
@@ -145,6 +113,9 @@
       </div>
     </div>
     <content data-bind='image_viewer' class="rdr-area">
+      <div class="preload-entity" data-bind="preload_entity">
+        <img /><img /><img /><img />
+      </div>
       <div class="rdr-image-wrap" data-bind='image_container' tabindex="-1">
       </div>
       <div class="zoom-level refresh-chapter is-hidden" data-bind="random_chapter">

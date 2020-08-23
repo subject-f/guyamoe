@@ -61,9 +61,7 @@ class Command(BaseCommand):
         else:
             self.blacklist_jb = {}
         self.jaiminisbox_manga = {
-            "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/",
-            "We-Want-To-Talk-About-Kaguya": "https://jaiminisbox.com/reader/series/we-want-to-talk-about-kaguya/",
-            "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to-official-doujin/",
+            "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/"
         }
         self.mangadex_manga_id = {
             "Kaguya-Wants-To-Be-Confessed-To": 17274,
@@ -237,7 +235,7 @@ class Command(BaseCommand):
                         }
             else:
                 print(
-                    f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Failed to reach JB page for {series}. Response status: {resp.status}"
+                    f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] Failed to reach JB page for {series}. Response status: {resp.status_code}"
                 )
         else:
             latest_chap_slug = latest_chap.replace(".", "/")
@@ -253,14 +251,14 @@ class Command(BaseCommand):
                     "url": f"https://jaiminisbox.com/reader/download/{series.slug.lower()}/en/0/{latest_chap_slug}/",
                 }
             else:
-                print(resp.status)
+                print(resp.status_code)
         for chapter in chapters:
             chapter_url = chapters[chapter]["url"]
             if (
                 "(Digital)" in chapters[chapter]["title"]
                 and str(float(int(float(chapter)))) in downloaded_chapters
             ):
-                if hasattr(settings, SCRAPER_BLACKLIST_FILE) and os.path.exists(
+                if hasattr(settings, "SCRAPER_BLACKLIST_FILE") and os.path.exists(
                     settings.SCRAPER_BLACKLIST_FILE
                 ):
                     with open(settings.SCRAPER_BLACKLIST_FILE, "r+") as f:
