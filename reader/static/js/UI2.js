@@ -976,6 +976,122 @@ function UI_Input(o) {
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
 }
 
+
+function UI_Dropdown(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['InputDropdown'].concat(o.kind || []),
+		html: o.html || `<div class="dropdown">
+						 <div class = "input-container">
+  						 <input type="text" placeholder="" class="dropbtn"/><span class="arrd"></span>
+  						 </div>
+						 <div class="hidden dropdown-content"></div>
+						 </div>`,
+	});
+
+	if(o.type) this.$.type = o.type;
+	this.options=o.options;
+	this.dropdown = this.$.childNodes[3];
+	this.input =  this.$.childNodes[1].childNodes[1];
+	this.input.value = o.setting.get();
+	this.disabled = o.disabled;
+	this.el = -1;
+
+	this.init = (crr, silent) => {
+		this.dropdown.innerHTML = '';
+		for(let i=0; i < crr.length; i++) {
+			this.dropdown.insertAdjacentHTML('beforeend', `<a class="opts">${crr[i]}</a>`)
+		}
+		if(silent) this.input.value = o.setting.get();
+		else this.dropdown.classList.remove('hidden');
+		if(this.disabled) this.input.setAttribute('readonly', '');
+	}
+	
+	this.get = () => this.value;
+	this.set = function(value) {
+		this.value = this.input.value = value;
+		this.S.out('set', this.value);
+	}
+	SettingsInterface.call(this, o.setting);
+
+	this.input.onkeyup = () => {
+		if(!this.disabled) this.init(this.options.filter(el => el.toLowerCase().includes(this.input.value.toLowerCase())), false);
+		this.disabled = false;
+	}
+
+	this.input.onkeydown = (e) => {
+		if(e.key == 'ArrowDown') {
+			if(this.el === this.dropdown.childNodes.length - 1) {
+				this.el = -1;
+				this.dropdown.childNodes[this.dropdown.childNodes.length - 1].classList.remove('dd-s');
+			}
+			this.el += 1;
+			try { this.dropdown.childNodes[this.el-1].classList.remove('dd-s'); } catch (err) {}
+			this.dropdown.childNodes[this.el].classList.add('dd-s');
+			this.input.value = ''
+			this.input.placeholder = this.dropdown.childNodes[this.el].textContent;
+			this.disabled = true;
+		}
+		if(e.key == 'ArrowUp') {
+			if(this.el === 0) {
+				this.el  = this.dropdown.childNodes.length;
+				this.dropdown.childNodes[0].classList.remove('dd-s');
+			}
+			if(this.el === -1) this.el = this.dropdown.childNodes.length;
+			this.el -= 1;
+			try {this.dropdown.childNodes[this.el+1].classList.remove('dd-s');} catch (err) {}
+			this.dropdown.childNodes[this.el].classList.add('dd-s');
+			this.input.value = ''
+			this.input.placeholder = this.dropdown.childNodes[this.el].textContent;
+			this.disabled = true;
+		}
+	}
+
+	new KeyListener(this.input, 'keydown')
+			.attach('submit', ['Enter'], e => {
+				this.dropdown.classList.add('hidden');
+				this.input.blur();
+				this.el = -1;
+				try {
+					if(this.input.value) {
+						this.set(this.dropdown.childNodes[0].textContent);
+						this.SeI.send();
+					}
+					else throw 'NoInput'
+				} catch (err) {
+					this.set(this.input.placeholder);
+					this.SeI.send();
+				}
+			})
+
+	this.input.onclick = (e) => {
+		this.dropdown.classList.remove('hidden');
+		this.init(this.options, true);
+		this.input.placeholder = this.input.value;
+		if(!this.disabled) this.input.value = '';
+		document.addEventListener('click', function _listener(e) {
+			if(!e.target.className.includes('dropbtn')) {
+				this.dropdown.classList.add('hidden');
+				document.removeEventListener('click', _listener);
+				this.input.value = o.setting.get();
+				this.el = -1;
+			}
+		}.bind(this));
+	}
+
+	this.dropdown.onclick = (e) => {
+		if(e.target.className === 'opts') {
+			e.target.parentNode.classList.add('hidden');
+			this.el = -1;
+			this.set(e.target.textContent);
+			this.SeI.send();
+		}
+	}
+	this.dropdown.setAttribute("tabindex", "-1")
+	new KeyListener(this.input, 'keydown').noPropagation(true);
+}
+
 function UI_ColorPicker(o) {
 	o=be(o);
 	UI.call(this, {
