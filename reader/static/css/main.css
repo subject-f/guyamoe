@@ -3117,7 +3117,7 @@ body, button, button:before {
     background-color: var(--blackLight);
     color: var(--textCol);
     height: 2.2em;
-    min-width: 190px;
+    min-width: 165px;
     font-family: "Open Sans";
     display: flex;
     justify-content: space-between;

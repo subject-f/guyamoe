@@ -991,14 +991,14 @@ function UI_Dropdown(o) {
 	});
 
 	if(o.type) this.$.type = o.type;
-	this.options=o.options;
-	this.dropdown = this.$.childNodes[3];
-	this.input =  this.$.childNodes[1].childNodes[1];
-	this.input.value = o.setting.get();
-	this.disabled = o.disabled;
-	this.el = -1;
+	this.options=o.options; //All options
+	this.dropdown = this.$.childNodes[3]; //Dropdown container 
+	this.input =  this.$.childNodes[1].childNodes[1]; //Input
+	this.input.value = o.setting.get(); //Setting input value during initialisation
+	this.disabled = o.disabled; //set to true if you want to disable inputting
+	this.el = -1; //keeps the track for scrolling through element
 
-	this.init = (crr, silent) => {
+	this.init = (crr, silent) => { 
 		this.dropdown.innerHTML = '';
 		for(let i=0; i < crr.length; i++) {
 			this.dropdown.insertAdjacentHTML('beforeend', `<a class="opts">${crr[i]}</a>`)
@@ -1011,12 +1011,14 @@ function UI_Dropdown(o) {
 	this.get = () => this.value;
 	this.set = function(value) {
 		this.value = this.input.value = value;
-		this.S.out('set', this.value);
 	}
 	SettingsInterface.call(this, o.setting);
 
 	this.input.onkeyup = () => {
-		if(!this.disabled) this.init(this.options.filter(el => el.toLowerCase().includes(this.input.value.toLowerCase())), false);
+		if(!this.disabled) {
+			this.init(this.options.filter(el => el.toLowerCase().includes(this.input.value.toLowerCase())), false);
+			this.el = -1;
+		}
 		this.disabled = false;
 	}
 
@@ -1033,6 +1035,7 @@ function UI_Dropdown(o) {
 			this.input.placeholder = this.dropdown.childNodes[this.el].textContent;
 			this.disabled = true;
 		}
+
 		if(e.key == 'ArrowUp') {
 			if(this.el === 0) {
 				this.el  = this.dropdown.childNodes.length;
@@ -1063,14 +1066,14 @@ function UI_Dropdown(o) {
 					this.set(this.input.placeholder);
 					this.SeI.send();
 				}
-			})
+			}).noPropagation(true)
 
 	this.input.onclick = (e) => {
 		this.dropdown.classList.remove('hidden');
 		this.init(this.options, true);
 		this.input.placeholder = this.input.value;
 		if(!this.disabled) this.input.value = '';
-		document.addEventListener('click', function _listener(e) {
+		document.addEventListener('click', function _listener(e) { //click outside to close 
 			if(!e.target.className.includes('dropbtn')) {
 				this.dropdown.classList.add('hidden');
 				document.removeEventListener('click', _listener);
@@ -1082,14 +1085,13 @@ function UI_Dropdown(o) {
 
 	this.dropdown.onclick = (e) => {
 		if(e.target.className === 'opts') {
-			e.target.parentNode.classList.add('hidden');
+			this.dropdown.classList.add('hidden');
 			this.el = -1;
 			this.set(e.target.textContent);
 			this.SeI.send();
 		}
 	}
 	this.dropdown.setAttribute("tabindex", "-1")
-	new KeyListener(this.input, 'keydown').noPropagation(true);
 }
 
 function UI_ColorPicker(o) {
