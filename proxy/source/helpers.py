@@ -1,5 +1,6 @@
 from django.core.cache import cache
 import requests
+import base64
 
 ENCODE_STR_SLASH = "%FF-"
 ENCODE_STR_QUESTION = "%DE-"
@@ -14,6 +15,14 @@ def naive_encode(url):
 
 def naive_decode(url):
     return url.replace(ENCODE_STR_SLASH, "/").replace(ENCODE_STR_QUESTION, "?")
+
+
+def decode(url: str):
+    return str(base64.urlsafe_b64decode(url.encode()), "utf-8")
+
+
+def encode(url: str):
+    return str(base64.urlsafe_b64encode(url.encode()), "utf-8")
 
 
 def get_wrapper(url, *, headers={}, **kwargs):

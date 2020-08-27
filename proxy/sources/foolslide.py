@@ -9,6 +9,8 @@ from ..source.helpers import (
     post_wrapper,
     get_wrapper,
     api_cache,
+    encode,
+    decode,
 )
 from django.urls import re_path
 from django.shortcuts import redirect
@@ -101,24 +103,16 @@ class FoolSlide(ProxySource):
         )
         split = url.split("/")
         url = "/".join(split[0 : split.index("series") + 2])
-        return self.encode(url)
-
-    @staticmethod
-    def decode(url: str):
-        return str(base64.urlsafe_b64decode(url.encode()), "utf-8")
-
-    @staticmethod
-    def encode(url: str):
-        return str(base64.urlsafe_b64encode(url.encode()), "utf-8")
+        return encode(url)
 
     def fs_scrape_common(self, meta_id):
         try:
             resp = post_wrapper(
-                f"https://{self.decode(meta_id)}/", data={"adult": "true"}
+                f"https://{decode(meta_id)}/", data={"adult": "true"}
             )
         except requests.exceptions.ConnectionError:
             resp = post_wrapper(
-                f"http://{self.decode(meta_id)}/", data={"adult": "true"}
+                f"http://{decode(meta_id)}/", data={"adult": "true"}
             )
         if resp.status_code == 200:
             data = resp.text
@@ -133,7 +127,7 @@ class FoolSlide(ProxySource):
                 .strip()
             )
             description = comic_info.find("div", class_="info").get_text().strip()
-            groups_dict = {"1": self.decode(meta_id).split("/")[0]}
+            groups_dict = {"1": decode(meta_id).split("/")[0]}
             cover_div = soup.find("div", class_="thumbnail")
             if cover_div and cover_div.find("img")["src"]:
                 cover = cover_div.find("img")["src"]
@@ -166,7 +160,7 @@ class FoolSlide(ProxySource):
                     minor_chapter = chp[1]
                 deconstructed_url = link["href"].split("/read/")
                 chapter_url = self.wrap_chapter_meta(
-                    self.encode(
+                    encode(
                         f"{deconstructed_url[0]}/api/reader/chapter?comic_stub={deconstructed_url[1].split('/')[0]}&chapter={major_chapter}&subchapter={minor_chapter}"
                     )
                 )
@@ -232,7 +226,7 @@ class FoolSlide(ProxySource):
 
     @api_cache(prefix="fs_chapter_dt", time=3600)
     def chapter_api_handler(self, meta_id):
-        resp = get_wrapper(self.decode(meta_id))
+        resp = get_wrapper(decode(meta_id))
         if resp.status_code == 200:
             data = json.loads(resp.text)
             return ChapterAPI(
@@ -255,7 +249,7 @@ class FoolSlide(ProxySource):
                 synopsis=data["description"],
                 author=data["artist"],
                 chapter_list=data["chapter_list"],
-                original_url=f"https://{self.decode(meta_id)}/",
+                original_url=f"https://{decode(meta_id)}/",
             )
         else:
             return None
