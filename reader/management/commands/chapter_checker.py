@@ -61,15 +61,21 @@ class Command(BaseCommand):
         else:
             self.blacklist_jb = {}
         self.jaiminisbox_manga = {
-            "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/"
+            "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/",
+            "Oshi-no-Ko": "https://jaiminisbox.com/reader/series/oshi-no-ko",
         }
         self.mangadex_manga_id = {
             "Kaguya-Wants-To-Be-Confessed-To": 17274,
             "We-Want-To-Talk-About-Kaguya": 29338,
             "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": 28363,
+            "Oshi-no-Ko": 46835,
         }
         self.jb_group = 3
         self.md_group = 2
+        self.md_group_map = {
+            "Ai's fanclub": 5,
+        }
+
 
     def create_chapter_obj(self, chapter, group, series, latest_volume, title):
         chapter_number = float(chapter)
@@ -104,34 +110,30 @@ class Command(BaseCommand):
         clear_pages_cache()
         return chapter_folder, str(group.id)
 
-    def mangadex_download(self, chapters, series, group, latest_volume, url=""):
-        for chapter in chapters:
-            if not chapters[chapter]:
-                print(f"Could not download chapter {chapter}.")
-                continue
-            chapter_pages = chapters[chapter][1]
-            chapter_folder, group_folder = self.create_chapter_obj(
-                chapter, group, series, latest_volume, chapters[chapter][0]
-            )
-            ch = Chapter.objects.get(
-                series=series, chapter_number=float(chapter), group=group
-            )
-            padding = len(str(len(chapter_pages)))
-            print(f"Downloading chapter {chapter}...")
-            print(f"Found {len(chapter_pages)} pages...")
-            for idx, page in enumerate(chapter_pages):
-                extension = page.rsplit(".", 1)[1]
-                page_file = f"{str(idx+1).zfill(padding)}.{extension}"
-                resp = requests.get(page)
-                if resp.status_code == 200:
-                    page_content = resp.content
-                    with open(
-                        os.path.join(chapter_folder, group_folder, page_file), "wb",
-                    ) as f:
-                        f.write(page_content)
-                else:
-                    print("failed at mangadex_download", idx, page)
-            chapter_post_process(ch, update_version=False)
+    def mangadex_download(self, chapter, chapter_data, series, group, latest_volume, url=""):
+        chapter_pages = chapter_data[1]
+        chapter_folder, group_folder = self.create_chapter_obj(
+            chapter, group, series, latest_volume, chapter_data[0]
+        )
+        ch = Chapter.objects.get(
+            series=series, chapter_number=float(chapter), group=group
+        )
+        padding = len(str(len(chapter_pages)))
+        print(f"Downloading chapter {chapter}...")
+        print(f"Found {len(chapter_pages)} pages...")
+        for idx, page in enumerate(chapter_pages):
+            extension = page.rsplit(".", 1)[1]
+            page_file = f"{str(idx+1).zfill(padding)}.{extension}"
+            resp = requests.get(page)
+            if resp.status_code == 200:
+                page_content = resp.content
+                with open(
+                    os.path.join(chapter_folder, group_folder, page_file), "wb",
+                ) as f:
+                    f.write(page_content)
+            else:
+                print("failed at mangadex_download", idx, page)
+        chapter_post_process(ch, update_version=False)
 
     def get_chapter_list(self, series_id):
         md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
@@ -154,7 +156,7 @@ class Command(BaseCommand):
         else:
             return None
         resp = requests.get(
-            f"https://mangadex.org/api/?id={chapter_id}&server=null&type=chapter"
+            f"https://mangadex.org/api/?id={chapter_id}&type=chapter"
         )
         if resp.status_code == 200:
             data = resp.text
@@ -171,10 +173,9 @@ class Command(BaseCommand):
                     for page in api_data["page_array"]
                 ],
                 chapter_id,
+                api_data.get("group_name", "")
             )
             return chapter_data
-        else:
-            print("failed at get_chapter_pages")
         return None
 
     def mangadex_checker(
@@ -184,9 +185,7 @@ class Command(BaseCommand):
             tz = pytz.timezone("Japan")
             if datetime.now(tz).weekday() < 3:
                 return
-        chapters = {}
         chapter_list = self.get_chapter_list(self.mangadex_manga_id[series_slug])
-        group = Group.objects.get(pk=self.md_group)
         series = Series.objects.get(slug=series_slug)
         for chapter in chapter_list:
             if (
@@ -196,10 +195,15 @@ class Command(BaseCommand):
                 continue
             if str(float(chapter)) not in downloaded_chapters:
                 print(f"Found new chapter ({chapter}) on MangaDex for {series_slug}.")
-                chapters[chapter] = self.get_chapter_pages(
+                chapter_data = self.get_chapter_pages(
                     self.mangadex_manga_id[series_slug], chapter
                 )
-        self.mangadex_download(chapters, series, group, latest_volume)
+                if not chapter_data:
+                    print(f"Failed to get chapter pages of {chapter} on MangaDex for {series_slug}.")
+                    continue
+                group_number = self.md_group_map.get(chapter_data[3], self.md_group)
+                group = Group.objects.get(pk=group_number)
+                self.mangadex_download(chapter, chapter_data, series, group, latest_volume)
 
     def jaiminis_box_checker(
         self, downloaded_chapters, series, latest_volume, url, latest_chap=None
@@ -365,10 +369,12 @@ class Command(BaseCommand):
                             for chapter in Chapter.objects.filter(series__slug=manga)
                         ]
                     else:
-                        chapters = [
+                        chapters = {
                             str(chapter.chapter_number)
+                            for group in self.md_group_map.values()
                             for chapter in Chapter.objects.filter(
-                                series__slug=manga, group=self.md_group
+                                series__slug=manga, group=group
                             )
-                        ]
+                        }
+                        chapters = list(chapters)
                     self.mangadex_checker(chapters, manga, latest_volume)
