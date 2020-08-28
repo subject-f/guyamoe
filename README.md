@@ -4,21 +4,53 @@ Generalized manga reading framework. Adapted for Kaguya-sama manga, but can be u
 Testing Supported By<br/>
 <img width="160" src="http://foundation.zurb.com/sites/docs/assets/img/logos/browser-stack.svg" alt="BrowserStack"/>
 
+⚠ **Note:** The install instructions below will not result in a general purpose CMS due to the amount of hardcoded assets in Guyamoe.
+
 ## Prerequisites 
 
+- Git
 - Python 3.6.5+
-  
+- Pip
+- Virtualenv
+
 ## Install
 
-`pip install -r requirements.txt`
+1. Create a virtualenv for Guyamoe.
+```
+virtualenv /opt/guyamoe
+```
 
-In the `settings.py` file in the `guyamoe` folder, edit the `SECRET_KEY` with a randomly generated string to be used for hashing. e.g. `SECRET_KEY = 's2&_ky$%ib6x5h4kqtj&izm%t+a2)iq(755c-f&uot3$1mde7-'`
+2. Clone this repository into the virtualenv.
+```
+git clone https://github.com/appu1232/guyamoe /opt/guyamoe/app
+```
 
-In command line/terminal, run:
--  `./manage.py makemigrations`
--  `./manage.py migrate`
--  `./manage.py loaddata reader/fixtures/reader_data.json`
--  `./manage.py createsuperuser` - prompts to create login
+3. Activate the virtualenv.
+```
+source /opt/guyamoe/bin/activate
+```
+
+4. Install Guyamoe's dependencies.
+```
+pip3 install -r /opt/guyamoe/app/requirements.txt
+```
+
+5. Change the value of the `SECRET_KEY` variable to a randomly generated string.
+```
+sed -i "s|os.environ.get(\"SECRET_KEY\", \"o kawaii koto\")|\"$(openssl rand -base64 32)\"|g" /opt/guyamoe/app/guyamoe/settings/base.py
+```
+
+6. Generate the default assets for Guyamoe.
+```
+sed -i 's|os.system("python -u manage.py runserver 0.0.0.0:8000")|#os.system("python -u manage.py runserver 0.0.0.0:8000")|g' /opt/guyamoe/app/docker/init.py
+cd /opt/guyamoe/app
+python3 /opt/guyamoe/app/docker/init.py
+```
+
+7. Create an admin user for Guyamoe.
+```
+python3 /opt/guyamoe/app/manage.py createsuperuser
+```
 
 Before starting the server, create a `media` folder in the base directory. Add manga with the corresponding chapters and page images. Structure it like so:
 ```
@@ -36,7 +68,7 @@ Note: Zero pad chapter folder numbers like so: `001` for the Kaguya series (this
 
 ## Start the server
 
--  `./manage.py runserver` - keep this console active
+-  `python3 /opt/guyamoe/app/manage.py runserver` - keep this console active
 
 Now the site should be accessible on localhost:8000
 
