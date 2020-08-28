@@ -73,6 +73,7 @@ class Command(BaseCommand):
         self.jb_group = 3
         self.md_group = 2
         self.md_group_map = {
+            None: self.md_group,
             "Ai's fanclub": 5,
         }
 
