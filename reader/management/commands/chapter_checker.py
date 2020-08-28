@@ -57,6 +57,7 @@ class Command(BaseCommand):
                 "Kaguya-Wants-To-Be-Confessed-To": blacklist,
                 "We-Want-To-Talk-About-Kaguya": [],
                 "Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": [],
+                "Oshi-no-Ko": [],
             }
         else:
             self.blacklist_jb = {}
