@@ -62,12 +62,8 @@ class Command(BaseCommand):
         else:
             self.blacklist_jb = {}
         self.jaiminisbox_manga = {
-<<<<<<< HEAD
             "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/",
             "Oshi-no-Ko": "https://jaiminisbox.com/reader/series/oshi-no-ko",
-=======
-            "Kaguya-Wants-To-Be-Confessed-To": "https://jaiminisbox.com/reader/series/kaguya-wants-to-be-confessed-to/"
->>>>>>> theme-dev
         }
         self.mangadex_manga_id = {
             "Kaguya-Wants-To-Be-Confessed-To": 17274,
