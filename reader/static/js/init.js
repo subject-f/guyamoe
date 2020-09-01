@@ -714,7 +714,7 @@ function SettingsHandler(){
 			Dark: 'Dark',
 			Reaper: 'Reaper',
 			Light: 'Light',
-			Custom: 'Custom'
+			Custom: 'Custom...'
 		},
 		type: SETTING_MULTI_DROPDOWN
 	})
