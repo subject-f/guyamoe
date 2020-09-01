@@ -164,6 +164,7 @@ function themeHandler() {
 		let theme = Settings.get('thm.theme');
 		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
 		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
+		else if (theme === 'Reaper') this.setTheme('#272836', '#121223', '#487DE4', '#EEEEEE');
 		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
 		if(reset === true) this.resetCustom();
 	}
@@ -707,14 +708,15 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.theme',
 		prettyName: 'Reader Theme',
-		options: ['Dark', 'Light', 'Custom'],
+		options: ['Dark', 'Reaper', 'Light', 'Custom'],
 		default: 'Dark',
 		strings: {
 			Dark: 'Dark',
+			Reaper: 'Reaper',
 			Light: 'Light',
-			Custom: 'Custom'
+			Custom: 'Custom...'
 		},
-		type: SETTING_MULTI
+		type: SETTING_MULTI_DROPDOWN
 	})
 	.newSetting({
 		addr: 'thm.primaryCol',
@@ -3321,6 +3323,13 @@ function UI_SettingDisplay(o) {
 				text: 'Reset'
 			}).S.link(Settings);
 			break;
+		case SETTING_MULTI_DROPDOWN:
+		this.entity = new UI_Dropdown({
+			setting: this.setting,
+			options: this.setting.optionsPrimitive,
+			disabled: false
+		}).S.link(Settings);
+		break;
 	}
 
 

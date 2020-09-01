@@ -1693,7 +1693,6 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .SettingUnit.compact .ButtonGroup {
-	justify-content: right;
 	margin-bottom: 0;
 }
 
@@ -1960,7 +1959,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 
 .t-row {
 	display: flex;
-	justify-content: left;
+	justify-content: flex-end;
 	flex-wrap: nowrap;
 	width: 100%;
 	margin: 0.7rem 0;
@@ -2395,7 +2394,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 		bottom: 0 !important;
 	}
 	.rdr-page-selector .preloaded {
-		border-bottom-color: #6699b9;
+		border-bottom-color: var(--accentCol);
 	}
 
 	.rdr-groups {
@@ -3110,3 +3109,80 @@ body, button, button:before {
 .pcr-app[data-theme="nano"] .pcr-selection .pcr-color-chooser, .pcr-app[data-theme="nano"] .pcr-selection .pcr-color-opacity {
 	margin: .2em .8em;
 }
+
+/*Dropdown style start*/
+
+.dropbtn {
+    background-color: var(--blackLight);
+    color: var(--textCol);
+    height: 2.2em;
+    min-width: 165px;
+    font-family: "Open Sans";
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 11px;
+    border: 1px solid var(--borderColor);
+    border-radius: 4px;
+    cursor: initial;
+    outline: none !important;
+}
+
+.input-container {
+	display: flex;
+}
+
+.arrd {
+	height: 4px;
+	width: 4px;
+}
+
+.arrd::after {
+	position: relative;
+    left: -25px;
+    bottom: -2px;
+    font-family: 'Guya';
+    font-size: 20px;
+    content: "\e902";
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  margin-top: 0.5em;
+  position: absolute;
+  background-color: var(--sidebarCol);
+  min-width: 190px;
+  overflow-x: hidden;
+  overflow-y: auto; 
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.dropdown-content button {
+  color: var(--textCol);
+  padding: 0 11px;
+  min-width: 190px;
+  height: 35px;
+  display: flex;
+  font-size: 0.8em;
+  align-items: center;
+  text-decoration: none;
+}
+
+.dropdown-content button:not(:last-child) {
+	border-bottom: 1px solid var(--sidebarColDark);
+}
+
+.dropdown:hover .dropbtn {background-color: var(--sidebarColDark)}
+.dropdown-content button:hover {background-color: var(--sidebarColDark)}
+.dropdown:hover .dropdown-content {display: block;}
+.dd-s {
+	background-color: var(--sidebarColDark)
+}
+
+/*Dropdown style end*/

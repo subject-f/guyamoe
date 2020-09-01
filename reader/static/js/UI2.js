@@ -976,6 +976,109 @@ function UI_Input(o) {
 	//		.attach('cancel', ['Escape'], e => this.clear(), );
 }
 
+
+function UI_Dropdown(o) {
+	o=be(o);
+	UI.call(this, {
+		node: o.node,
+		kind: ['InputDropdown'].concat(o.kind || []),
+		html: o.html || `<div class="dropdown">
+						 <div class = "input-container">
+  						 <input type="text" placeholder="" class="dropbtn"/><span class="arrd"></span>
+  						 </div>
+						 <div class="hidden dropdown-content"></div>
+						 </div>`,
+	});
+
+	if(o.type) this.$.type = o.type;
+	this.options=o.options; //All options
+	this.dropdown = this.$.childNodes[3]; //Dropdown container 
+	this.input =  this.$.childNodes[1].childNodes[1]; //Input
+	this.input.value = o.setting.get(); //Setting input value during initialisation
+	this.disabled = o.disabled; //set to true if you want to disable inputting
+	this.el = -1; //keeps the track for scrolling through element
+	if(this.disabled) this.input.setAttribute('readonly', ''); //set to disable
+
+	this.init = (crr) => { 
+		this.dropdown.innerHTML = '';
+		this.dropdown.style.height = "unset";
+		for(let i=0; i < crr.length; i++) {
+			this.dropdown.insertAdjacentHTML('beforeend', `<button class="opts">${crr[i]}</button>`)
+		}
+		this.dropdown.classList.remove('hidden');
+		if (window.innerHeight - this.dropdown.getBoundingClientRect().bottom < 0) this.dropdown.style.height = 35*this.options.length + (window.innerHeight - this.dropdown.getBoundingClientRect().bottom) - 8 + "px";
+	}
+
+	this.get = () => this.value;
+
+	this.set = function(value) {
+		this.value = this.input.value = value;
+		this.SeI.send();
+	}
+
+	this.reset = function(full) {
+		this.dropdown.classList.add('hidden');
+		this.input.blur();
+		this.el = -1;
+		if (full) this.input.value = o.setting.get();
+	}
+
+	SettingsInterface.call(this, o.setting);
+
+	this.input.oninput = () => {
+			this.init(this.options.filter(el => el.toLowerCase().includes(this.input.value.toLowerCase())));
+	}
+
+	new KeyListener(this.input, 'keydown')
+		.attach('submit', ['Enter'], e => {
+			if (this.input.value && (this.options.includes(this.input.value) || this.dropdown.childNodes.length)) this.set(this.dropdown.childNodes[0].textContent);
+			else this.set(this.input.placeholder);
+			this.reset(false);
+		})
+		.attach('traverseUp', ['ArrowUp'], e => {
+			if (this.el === 0) {
+				this.el = this.dropdown.childNodes.length;
+				this.dropdown.childNodes[0].classList.remove('dd-s');
+			} else if (this.el === -1) {
+				this.el = this.dropdown.childNodes.length;
+			} else {
+				this.dropdown.childNodes[this.el].classList.remove('dd-s');
+			}
+			this.el -= 1;
+			this.dropdown.childNodes[this.el].classList.add('dd-s');
+			this.input.value = ''
+			this.input.placeholder = this.dropdown.childNodes[this.el].textContent;
+			this.dropdown.scrollTop = this.dropdown.childNodes[this.el].offsetTop;
+		})
+		.attach('traverseDown', ['ArrowDown'], e => {
+			if (this.el === this.dropdown.childNodes.length - 1) {
+				this.el = -1;
+				this.dropdown.childNodes[this.dropdown.childNodes.length - 1].classList.remove('dd-s');
+			} else if (this.el !== -1) {
+				this.dropdown.childNodes[this.el].classList.remove('dd-s');
+			}
+			this.el += 1;
+			this.dropdown.childNodes[this.el].classList.add('dd-s');
+			this.input.value = ''
+			this.input.placeholder = this.dropdown.childNodes[this.el].textContent;
+			this.dropdown.scrollTop = this.dropdown.childNodes[this.el].offsetTop;
+		})
+		.noPropagation(true)
+
+	this.input.onfocus = (e) => {
+		this.init(this.options);
+		this.input.placeholder = this.input.value;
+		if(!this.disabled) this.input.value = '';
+	}
+
+	this.input.onblur = (e) => {
+		if(e.relatedTarget && e.relatedTarget.className === 'opts') this.set(e.relatedTarget.textContent);
+		this.reset(true);
+	};
+
+	this.dropdown.setAttribute("tabindex", "-1");
+}
+
 function UI_ColorPicker(o) {
 	o=be(o);
 	UI.call(this, {
