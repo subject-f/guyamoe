@@ -10,7 +10,7 @@ from django.conf import settings
 
 class Imgur(ProxySource):
     def get_chapter_api_prefix(self):
-        return ""
+        return "imgur_pages"
 
     def get_series_api_prefix(self):
         return "imgur_album"
@@ -70,8 +70,18 @@ class Imgur(ProxySource):
         else:
             return None
 
+    @api_cache(prefix="imgur_pages_dt", time=3600 * 6)
     def chapter_api_handler(self, meta_id):
-        pass
+        resp = get_wrapper(
+            f"https://api.imgur.com/3/album/{meta_id}",
+            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
+        )
+        if resp.status_code == 200:
+            api_data = json.loads(resp.text)
+            pages = [obj["link"] for obj in api_data["data"]["images"]]
+            return ChapterAPI(pages=pages, series=meta_id, chapter=meta_id,)
+        else:
+            return None
 
     @api_cache(prefix="imgur_series_page_dt", time=3600 * 6)
     def series_page_handler(self, meta_id):

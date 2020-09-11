@@ -9,7 +9,7 @@ from datetime import datetime
 
 class NHentai(ProxySource):
     def get_chapter_api_prefix(self):
-        return ""
+        return "nh_chapter"
 
     def get_series_api_prefix(self):
         return "nh_series"
@@ -132,8 +132,17 @@ class NHentai(ProxySource):
         else:
             return None
 
+    @api_cache(prefix="nh_pages_dt", time=3600)
     def chapter_api_handler(self, meta_id):
-        pass
+        data = self.nh_api_common(meta_id)
+        if data:
+            return ChapterAPI(
+                pages=data["chapters"]["1"]["groups"]["1"],
+                series=data["slug"],
+                chapter="1"
+            )
+        else:
+            return None
 
     @api_cache(prefix="nh_series_page_dt", time=3600)
     def series_page_handler(self, meta_id):
