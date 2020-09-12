@@ -165,6 +165,7 @@ function themeHandler() {
 		if(theme === 'Custom')	this.setTheme(Settings.get('thm.primaryCol'), Settings.get('thm.readerBg'), Settings.get('thm.accentCol'), Settings.get('thm.textCol'));
 		else if (theme === 'Dark')	this.setTheme('#3a3f44', '#272b30', '#b2dffb','#eeeeee');
 		else if (theme === 'Reaper') this.setTheme('#272836', '#121223', '#487DE4', '#EEEEEE');
+		else if (theme === 'Zaibatsu') this.setTheme('#272836', '#1D1D1D', '#CF0F0F', '#EEEEEE');
 		else if (theme === 'Light') this.setTheme('#F1F4FF', '#FFFFFF', '#5889F0','#2B2B2B');
 		if(reset === true) this.resetCustom();
 	}
@@ -708,12 +709,13 @@ function SettingsHandler(){
 	.newSetting({
 		addr: 'thm.theme',
 		prettyName: 'Reader Theme',
-		options: ['Dark', 'Reaper', 'Light', 'Custom'],
+		options: ['Dark', 'Reaper', 'Zaibatsu', 'Light', 'Custom'],
 		default: 'Dark',
 		strings: {
 			Dark: 'Dark',
 			Reaper: 'Reaper',
 			Light: 'Light',
+			Zaibatsu: 'Zaibatsu',
 			Custom: 'Custom...'
 		},
 		type: SETTING_MULTI_DROPDOWN
