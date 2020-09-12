@@ -1,8 +1,9 @@
-from django.core.cache import cache
-from reader.users_cache_lib import get_user_ip
-from django.utils.deprecation import MiddlewareMixin
-from django.conf import settings
 import requests
+from django.conf import settings
+from django.core.cache import cache
+from django.utils.deprecation import MiddlewareMixin
+
+from reader.users_cache_lib import get_user_ip
 
 
 class ForwardParametersMiddleware(MiddlewareMixin):

@@ -1,10 +1,11 @@
-from PIL import ImageDraw, Image, ImageFilter
-from multiprocessing import Pool
-import subprocess
-import time
 import json
 import os
 import random
+import subprocess
+import time
+from multiprocessing import Pool
+
+from PIL import Image, ImageDraw, ImageFilter
 
 WIDTH = 850
 HEIGHT = 1250
@@ -112,7 +113,6 @@ if __name__ == "__main__":
 
     os.system("python manage.py makemigrations")
     result = subprocess.check_output("python manage.py migrate", shell=True, text=True)
-    print(result)
 
     if "OK" in result or changed:
         os.system(f"python manage.py loaddata {FIXTURES_PATH}")

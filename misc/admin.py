@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Page, Variable, Static
+
+from .models import Page, Static, Variable
 
 # Register your models here.
 

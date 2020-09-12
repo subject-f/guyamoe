@@ -1,18 +1,21 @@
-from ast import literal_eval
-import random
-import os
-import json
-import zipfile
-import re
 import base64
+import json
+import os
+import random
+import re
+import shutil
 import subprocess
+import zipfile
+from ast import literal_eval
 from datetime import datetime
 from io import BytesIO
-from PIL import ImageFilter, Image
+
 from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404
-from reader.models import Series, Volume, Chapter, ChapterIndex, Group
+from PIL import Image, ImageFilter
+
+from reader.models import Chapter, ChapterIndex, Group, Series, Volume
 
 
 def all_chapter_data_etag(request):
@@ -76,8 +79,6 @@ def series_data(series_slug):
                     str(chapter.group.id): int(chapter.uploaded_on.timestamp())
                 },
             }
-            if chapter.wo and chapter.wo != 0:
-                chapters_dict[ch_clean]["wo"] = chapter.wo
         if chapter.preferred_sort:
             try:
                 chapters_dict[ch_clean]["preferred_sort"] = literal_eval(
@@ -125,6 +126,18 @@ def all_groups():
 
 def random_chars():
     return "".join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
+
+
+def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
+    group_id = str(group_id)
+    if os.path.exists(os.path.join(folder_path, group_id)):
+        shutil.rmtree(os.path.join(folder_path, group_id))
+    if os.path.exists(os.path.join(folder_path, f"{group_id}_shrunk")):
+        shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk"))
+    if os.path.exists(os.path.join(folder_path, f"{group_id}_shrunk_blur")):
+        shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk_blur"))
+    if os.path.exists(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip")):
+        os.remove(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip"))
 
 
 def create_preview_pages(chapter_folder, group_folder, page_file):
@@ -209,8 +222,7 @@ def index_chapter(chapter):
         )
 
 
-def chapter_post_process(chapter, update_version=True):
-    print(chapter.series, chapter.chapter_number)
+def chapter_post_process(chapter, update_version=True, update_upload=False):
     chapter_folder = os.path.join(
         settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder
     )

@@ -1,15 +1,16 @@
-from django.shortcuts import render, redirect
-from django.utils.decorators import decorator_from_middleware
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_control
-from django.core.cache import cache
-from django.conf import settings
-
-from reader.middleware import OnlineNowMiddleware
-from homepage.middleware import ForwardParametersMiddleware
-from reader.models import Volume, Chapter
-from reader.views import series_page_data
 import random as r
+
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.cache import cache
+from django.shortcuts import redirect, render
+from django.utils.decorators import decorator_from_middleware
+from django.views.decorators.cache import cache_control
+
+from homepage.middleware import ForwardParametersMiddleware
+from reader.middleware import OnlineNowMiddleware
+from reader.models import Chapter, Volume
+from reader.views import series_page_data
 
 
 @staff_member_required

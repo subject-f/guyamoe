@@ -1,9 +1,10 @@
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
-from datetime import datetime, timezone
-import os
 import json
+import os
+from datetime import datetime, timezone
+
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
 
 class HitCount(models.Model):
@@ -54,7 +55,6 @@ class Series(models.Model):
     next_release_html = models.TextField(blank=True, null=True)
     indexed = models.BooleanField(default=False)
 
-
     def __str__(self):
         return self.name
 
@@ -101,11 +101,12 @@ class Chapter(models.Model):
     uploaded_on = models.DateTimeField(
         default=None, blank=True, null=True, db_index=True
     )
+    updated_on = models.DateTimeField(
+        default=None, blank=True, null=True, db_index=True
+    )
     version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     preferred_sort = models.CharField(max_length=200, blank=True, null=True)
-    wo = models.PositiveSmallIntegerField(
-        blank=True, null=True, default=0, db_index=True
-    )
+    source = models.CharField(max_length=8, blank=True)
 
     def clean_chapter_number(self):
         return (

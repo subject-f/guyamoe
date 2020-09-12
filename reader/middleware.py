@@ -1,6 +1,7 @@
 from django.core.cache import cache
-from .users_cache_lib import get_user_ip
 from django.utils.deprecation import MiddlewareMixin
+
+from .users_cache_lib import get_user_ip
 
 
 class OnlineNowMiddleware(MiddlewareMixin):

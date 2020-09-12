@@ -1,13 +1,14 @@
-from reader.models import HitCount, Series, Chapter, Volume
-from django.db.models.signals import post_delete, post_save
-from django.contrib.contenttypes.models import ContentType
-from django.dispatch import receiver
-from django.conf import settings
-from api.api import clear_pages_cache
-from PIL import ImageFilter, Image
-from django.conf import settings
-import shutil
 import os
+import shutil
+
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+from PIL import Image, ImageFilter
+
+from api.api import clear_pages_cache, delete_chapter_pages_if_exists
+from reader.models import Chapter, HitCount, Series, Volume
 
 
 @receiver(post_delete, sender=Series)
@@ -31,24 +32,9 @@ def delete_chapter_folder(sender, instance, **kwargs):
             "chapters",
             instance.folder,
         )
-        if os.path.exists(os.path.join(folder_path, str(instance.group.id))):
-            shutil.rmtree(os.path.join(folder_path, str(instance.group.id)))
-        if os.path.exists(
-            os.path.join(folder_path, f"{str(instance.group.id)}_shrunk")
-        ):
-            shutil.rmtree(os.path.join(folder_path, f"{str(instance.group.id)}_shrunk"))
-        if os.path.exists(
-            os.path.join(folder_path, f"{str(instance.group.id)}_shrunk_blur")
-        ):
-            shutil.rmtree(
-                os.path.join(folder_path, f"{str(instance.group.id)}_shrunk_blur")
-            )
-        if os.path.exists(
-            os.path.join(folder_path, f"{str(instance.clean_chapter_number())}.zip")
-        ):
-            os.remove(
-                os.path.join(folder_path, f"{str(instance.clean_chapter_number())}.zip")
-            )
+        delete_chapter_pages_if_exists(
+            folder_path, instance.clean_chapter_number(), instance.group.id
+        )
         if os.path.exists(folder_path) and not os.listdir(folder_path):
             shutil.rmtree(folder_path)
         chapter = ContentType.objects.get(app_label="reader", model="chapter")

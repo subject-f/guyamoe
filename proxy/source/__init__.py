@@ -1,11 +1,13 @@
 import abc
 import json
-from django.shortcuts import render, redirect
+from typing import List
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from django.urls import path, re_path
 from django.views.decorators.cache import cache_control
-from django.http import HttpResponse
-from django.conf import settings
-from typing import List
+
 from .data import *
 from .helpers import *
 

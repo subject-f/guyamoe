@@ -1,9 +1,11 @@
-from misc.models import Page, Static
+import os
+import shutil
+
+from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from django.conf import settings
-import shutil
-import os
+
+from misc.models import Page, Static
 
 
 @receiver(post_delete, sender=Page)

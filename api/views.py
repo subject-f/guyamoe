@@ -1,38 +1,41 @@
-from ast import literal_eval
 import asyncio
-import os
 import hashlib
 import json
+import os
 import time
 import zipfile
+from ast import literal_eval
 from datetime import datetime, timezone
 
-from discord import Embed, Webhook, RequestsWebhookAdapter
+from discord import Embed, RequestsWebhookAdapter, Webhook
+from django.conf import settings
+from django.core.cache import cache
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
+    JsonResponse,
     StreamingHttpResponse,
 )
-from django.conf import settings
-from django.http import JsonResponse
-from django.core.cache import cache
 from django.views.decorators.cache import cache_control
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import condition
-from reader.models import Series, Volume, Chapter, Group, ChapterIndex
+
+from reader.models import Chapter, ChapterIndex, Group, Series, Volume
 from reader.users_cache_lib import get_user_ip
+
 from .api import (
     all_chapter_data_etag,
-    chapter_data_etag,
-    series_data_cache,
     all_groups,
-    random_chars,
+    chapter_data_etag,
     chapter_post_process,
-    clear_series_cache,
     clear_pages_cache,
-    zip_volume,
+    clear_series_cache,
+    delete_chapter_pages_if_exists,
+    random_chars,
+    series_data_cache,
     zip_chapter,
+    zip_volume,
 )
-from django.views.decorators.csrf import csrf_exempt
 
 
 @cache_control(public=True, max_age=30, s_maxage=30)
@@ -189,29 +192,44 @@ def upload_new_chapter(request, series_slug):
             if not str(chapter_number).endswith("0")
             else "_"
         )
+        ch_obj = None
+
+        # If no chapter, create new chapter folder id
         if not existing_chapter:
             uid = chapter_folder_numb + random_chars()
         else:
-            old_chap = Chapter.objects.filter(
-                chapter_number=chapter_number, series=series, group=group
-            ).first()
-            if old_chap:
-                old_chap.delete()
-                reupload = True
             uid = existing_chapter.folder
-        ch_obj = Chapter.objects.create(
-            chapter_number=chapter_number,
-            group=group,
-            series=series,
-            folder=uid,
-            title=request.POST["chapterTitle"],
-            volume=request.POST["volumeNumber"],
-            uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc),
-        )
         chapter_folder = os.path.join(
             settings.MEDIA_ROOT, "manga", series_slug, "chapters", uid
         )
         group_folder = str(group.id)
+
+        # If chapter exists, see if release by group exists. if it does, delete the group's chapter pages
+        if existing_chapter:
+            ch_obj = Chapter.objects.filter(
+                chapter_number=chapter_number, series=series, group=group
+            ).first()
+            if ch_obj:
+                delete_chapter_pages_if_exists(
+                    chapter_folder,
+                    existing_chapter.clean_chapter_number(),
+                    group_folder,
+                )
+                reupload = True
+                ch_obj.updated_on = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+        # Create the chapter model for the group if it didn't exist.
+        if not existing_chapter or not ch_obj:
+            ch_obj = Chapter.objects.create(
+                chapter_number=chapter_number,
+                group=group,
+                series=series,
+                folder=uid,
+                title=request.POST["chapterTitle"],
+                volume=request.POST["volumeNumber"],
+                uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc),
+            )
+
         if os.path.exists(os.path.join(chapter_folder, group_folder)):
             return HttpResponse(
                 JsonResponse(

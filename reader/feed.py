@@ -1,8 +1,9 @@
 from django.contrib.syndication.views import Feed
 from django.core.cache import cache
-from django.utils.feedgenerator import DefaultFeed
 from django.shortcuts import reverse
-from reader.models import Series, Chapter
+from django.utils.feedgenerator import DefaultFeed
+
+from reader.models import Chapter, Series
 
 
 class CorrectMimeTypeFeed(DefaultFeed):

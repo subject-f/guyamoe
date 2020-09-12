@@ -1,7 +1,8 @@
 from django.urls import path, re_path
+from django.views.decorators.http import condition
+
 from api.api import all_chapter_data_etag, chapter_data_etag
 from reader import views
-from django.views.decorators.http import condition
 from reader.feed import AllChaptersFeed, SeriesChaptersFeed
 from reader.models import Chapter
 

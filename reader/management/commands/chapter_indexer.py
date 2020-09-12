@@ -1,8 +1,10 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
-from reader.models import Series, Chapter, ChapterIndex
 import json
 import os
+
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+
+from reader.models import Chapter, ChapterIndex, Series
 
 
 class Command(BaseCommand):
