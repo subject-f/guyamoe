@@ -1,10 +1,12 @@
-import json
 import os
 from datetime import datetime, timezone
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+
+MANGADEX = "MD"
+SCRAPING_SOURCES = ((MANGADEX, "MangaDex"),)
 
 
 class HitCount(models.Model):
@@ -28,7 +30,6 @@ class Group(models.Model):
         return self.name
 
 
-# Create your models here.
 class Series(models.Model):
     name = models.CharField(max_length=200, db_index=True)
     slug = models.SlugField(unique=True, max_length=200)
@@ -54,6 +55,12 @@ class Series(models.Model):
     )
     next_release_html = models.TextField(blank=True, null=True)
     indexed = models.BooleanField(default=False)
+    preferred_sort = models.CharField(max_length=200, blank=True, null=True)
+    scraping_enabled = models.BooleanField(default=False)
+    scraping_source = models.CharField(
+        max_length=2, choices=SCRAPING_SOURCES, default=MANGADEX
+    )
+    scraping_identifiers = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -106,7 +113,7 @@ class Chapter(models.Model):
     )
     version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     preferred_sort = models.CharField(max_length=200, blank=True, null=True)
-    source = models.CharField(max_length=8, blank=True)
+    scraper_hash = models.CharField(max_length=32, blank=True)
 
     def clean_chapter_number(self):
         return (

@@ -1,9 +1,10 @@
 import os
 import shutil
+from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from PIL import Image, ImageFilter
 
@@ -60,8 +61,21 @@ def delete_volume_folder(sender, instance, **kwargs):
             shutil.rmtree(folder_path)
 
 
+@receiver(pre_save, sender=Chapter)
+def pre_save_chapter(sender, instance, **kwargs):
+    if instance.series.next_release_page:
+        highest_chapter_number = Chapter.objects.filter(series=instance.series).latest(
+            "chapter_number"
+        )
+        if instance.chapter_number > highest_chapter_number.chapter_number:
+            instance.series.next_release_time = datetime.utcnow().replace(
+                tzinfo=timezone.utc
+            ) + timedelta(days=7)
+            instance.series.save()
+
+
 @receiver(post_save, sender=Chapter)
-def save_chapter(sender, instance, **kwargs):
+def post_save_chapter(sender, instance, **kwargs):
     if instance.series:
         clear_pages_cache()
 

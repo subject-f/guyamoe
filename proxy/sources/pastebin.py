@@ -91,7 +91,7 @@ class Pastebin(ProxySource):
                 "cover_vol_url": cover,
                 "metadata": [],
                 "author": author,
-                "artist": author,
+                "artist": artist,
                 "groups": groups_dict,
                 "cover": cover,
                 "chapter_dict": chapter_dict,

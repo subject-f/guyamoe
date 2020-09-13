@@ -11,8 +11,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
@@ -26,7 +26,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost"]
 
-SITE_ID = 1
+SITE_ID = 2
 
 # Application definition
 
@@ -130,8 +130,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-PREFERRED_SORT = ["3", "2", "1", "4"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/

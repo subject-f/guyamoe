@@ -1,21 +1,7 @@
-import asyncio
-import io
-import os
-import re
-import shutil
-import traceback
-import zipfile
-from datetime import datetime, timezone
+from django.core.management.base import BaseCommand
 
-import aiohttp
-import pyppeteer as pp
-from bs4 import BeautifulSoup
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-from PIL import Image, ImageFilter
-
-from api.api import chapter_post_process, clear_pages_cache, random_chars
-from reader.models import Chapter, Group, Series, Volume
+from api.api import chapter_post_process
+from reader.models import Chapter
 
 
 class Command(BaseCommand):
@@ -23,4 +9,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for chapter in Chapter.objects.all():
-            chapter_post_process(chapter, update_version=False)
+            chapter_post_process(chapter, is_update=False)

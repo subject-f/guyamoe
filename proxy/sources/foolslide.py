@@ -1,10 +1,9 @@
-import base64
 import json
 import re
-from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import re_path
 
@@ -16,7 +15,6 @@ from ..source.helpers import (
     encode,
     get_wrapper,
     naive_decode,
-    naive_encode,
     post_wrapper,
 )
 
