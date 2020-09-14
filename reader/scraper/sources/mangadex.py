@@ -74,7 +74,7 @@ class MangaDex(BaseScraper):
     def is_valid_source_chapter(
         self, series: Series, md_chapter_id, md_chapter_metadata, md_group
     ):
-        if md_chapter_id in self.chapter_id_blacklist:
+        if str(md_chapter_id) in self.chapter_id_blacklist:
             return False
         if (self.group_whitelist and md_group not in self.group_whitelist) or (
             self.group_blacklist and md_group in self.group_blacklist
@@ -125,8 +125,14 @@ class MangaDex(BaseScraper):
                 ):
                     continue
                 group = self.is_valid_group(md_group)
-                if group and self.is_valid_source_chapter(
-                    series, md_chapter_id, md_chapter_metadata, md_group
+                if (
+                    group
+                    and specific_chapters
+                    or (
+                        self.is_valid_source_chapter(
+                            series, md_chapter_id, md_chapter_metadata, md_group
+                        )
+                    )
                 ):
                     yield (
                         md_chapter_id,
