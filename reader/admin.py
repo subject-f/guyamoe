@@ -2,7 +2,8 @@ from django.contrib import admin
 
 from .forms import ChapterForm, SeriesForm
 from .models import Chapter, Group, HitCount, Person, Series, Volume
-
+from django.conf import settings
+from guyamoe.settings.local import SETTINGS_ENV
 
 # Register your models here.
 class HitCountAdmin(admin.ModelAdmin):
@@ -77,10 +78,6 @@ class ChapterAdmin(admin.ModelAdmin):
         "series__name",
         "volume",
     )
-    #ordering = (
-        #"-updated_on",
-#        "-uploaded_on",
-    #)
     list_display = (
         "chapter_number",
         "title",
@@ -99,14 +96,17 @@ CASE
     ELSE uploaded_on END
 as nupdated_on
 """
-        qs = qs.extra(select={'nupdated_on': sort_sql}).order_by('-nupdated_on')
+        qs = qs.extra(select={"nupdated_on": sort_sql}).order_by("-nupdated_on")
         return qs
 
     def nupdated_on(self, obj):
         return obj.nupdated_on
 
-    ordering = ("-nupdated_on",)
+    # Django ORM inconsistency leading to unexpected errors when referring to extra fields when using sqlite db (local) but not when using postgres (dev/prod)
+    if settings.SETTINGS_ENV == "local":
+        ordering = ("-updated_on",)
+    else:
+        ordering = ("-nupdated_on",)
 
 
 admin.site.register(Chapter, ChapterAdmin)
-

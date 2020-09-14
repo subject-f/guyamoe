@@ -2,6 +2,9 @@ import os
 
 from .base import *
 
+
+SETTINGS_ENV = "prod"
+
 CANONICAL_ROOT_DOMAIN = "guya.moe"
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
