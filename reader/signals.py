@@ -37,7 +37,7 @@ def delete_chapter_folder(sender, instance, **kwargs):
             folder_path, instance.clean_chapter_number(), instance.group.id
         )
         if os.path.exists(folder_path) and not os.listdir(folder_path):
-            shutil.rmtree(folder_path)
+            shutil.rmtree(folder_path, ignore_errors=True)
         chapter = ContentType.objects.get(app_label="reader", model="chapter")
         hit_count_obj = HitCount.objects.filter(
             content_type=chapter, object_id=instance.id
@@ -57,8 +57,7 @@ def delete_volume_folder(sender, instance, **kwargs):
             "volume_covers",
             str(instance.volume_number),
         )
-        if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
+        shutil.rmtree(folder_path, ignore_errors=True)
 
 
 @receiver(pre_save, sender=Chapter)

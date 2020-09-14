@@ -3,7 +3,6 @@ import json
 import os
 import time
 import zipfile
-from ast import literal_eval
 from datetime import datetime
 
 from discord import Embed, RequestsWebhookAdapter, Webhook
@@ -22,6 +21,7 @@ from .api import (
     clear_pages_cache,
     clear_series_cache,
     create_chapter_obj,
+    get_chapter_preferred_sort,
     series_data_cache,
     zip_chapter,
 )
@@ -37,7 +37,7 @@ def get_series_data(request, series_slug):
 
 @cache_control(public=True, max_age=900, s_maxage=900)
 def get_all_series(request):
-    all_series_data = cache.get(f"all_series_data")
+    all_series_data = cache.get("all_series_data")
     if not all_series_data:
         all_series = Series.objects.all().select_related("author", "artist")
         all_series_data = {}
@@ -117,22 +117,8 @@ def download_chapter(request, series_slug, chapter):
         )
         if not ch_qs:
             return HttpResponseBadRequest()
-        preferred_sort = None
-        for ch_obj in ch_qs:
-            if ch_obj.preferred_sort:
-                try:
-                    preferred_sort = literal_eval(ch_obj.preferred_sort)
-                    break
-                except Exception:
-                    pass
+        preferred_sort = get_chapter_preferred_sort(ch_qs.first())
         if preferred_sort:
-            ch_obj = ch_qs.get(
-                series__slug=series_slug,
-                chapter_number=chapter_number,
-                group__id=int(preferred_sort[0]),
-            )
-        else:
-            preferred_sort = literal_eval(chapter.series.preferred_sort)
             for group in preferred_sort:
                 ch_obj = ch_qs.filter(group__id=int(group)).first()
                 if ch_obj:

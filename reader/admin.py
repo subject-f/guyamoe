@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .forms import ChapterForm, SeriesForm
 from .models import Chapter, Group, HitCount, Person, Series, Volume
 
 
@@ -24,8 +25,24 @@ class HitCountAdmin(admin.ModelAdmin):
 
 admin.site.register(HitCount, HitCountAdmin)
 admin.site.register(Person)
-admin.site.register(Group)
-admin.site.register(Series)
+
+
+class GroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+    )
+
+
+admin.site.register(Group, GroupAdmin)
+
+
+class SeriesAdmin(admin.ModelAdmin):
+    form = SeriesForm
+    list_display = ("name",)
+
+
+admin.site.register(Series, SeriesAdmin)
 
 
 class VolumeAdmin(admin.ModelAdmin):
@@ -53,6 +70,7 @@ admin.site.register(Volume, VolumeAdmin)
 
 
 class ChapterAdmin(admin.ModelAdmin):
+    form = ChapterForm
     search_fields = (
         "chapter_number",
         "title",

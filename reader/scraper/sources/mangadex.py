@@ -57,7 +57,7 @@ class MangaDex(BaseScraper):
             domain = (
                 api_data["server"]
                 if not api_data["server"].startswith("/")
-                else f"https://mangadex.org" + api_data["server"]
+                else "https://mangadex.org" + api_data["server"]
             )
             return {
                 "hash": api_data["hash"],

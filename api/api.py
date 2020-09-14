@@ -19,7 +19,7 @@ def all_chapter_data_etag(request):
     etag = cache.get("all_chapter_data_etag")
     if not etag:
         etag = str(datetime.now())
-        cache.set(f"all_chapter_data_etag", etag, 48 * 3600)
+        cache.set("all_chapter_data_etag", etag, 48 * 3600)
     return etag
 
 
@@ -116,10 +116,10 @@ def series_data_cache(series_slug):
 
 
 def all_groups():
-    groups_data = cache.get(f"all_groups_data")
+    groups_data = cache.get("all_groups_data")
     if not groups_data:
         groups_data = {str(group.id): group.name for group in Group.objects.all()}
-        cache.set(f"all_groups_data", groups_data, 3600 * 12)
+        cache.set("all_groups_data", groups_data, 3600 * 12)
     return groups_data
 
 
@@ -129,12 +129,11 @@ def random_chars():
 
 def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
     group_id = str(group_id)
-    if os.path.exists(os.path.join(folder_path, group_id)):
-        shutil.rmtree(os.path.join(folder_path, group_id))
-    if os.path.exists(os.path.join(folder_path, f"{group_id}_shrunk")):
-        shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk"))
-    if os.path.exists(os.path.join(folder_path, f"{group_id}_shrunk_blur")):
-        shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk_blur"))
+    shutil.rmtree(os.path.join(folder_path, group_id), ignore_errors=True)
+    shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk"), ignore_errors=True)
+    shutil.rmtree(
+        os.path.join(folder_path, f"{group_id}_shrunk_blur"), ignore_errors=True
+    )
     if os.path.exists(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip")):
         os.remove(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip"))
 
@@ -232,29 +231,46 @@ def create_preview_pages(chapter_folder, group_folder, page_file):
     )
 
 
+def get_chapter_preferred_sort(chapter):
+    preferred_sort = None
+    for ch in Chapter.objects.filter(
+        chapter_number=chapter.chapter_number, series=chapter.series
+    ):
+        if ch.preferred_sort:
+            try:
+                preferred_sort = literal_eval(preferred_sort)
+            except Exception:
+                pass
+    if not preferred_sort:
+        try:
+            preferred_sort = (
+                literal_eval(chapter.series.preferred_sort)
+                if chapter.series.preferred_sort
+                else None
+            )
+        except Exception:
+            pass
+    return preferred_sort
+
+
 def index_chapter(chapter):
     if hasattr(settings, "OCR_SCRIPT_PATH") and os.path.exists(
         settings.OCR_SCRIPT_PATH
     ):
         ch_slug = chapter.slug_chapter_number()
         group_folder = str(chapter.group.id)
-        preferred_sort = (
-            chapter.preferred_sort
-            if chapter.preferred_sort
-            else chapter.series.preferred_sort
-        )
+        preferred_sort = get_chapter_preferred_sort(chapter)
         if preferred_sort:
-            preferred_sort = literal_eval(preferred_sort)
             curr_chap_index_priority = preferred_sort.index(str(chapter.group.id))
-            all_chap_versions = [
+            all_chap_groups = [
                 ch.group.id
                 for ch in Chapter.objects.filter(
                     chapter_number=chapter.chapter_number, series=chapter.series
                 )
             ]
-            for version in all_chap_versions:
+            for group in all_chap_groups:
                 try:
-                    if preferred_sort.index(str(version)) <= curr_chap_index_priority:
+                    if preferred_sort.index(str(group)) <= curr_chap_index_priority:
                         break
                 except ValueError:
                     continue

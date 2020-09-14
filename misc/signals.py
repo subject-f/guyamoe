@@ -11,8 +11,7 @@ from misc.models import Page, Static
 @receiver(post_delete, sender=Page)
 def delete_page(sender, instance, **kwargs):
     folder_path = os.path.join(settings.MEDIA_ROOT, "pages", instance.page_url)
-    if os.path.exists(folder_path):
-        shutil.rmtree(folder_path)
+    shutil.rmtree(folder_path, ignore_errors=True)
 
 
 @receiver(post_delete, sender=Static)
