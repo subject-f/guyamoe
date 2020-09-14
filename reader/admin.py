@@ -77,12 +77,17 @@ class ChapterAdmin(admin.ModelAdmin):
         "series__name",
         "volume",
     )
-    ordering = ("chapter_number",)
+    ordering = (
+        "-updated_on",
+        "-uploaded_on",
+    )
     list_display = (
         "chapter_number",
         "title",
         "series",
         "volume",
+        "updated_on",
+        "uploaded_on",
     )
 
 
