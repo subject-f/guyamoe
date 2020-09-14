@@ -77,18 +77,36 @@ class ChapterAdmin(admin.ModelAdmin):
         "series__name",
         "volume",
     )
-    ordering = (
-        "-updated_on",
-        "-uploaded_on",
-    )
+    #ordering = (
+        #"-updated_on",
+#        "-uploaded_on",
+    #)
     list_display = (
         "chapter_number",
         "title",
         "series",
         "volume",
+        "version",
         "updated_on",
         "uploaded_on",
     )
 
+    def get_queryset(self, request):
+        qs = super(ChapterAdmin, self).get_queryset(request)
+        sort_sql = """SELECT
+CASE
+    WHEN updated_on IS NOT NULL THEN updated_on
+    ELSE uploaded_on END
+as nupdated_on
+"""
+        qs = qs.extra(select={'nupdated_on': sort_sql}).order_by('-nupdated_on')
+        return qs
+
+    def nupdated_on(self, obj):
+        return obj.nupdated_on
+
+    ordering = ("-nupdated_on",)
+
 
 admin.site.register(Chapter, ChapterAdmin)
+
