@@ -262,7 +262,10 @@ def index_chapter(chapter):
         group_folder = str(chapter.group.id)
         preferred_sort = get_chapter_preferred_sort(chapter)
         if preferred_sort:
-            curr_chap_index_priority = preferred_sort.index(str(chapter.group.id))
+            if str(chapter.group.id) in preferred_sort:
+                curr_chap_index_priority = preferred_sort.index(str(chapter.group.id))
+            else:
+                curr_chap_index_priority = -1
             all_chap_groups = [
                 ch.group.id
                 for ch in Chapter.objects.filter(
@@ -271,7 +274,10 @@ def index_chapter(chapter):
             ]
             for group in all_chap_groups:
                 try:
-                    if preferred_sort.index(str(group)) <= curr_chap_index_priority:
+                    if (
+                        group in preferred_sort
+                        and preferred_sort.index(str(group)) <= curr_chap_index_priority
+                    ):
                         break
                 except ValueError:
                     continue
