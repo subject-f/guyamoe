@@ -2,7 +2,6 @@ import os
 
 from .base import *
 
-
 CANONICAL_ROOT_DOMAIN = "guya.moe"
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -40,6 +39,27 @@ ALLOWED_HOSTS = [
 
 CANONICAL_SITE_NAME = "guya.moe"
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": True,
+    "formatters": {
+        "verbose": {
+            "format": "%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s"
+        }
+    },
+    "handlers": {
+        "file": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "verbose",
+            "filename": os.path.join(PARENT_DIR, "guyamoe.log"),
+            "maxBytes": 1024 * 1024 * 100,  # 100 mb
+        }
+    },
+    "loggers": {
+        "django": {"handlers": ["file"], "level": "WARNING", "propagate": True,},
+    },
+}
 
 CACHES = {
     "default": {
@@ -60,4 +80,3 @@ DATABASES = {
 }
 
 OCR_SCRIPT_PATH = os.path.join(PARENT_DIR, "ocr_tool.sh")
-SCRAPER_BLACKLIST_FILE = os.path.join(PARENT_DIR, "scraper_blacklist.json")

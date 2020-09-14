@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import HitCount, Person, Group, Series, Volume, Chapter
+
+from .forms import ChapterForm, SeriesForm
+from .models import Chapter, Group, HitCount, Person, Series, Volume
+
 
 # Register your models here.
 class HitCountAdmin(admin.ModelAdmin):
@@ -12,7 +15,6 @@ class HitCountAdmin(admin.ModelAdmin):
     )
 
     def series(self, obj):
-        print(type(obj.content))
         if isinstance(obj.content, Series):
             return obj.content.name
         if isinstance(obj.content, Chapter):
@@ -23,8 +25,24 @@ class HitCountAdmin(admin.ModelAdmin):
 
 admin.site.register(HitCount, HitCountAdmin)
 admin.site.register(Person)
-admin.site.register(Group)
-admin.site.register(Series)
+
+
+class GroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+    )
+
+
+admin.site.register(Group, GroupAdmin)
+
+
+class SeriesAdmin(admin.ModelAdmin):
+    form = SeriesForm
+    list_display = ("name",)
+
+
+admin.site.register(Series, SeriesAdmin)
 
 
 class VolumeAdmin(admin.ModelAdmin):
@@ -52,6 +70,7 @@ admin.site.register(Volume, VolumeAdmin)
 
 
 class ChapterAdmin(admin.ModelAdmin):
+    form = ChapterForm
     search_fields = (
         "chapter_number",
         "title",

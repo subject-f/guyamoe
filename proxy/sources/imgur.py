@@ -1,11 +1,13 @@
 import json
-from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import get_wrapper, api_cache
-from django.urls import re_path
-from django.shortcuts import redirect
 from datetime import datetime
+
 from django.conf import settings
+from django.shortcuts import redirect
+from django.urls import re_path
+
+from ..source import ProxySource
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, get_wrapper
 
 
 class Imgur(ProxySource):

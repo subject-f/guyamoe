@@ -1,6 +1,7 @@
-from django.core.cache import cache
-import requests
 import base64
+
+import requests
+from django.core.cache import cache
 
 ENCODE_STR_SLASH = "%FF-"
 ENCODE_STR_QUESTION = "%DE-"

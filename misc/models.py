@@ -1,5 +1,7 @@
-from django.db import models
 import os
+
+from django.db import models
+
 
 # Create your models here.
 class Variable(models.Model):

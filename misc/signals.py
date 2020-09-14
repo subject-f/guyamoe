@@ -1,16 +1,17 @@
-from misc.models import Page, Static
+import os
+import shutil
+
+from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from django.conf import settings
-import shutil
-import os
+
+from misc.models import Page, Static
 
 
 @receiver(post_delete, sender=Page)
 def delete_page(sender, instance, **kwargs):
     folder_path = os.path.join(settings.MEDIA_ROOT, "pages", instance.page_url)
-    if os.path.exists(folder_path):
-        shutil.rmtree(folder_path)
+    shutil.rmtree(folder_path, ignore_errors=True)
 
 
 @receiver(post_delete, sender=Static)

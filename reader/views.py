@@ -1,19 +1,21 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+import json
+from collections import OrderedDict, defaultdict
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import cache_control
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import F
-from django.contrib.contenttypes.models import ContentType
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import decorator_from_middleware
+from django.views.decorators.cache import cache_control
+from django.views.decorators.csrf import csrf_exempt
+
 from .middleware import OnlineNowMiddleware
-from .models import HitCount, Series, Volume, Chapter
-from datetime import datetime
+from .models import Chapter, HitCount, Series, Volume
 from .users_cache_lib import get_user_ip
-from collections import OrderedDict, defaultdict
-import json
 
 
 @csrf_exempt

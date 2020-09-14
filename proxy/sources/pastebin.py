@@ -1,11 +1,13 @@
 import json
-from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import get_wrapper, api_cache
-from django.urls import re_path
-from django.shortcuts import redirect
 from datetime import datetime
+
 from django.conf import settings
+from django.shortcuts import redirect
+from django.urls import re_path
+
+from ..source import ProxySource
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, get_wrapper
 
 
 class Pastebin(ProxySource):
@@ -89,7 +91,7 @@ class Pastebin(ProxySource):
                 "cover_vol_url": cover,
                 "metadata": [],
                 "author": author,
-                "artist": author,
+                "artist": artist,
                 "groups": groups_dict,
                 "cover": cover,
                 "chapter_dict": chapter_dict,

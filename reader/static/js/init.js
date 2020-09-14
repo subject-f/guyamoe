@@ -115,7 +115,7 @@ function ReaderAPI(o) {
 	}
 
 	this.requestSeries = function(slug) {
-		this.seriesRequest = fetch(this.seriesUrl + slug + '/' + '?nocache')
+		this.seriesRequest = fetch(this.seriesUrl + slug + '/')
 			.then(response => response.json())
 			.then(seriesData => {
 				seriesData = this.infuseSeriesData(seriesData);

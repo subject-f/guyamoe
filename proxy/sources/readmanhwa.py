@@ -1,12 +1,14 @@
-import requests
 import json
-from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import naive_encode, naive_decode, get_wrapper, api_cache
-from django.urls import re_path
-from django.shortcuts import redirect
-from datetime import datetime
 from concurrent import futures
+from datetime import datetime
+
+import requests
+from django.shortcuts import redirect
+from django.urls import re_path
+
+from ..source import ProxySource
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, get_wrapper, naive_decode, naive_encode
 
 
 class ReadManhwa(ProxySource):

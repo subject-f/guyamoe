@@ -1,22 +1,22 @@
 import json
 import re
-import base64
+
+import requests
+from bs4 import BeautifulSoup
+from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.urls import re_path
+
 from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
 from ..source.helpers import (
-    naive_encode,
+    api_cache,
+    decode,
+    encode,
+    get_wrapper,
     naive_decode,
     post_wrapper,
-    get_wrapper,
-    api_cache,
-    encode,
-    decode,
 )
-from django.urls import re_path
-from django.shortcuts import redirect
-from datetime import datetime
-from bs4 import BeautifulSoup
-import requests
 
 
 class FoolSlide(ProxySource):
@@ -107,13 +107,9 @@ class FoolSlide(ProxySource):
 
     def fs_scrape_common(self, meta_id):
         try:
-            resp = post_wrapper(
-                f"https://{decode(meta_id)}/", data={"adult": "true"}
-            )
+            resp = post_wrapper(f"https://{decode(meta_id)}/", data={"adult": "true"})
         except requests.exceptions.ConnectionError:
-            resp = post_wrapper(
-                f"http://{decode(meta_id)}/", data={"adult": "true"}
-            )
+            resp = post_wrapper(f"http://{decode(meta_id)}/", data={"adult": "true"})
         if resp.status_code == 200:
             data = resp.text
             soup = BeautifulSoup(data, "html.parser")

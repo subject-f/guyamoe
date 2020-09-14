@@ -1,7 +1,8 @@
 from django.contrib.sitemaps import Sitemap
 from django.shortcuts import reverse
+
 from misc.models import Page
-from reader.models import Series, Chapter
+from reader.models import Chapter, Series
 
 
 class StaticViewSitemap(Sitemap):

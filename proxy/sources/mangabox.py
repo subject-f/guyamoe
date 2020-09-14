@@ -1,12 +1,14 @@
 import json
 import re
-from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import get_wrapper, api_cache, decode, encode
-from django.urls import re_path
-from django.shortcuts import redirect
 from datetime import datetime
+
 from bs4 import BeautifulSoup
+from django.shortcuts import redirect
+from django.urls import re_path
+
+from ..source import ProxySource
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, decode, encode, get_wrapper
 
 
 class MangaBox(ProxySource):

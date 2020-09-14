@@ -1,8 +1,9 @@
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 from django.views.decorators.http import condition
+
 from reader.models import Chapter
+
 from . import sources
-from django.urls import path, include
 
 urlpatterns = [
     path(

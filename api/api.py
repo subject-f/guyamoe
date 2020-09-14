@@ -1,25 +1,25 @@
-from ast import literal_eval
-import random
-import os
 import json
-import zipfile
-import re
-import base64
+import os
+import random
+import shutil
 import subprocess
-from datetime import datetime
-from io import BytesIO
-from PIL import ImageFilter, Image
+import zipfile
+from ast import literal_eval
+from datetime import datetime, timezone
+
 from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404
-from reader.models import Series, Volume, Chapter, ChapterIndex, Group
+from PIL import Image, ImageFilter
+
+from reader.models import Chapter, ChapterIndex, Group, Series, Volume
 
 
 def all_chapter_data_etag(request):
     etag = cache.get("all_chapter_data_etag")
     if not etag:
         etag = str(datetime.now())
-        cache.set(f"all_chapter_data_etag", etag, 48 * 3600)
+        cache.set("all_chapter_data_etag", etag, 48 * 3600)
     return etag
 
 
@@ -76,14 +76,12 @@ def series_data(series_slug):
                     str(chapter.group.id): int(chapter.uploaded_on.timestamp())
                 },
             }
-            if chapter.wo and chapter.wo != 0:
-                chapters_dict[ch_clean]["wo"] = chapter.wo
         if chapter.preferred_sort:
             try:
                 chapters_dict[ch_clean]["preferred_sort"] = literal_eval(
                     chapter.preferred_sort
                 )
-            except:
+            except Exception:
                 pass
     vols = Volume.objects.filter(series=series).order_by("-volume_number")
     cover_vol_url = ""
@@ -99,7 +97,9 @@ def series_data(series_slug):
         "artist": series.artist.name,
         "groups": groups_dict,
         "cover": cover_vol_url,
-        "preferred_sort": settings.PREFERRED_SORT,
+        "preferred_sort": literal_eval(series.preferred_sort)
+        if series.preferred_sort
+        else [],
         "chapters": chapters_dict,
         "next_release_page": series.next_release_page,
         "next_release_time": series.next_release_time.timestamp()
@@ -116,15 +116,82 @@ def series_data_cache(series_slug):
 
 
 def all_groups():
-    groups_data = cache.get(f"all_groups_data")
+    groups_data = cache.get("all_groups_data")
     if not groups_data:
         groups_data = {str(group.id): group.name for group in Group.objects.all()}
-        cache.set(f"all_groups_data", groups_data, 3600 * 12)
+        cache.set("all_groups_data", groups_data, 3600 * 12)
     return groups_data
 
 
 def random_chars():
     return "".join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
+
+
+def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
+    group_id = str(group_id)
+    shutil.rmtree(os.path.join(folder_path, group_id), ignore_errors=True)
+    shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk"), ignore_errors=True)
+    shutil.rmtree(
+        os.path.join(folder_path, f"{group_id}_shrunk_blur"), ignore_errors=True
+    )
+    if os.path.exists(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip")):
+        os.remove(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip"))
+
+
+def create_chapter_obj(
+    chapter: float, group: Group, series: Series, latest_volume: int, title: str,
+):
+    update = False
+    chapter_number = chapter
+    existing_chapter = Chapter.objects.filter(
+        chapter_number=chapter_number, series=series
+    ).first()
+    chapter_folder_numb = f"{int(chapter_number):04}"
+    chapter_folder_numb += (
+        f"-{str(chapter_number).rsplit('.')[1]}_"
+        if not str(chapter_number).endswith("0")
+        else "_"
+    )
+
+    if not existing_chapter:
+        uid = chapter_folder_numb + random_chars()
+    else:
+        uid = existing_chapter.folder
+    chapter_folder = os.path.join(
+        settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid
+    )
+    group_folder = str(group.id)
+
+    # If chapter exists, see if release by group exists. if it does, delete the group's chapter pages
+    if existing_chapter:
+        ch_obj = Chapter.objects.filter(
+            chapter_number=chapter_number, series=series, group=group
+        ).first()
+        if ch_obj:
+            delete_chapter_pages_if_exists(
+                chapter_folder, existing_chapter.clean_chapter_number(), group_folder,
+            )
+            update = True
+
+    # Create the chapter model for the group if it didn't exist.
+    if not existing_chapter or not ch_obj:
+        ch_obj = Chapter.objects.create(
+            chapter_number=chapter_number,
+            group=group,
+            series=series,
+            folder=uid,
+            title=title,
+            volume=latest_volume,
+            uploaded_on=datetime.utcnow().replace(tzinfo=timezone.utc),
+        )
+    chapter_folder = os.path.join(
+        settings.MEDIA_ROOT, "manga", series.slug, "chapters", uid
+    )
+    os.makedirs(os.path.join(chapter_folder, str(group.id)))
+    os.makedirs(os.path.join(chapter_folder, f"{str(group.id)}_shrunk"))
+    os.makedirs(os.path.join(chapter_folder, f"{str(group.id)}_shrunk_blur"))
+    clear_pages_cache()
+    return ch_obj, chapter_folder, str(group.id), update
 
 
 def create_preview_pages(chapter_folder, group_folder, page_file):
@@ -164,30 +231,58 @@ def create_preview_pages(chapter_folder, group_folder, page_file):
     )
 
 
+def get_chapter_preferred_sort(chapter):
+    preferred_sort = None
+    for ch in Chapter.objects.filter(
+        chapter_number=chapter.chapter_number, series=chapter.series
+    ):
+        if ch.preferred_sort:
+            try:
+                preferred_sort = literal_eval(preferred_sort)
+                break
+            except Exception:
+                pass
+    if not preferred_sort:
+        try:
+            preferred_sort = (
+                literal_eval(chapter.series.preferred_sort)
+                if chapter.series.preferred_sort
+                else None
+            )
+        except Exception:
+            pass
+    return preferred_sort
+
+
 def index_chapter(chapter):
     if hasattr(settings, "OCR_SCRIPT_PATH") and os.path.exists(
         settings.OCR_SCRIPT_PATH
     ):
         ch_slug = chapter.slug_chapter_number()
         group_folder = str(chapter.group.id)
-        curr_chap_index_priority = settings.PREFERRED_SORT.index(str(chapter.group.id))
-        all_chap_versions = [
-            ch.group.id
-            for ch in Chapter.objects.filter(
-                chapter_number=chapter.chapter_number, series=chapter.series
-            )
-        ]
-        for version in all_chap_versions:
-            try:
-                if (
-                    settings.PREFERRED_SORT.index(str(version))
-                    <= curr_chap_index_priority
-                ):
-                    break
-            except ValueError:
-                continue
-        else:
-            return
+        preferred_sort = get_chapter_preferred_sort(chapter)
+        if preferred_sort:
+            if str(chapter.group.id) in preferred_sort:
+                curr_chap_index_priority = preferred_sort.index(str(chapter.group.id))
+            else:
+                curr_chap_index_priority = -1
+            all_chap_groups = [
+                ch.group.id
+                for ch in Chapter.objects.filter(
+                    chapter_number=chapter.chapter_number, series=chapter.series
+                )
+            ]
+            for group in all_chap_groups:
+                try:
+                    if (
+                        group in preferred_sort
+                        and preferred_sort.index(str(group)) <= curr_chap_index_priority
+                    ):
+                        break
+                except ValueError:
+                    continue
+            else:
+                return
         print("Deleting old chapter index from db.")
         for index in ChapterIndex.objects.filter(series=chapter.series):
             word_dict = json.loads(index.chapter_and_pages)
@@ -209,8 +304,7 @@ def index_chapter(chapter):
         )
 
 
-def chapter_post_process(chapter, update_version=True):
-    print(chapter.series, chapter.chapter_number)
+def chapter_post_process(chapter, is_update=True):
     chapter_folder = os.path.join(
         settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder
     )
@@ -225,8 +319,9 @@ def chapter_post_process(chapter, update_version=True):
     for idx, page in enumerate(all_pages):
         create_preview_pages(chapter_folder, group, page)
     zip_chapter(chapter.series.slug, chapter.chapter_number, chapter.group)
-    if update_version:
+    if is_update:
         chapter.version = chapter.version + 1 if chapter.version else 2
+        chapter.updated_on = datetime.utcnow().replace(tzinfo=timezone.utc)
         chapter.save()
     clear_pages_cache()
     index_chapter(chapter)
@@ -253,46 +348,6 @@ def clear_pages_cache():
         cache.set(ip, ip, 450)
     cache.set("online_now", set(ip_list), 600)
     cache.set("peak_traffic", peak_traffic, 3600 * 6)
-
-
-def zip_volume(series_slug, volume):
-    zip_filename = f"{series_slug}_vol_{volume}.zip"
-    zip_file = os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename)
-    zf = zipfile.ZipFile(
-        os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "w"
-    )
-    checked_chapters = set([])
-    for chapter in Chapter.objects.filter(series__slug=series_slug, volume=volume):
-        if chapter.chapter_number in checked_chapters:
-            continue
-        checked_chapters.add(chapter.chapter_number)
-        chapter_media_path = os.path.join(
-            settings.MEDIA_ROOT, "manga", series_slug, "chapters", chapter.folder
-        )
-        groups = os.listdir(chapter_media_path)
-        for group in settings.PREFERRED_SORT:
-            if group in groups:
-                ch_obj = Chapter.objects.filter(
-                    series__slug=series_slug, folder=chapter.folder, group__id=group
-                ).first()
-                if not ch_obj:
-                    continue
-                group_dir = os.path.join(chapter_media_path, group)
-                for root, _, files in os.walk(group_dir):
-                    for f in files:
-                        zf.write(
-                            os.path.join(root, f),
-                            os.path.join(ch_obj.clean_chapter_number(), f),
-                        )
-                break
-        else:
-            continue
-    zf.close()
-    with open(
-        os.path.join(settings.MEDIA_ROOT, "manga", series_slug, zip_filename), "rb"
-    ) as fh:
-        zip_file = fh.read()
-    return zip_file, zip_filename
 
 
 def zip_chapter(series_slug, chapter, group):

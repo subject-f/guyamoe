@@ -1,10 +1,12 @@
 import json
-from ..source import ProxySource
-from ..source.data import SeriesAPI, SeriesPage, ChapterAPI
-from ..source.helpers import get_wrapper, api_cache
-from django.urls import re_path
-from django.shortcuts import redirect
 from datetime import datetime
+
+from django.shortcuts import redirect
+from django.urls import re_path
+
+from ..source import ProxySource
+from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, get_wrapper
 
 
 class NHentai(ProxySource):
@@ -139,7 +141,7 @@ class NHentai(ProxySource):
             return ChapterAPI(
                 pages=data["chapters"]["1"]["groups"]["1"],
                 series=data["slug"],
-                chapter="1"
+                chapter="1",
             )
         else:
             return None
