@@ -62,7 +62,7 @@ def delete_volume_folder(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Chapter)
 def pre_save_chapter(sender, instance, **kwargs):
-    if instance.series.next_release_page:
+    if instance.series and instance.series.next_release_page:
         highest_chapter_number = Chapter.objects.filter(series=instance.series).latest(
             "chapter_number"
         )
