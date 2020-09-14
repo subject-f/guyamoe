@@ -265,24 +265,25 @@ def index_chapter(chapter):
             if str(chapter.group.id) in preferred_sort:
                 curr_chap_index_priority = preferred_sort.index(str(chapter.group.id))
             else:
-                curr_chap_index_priority = -1
+                curr_chap_index_priority = len(preferred_sort)
             all_chap_groups = [
                 ch.group.id
                 for ch in Chapter.objects.filter(
                     chapter_number=chapter.chapter_number, series=chapter.series
                 )
+                if ch.group != chapter.group
             ]
-            for group in all_chap_groups:
-                try:
-                    if (
-                        group in preferred_sort
-                        and preferred_sort.index(str(group)) <= curr_chap_index_priority
-                    ):
-                        break
-                except ValueError:
-                    continue
-            else:
-                return
+
+            # if chapter by other group(s) exists, check if the new chapter has a higher priority on the preferred_sort list. only index if it is.
+            index_to_beat = len(preferred_sort)
+            if all_chap_groups:
+                for group in all_chap_groups:
+                    if str(group) in preferred_sort:
+                        group_index = preferred_sort.index(str(group))
+                        if group_index < index_to_beat:
+                            index_to_beat = group_index
+                if curr_chap_index_priority > index_to_beat:
+                    return
         print("Deleting old chapter index from db.")
         for index in ChapterIndex.objects.filter(series=chapter.series):
             word_dict = json.loads(index.chapter_and_pages)
