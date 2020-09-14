@@ -107,16 +107,18 @@ as time_since_change
         if obj.time_since_last_update is not None:
             if type(obj.time_since_last_update) is str:
                 try:
-                    time_diff = datetime.strptime(
+                    last_update = datetime.strptime(
                         obj.time_since_last_update, "%Y-%m-%d %H:%M:%S.%f"
                     )
                 except ValueError:
-                    time_diff = datetime.strptime(
+                    last_update = datetime.strptime(
                         obj.time_since_last_update, "%Y-%m-%d %H:%M:%S"
                     )
-            time_diff = time_diff.replace(tzinfo=timezone.utc)
+                last_update = last_update.replace(tzinfo=timezone.utc)
+            else:
+                last_update = obj.time_since_last_update.replace(tzinfo=timezone.utc)
             curr_time = datetime.utcnow().replace(tzinfo=timezone.utc)
-            time_since_last_update = curr_time - time_diff
+            time_since_last_update = curr_time - last_update
         else:
             time_since_last_update = curr_time - obj.uploaded_on
         days = time_since_last_update.days
