@@ -239,6 +239,7 @@ def get_chapter_preferred_sort(chapter):
         if ch.preferred_sort:
             try:
                 preferred_sort = literal_eval(preferred_sort)
+                break
             except Exception:
                 pass
     if not preferred_sort:
