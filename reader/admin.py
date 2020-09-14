@@ -1,9 +1,10 @@
+from datetime import datetime, timezone
+
 from django.contrib import admin
 
 from .forms import ChapterForm, SeriesForm
 from .models import Chapter, Group, HitCount, Person, Series, Volume
-from django.conf import settings
-from guyamoe.settings.local import SETTINGS_ENV
+
 
 # Register your models here.
 class HitCountAdmin(admin.ModelAdmin):
@@ -84,6 +85,7 @@ class ChapterAdmin(admin.ModelAdmin):
         "series",
         "volume",
         "version",
+        "time_since_last_update",
         "updated_on",
         "uploaded_on",
     )
@@ -94,19 +96,37 @@ class ChapterAdmin(admin.ModelAdmin):
 CASE
     WHEN updated_on IS NOT NULL THEN updated_on
     ELSE uploaded_on END
-as nupdated_on
+as time_since_change
 """
-        qs = qs.extra(select={"nupdated_on": sort_sql}).order_by("-nupdated_on")
+        qs = qs.extra(select={"time_since_last_update": sort_sql}).order_by(
+            "-time_since_last_update"
+        )
         return qs
 
-    def nupdated_on(self, obj):
-        return obj.nupdated_on
+    def time_since_last_update(self, obj):
+        if obj.time_since_last_update is not None:
+            try:
+                time_diff = datetime.strptime(
+                    obj.time_since_last_update, "%Y-%m-%d %H:%M:%S.%f"
+                )
+            except ValueError:
+                time_diff = datetime.strptime(
+                    obj.time_since_last_update, "%Y-%m-%d %H:%M:%S"
+                )
+            time_diff = time_diff.replace(tzinfo=timezone.utc)
+            curr_time = datetime.utcnow().replace(tzinfo=timezone.utc)
+            time_since_last_update = curr_time - time_diff
+        else:
+            time_since_last_update = curr_time - obj.uploaded_on
+        days = time_since_last_update.days
+        seconds = time_since_last_update.seconds
+        hours = seconds // 3600
+        minutes = (seconds // 60) % 60
 
-    # Django ORM inconsistency leading to unexpected errors when referring to extra fields when using sqlite db (local) but not when using postgres (dev/prod)
-    if settings.SETTINGS_ENV == "local":
-        ordering = ("-updated_on",)
-    else:
-        ordering = ("-nupdated_on",)
+        return f"{days} days {hours} hours {minutes} mins"
+
+    time_since_last_update.admin_order_field = "time_since_last_update"
+    ordering = ("-uploaded_on", "-updated_on")
 
 
 admin.site.register(Chapter, ChapterAdmin)

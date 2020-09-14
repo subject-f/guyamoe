@@ -3,8 +3,6 @@ import os
 from .base import *
 
 
-SETTINGS_ENV = "local"
-
 CANONICAL_ROOT_DOMAIN = "localhost:8000"
 
 DEBUG = True
