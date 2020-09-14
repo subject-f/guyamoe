@@ -38,16 +38,17 @@ def hit_count(request):
                 chapter_number = request.POST["chapter"]
                 group_id = request.POST["group"]
                 chapter = ContentType.objects.get(app_label="reader", model="chapter")
-                hit, _ = HitCount.objects.get_or_create(
-                    content_type=chapter,
-                    object_id=Chapter.objects.get(
-                        chapter_number=float(chapter_number),
-                        group__id=group_id,
-                        series__id=series_id,
-                    ).id,
-                )
-                hit.hits = F("hits") + 1
-                hit.save()
+                ch_obj = Chapter.objects.filter(
+                    chapter_number=float(chapter_number),
+                    group__id=group_id,
+                    series__id=series_id,
+                ).first()
+                if ch_obj:
+                    hit, _ = HitCount.objects.get_or_create(
+                        content_type=chapter, object_id=ch_obj.id,
+                    )
+                    hit.hits = F("hits") + 1
+                    hit.save()
 
     return HttpResponse(json.dumps({}), content_type="application/json")
 
