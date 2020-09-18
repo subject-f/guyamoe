@@ -1990,13 +1990,13 @@ const SCROLL_X = 3;
 	this.setTouchHandlers = (state) => {
 		if(state) {
 			this._.image_container.ontouchstart = this.touch.startHandler;
-			this._.image_container.ontouchmove = this.touch.moveHandler;
+			this._.image_container.addEventListener('touchmove', this.touch.moveHandler, {passive: false});
 			this._.image_container.ontouchend = this.touch.endHandler;
 			this._.image_container.ontouchcancel = this.touch.endHandler;
 		}else{
 			this._.image_container.ontouchstart = undefined;
-			this._.image_container.ontouchmove = undefined;
-			this._.image_container.ontouchend = undefined;
+            this._.image_container.removeEventListener('touchmove', this.touch.moveHandler);
+            this._.image_container.ontouchend = undefined;
 			this._.image_container.ontouchcancel = undefined;
 		}
 	}
