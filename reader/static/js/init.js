@@ -2055,7 +2055,7 @@ const SCROLL_X = 3;
 		// this.touch.a = requestAnimationFrame(this.touch.anim);
 		if(this.touch.gesture == SCROLL) return;
 		if(Settings.get('lyt.direction') == 'ttb') return;
-
+		e.preventDefault();
 		this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
