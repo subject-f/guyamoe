@@ -2084,6 +2084,7 @@ const SCROLL_X = 3;
 
 		if(Math.abs(this.touch.delta) > 0.030 || this.touch.gesture == SWIPE) {
 			this.touch.gesture = SWIPE;
+			e.preventDefault();
 			if(this.touch.scrollLocked == true) return;
 			document.documentElement.style.overflow = "hidden";
 			this.touch.scrollLocked = true;
