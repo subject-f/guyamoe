@@ -1282,15 +1282,19 @@ function UI_Reader(o) {
 				return Settings.get('misc.groupPreference');
 		}
 
-		if(chapterObj.preferred_sort
-		&& chapterObj.preferred_sort[0] !== undefined
-		&& chapterObj.groups[chapterObj.preferred_sort[0]] !== undefined)
-			return chapterObj.preferred_sort[0];
+		if(chapterObj.preferred_sort){
+		  for(var i=0;i<chapterObj.preferred_sort.length;i++){
+			if(chapterObj.groups[chapterObj.preferred_sort[i]])
+			  return chapterObj.preferred_sort[i]
+		  }
+		}
 
-		if(this.current.preferred_sort
-		&& this.current.preferred_sort[0] !== undefined
-		&& chapterObj.groups[this.current.preferred_sort[0]] !== undefined)
-			return this.current.preferred_sort[0];
+		if(this.current.preferred_sort){
+		  for(var i=0;i<this.current.preferred_sort.length;i++){
+			if(chapterObj.groups[this.current.preferred_sort[i]])
+			  return this.current.preferred_sort[i];
+		  }
+		}
 
 		return Object.keys(chapterObj.groups)[0];
 	}
