@@ -2560,13 +2560,9 @@ function URLChanger(o) {
 	var pathName = pathSplit
 			.concat([SCP.series, SCP.chapter.replace('.', '-'), SCP.page + 1, ''])
 			.join('/');
-		if(Reader.getGroup(undefined, true) !== Reader.SCP.group)
-			pathName += '#' + Reader.SCP.group;
 
 		switch(Settings.get('bhv.historyUpdate')) {
 			case 'none':
-				if(this.titleSet) return;
-				this.titleSet = true;
 			var	title = `${Reader.current.title} | ${this.hostname}`;
 				window.history.replaceState(null, title, pathName);
 				document.title = title;
@@ -2598,6 +2594,8 @@ function URLChanger(o) {
 				}
 				break;
 		}
+		if(Reader.getGroup(undefined, true) !== Reader.SCP.group)
+			location.hash = '#' + Reader.SCP.group;
 		this.page = SCP.page;
 		this.chapter = SCP.chapter;
 	}
