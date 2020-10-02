@@ -163,7 +163,6 @@ def upload_new_chapter(request, series_slug):
         ch_obj, chapter_folder, group_folder, is_update = create_chapter_obj(
             chapter_number, group, series, volume, title
         )
-        os.makedirs(os.path.join(chapter_folder, group_folder))
         with zipfile.ZipFile(request.FILES["chapterPages"]) as zip_file:
             zipped_pages = zip_file.namelist()
             if all(
