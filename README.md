@@ -8,16 +8,17 @@ Testing Supported By<br/>
 
 ## Prerequisites 
 
-- Git
-- Python 3.6.5+
-- Pip
-- Virtualenv
+- git
+- python 3.6.5+
+- pip
+- virtualenv
+- sudo
 
 ## Install
 
 1. Create a virtualenv for Guyamoe.
 ```
-virtualenv /opt/guyamoe
+sudo virtualenv /opt/guyamoe && sudo chown -R "$(id -u)":"$(id -g)" /opt/guyamoe
 ```
 
 2. Clone this repository into the virtualenv.
@@ -74,11 +75,12 @@ Now the site should be accessible on localhost:8000
 
 ## Other info
 
-Relevant urls (as of now): 
+Relevant URLs (as of now): 
 
 - `/` - home page
 - `/about` - about page
 - `/admin` - admin view (login with created user above)
+- `/admin_home` - admin endpoint for clearing the site's cache
 - `/reader/series/<series_slug_name>` - series info and all chapter links
 - `/reader/series/<series_slug_name>/<chapter_number>/<page_number>` - url scheme for reader opened on specfied page of chapter of series.
 - `/api/series/<series_slug_name>` - all series data requested by reader frontend
