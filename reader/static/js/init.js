@@ -918,6 +918,22 @@ function SettingsHandler(){
 		nomobile: true
 	})
 	.newSetting({
+		addr: 'bhv.snapTime',
+		prettyName: 'Page swipe speed',
+		options: [1.2, .8, .7, .5, .3, 0],
+		default: 0.3,
+		strings: {
+			1.2: 'Slooow',
+			.8: 'Slow',
+			.7: 'Normal',
+			.5: 'Fast',
+			.3: 'Fastest',
+			0: 'Snap'
+		},
+		type: SETTING_VALUE,
+		global: false,
+	})
+	.newSetting({
 		addr: 'bhv.resetScroll',
 		prettyName: 'Reset page scroll after page flip',
 		default: false,
@@ -960,6 +976,14 @@ function SettingsHandler(){
 		prettyName: 'Group preference',
 		type: SETTING_VALUE,
 		hidden: true,
+		global: false
+	})
+	.newSetting({
+		addr: 'adv.debugTouch',
+		default: false,
+		prettyName: 'Debug touch handler',
+		type: SETTING_BOOLEAN,
+		compact: true,
 		global: false
 	})
 	this.deserialize();
@@ -1328,6 +1352,10 @@ function UI_Reader(o) {
 	}
 
 	this.bootstrapChapter = function(page) {
+		requestAnimationFrame(() => {
+			this.imageView.$.style.transition = '';
+			this.imageView.$.style.opacity = '0';
+		})
 		this.shuffleRandomChapter();
 		if(this.SCP.chapterObject.notice) {
 			this.imageView.displayNotice();
@@ -1344,6 +1372,10 @@ function UI_Reader(o) {
 		this.drawPreviews();
 
 		this.imageView.drawImages(this.SCP.chapterObject.images[this.SCP.group], this.SCP.chapterObject.wides[this.SCP.group]);
+		setTimeout(() => {
+			this.imageView.$.style.transition = 'opacity 0.4s linear';
+			this.imageView.$.style.opacity = '1'
+		}, 1);
 
 		this.selector_chap.set(this.SCP.chapter, true);
 		this.selector_vol.set(this.SCP.volume, true);
@@ -1455,23 +1487,23 @@ function UI_Reader(o) {
 		}
 	}
 
-	this.nextPage = function() {
+	this.nextPage = function(force) {
 		if (this.loadingChapter) return;
 	let nextWrapperIndex = this.imageView.imageWrappersMap[this.SCP.page] + 1;
 		
-		if(nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
+		if(force || nextWrapperIndex >= this.imageView.imageWrappersMask.length) {
 			this.nextChapter();
 		} else {
 			this.displayPage(this.imageView.imageWrappersMask[nextWrapperIndex][0])
 		}
 	}
 
-	this.prevPage = function(){
+	this.prevPage = function(force){
 		if (this.loadingChapter) return;
-		if(this.SCP.page > 0) 
-			this.displayPage(this.SCP.page - 1)
-		else {
+		if(force || this.SCP.page <= 0) 
 			this.prevChapter('last');
+		else {
+			this.displayPage(this.SCP.page - 1)
 		}
 	}
 	this.nextVolume = function(){
@@ -1907,15 +1939,17 @@ function UI_ReaderImageView(o) {
 				}
 			}
 		}else{
-			if(this.touch.transitionTimer) {
-				this.touch.transitionTimer.then(() => {
+			if (!dry){	
+				if(this.touch.transitionTimer) {
+					this.touch.transitionTimer.then(() => {
+						this.moveContainer(wrapperIndex);
+					}).catch((e) => {console.log(e)});	
+				}else{
 					this.moveContainer(wrapperIndex);
-				})
-			}else{
-				this.moveContainer(wrapperIndex);
+				}
+				//this.getScrollElement().focus();
+				if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 			}
-			//this.getScrollElement().focus();
-			if(Settings.get('bhv.resetScroll')) scroll(this.getScrollElement(), 0, 0);
 		}
 	var spreadCount = Settings.get('adv.spreadCount');
 	var toPreload = Settings.get('bhv.preload');
@@ -1959,32 +1993,40 @@ function UI_ReaderImageView(o) {
 		this.imageContainer.$.style.marginLeft = this.containerOffset + '%';
 	}
 
-	this.moveWrappers = (offset, snap) => {
-		if(!this.touch.affectedWrappers) {
-			this.touch.affectedWrappers = [];
-			if(this.wrappers.left) this.touch.affectedWrappers.push(this.wrappers.left);
-			this.touch.affectedWrappers.push(this.wrappers.current);
-			if(this.wrappers.right) this.touch.affectedWrappers.push(this.wrappers.right);
+	this.moveWrappers = (offset, snap, targetWrapper) => {
+		if(targetWrapper || !this.touch.affectedWrappers) {
+			if(targetWrapper) {
+			var wrapperIndex = this.imageWrappers.indexOf(targetWrapper);
+			}else{
+				wrapperIndex = this.imageWrappers.indexOf(this.wrappers.current);
+			}
+			this.touch.affectedWrappers = this.imageWrappers.slice(Math.max(0, wrapperIndex-1), wrapperIndex+2);
 		}
 		if(snap) {
-			this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style.transition = `transform ${this.touch.transitionTime}s cubic-bezier(${this.touch.transitionTime},.55,.4,1)`);
-			this.touch.transitionTimer = promiseTimeout(Math.round(this.touch.transitionTime*1000), true);
+			this.touch.affectedWrappers.forEach(wrapper => {
+				wrapper.$.style.transition = `transform ${this.touch.transitionTime}s cubic-bezier(${this.touch.transitionTime},.55,.4,1), opacity  ${this.touch.transitionTime}s linear`
+				if(offset == 0)
+					wrapper.$.style.opacity = '';
+			});
+
+			this.touch.transitionTimer = promiseTimeout(
+				Math.round(this.touch.transitionTime*1000),
+				err => {
+					delete this.touch.transitionTimer;
+					throw 'Interrupted swipe.'
+				}
+			);
 			this.touch.transitionTimer.then(() => {
 					this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
 					this.touch.affectedWrappers = null;
+					this.touch.touching = false;
 					delete this.touch.transitionTimer;
-				}).catch(() => {delete this.touch.transitionTimer;})	
-		}else{
-			//for regrab
-			if(this.touch.transitionTimer) {
-				this.touch.transitionTimer.cancel();
-				this.touch.transitionTimer = false;
-				this.touch.affectedWrappers = null;
-			}
+				}).catch(() => {});	
 		}
-		if(this.wrappers.left) this.wrappers.left.$.style.transform = `translateX(${offset * 100}%)`;
-		this.wrappers.current.$.style.transform = `translateX(${offset * 100}%)`;
-		if(this.wrappers.right) this.wrappers.right.$.style.transform = `translateX(${offset * 100}%)`;
+		this.touch.affectedWrappers.forEach(wrapper => {
+			if(wrapper.$.style.transition && !snap) wrapper.$.style.transition = ''
+			wrapper.$.style.transform = `translateX(${offset * 100}%)`
+		});
 	}
 
 const SCROLL = 1;
@@ -1993,22 +2035,22 @@ const SCROLL_X = 3;
 
 	this.setTouchHandlers = (state) => {
 		if(state) {
-			this._.image_container.ontouchstart = this.touch.startHandler;
+			this._.image_container.addEventListener('touchstart', this.touch.startHandler, {passive: false});
 			this._.image_container.addEventListener('touchmove', this.touch.moveHandler, {passive: false});
-			this._.image_container.ontouchend = this.touch.endHandler;
-			this._.image_container.ontouchcancel = this.touch.endHandler;
+			this._.image_container.addEventListener('touchend', this.touch.endHandler, {passive: false});
+			this._.image_container.addEventListener('touchcancel', this.touch.endHandler, {passive: false});
 		}else{
-			this._.image_container.ontouchstart = undefined;
-            this._.image_container.removeEventListener('touchmove', this.touch.moveHandler);
-            this._.image_container.ontouchend = undefined;
-			this._.image_container.ontouchcancel = undefined;
+			this._.image_container.removeEventListener('touchstart', this.touch.startHandler);
+			this._.image_container.removeEventListener('touchmove', this.touch.moveHandler);
+			this._.image_container.removeEventListener('touchend', this.touch.endHandler);
+			this._.image_container.removeEventListener('touchcancel', this.touch.endHandler);
 		}
 	}
 
 	this.touch = {
 		start: 0,
 		startY: 0,
-		initialX: 0,
+		initialDelta: 0,
 		scrollY: 0,
 		transitionTimer: null,
 		delta: 0,
@@ -2022,24 +2064,67 @@ const SCROLL_X = 3;
 		a: null
 	};
 	
+	this.touch.log = (text) => {
+		if(Settings.get('adv.debugTouch') == false) return;
+		if(!this.touch.reee) {
+			this.touch.reee = document.createElement('pre');
+			this.touch.reee.id = 'reee';
+			this.touch.reee.style = 'position: fixed; pointer-events: none; font-size: 12px; top: 0; width: 100wv; height; 100wh; color: #00FF00; font-weight: bold; font-family: monospace; text-shadow: 1px 1px 2px black, -1px -1px 2px black;'
+			document.body.appendChild(this.touch.reee);
+		}
+		setTimeout(() => {
+		var string = '';
+			for(let key in this.touch) {
+				if(this.touch[key] instanceof UI_ReaderImageWrapper) {
+					string += key + ': ' + this.imageWrappers.indexOf(this.touch[key]) + '\n';
+				}else if(this.touch[key] && this.touch[key].toString) {
+					string += key + ': ' + this.touch[key].toString().substr(0,20).replace('\n','') + '\n';
+				}else if(this.touch[key] == false && this.touch[key] !== undefined){
+					string += key + ': ' + this.touch[key] + '\n';
+				}
+			}
+			string += (text || '') + '\n'
+			reee.innerHTML = string;
+		}, 10)
+	}
+
 	this.touch.startHandler = e => {
-		if(this.touch.transitionTimer) return;
-		if(e.touches.length > 1) return;
-		this.touch.initialX = 0;
-		this.touch.x = e.touches[0].pageX;
-		this.touch.y = e.touches[0].pageY;
+		this.touch.log('start');
+		this.touch.firstTouch = true;
+		if(e.touches.length > 1) return this.touch.endHandler(e);
+		if(Settings.get('lyt.direction') == 'ttb') return;
+		this.touch.touchedWrapper = (e.target._struct.parentWrapper || e.target._struct);
+		if(!(this.touch.touchedWrapper instanceof UI_ReaderImageWrapper)) return;
+		this.touch.touching = true;
 		this.touch.containerWidth = this._.image_container.offsetWidth;
+		this.touch.x = e.touches[0].screenX;
+		this.touch.y = e.touches[0].screenY;
 		this.touch.startX = this.touch.x;
 		this.touch.startY = this.touch.y;
-		this._.image_container.style.transition = '';
 		this.touch.gesture = null;
 		this.touch.delta = 0;
 		this.touch.deltaY = 0;
-		this.touch.scrollY = window.scrollY;
+		this.touch.scrollY = Reader.$.scrollTop;
 		this.touch.measures = [];
 		this.touch.times = [];
-		if(this.touch.affectedWrappers) this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
-		this.touch.affectedWrappers = null;
+		this.touch.wrapperIndexOffset = 0;
+		this.touch.initialDelta = 0;
+		if(this.touch.transitionTimer) {
+			this.touch.transitionTimer.cancel();
+			delete this.touch.transitionTimer;
+			if(this.touch.touchedWrapper != this.wrappers.current) {
+				this.touch.wrapperIndexOffset = this.imageWrappers.indexOf(this.touch.touchedWrapper) - this.imageWrappers.indexOf(this.touch.initialWrapper);
+			}
+			if(Math.abs(this.touch.wrapperIndexOffset) > 0)
+				this.touch.initialDelta = this.touch.touchedWrapper.$.getBoundingClientRect().left / this.touch.containerWidth - this.touch.wrapperIndexOffset || 0;
+			else
+				this.touch.initialDelta = this.touch.initialWrapper.$.getBoundingClientRect().left / this.touch.containerWidth || 0;
+			this.moveWrappers(this.touch.initialDelta, false, this.touch.touchedWrapper);
+		}else{
+			this.touch.initialWrapper = this.wrappers.current;
+			if(this.touch.affectedWrappers) this.touch.affectedWrappers.forEach(wrapper => wrapper.$.style = '');
+			this.touch.affectedWrappers = null;
+		}
 	var maxScroll = this.wrappers.current.get().map(img => img.$.offsetWidth).reduce((i, k) => i + k) - this.wrappers.current.$.offsetWidth;
 		if(maxScroll <= 0){
 			this.touch.imagePosition = null;
@@ -2051,16 +2136,28 @@ const SCROLL_X = 3;
 			this.touch.imagePosition = 0;
 		}
 	}
-	
-	this.touch.moveHandler = e => {
-		if(this.touch.transitionTimer) return;
-		this.touch.x = e.touches[0].pageX;
-		this.touch.y = e.touches[0].pageY;
-		// this.touch.a = requestAnimationFrame(this.touch.anim);
-		if(this.touch.gesture == SCROLL) return;
-		if(Settings.get('lyt.direction') == 'ttb') return;
 
-		this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth;
+	this.touch.moveHandler = e => {
+		this.touch.log('move');
+		if(!this.touch.touching) return false;
+		if(e.touches.length > 1) {
+			return this.touch.endHandler(e);
+		}
+		// e.preventDefault();
+		this.touch.x = e.touches[0].screenX;
+		this.touch.y = e.touches[0].screenY;
+		if(this.touch.gesture == SCROLL) {
+			// Reader.$.scrollTo(0,this.touch.scrollY - (this.touch.y - this.touch.startY));
+			if(this.touch.y - this.touch.startY > 0)
+				Reader.$.scrollTo({top: 0, behavior: 'smooth'})
+			else
+				Reader.$.scrollTo({top: this.$.offsetTop, behavior: 'smooth'})
+			this.touch.endHandler(e);
+			return false;
+		};
+		// if(this.touch.gesture == SWIPE) 
+
+		this.touch.delta = (this.touch.x - this.touch.startX) / this.touch.containerWidth + this.touch.initialDelta ;
 		if(this.touch.imagePosition == 0
 		|| this.touch.imagePosition == 1 && this.touch.delta > 0
 		|| this.touch.imagePosition == -1 && this.touch.delta < 0) {
@@ -2069,16 +2166,11 @@ const SCROLL_X = 3;
 		}
 		this.touch.deltaY = this.touch.y - this.touch.startY;
 
-		if(Settings.get('lyt.direction') == 'rtl'){
-			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta > 0)
-			|| (Reader.SCP.page == 0 && this.touch.delta < 0)) {
-				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
-			}
-		}else{
-			if((Reader.SCP.page == Reader.SCP.lastPage && this.touch.delta < 0)
-			|| (Reader.SCP.page == 0 && this.touch.delta > 0)) {
-				this.wrappers.current.$.style.opacity = (0.6-Math.abs(this.touch.delta))/0.6;
-			}
+		if(this.touch.touchedWrapper == this.imageWrappers[0] && this.touch.delta + this.touch.wrapperIndexOffset > 0) {
+			this.touch.touchedWrapper.$.style.opacity = (0.6-Math.abs(this.touch.delta + this.touch.wrapperIndexOffset))/0.6;
+		}
+		if (this.touch.touchedWrapper == this.imageWrappers[this.imageWrappers.length-1] && this.touch.delta + this.touch.wrapperIndexOffset < 0) {
+			this.touch.touchedWrapper.$.style.opacity = (0.6-Math.abs(this.touch.delta + this.touch.wrapperIndexOffset))/0.6;
 		}
 
 		this.touch.measures.push(this.touch.x);
@@ -2086,15 +2178,14 @@ const SCROLL_X = 3;
 		this.moveWrappers(this.touch.delta);
 
 
-		if(Math.abs(this.touch.delta) > 0.030 || this.touch.gesture == SWIPE) {
+		if(Math.abs(this.touch.delta) > 0.027 || this.touch.gesture == SWIPE) {
 			this.touch.gesture = SWIPE;
-			e.preventDefault();
 			if(this.touch.scrollLocked == true) return;
 			document.documentElement.style.overflow = "hidden";
 			this.touch.scrollLocked = true;
 			return;
 		}
-		if(Math.abs(this.touch.deltaY) > this.touch.em) {
+		if(Math.abs(this.touch.deltaY) > this.touch.em*0.8) {
 			this.touch.gesture = SCROLL;
 			this.moveWrappers(0);
 			if(this.touch.scrollLocked == false) return;
@@ -2105,59 +2196,57 @@ const SCROLL_X = 3;
 	}
 
 	this.touch.endHandler = e => {
+		this.touch.log('end');
+		if(!this.touch.touching) return false;
+		this.touch.touching = false;
 		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
 		if(this.touch.transitionTimer) return;
-		//cancelAnimationFrame(this.touch.a);
-		//this._.image_container.style.touchAction = 'unset';
 	var times = this.touch.times.slice(-4);
 	var measures = this.touch.measures.slice(-4);
 	var ms = times[times.length-1] - times[0];
 	var delta = measures[measures.length-1] - measures[0];
-	var velocity = (delta / ms) * this.touch.em / 100;
+		this.touch.velocity = (delta / ms) * this.touch.em / 100;
 		this.touch.times = [];
 		this.touch.measures = [];
-		this.touch.transitionTime = Math.max(0, 0.30 - Math.abs(velocity)/2.5);
+		this.touch.transitionTime = Math.max(0, Settings.get('bhv.snapTime') - Math.abs(this.touch.velocity)/2.5);
 		if(isNaN(this.touch.transitionTime)) this.touch.transitionTime = 0;
-		if(isNaN(this.touch.transitionTime)) debugger;
-		if((velocity < this.touch.escapeVelocity * -1
-		|| this.touch.delta < this.touch.escapeDelta * -1)
-		&& !(Reader.SCP.chapter == Reader.SCP.lastChapter
-		&& Reader.SCP.page == Reader.SCP.lastPage)) {
-			this.moveWrappers(-1, true);
-			switch(Settings.get('lyt.direction')){
-				case 'ltr':
-					if(this.touch.transitionTimer)
-						this.touch.transitionTimer.then(this.next)
-					else
-						this.next();
-					break; 
-				case 'rtl': 
-					if(this.touch.transitionTimer)
-						this.touch.transitionTimer.then(this.prev)
-					else
-						this.prev();
-					break;
+
+//			&& !(Reader.SCP.chapter == Reader.SCP.lastChapter && Reader.SCP.page == Reader.SCP.lastPage))
+//			&& !(Reader.SCP.chapter == Reader.SCP.firstChapter && Reader.SCP.page == 0))) {
+		if(this.touch.velocity < this.touch.escapeVelocity * -1 || this.touch.delta + this.touch.wrapperIndexOffset < this.touch.escapeDelta * -1)
+		var gestureOffset = 1;
+		else if(this.touch.velocity > this.touch.escapeVelocity || this.touch.delta + this.touch.wrapperIndexOffset > this.touch.escapeDelta)
+			gestureOffset = -1;
+		else 
+			gestureOffset = 0;
+
+		if(this.touch.wrapperIndexOffset || gestureOffset) {
+		let direction = (this.touch.delta > 0)?-1:1;
+			direction *= (Settings.get('lyt.direction') == 'rtl')?-1:1;
+			var wrapperIndex = this.imageWrappers.indexOf(this.wrappers.current) + this.touch.wrapperIndexOffset + gestureOffset;
+			this.touch.log(wrapperIndex + ' ' + gestureOffset + ' ' + this.touch.wrapperIndexOffset);
+			this.moveWrappers(this.touch.wrapperIndexOffset * -1 - gestureOffset, true);
+			var advanceFn;
+			if(wrapperIndex < 0) {
+				this.touch.touchedWrapper.$.style.opacity = '0';
+				advanceFn = () => {
+					Settings.get('lyt.direction') == 'ltr'?Reader.prevPage(true):Reader.nextPage(true);
+				}
+			}else if(wrapperIndex > this.imageWrappers.length - 1){
+				this.touch.touchedWrapper.$.style.opacity = '0';
+				advanceFn = () => {
+					Settings.get('lyt.direction') == 'ltr'?Reader.nextPage(true):Reader.prevPage(true);
+				}
+			}else{
+				advanceFn = () => {
+					Reader.displayPage(this.imageWrappers[wrapperIndex].getIndices()[0]);
+				}
 			}
-		}else
-		if((velocity > this.touch.escapeVelocity
-		|| this.touch.delta > this.touch.escapeDelta)
-		&& !(Reader.SCP.chapter == Reader.SCP.firstChapter
-		&& Reader.SCP.page == 0)) {
-			this.moveWrappers(1, true);
-			switch(Settings.get('lyt.direction')){
-				case 'ltr':
-					if(this.touch.transitionTimer)
-						this.touch.transitionTimer.then(this.prev)
-					else
-						this.prev();
-					break; 
-				case 'rtl': 
-					if(this.touch.transitionTimer)
-						this.touch.transitionTimer.then(this.next)
-					else
-						this.next();
-					break;
-			}
+
+			if(this.touch.transitionTimer)
+				this.touch.transitionTimer.then(advanceFn).catch(() => {});	
+			else
+				advanceFn();
 		}else{
 			this.moveWrappers(0, true);
 		}

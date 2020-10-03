@@ -1243,7 +1243,7 @@ var customHTML = o.html;
 		this.SeI.setting.options().forEach(option => {
 		let button = new UI_ToggleButton({
 				setting: this.SeI.setting.addr,
-				text: this.SeI.setting.strings[option],
+				text: this.SeI.setting.getFormatted(option),
 				option: option
 			});
 			button.S.link(this)

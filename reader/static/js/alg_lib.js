@@ -990,22 +990,40 @@ function nonEnum(ctx, name, value) {
 	})
 }
 
-function promiseTimeout(ms, value) {
+function promiseTimeout(ms, error) {
 	var res, rej;
 	var p = new Promise(function(resolve, reject) {
 		res = resolve;
 		rej = reject;
-	}).catch(() => {});
+	}).catch(error || (() => {}))
 	p._timeout = setTimeout(function() {
-		res(value);
+		res();
 	}, ms);
 	p.cancel = function(err) {
 		clearTimeout(p._timeout);
 		rej(err);
 		return false;
 	};
+	// CancellablePromiseMixin.call(p);
 	return p;
 }
+
+// function CancellablePromiseMixin() {
+// 	this._then = this.then.bind(this);
+// 	this.then = (res, rej, err) => {
+// 	let thenable = this._then.call(this, res, rej, err);
+// 		thenable.cancel = this.cancel;
+// 		CancellablePromiseMixin.call(thenable);
+// 		return thenable;
+// 	}
+// 	this._catch = this.catch.bind(this);
+// 	this.catch = (res, rej, err) => {
+// 	let thenable = this._catch.call(this, res, rej, err);
+// 		thenable.cancel = this.cancel;
+// 		CancellablePromiseMixin.call(thenable);
+// 		return thenable;
+// 	}
+// }
 
 /* Hex to RGB pls */
 const hexToRgb = hex =>
