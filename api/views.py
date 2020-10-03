@@ -112,6 +112,7 @@ def download_chapter(request, series_slug, chapter):
     group = request.GET.get("group", None)
     chapter_number = float(chapter.replace("-", "."))
     if not group:
+        ch_obj = None
         ch_qs = Chapter.objects.filter(
             series__slug=series_slug, chapter_number=chapter_number
         )
@@ -123,8 +124,8 @@ def download_chapter(request, series_slug, chapter):
                 ch_obj = ch_qs.filter(group__id=int(group)).first()
                 if ch_obj:
                     break
-            if not ch_obj:
-                ch_obj = ch_qs.first()
+        if not ch_obj:
+            ch_obj = ch_qs.first()
     else:
         if not group.isdigit():
             return HttpResponseBadRequest()
