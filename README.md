@@ -7,49 +7,45 @@ Testing Supported By<br/>
 ⚠ **Note:** The install instructions below will not result in a general purpose CMS due to the amount of hardcoded assets in Guyamoe.
 
 ## Prerequisites 
-
 - git
 - python 3.6.5+
 - pip
 - virtualenv
 
 ## Install
-
-1. Create a virtualenv for Guyamoe in the current user's home directory.
+1. Create a venv for Guyamoe in your home directory.
 ```
-virtualenv "${HOME}"/guyamoe
-```
-
-2. Clone this repository into the virtualenv.
-```
-git clone https://github.com/appu1232/guyamoe "${HOME}"/guyamoe/app
+virtualenv ~/guyamoe
 ```
 
-3. Activate the virtualenv.
+2. Clone Guyamoe's source code into the venv.
 ```
-source "${HOME}"/guyamoe/bin/activate
+git clone https://github.com/appu1232/guyamoe ~/guyamoe/app
+```
+
+3. Activate the venv.
+```
+cd ~/guyamoe/app && source ../bin/activate
 ```
 
 4. Install Guyamoe's dependencies.
 ```
-pip3 install -r "${HOME}"/guyamoe/app/requirements.txt
+pip3 install -r requirements.txt
 ```
 
 5. Change the value of the `SECRET_KEY` variable to a randomly generated string.
 ```
-sed -i "s|os.environ.get(\"SECRET_KEY\", \"o kawaii koto\")|\"$(openssl rand -base64 32)\"|g" "${HOME}"/guyamoe/app/guyamoe/settings/base.py
+sed -i "s|\"o kawaii koto\"|\"$(openssl rand -base64 32)\"|" guyamoe/settings/base.py
 ```
 
 6. Generate the default assets for Guyamoe.
 ```
-sed -i 's|os.system("python -u manage.py runserver 0.0.0.0:8000")|#os.system("python -u manage.py runserver 0.0.0.0:8000")|g' "${HOME}"/guyamoe/app/docker/init.py
-cd "${HOME}"/guyamoe/app
-python3 "${HOME}"/guyamoe/app/docker/init.py
+python3 init.py
 ```
 
 7. Create an admin user for Guyamoe.
 ```
-python3 "${HOME}"/guyamoe/app/manage.py createsuperuser
+python3 manage.py createsuperuser
 ```
 
 Before starting the server, create a `media` folder in the base directory. Add manga with the corresponding chapters and page images. Structure it like so:
@@ -64,16 +60,14 @@ media
 ```
 E.g. `Kaguya-Wants-To-Be-Confessed-To` for `<series-slug-name>`. 
 
-Note: Zero pad chapter folder numbers like so: `001` for the Kaguya series (this is how the fixtures data for the series has it). It doesn't matter for pages though nor does it have to be .jpg. Only thing required for pages is that the ordering can be known from a simple numerical/alphabetical sort on the directory.
+**Note:** Zero pad chapter folder numbers like so: `001` for the Kaguya series (this is how the fixtures data for the series has it). It doesn't matter for pages though nor does it have to be .jpg. Only thing required for pages is that the ordering can be known from a simple numerical/alphabetical sort on the directory.
 
 ## Start the server
-
--  `python3 "${HOME}"/guyamoe/app/manage.py runserver` - keep this console active
+-  `python3 manage.py runserver` - keep this console active
 
 Now the site should be accessible on localhost:8000
 
 ## Other info
-
 Relevant URLs (as of now): 
 
 - `/` - home page
