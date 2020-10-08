@@ -23,12 +23,23 @@ class Imgur(ProxySource):
     def shortcut_instantiator(self):
         def handler(request, album_hash):
             return redirect(
-                f"reader-{self.get_reader_prefix()}-chapter-page", album_hash, "1", "1",
+                f"reader-{self.get_reader_prefix()}-chapter-page",
+                album_hash,
+                "1",
+                "1",
             )
 
         return [
             re_path(r"^(?:a|gallery)/(?P<album_hash>[\d\w]+)/$", handler),
         ]
+
+    @staticmethod
+    def image_url_handler(metadata):
+        return (
+            metadata["link"] + "?_w."
+            if metadata.get("width", 0) > metadata.get("height", 0)
+            else metadata["link"]
+        )
 
     @api_cache(prefix="imgur_series_dt", time=3600 * 6)
     def series_api_handler(self, meta_id):
@@ -52,7 +63,7 @@ class Imgur(ProxySource):
                         "1": [
                             {
                                 "description": obj["description"] or "",
-                                "src": obj["link"],
+                                "src": self.image_url_handler(obj),
                             }
                             for obj in api_data["data"]["images"]
                         ]
@@ -80,8 +91,12 @@ class Imgur(ProxySource):
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
-            pages = [obj["link"] for obj in api_data["data"]["images"]]
-            return ChapterAPI(pages=pages, series=meta_id, chapter=meta_id,)
+            pages = [self.image_url_handler(obj) for obj in api_data["data"]["images"]]
+            return ChapterAPI(
+                pages=pages,
+                series=meta_id,
+                chapter=meta_id,
+            )
         else:
             return None
 

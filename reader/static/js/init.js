@@ -3344,7 +3344,7 @@ function UI_SettingDisplay(o) {
 }
 
 
-
+const WIDE_FLAG = "_w.";
 
 function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 	for (let i = 0; i < chapter.groups[group].length; i++) {
@@ -3380,7 +3380,7 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 				+ '/' 
 				+ chapter.groups[group][i]
 		)
-		if (chapter.groups[group][i].indexOf('_w.') > -1) {
+		if (chapter.groups[group][i].includes(WIDE_FLAG)) {
 			chapter.wides[group].push(i);
 		}
 	}
@@ -3390,12 +3390,20 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 // NH API response returns an array, whereas others returns a chapter ID
 function thirdPartySeriesHandler(url, chapter, group) {
 	if (Array.isArray(chapter.groups[group])) {
-		for (let image of chapter.groups[group]) {
+		// TODO page handling is pretty ugly here. I'd recommend a refactor someday.
+		for (let i = 0; i < chapter.groups[group].length; i++) {
+			let image = chapter.groups[group][i];
 			if (typeof image === 'string' || image instanceof String) {
 				chapter.images[group].push(image);
+				if (image.includes(WIDE_FLAG)) {
+					chapter.wides[group].push(i);
+				}
 			} else {
 				chapter.descriptions[group].push(image.description);
 				chapter.images[group].push(image.src);
+				if (image.src.includes(WIDE_FLAG)) {
+					chapter.wides[group].push(i);
+				}
 			}
 		}
 		chapter.loaded[group] = true;
