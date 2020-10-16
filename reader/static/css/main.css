@@ -979,7 +979,8 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 
 .fit-all .rdr-image-wrap .ReaderImageWrapper img {
 	object-fit: contain;
-	min-width: 0;
+	min-width: 20%;
+    min-height: 20%;
 	height: 100%;
 }
 
@@ -3182,3 +3183,7 @@ body, button, button:before {
 }
 
 /*Dropdown style end*/
+
+#reee:after{
+	content: attr(reee);
+}

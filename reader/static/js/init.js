@@ -2032,6 +2032,7 @@ function UI_ReaderImageView(o) {
 const SCROLL = 1;
 const SWIPE = 2;
 const SCROLL_X = 3;
+const ZOOM = 4;
 
 	this.setTouchHandlers = (state) => {
 		if(state) {
@@ -2061,23 +2062,28 @@ const SCROLL_X = 3;
 		escapeVelocity: 0.07,
 		escapeDelta: 0.40,
 		imagePosition: 0,
-		a: null
+		a: null,
+		z: {}
 	};
 	
-	this.touch.log = (text) => {
+	this.touch.log = (text, add) => {
 		if(Settings.get('adv.debugTouch') == false) return;
 		if(!this.touch.reee) {
 			this.touch.reee = document.createElement('pre');
 			this.touch.reee.id = 'reee';
-			this.touch.reee.style = 'position: fixed; pointer-events: none; font-size: 12px; top: 0; width: 100wv; height; 100wh; color: #00FF00; font-weight: bold; font-family: monospace; text-shadow: 1px 1px 2px black, -1px -1px 2px black;'
+			this.touch.reee.style = 'position: fixed; pointer-events: none; font-size: 9px; top: 0; width: 100wv; height; 100wh; color: #00FF00; font-weight: bold; font-family: monospace; text-shadow: 1px 1px 2px black, -1px -1px 2px black, -1px 1px 2px black, 1px -1px 2px black, 0px 0px 5px black;'
+			this.touch.reee.setAttribute('reee',0);
 			document.body.appendChild(this.touch.reee);
 		}
+		if(add) this.touch.reee.setAttribute('reee',this.touch.reee.getAttribute('reee')+add)
 		setTimeout(() => {
 		var string = '';
 			for(let key in this.touch) {
 				if(this.touch[key] instanceof UI_ReaderImageWrapper) {
 					string += key + ': ' + this.imageWrappers.indexOf(this.touch[key]) + '\n';
-				}else if(this.touch[key] && this.touch[key].toString) {
+				}else if(key == 'z') {
+					string += key + ': ' + JSON.stringify(this.touch[key],undefined,' ') + '\n';
+				}else if(this.touch[key] && this.touch[key].toString && this.touch[key].toString().indexOf('=>') < 0) {
 					string += key + ': ' + this.touch[key].toString().substr(0,20).replace('\n','') + '\n';
 				}else if(this.touch[key] == false && this.touch[key] !== undefined){
 					string += key + ': ' + this.touch[key] + '\n';
@@ -2090,12 +2096,15 @@ const SCROLL_X = 3;
 
 	this.touch.startHandler = e => {
 		this.touch.log('start');
-		this.touch.firstTouch = true;
-		if(e.touches.length > 1) return this.touch.endHandler(e);
-		if(Settings.get('lyt.direction') == 'ttb') return;
+		if(Settings.get('lyt.direction') == 'ttb') return
 		this.touch.touchedWrapper = (e.target._struct.parentWrapper || e.target._struct);
 		if(!(this.touch.touchedWrapper instanceof UI_ReaderImageWrapper)) return;
 		this.touch.touching = true;
+		this.touch.fingers = e.touches.length;
+		if(e.touches.length > 1 && this.touch.gesture != SWIPE && this.touch.gesture != SCROLL && !this.touch.transitionTimer)
+			return this.touch.gesture = ZOOM;
+		if(this.touch.fingers > 1 && this.touch.gesture != ZOOM)
+			return;
 		this.touch.containerWidth = this._.image_container.offsetWidth;
 		this.touch.x = e.touches[0].screenX;
 		this.touch.y = e.touches[0].screenY;
@@ -2110,6 +2119,7 @@ const SCROLL_X = 3;
 		this.touch.wrapperIndexOffset = 0;
 		this.touch.initialDelta = 0;
 		if(this.touch.transitionTimer) {
+			this.touch.gesture = SWIPE;
 			this.touch.transitionTimer.cancel();
 			delete this.touch.transitionTimer;
 			if(this.touch.touchedWrapper != this.wrappers.current) {
@@ -2137,11 +2147,140 @@ const SCROLL_X = 3;
 		}
 	}
 
+	//properties: [['translate3d:px',x,y,z],['scale',1]]
+	this.touch.setTransform = (element, properties) => {
+	var transformString = '';
+		if(!element._transforms) element._transforms = {};
+		for(var i=0; i<properties.length;i++) {
+		var prop =  properties[i];
+		var args = prop[0].split(':').slice(1);
+			transformString += prop[0].split(':')[0] + '(' + prop[1] + (args[0] || '');
+			if(is(prop[2])) transformString += ', ' + prop[2] + (args[1] || args[0] || '');
+			if(is(prop[3])) transformString += ', ' + prop[3] + (args[2] || args[0] || '');
+			transformString += ') ';
+			element._transforms[prop[0].split(':')[0]] = prop.slice(1);
+		}
+		element.style.transform = transformString;
+	} 
+
 	this.touch.moveHandler = e => {
-		this.touch.log('move');
+		this.touch.log(`
+			${JSON.stringify(this.touch.touchedWrapper.$._center)}
+			${JSON.stringify(this.touch.touchedWrapper.$._scale)}
+			${JSON.stringify(this.touch.touchedWrapper.$._ratio)}
+			${JSON.stringify(this.touch.touchedWrapper.$._centerOffset)}
+		`);
 		if(!this.touch.touching) return false;
-		if(e.touches.length > 1) {
-			return this.touch.endHandler(e);
+		this.touch.fingers = e.touches.length;
+		if(this.touch.gesture == ZOOM || this.touch.z.scale > 1) {
+		let z = this.touch.z;
+			z.a = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+			if(!e.touches[1]) {
+				z.dragging = true;
+				if(!z.initialPoint) z.initialPoint = Object.assign({},z.a);
+				if(!z.dragOffset) z.dragOffset = {x:0,y:0};
+				if(!z.initialDragOffset) z.initialDragOffset = Object.assign({},z.dragOffset);
+				z.dragOffset.x = Math.max(
+					Math.min(
+						z.a.x - z.initialPoint.x + z.initialDragOffset.x,
+						((z.width * z.scale) - z.width - z.overflow.left) * -1 - (z.centerOffset?z.centerOffset.x:0) + ((z.width * z.scale) - z.width) 
+					),
+					((z.width * z.scale) - z.width - z.overflow.left) * -1 - (z.centerOffset?z.centerOffset.x:0)
+				);
+				z.dragOffset.y = Math.max(
+					Math.min(
+						z.a.y - z.initialPoint.y + z.initialDragOffset.y,
+						((z.height * z.scale) - z.height - z.overflow.top) * -1 - (z.centerOffset?z.centerOffset.y:0) + ((z.height * z.scale) - z.height)
+					),
+					((z.height * z.scale) - z.height - z.overflow.top) * -1 - (z.centerOffset?z.centerOffset.y:0)
+				);
+				this.touch.setTransform(
+					this.touch.touchedWrapper.$,
+					[
+						['translate3d:px',z.dragOffset.x + (z.centerOffset?z.centerOffset.x:0), z.dragOffset.y + (z.centerOffset?z.centerOffset.x:0), 0],
+						['scale', z.scale]
+					]
+				)
+				return;
+			}else{
+				z.dragging = false;
+				z.initialPoint = undefined;
+				z.initialDragOffset = undefined;
+			};
+			z.active = true;
+			if(z.first === undefined)
+				z.first = true;
+			else
+				z.first = false;
+			z.b = {x: e.touches[1].clientX, y: e.touches[1].clientY};
+			z.distance = Math.sqrt((z.a.x - z.b.x)*(z.a.x - z.b.x) + (z.a.y - z.b.y)*(z.a.y - z.b.y));
+			if(z.first) {
+				z.height = this.touch.touchedWrapper.$.offsetHeight;
+				z.width = this.touch.touchedWrapper.$.offsetWidth;
+				z.initialDistance = z.distance;
+				z.initialScale = this.touch.touchedWrapper.$._scale || z.scale || 1;
+			}
+			z.scale = z.distance / z.initialDistance * z.initialScale;
+			if(z.scale < 1) {
+				z.initialDistance = z.distance;
+				z.initialScale = 1;
+				z.scale = 1;
+			}else if (z.scale > 3){
+				z.initialDistance = z.distance;
+				z.initialScale = 3;
+				z.scale = 3;
+			}
+			if(z.first) {
+				z.center = {
+					x: (z.a.x + z.b.x)/2, 
+					y: (z.a.y + z.b.y)/2
+				}
+				if(this.touch.touchedWrapper.$._center){
+				var oldCenter = this.touch.touchedWrapper.$._center;
+					z.center = {
+						x: oldCenter.x + (z.center.x - oldCenter.x - (z.dragOffset?z.dragOffset.x:0)) / z.scale,
+						y: oldCenter.y + (z.center.y - oldCenter.y - (z.dragOffset?z.dragOffset.y:0)) / z.scale
+					}
+				}
+				z.ratio = {
+					x: z.center.x / z.width,
+					y: z.center.y / z.height,
+					xx: 1 - z.center.x / z.width,
+					yy: 1 - z.center.y / z.height,
+				}
+			}
+			z.overflow = {
+				top: z.ratio.y * (z.scale * z.height - z.height),
+				right: z.ratio.yy * (z.scale * z.width - z.width),
+				bottom: z.ratio.xx * (z.scale * z.height - z.height),
+				left: z.ratio.x * (z.scale * z.width - z.width),
+			};
+			if(z.first && this.touch.touchedWrapper.$._ratio) {
+				z.oldRatio = this.touch.touchedWrapper.$._ratio;
+				z.centerOffset = {
+					x: (z.oldRatio.x * (z.scale * z.width - z.width) - z.overflow.left) * -1,
+					y: (z.oldRatio.y * (z.scale * z.height - z.height) - z.overflow.top) * -1
+				};
+				if(this.touch.touchedWrapper.$._centerOffset) {
+					z.centerOffset.x += this.touch.touchedWrapper.$._centerOffset.x;
+					z.centerOffset.y += this.touch.touchedWrapper.$._centerOffset.y;
+				}
+			}
+
+			this.touch.touchedWrapper.$.style.transformOrigin = `${z.center.x}px ${z.center.y}px`;
+			this.touch.setTransform(
+				this.touch.touchedWrapper.$,
+				[
+					z.centerOffset?['translate3d:px',z.centerOffset.x + (z.dragOffset?z.dragOffset.x:0), z.centerOffset.y + (z.dragOffset?z.dragOffset.y:0), 0]:['translate3d:px',0,0,0],
+					['scale', z.scale]
+				]
+			)
+			this.touch.touchedWrapper.$._center = z.center;
+			this.touch.touchedWrapper.$._scale = z.scale;
+			this.touch.touchedWrapper.$._ratio = z.ratio;
+			this.touch.touchedWrapper.$._centerOffset = z.centerOffset;
+			// return this.touch.endHandler(e);
+			return;
 		}
 		// e.preventDefault();
 		this.touch.x = e.touches[0].screenX;
@@ -2198,8 +2337,44 @@ const SCROLL_X = 3;
 	this.touch.endHandler = e => {
 		this.touch.log('end');
 		if(!this.touch.touching) return false;
+		//if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
+		if(this.touch.fingers > 1 && this.touch.gesture != ZOOM) {
+			this.touch.fingers -= e.changedTouches.length;
+			return;
+		}
+		if(this.touch.z.dragging) {
+			this.touch.z.initialPoint = undefined;
+			this.touch.z.initialDragOffset = undefined;
+			this.touch.z.dragging = false;
+			return;
+		}
+
+		if(this.touch.gesture == ZOOM) {
+			if(this.touch.z.scale < 1.3) {
+				this.touch.touchedWrapper.$.style.transition = 'transform 0.3s ease, transform-origin 0.3s ease';
+				this.touch.touchedWrapper.$.style.transform = '';
+				this.touch.touchedWrapper.$._scale = undefined;
+				this.touch.touchedWrapper.$._center = undefined;
+				this.touch.touchedWrapper.$._ratio = undefined;
+				this.touch.touchedWrapper.$._centerOffset = undefined;
+				setTimeout(() => {
+					this.touch.touchedWrapper.$.style.transition = '';
+					this.touch.touchedWrapper.$.style.transformOrigin = '';
+				},300)
+				this.touch.z.first = undefined;
+				this.touch.z.centerOffset = undefined;
+				this.touch.z.oldRatio = undefined;
+				this.touch.z.cumulativeDrag = undefined;
+				this.touch.z.dragging = false;
+				this.touch.z.dragOffset = undefined;
+			}
+			if(e.changedTouches.length > 0) {
+				this.touch.z.first = undefined;
+			}
+			// this.touch.z = {};
+			return;
+		}
 		this.touch.touching = false;
-		if(this.touch.gesture == SCROLL_X || this.touch.gesture == SCROLL) return;
 		if(this.touch.transitionTimer) return;
 	var times = this.touch.times.slice(-4);
 	var measures = this.touch.measures.slice(-4);
@@ -2306,6 +2481,7 @@ const SCROLL_X = 3;
 					(Settings.get('lyt.direction') == 'rtl')?
 						this.next(e):
 						this.prev(e);
+					this.touch.z = {};
 					break;
 				case 2:
 				case 3:
@@ -2316,6 +2492,7 @@ const SCROLL_X = 3;
 					(Settings.get('lyt.direction') == 'rtl')?
 						this.prev(e):
 						this.next(e);
+					this.touch.z = {};
 					break;
 				default:
 					break;
