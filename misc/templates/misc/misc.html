@@ -8,8 +8,8 @@
 <meta name="description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}">
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{{page_title}}" />
-<meta name="twitter:image" content="https://{{ request.get_host }}{{cover_image_url}}" />
-<meta property="og:image" content="https://{{ request.get_host }}{{cover_image_url}}">
+<meta name="twitter:image" content="{{cover_image_url}}" />
+<meta property="og:image" content="{{cover_image_url}}">
 <meta property="og:url" content="{{ misc_page.page_url }}">
 {% endblock %}
 
