@@ -5,6 +5,7 @@ from .sources.mangadex import MangaDex
 from .sources.nhentai import NHentai
 from .sources.pastebin import Pastebin
 from .sources.readmanhwa import ReadManhwa
+from .sources.hitomi import Hitomi
 
 sources = [
     MangaDex(),
@@ -14,4 +15,5 @@ sources = [
     Imgur(),
     MangaBox(),
     Pastebin(),
+    Hitomi(),
 ]
