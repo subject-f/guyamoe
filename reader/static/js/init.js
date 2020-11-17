@@ -863,6 +863,19 @@ function SettingsHandler(){
 		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
+		addr: 'apr.rmvGap',
+		prettyName: 'Remove gaps in vertical view',
+		default: false,
+		strings: {
+			true: 'Gaps removed',
+			false: 'Gaps applied'
+		},
+		compact: true,
+		condition: {'lyt.direction': ['ttb']},
+		type: SETTING_BOOLEAN,
+		global: true
+	})
+	.newSetting({
 		addr: 'apr.hoverinos',
 		prettyName: 'Mouseover reader hints (next, prev)',
 		default: true,
@@ -1585,6 +1598,10 @@ function UI_Reader(o) {
 			'apr.sidebar': o => this.toggleSidebar(o),
 			'apr.selPinned': o => this.setLayout(o, true),
 			'apr.previews': o => this.drawPreviews(o),
+			'apr.rmvGap' : () => {
+				if (Settings.get('apr.rmvGap')) document.documentElement.style.setProperty("--ttbMargin", "0");
+				else document.documentElement.style.setProperty("--ttbMargin", "1em");
+			},
 			'thm.reset' : o => {
 				ThemeManager.themeUpdated()
 			},
