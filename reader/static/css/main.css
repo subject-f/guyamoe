@@ -19,6 +19,7 @@
 --rdr-wb: 2px;
 --rdrAncBottomWhite: rgba(255,255,255,0.35);
 --rescueShade: unset;
+--ttbMargin: 1em;
 }
 
 @font-face {
@@ -1010,7 +1011,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 
 .direction-ttb .rdr-image-wrap .ReaderImageWrapper {
 	flex-shrink: 0;
-	margin-bottom: 1em;
+	margin-bottom: var(--ttbMargin);
 	min-height: 20% !important;
 	max-width: 100%;
 }
