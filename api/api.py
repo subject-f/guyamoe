@@ -18,16 +18,22 @@ from reader.models import Chapter, ChapterIndex, Group, Series, Volume
 def all_chapter_data_etag(request):
     etag = cache.get("all_chapter_data_etag")
     if not etag:
-        etag = str(datetime.now())
-        cache.set("all_chapter_data_etag", etag, 48 * 3600)
+        obj = Chapter.objects.order_by("-uploaded_on").first()
+        etag = str(obj.updated_on or obj.uploaded_on)
+        cache.set("all_chapter_data_etag", etag, 600)
     return etag
 
 
 def chapter_data_etag(request, series_slug):
     etag = cache.get(f"{series_slug}_chapter_data_etag")
     if not etag:
-        etag = str(datetime.now())
-        cache.set(f"{series_slug}_chapter_data_etag", etag, 48 * 3600)
+        obj = (
+            Chapter.objects.filter(series=Series.objects.get(slug=series_slug))
+            .order_by("-uploaded_on")
+            .first()
+        )
+        etag = str(obj.updated_on or obj.uploaded_on)
+        cache.set(f"{series_slug}_chapter_data_etag", etag, 600)
     return etag
 
 
@@ -139,7 +145,11 @@ def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
 
 
 def create_chapter_obj(
-    chapter: float, group: Group, series: Series, latest_volume: int, title: str,
+    chapter: float,
+    group: Group,
+    series: Series,
+    latest_volume: int,
+    title: str,
 ):
     update = False
     chapter_number = chapter
@@ -169,7 +179,9 @@ def create_chapter_obj(
         ).first()
         if ch_obj:
             delete_chapter_pages_if_exists(
-                chapter_folder, existing_chapter.clean_chapter_number(), group_folder,
+                chapter_folder,
+                existing_chapter.clean_chapter_number(),
+                group_folder,
             )
             update = True
 

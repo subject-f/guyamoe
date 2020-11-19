@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 from django.views.decorators.http import condition
+from django.views.decorators.cache import cache_control
 
 from api.api import all_chapter_data_etag, chapter_data_etag
 from reader import views
@@ -46,10 +47,16 @@ urlpatterns = [
     re_path(r"^update_view_count/", views.hit_count, name="reader-view-count"),
     re_path(
         r"^other/rss/all$",
-        condition(etag_func=all_chapter_data_etag)(AllChaptersFeed()),
+        cache_control(
+            public=True, max_age=600, s_maxage=600
+        )(  # Cache control for CF, etag for RSS readers
+            condition(etag_func=all_chapter_data_etag)(AllChaptersFeed())
+        ),
     ),
     path(
         r"other/rss/<str:series_slug>",
-        condition(etag_func=chapter_data_etag)(SeriesChaptersFeed()),
+        cache_control(public=True, max_age=600, s_maxage=600)(
+            condition(etag_func=chapter_data_etag)(SeriesChaptersFeed())
+        ),
     ),
 ]
