@@ -22,6 +22,7 @@ class MangaDex(BaseScraper):
             self.group_whitelist = scraping_info.get("group_whitelist", None)
             self.group_blacklist = scraping_info.get("group_blacklist", None)
             self.chapter_id_blacklist = scraping_info.get("chapter_id_blacklist", None)
+            self.released_within_days = scraping_info.get("released_within_days", 30)
             self.initialized = True
         except Exception:
             self.initialized = False
@@ -99,7 +100,7 @@ class MangaDex(BaseScraper):
         ch_obj = downloaded_chapters[chapter_number][md_group]
         if (
             datetime.utcnow().replace(tzinfo=timezone.utc) - ch_obj.uploaded_on
-        ) > timedelta(days=30):
+        ) > timedelta(days=self.released_within_days):
             return False, None
         md_chapter_data = self.get_source_chapter_data(md_chapter_id)
         source_chapter_hash = self.generate_source_chapter_hash(md_chapter_data)

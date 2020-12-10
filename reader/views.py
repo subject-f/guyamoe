@@ -175,7 +175,9 @@ def series_info_admin(request, series_slug):
 def get_all_metadata(series_slug):
     series_metadata = cache.get(f"series_metadata_{series_slug}")
     if not series_metadata:
-        series = Series.objects.get(slug=series_slug)
+        series = Series.objects.filter(slug=series_slug).first()
+        if not series:
+            return None
         chapters = Chapter.objects.filter(series=series).select_related("series")
         series_metadata = {}
         series_metadata["indexed"] = series.indexed
@@ -195,7 +197,7 @@ def get_all_metadata(series_slug):
 def reader(request, series_slug, chapter, page=None):
     if page:
         data = get_all_metadata(series_slug)
-        if chapter in data:
+        if data and chapter in data:
             data[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
             data[chapter]["api_path"] = f"/api/series/"
             data[chapter]["version_query"] = settings.STATIC_VERSION

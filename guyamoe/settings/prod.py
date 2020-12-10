@@ -50,7 +50,7 @@ LOGGING = {
     },
     "handlers": {
         "file": {
-            "level": "WARNING",
+            "level": "ERROR",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "verbose",
             "filename": os.path.join(PARENT_DIR, "guyamoe.log"),
