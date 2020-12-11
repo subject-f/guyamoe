@@ -95,7 +95,7 @@ class MangaDex(BaseScraper):
         return group
 
     def is_source_chapter_updated(
-        self, series, downloaded_chapters, chapter_number, md_chapter_id, md_group
+        self, downloaded_chapters, chapter_number, md_chapter_id, md_group
     ):
         ch_obj = downloaded_chapters[chapter_number][md_group]
         if (
@@ -103,6 +103,8 @@ class MangaDex(BaseScraper):
         ) > timedelta(days=self.released_within_days):
             return False, None
         md_chapter_data = self.get_source_chapter_data(md_chapter_id)
+        if not md_chapter_data:
+            return False, None
         source_chapter_hash = self.generate_source_chapter_hash(md_chapter_data)
         # check if the source chapter has updated.
         if ch_obj.scraper_hash == source_chapter_hash:
@@ -112,7 +114,6 @@ class MangaDex(BaseScraper):
     def get_valid_source_chapters(
         self,
         series: Series,
-        downloaded_chapters,
         md_chapters,
         *,
         specific_chapters: Dict[float, List[str]] = [],
@@ -170,6 +171,8 @@ class MangaDex(BaseScraper):
     ):
         if not md_chapter_data:
             md_chapter_data = self.get_source_chapter_data(md_chapter_id)
+            if not md_chapter_data:
+                return None
             md_chapter_pages = md_chapter_data["pages"]
         else:
             md_chapter_pages = md_chapter_data["pages"]
@@ -223,10 +226,7 @@ class MangaDex(BaseScraper):
             series,
             group,
         ) in self.get_valid_source_chapters(
-            self.series,
-            downloaded_chapters,
-            md_chapters,
-            specific_chapters=specific_chapters,
+            self.series, md_chapters, specific_chapters=specific_chapters,
         ):
             # if checking updates and not getting missing chapters only, skip exisitng chapters from groups if there isn't a newer version of it on the source
             md_chapter_data = None
@@ -237,11 +237,7 @@ class MangaDex(BaseScraper):
                 if not check_updates:
                     continue
                 is_updated, md_chapter_data = self.is_source_chapter_updated(
-                    series,
-                    downloaded_chapters,
-                    chapter_number,
-                    md_chapter_id,
-                    group.name,
+                    downloaded_chapters, chapter_number, md_chapter_id, group.name,
                 )
                 if not is_updated:
                     continue
@@ -254,5 +250,6 @@ class MangaDex(BaseScraper):
                 md_chapter_id,
                 md_chapter_data,
             )
-            scraped_chapters.append(ch_obj)
+            if ch_obj:
+                scraped_chapters.append(ch_obj)
         return scraped_chapters

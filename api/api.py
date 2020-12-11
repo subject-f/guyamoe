@@ -145,11 +145,7 @@ def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
 
 
 def create_chapter_obj(
-    chapter: float,
-    group: Group,
-    series: Series,
-    latest_volume: int,
-    title: str,
+    chapter: float, group: Group, series: Series, latest_volume: int, title: str,
 ):
     update = False
     chapter_number = chapter
@@ -179,9 +175,7 @@ def create_chapter_obj(
         ).first()
         if ch_obj:
             delete_chapter_pages_if_exists(
-                chapter_folder,
-                existing_chapter.clean_chapter_number(),
-                group_folder,
+                chapter_folder, existing_chapter.clean_chapter_number(), group_folder,
             )
             update = True
 

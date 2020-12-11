@@ -32,8 +32,7 @@ class Hitomi(ProxySource):
                 )
             else:
                 return redirect(
-                    f"reader-{self.get_reader_prefix()}-series-page",
-                    series_id,
+                    f"reader-{self.get_reader_prefix()}-series-page", series_id,
                 )
 
         return [
@@ -152,11 +151,7 @@ class Hitomi(ProxySource):
     def chapter_api_handler(self, meta_id):
         data = self.ht_api_common(meta_id)
         if data:
-            return ChapterAPI(
-                pages=data["pages"],
-                series=data["slug"],
-                chapter="1",
-            )
+            return ChapterAPI(pages=data["pages"], series=data["slug"], chapter="1",)
         else:
             return None
 

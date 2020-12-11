@@ -23,10 +23,7 @@ class Imgur(ProxySource):
     def shortcut_instantiator(self):
         def handler(request, album_hash):
             return redirect(
-                f"reader-{self.get_reader_prefix()}-chapter-page",
-                album_hash,
-                "1",
-                "1",
+                f"reader-{self.get_reader_prefix()}-chapter-page", album_hash, "1", "1",
             )
 
         return [
@@ -92,11 +89,7 @@ class Imgur(ProxySource):
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
             pages = [self.image_url_handler(obj) for obj in api_data["data"]["images"]]
-            return ChapterAPI(
-                pages=pages,
-                series=meta_id,
-                chapter=meta_id,
-            )
+            return ChapterAPI(pages=pages, series=meta_id, chapter=meta_id,)
         else:
             return None
 
