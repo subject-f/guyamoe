@@ -97,7 +97,7 @@ def series_page_data(series_slug):
                     chapter.slug_chapter_number(),
                     chapter.group.name if not multiple_groups else "Multiple Groups",
                     [u.year, u.month - 1, u.day, u.hour, u.minute, u.second],
-                    chapter.volume,
+                    chapter.volume or "null",
                 ]
             )
             volume_dict[chapter.volume].append(
