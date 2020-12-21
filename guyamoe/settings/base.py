@@ -140,7 +140,7 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_VERSION = "?v=" + subprocess.check_output(
-    f"git -C {BASE_DIR} rev-parse --short HEAD", shell=True, text=True
+    ["git", "-C", str(BASE_DIR), "rev-parse", "--short", "HEAD"], text=True
 )
 
 MEDIA_URL = "/media/"
