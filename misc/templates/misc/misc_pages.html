@@ -1,13 +1,8 @@
 {% extends "layout.html" %}
 {% load static %}
 {% load page_tags %}
-{% block head %}
-<title>Kaguya-sama news and articles | Guya.moe</title>
-<meta name="twitter:description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka." />
-<meta property="og:description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka." />
-<meta name="description" content="A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka.">
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Kaguya-sama news and articles | Guya.moe" />
+{% block meta %}
+{{ block.super }}
 <meta property="og:url" content="/pages">
 {% endblock %}
 

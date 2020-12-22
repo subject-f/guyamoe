@@ -85,6 +85,8 @@ def misc_pages(request):
             "pages": pages,
             "template": "misc_page",
             "relative_url": "pages/",
+            "page_title": "Kaguya-sama news and articles",
+            "page_description": "A collection of articles, interviews and news related to Kaguya-sama and Aka Akasaka.",
             "version_query": settings.STATIC_VERSION,
         },
     )

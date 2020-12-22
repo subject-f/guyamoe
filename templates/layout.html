@@ -22,6 +22,21 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="theme-color" content="#2b2f33" /> 
 	<meta name="format-detection" content="telephone=no">
+  {% block meta %}
+  {% if page_title %}
+  <title>{{ brand.name }} :: {{ page_title }}</title>
+  {% else %}
+  <title>{{ brand.name }}</title>
+  {% endif %}
+  <meta name="twitter:description" content="{% firstof page_description brand.description %}" />
+  <meta property="og:description" content="{% firstof page_description brand.description %}" />
+  <meta name="description" content="{% firstof page_description brand.description %}">
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="{% firstof page_title brand.name %}" />
+  <meta name="twitter:image" content="{{ brand.image_url }}" />
+  <meta property="og:image" content="{{ brand.image_url }}">
+  {% endblock %}
 	{% block head %} {% endblock %}
 	{% include "history.html" %}
 </head>

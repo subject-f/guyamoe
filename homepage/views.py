@@ -90,6 +90,7 @@ def about(request):
         {
             "relative_url": "about/",
             "template": "about",
+            "page_title": "About",
             "version_query": settings.STATIC_VERSION,
         },
     )
