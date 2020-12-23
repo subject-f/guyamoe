@@ -947,6 +947,21 @@ function SettingsHandler(){
 		global: false
 	})
 	.newSetting({
+		addr: 'bhv.clickTurnPage',
+		prettyName: `Turn page by ${IS_MOBILE ? 'tapping' : 'clicking'}`,
+		strings: {
+			true: 'Turn page',
+			false: 'Disabled',
+		},
+		help: {
+			true: `When ${IS_MOBILE ? 'tapping' : 'clicking'}, the page turns depending on the direction.`,
+			false: `${IS_MOBILE ? 'Tapping' : 'Clicking'} on the page does not turn it.`,
+		},
+		default: true,
+		compact: true,
+		type: SETTING_BOOLEAN,
+	})
+	.newSetting({
 		addr: 'bhv.historyUpdate',
 		prettyName: 'Browser history/back button behavior',
 		options: ['none','replace','chap','jump', 'all'],
@@ -2214,6 +2229,7 @@ const SCROLL_X = 3;
 			return;
 		}
 		if(e.button != 0) return;
+		if(Settings.get('bhv.clickTurnPage') === false) return;
 	var box = this.$.getBoundingClientRect();
 	var areas = [
 			0,
