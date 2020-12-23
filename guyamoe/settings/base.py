@@ -86,7 +86,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "guyamoe.context_processors.branding"
+                "guyamoe.context_processors.branding",
+                "guyamoe.context_processors.urls",
             ],
         },
     },

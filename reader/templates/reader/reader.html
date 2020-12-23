@@ -25,10 +25,10 @@
   <meta property="og:image" content="{{ cover }}">
   <meta name="twitter:image" content="{{ cover }}">
   {% endif %}
-  <meta property="og:url" content="/read/manga/{{ slug }}/">
+  <meta property="og:url" content="{{ absolute_url }}">
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
-  <link rel="canonical" href="{{ root_domain }}/{{ relative_url }}/" />
+  <link rel="canonical" href="{{ absolute_url }}" />
   <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
   <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
   {% include "history.html" %}
