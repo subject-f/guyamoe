@@ -1,16 +1,16 @@
 {% load static %}
 <style>
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700&display=swap');
-</style> 
+</style>
 <style>
-    body {
-        background: #000000;
+		body {
+				background: #000000;
 		display: flex;
 		align-items: center;
 		align-content: center;
 		font-family: 'Open Sans', sans-serif;
 		font-weight: 200;
-    }
+		}
 	content {
 		color: white;
 		padding: 0 6rem 0 4rem;
@@ -46,20 +46,20 @@
 </style>
 <html>
 	<head>
-	   <title>404 :: Guya.moe</title>
-	<meta name="twitter:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya." />
-	<meta property="og:description" content="A place to read the Kaguya-sama: Love is War (Kaguya Wants to Be Confessed To) manga. No ads. No bad reader. All guya.">
-	<meta name="description" content="A place to read the Kaguya-sama: Love is War (aWants to Be Confessed To) manga. No ads. No bad reader. All guya.">
+		<title>{{ brand.name }} :: 404</title>
+		<meta name="twitter:description" content="{{ brand.description }}" />
+		<meta property="og:description" content="{{ brand.description }}">
+		<meta name="description" content="{{ brand.description }}">
 
 	</head>
 	<body>
-    	<img src="https://guya.moe/static/img/how_cute_404.png" />
-    	<content>
-    		<p>You were trying to visit a page<br> that doesn't even exist?
-    		<p>How cute.
-    		<p>404
-    		<p>NOT FOUND
-    		<a href="/">Return to main page</a>
-    	</content>
+			<img src="{% static 'img/how_cute_404.png' %}" />
+			<content>
+				<p>You were trying to visit a page<br> that doesn't even exist?
+				<p>How cute.
+				<p>404
+				<p>NOT FOUND
+				<a href="/">Return to main page</a>
+			</content>
 	</body>
 </html>

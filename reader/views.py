@@ -185,6 +185,7 @@ def get_all_metadata(series_slug):
             series_metadata[chapter.slug_chapter_number()] = {
                 "series_name": chapter.series.name,
                 "slug": chapter.series.slug,
+                "author_name": series.author.name,
                 "chapter_number": chapter.clean_chapter_number(),
                 "chapter_title": chapter.title,
             }

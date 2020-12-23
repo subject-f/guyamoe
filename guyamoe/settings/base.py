@@ -86,6 +86,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "guyamoe.context_processors.branding",
+                "guyamoe.context_processors.urls",
             ],
         },
     },
@@ -150,3 +152,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 IMGUR_CLIENT_ID = os.environ.get("IMGUR_CLIENT_ID", "")
 MAIL_DISCORD_WEBHOOK_ID = int(os.environ.get("MAIL_DISCORD_WEBHOOK_ID", 1))
 MAIL_DISCORD_WEBHOOK_TOKEN = os.environ.get("MAIL_DISCORD_WEBHOOK_TOKEN", "")
+
+BRANDING_NAME = "Guya.moe"
+BRANDING_DESCRIPTION = "A place to read the entirety of the Kaguya-sama: Love is War manga. No ads. No bad reader. All guya."
+BRANDING_IMAGE_URL = "https://i.imgur.com/jBhT5LV.png"

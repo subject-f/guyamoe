@@ -10,7 +10,7 @@
 	<script src="{% static 'js/jquery.min.js' %}"></script>
 	<script src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 	<script defer src="{% static 'js/bootstrap.min.js' %}"></script>
-	<link rel="canonical" href="https://guya.moe/{{ relative_url }}/" />
+	<link rel="canonical" href="{{ absolute_url }}" />
 	<link rel="manifest" href="{% static 'manifest.json' %}{{ version_query }}">
 	<link rel="shortcut icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" defer />
 	<link rel="icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" />
@@ -20,8 +20,24 @@
 	<link rel="apple-touch-icon" sizes="512x512" href="{% static 'safari-touch-512x512.png' %}{{ version_query }}" />
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<meta name="theme-color" content="#2b2f33" /> 
+	<meta name="theme-color" content="#2b2f33" />
 	<meta name="format-detection" content="telephone=no">
+  {% block meta %}
+  {% if page_title %}
+  <title>{{ brand.name }} :: {{ page_title }}</title>
+  {% else %}
+  <title>{{ brand.name }}</title>
+  {% endif %}
+  <meta name="twitter:description" content="{% firstof page_description brand.description %}" />
+  <meta property="og:description" content="{% firstof page_description brand.description %}" />
+  <meta name="description" content="{% firstof page_description brand.description %}">
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="{% firstof page_title brand.name %}" />
+  <meta name="twitter:image" content="{{ brand.image_url }}" />
+  <meta property="og:image" content="{{ brand.image_url }}">
+  <meta property="og:url" content="{{ absolute_url }}">
+  {% endblock %}
 	{% block head %} {% endblock %}
 	{% include "history.html" %}
 </head>
@@ -132,7 +148,7 @@
 				&& aList[i].href.indexOf(document.location.origin) > -1) {
 					aList[i].onclick = function() {
 						window.location = this.getAttribute("href");
-						return false; 
+						return false;
 					}
 				}
 			}

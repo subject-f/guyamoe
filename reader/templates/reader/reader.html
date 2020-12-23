@@ -4,31 +4,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="theme-color" content="#2b2f33" />
-  <title>{{ series_name }} :: Chapter {{ chapter_number }} | Guya.moe</title>
-  <meta name="twitter:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-  <meta property="og:title" content="{{ series_name }} - Chapter {{ chapter_number }} | Guya.moe">
-  <meta name="description" content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
+  <title>{{ brand.name }} :: {{ series_name }} :: Chapter {{ chapter_number }}</title>
+  <meta name="twitter:title" content="{{ brand.name }} :: {{ series_name }} :: Chapter {{ chapter_number }}">
+  <meta property="og:title" content="{{ brand.name }} :: {{ series_name }} :: Chapter {{ chapter_number }}">
+  <meta name="description" content="{{ brand.name }} :: Read chapter {{ chapter_number }} of {{ series_name }}">
   <meta name="twitter:card" content="summary">
   {% if first_party %}
   <meta property="og:description"
-    content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
+    content="{{ brand.name }} :: Read chapter {{ chapter_number }} of {{ series_name }}">
   <meta name="twitter:description"
-    content="Read chapter {{ chapter_number }} of {{ series_name }} | Guya.moe">
-  <meta property="og:image" content="https://i.imgur.com/jBhT5LV.png">
-  <meta name="twitter:image" content="https://i.imgur.com/jBhT5LV.png">
-  <meta name="author" content="Akasaka Aka">
+    content="{{ brand.name }} :: Read chapter {{ chapter_number }} of {{ series_name }}">
+  <meta property="og:image" content="{{ brand.image_url }}">
+  <meta name="twitter:image" content="{{ brand.image_url }}">
+  <meta name="author" content="{{ author_name }}">
   {% else %}
   <meta property="og:description"
-    content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+    content="Read the {{ series_name }} manga series.">
   <meta name="twitter:description"
-    content="Read the {{ series_name }} manga series. No ads. No bad reader. Some guya.">
+    content="Read the {{ series_name }} manga series.">
   <meta property="og:image" content="{{ cover }}">
   <meta name="twitter:image" content="{{ cover }}">
   {% endif %}
-  <meta property="og:url" content="/read/manga/{{ slug }}/">
+  <meta property="og:url" content="{{ absolute_url }}">
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
-  <link rel="canonical" href="https://guya.moe/{{ relative_url }}/" />
+  <link rel="canonical" href="{{ absolute_url }}" />
   <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
   <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
   {% include "history.html" %}
