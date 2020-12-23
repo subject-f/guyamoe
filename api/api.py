@@ -311,7 +311,7 @@ def index_chapter(chapter):
         )
 
 
-def chapter_post_process(chapter, is_update=True):
+def chapter_post_process(chapter, is_update=True, *, save_zip=True):
     chapter_folder = os.path.join(
         settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder
     )
@@ -330,7 +330,10 @@ def chapter_post_process(chapter, is_update=True):
     all_pages = os.listdir(os.path.join(chapter_folder, group))
     for idx, page in enumerate(all_pages):
         create_preview_pages(chapter_folder, group, page)
-    zip_chapter(chapter)
+
+    if save_zip:
+        zip_chapter(chapter)
+
     if is_update:
         chapter.version = chapter.version + 1 if chapter.version else 2
         chapter.updated_on = datetime.utcnow().replace(tzinfo=timezone.utc)
