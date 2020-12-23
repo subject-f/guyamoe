@@ -146,7 +146,7 @@ def download_chapter(request, series_slug, chapter):
         with open(os.path.join(chapter_dir, zip_chapter_file), "rb") as f:
             zip_file = f.read()
     else:
-        zip_file, _, _ = zip_chapter(series_slug, chapter_number, ch_obj.group)
+        zip_file, _, _ = zip_chapter(ch_obj)
     resp = HttpResponse(zip_file, content_type="application/x-zip-compressed")
     resp[
         "Content-Disposition"

@@ -325,7 +325,7 @@ def chapter_post_process(chapter, is_update=True):
     all_pages = os.listdir(os.path.join(chapter_folder, group))
     for idx, page in enumerate(all_pages):
         create_preview_pages(chapter_folder, group, page)
-    zip_chapter(chapter.series.slug, chapter.chapter_number, chapter.group)
+    zip_chapter(chapter)
     if is_update:
         chapter.version = chapter.version + 1 if chapter.version else 2
         chapter.updated_on = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -357,18 +357,16 @@ def clear_pages_cache():
     cache.set("peak_traffic", peak_traffic, 3600 * 6)
 
 
-def zip_chapter(series_slug, chapter, group):
-    ch_obj = Chapter.objects.filter(
-        series__slug=series_slug, chapter_number=chapter, group=group
-    ).first()
+def zip_chapter(chapter: Chapter):
     chapter_dir = os.path.join(
-        settings.MEDIA_ROOT, "manga", series_slug, "chapters", ch_obj.folder
+        settings.MEDIA_ROOT, "manga", chapter.series.slug, "chapters", chapter.folder
     )
+    group_id = str(chapter.group.id)
     chapter_pages = [
-        os.path.join(chapter_dir, str(group.id), f)
-        for f in os.listdir(os.path.join(chapter_dir, str(group.id)))
+        os.path.join(chapter_dir, group_id, f)
+        for f in os.listdir(os.path.join(chapter_dir, group_id))
     ]
-    zip_filename = f"{ch_obj.group.id}_{ch_obj.slug_chapter_number()}.zip"
+    zip_filename = f"{chapter.group.id}_{chapter.slug_chapter_number()}.zip"
     zf = zipfile.ZipFile(os.path.join(chapter_dir, zip_filename), "w")
     for fpath in chapter_pages:
         _, fname = os.path.split(fpath)
