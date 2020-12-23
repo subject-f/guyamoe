@@ -204,6 +204,7 @@ def reader(request, series_slug, chapter, page=None):
             data[chapter]["version_query"] = settings.STATIC_VERSION
             data[chapter]["first_party"] = True
             data[chapter]["indexed"] = data["indexed"]
+            data[chapter]["root_domain"] = settings.CANONICAL_ROOT_DOMAIN
             return render(request, "reader/reader.html", data[chapter])
         else:
             return render(request, "homepage/how_cute_404.html", status=404)
