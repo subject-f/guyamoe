@@ -320,8 +320,13 @@ def chapter_post_process(chapter, is_update=True):
     blur = os.path.join(chapter_folder, f"{group}_shrunk_blur")
     os.makedirs(shrunk, exist_ok=True)
     os.makedirs(blur, exist_ok=True)
-    [os.remove(os.path.join(chapter_folder, shrunk, f)) for f in os.listdir(shrunk)]
-    [os.remove(os.path.join(chapter_folder, blur, f)) for f in os.listdir(blur)]
+
+    for f in os.listdir(shrunk):
+        os.remove(os.path.join(chapter_folder, shrunk, f))
+
+    for f in os.listdir(blur):
+        os.remove(os.path.join(chapter_folder, blur, f))
+
     all_pages = os.listdir(os.path.join(chapter_folder, group))
     for idx, page in enumerate(all_pages):
         create_preview_pages(chapter_folder, group, page)
