@@ -955,7 +955,7 @@ function SettingsHandler(){
 		},
 		help: {
 			true: `When ${IS_MOBILE ? 'tapping' : 'clicking'}, the page turns depending on the direction.`,
-			false: 'Tapping on the page does not turn it.',
+			false: `${IS_MOBILE ? 'Tapping' : 'Clicking'} on the page does not turn it.`,
 		},
 		default: true,
 		compact: true,
