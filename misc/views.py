@@ -50,7 +50,7 @@ def content(request, page_url):
         content = content.replace("{{%s}}" % var.key, var.value)
     template_tags = {
         "content": content,
-        "preview": page.preview,
+        "page_description": page.preview,
         "page_url": page.page_url,
         "page_title": page.page_title,
         "date": int(page.date.timestamp()) if page.date else "",

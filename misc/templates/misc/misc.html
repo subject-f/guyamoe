@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 {% load page_tags %}
 {% load static %}
-{% block head %}
-<title>{{ page_title }} | Guya.moe</title>
-<meta name="twitter:description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}" />
-<meta property="og:description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}" />
-<meta name="description" content="{{ content | convert_to_markdown | striptags | truncatewords:40 }}">
+{% block meta %}
+<title>{{ brand.name }} :: {{ page_title }}</title>
+<meta name="twitter:description" content="{{ page_description }}" />
+<meta property="og:description" content="{{ page_description }}" />
+<meta name="description" content="{{ page_description }}">
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{{page_title}}" />
 <meta name="twitter:image" content="{{cover_image_url}}" />
