@@ -1205,8 +1205,8 @@ function UI_Reader(o) {
 		if(slug) this.SCP.series = slug;
 		this.SCP.lastChapter = this.current.chaptersIndex[this.current.chaptersIndex.length - 1];
 		this.SCP.firstChapter = this.current.chaptersIndex[0];
-		let path = window.location.pathname.split("/").map(e => unescape(e));
-		this._.title.innerHTML = `<a href="${path.splice(0, path.indexOf(unescape(this.current.slug))).join("/")}/${this.current.slug}/">${this.current.title}</a>`;
+		let path = window.location.pathname.split("/").map(e => decodeURIComponent(e));
+		this._.title.innerHTML = `<a href="${path.splice(0, path.indexOf(decodeURIComponent(this.current.slug))).join("/")}/${this.current.slug}/">${this.current.title}</a>`;
 		this.$.querySelector('aside').classList.remove('unload');
 	var chapterElements = [];
 	var volElements = {};
@@ -1420,7 +1420,7 @@ function UI_Reader(o) {
 		&& !this.SCP.chapterObject.notice){
 			let source = window.location.pathname.split("/");
 			source = source[source.indexOf(this.SCP.series) - 1];
-			globalHistoryHandler.addChapter(unescape(this.SCP.series), source, this.SCP.chapter.toString());
+			globalHistoryHandler.addChapter(decodeURIComponent(this.SCP.series), source, this.SCP.chapter.toString());
 		}
 		this.S.out('SCP', this.SCP);
 	}
