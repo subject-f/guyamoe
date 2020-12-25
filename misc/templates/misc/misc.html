@@ -3,9 +3,9 @@
 {% load static %}
 {% block meta %}
 <title>{{ page_title }} :: {{ brand.name }}</title>
-<meta name="twitter:description" content="{{ page_description }}" />
-<meta property="og:description" content="{{ page_description }}" />
-<meta name="description" content="{{ page_description }}">
+<meta name="twitter:description" content="{{ page_description | convert_to_markdown | striptags }}" />
+<meta property="og:description" content="{{ page_description | convert_to_markdown | striptags }}" />
+<meta name="description" content="{{ page_description | convert_to_markdown | striptags }}">
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{{page_title}}" />
 <meta name="twitter:image" content="{{cover_image_url}}" />
