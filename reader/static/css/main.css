@@ -278,6 +278,28 @@ aside header > .guya {
 	transform: scale(-1, 1);
 }
 
+.ico-btn.download:before {
+	content: "\e938";
+}
+
+.ico-btn.downloading {
+	animation: rotate 0.7s linear infinite; 
+}
+
+.ico-btn.downloading:hover {
+	top: 0px !important;
+}
+
+.ico-btn.downloading:before {
+	content: '\e97c';
+	color: var(--accentCol)
+}
+
+@keyframes rotate{
+	to{ transform: rotate(360deg); }
+}
+  
+
 .rdr-aside-content {
 	display: flex;
 	width: 100%;

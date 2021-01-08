@@ -1668,6 +1668,7 @@ function UI_Reader(o) {
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 	this._.jump.onclick = e => Loda.display('jump');
+	this._.download_chapter.onclick = () => this.downloadChapter();
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -1675,6 +1676,46 @@ function UI_Reader(o) {
 		return false;
 	}, false)
 
+	this.chapterDownloadURL = "";
+	this.downloadChapter = async function() {
+		if(this.chapterDownloadURL) {
+			URL.revokeObjectURL(this.chapterDownloadURL)
+		}
+		this._.download_chapter.style.display = "none";
+		this._.downloading_chapter.style.display = "block";
+		let mimeMap = {
+			'image/gif': '.gif',
+			'image/jpeg': '.jpg',
+			'image/png': '.png'
+		}
+		await Reader.fetchChapter(Reader.SCP.chapter)
+		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
+		try {
+			let zip = new JSZip();
+			for(let i = 0; i < chapURLArray.length; i++) {
+				url = chapURLArray[i];
+					let imgBlob = await (await fetch(url)).blob();
+					zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+			}
+			zip.generateAsync({type:"blob"}).then((blob) => {
+				this.chapterDownloadURL = URL.createObjectURL(blob)
+				initiateDownload(this.chapterDownloadURL)
+			})
+		} catch (err) {
+			throw "Error in generating zip " + err;
+		} finally {
+			this._.downloading_chapter.style.display = "none";
+			this._.download_chapter.style.display = "block";
+		}
+		function initiateDownload(url) {
+			let elem = window.document.createElement('a');
+			elem.href = url;
+			elem.download = "chapter.zip";        
+			document.body.appendChild(elem);
+			elem.click();        
+			document.body.removeChild(elem);
+		}
+	}
 
 	Tooltippy
 		.attach(this._.chap_prev, 'Previous chapter [[]')
@@ -1692,6 +1733,7 @@ function UI_Reader(o) {
 		.attach(this._.jump, 'Jump to chapter... [J]')
 		.attach(this._.spread_button, 'Change two-page mode [Q]')
 		.attach(this._.settings_button, 'Advanced settings... [O]')
+		.attach(this._.download_chapter, 'Download chapter in the background')
 		//.attach(this._.comment_button, 'Go to comments [C]')
 		// .attach(this._.fit_none, 'Images are displayed in natural resolution.')
 		// .attach(this._.fit_all, 'Images expand to width or height.')
