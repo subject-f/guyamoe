@@ -1682,6 +1682,7 @@ function UI_Reader(o) {
 			URL.revokeObjectURL(this.chapterDownloadURL)
 		}
 		this._.download_chapter.style.display = "none";
+		this._.downloading_chapter.textContent = "0%"
 		this._.downloading_chapter.style.display = "block";
 		let mimeMap = {
 			'image/gif': '.gif',
@@ -1694,13 +1695,13 @@ function UI_Reader(o) {
 			let zip = new JSZip();
 			for(let i = 0; i < chapURLArray.length; i++) {
 				url = chapURLArray[i];
-					let imgBlob = await (await fetch(url)).blob();
-					zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+				let imgBlob = await (await fetch(url)).blob();
+				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+				this._.downloading_chapter.textContent = Math.round((i+1)/chapURLArray.length * 98) + "%"
 			}
-			zip.generateAsync({type:"blob"}).then((blob) => {
-				this.chapterDownloadURL = URL.createObjectURL(blob)
-				initiateDownload(this.chapterDownloadURL)
-			})
+			let zipBlob = await zip.generateAsync({type:"blob"});
+			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
+			initiateDownload(this.chapterDownloadURL);
 		} catch (err) {
 			throw "Error in generating zip " + err;
 		} finally {

@@ -283,22 +283,11 @@ aside header > .guya {
 }
 
 .ico-btn.downloading {
-	animation: rotate 0.7s linear infinite; 
-}
-
-.ico-btn.downloading:hover {
+	font-family: "Open Sans", sans-serif !important;
+	font-size: 70%;
 	top: 0px !important;
-}
-
-.ico-btn.downloading:before {
-	content: '\e97c';
-	color: var(--accentCol)
-}
-
-@keyframes rotate{
-	to{ transform: rotate(360deg); }
-}
-  
+	color: var(--accentCol) 
+} 
 
 .rdr-aside-content {
 	display: flex;
@@ -1701,7 +1690,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .SettingUnit.compact .ToggleButton:before {
-	content: "";
+	content: "";
 	display: inline-block;
 	font-family: Guya;
 	font-size: 1.7em;
