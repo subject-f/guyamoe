@@ -1247,6 +1247,7 @@ function UI_Reader(o) {
 					resolve();
 				});
 			} else {
+				this.loadingChapter = false;
 				resolve();
 			}
 		});
