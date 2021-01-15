@@ -278,6 +278,37 @@ aside header > .guya {
 	transform: scale(-1, 1);
 }
 
+.ico-btn.download:before {
+	content: "\e938";
+}
+
+.download-wrapper {
+	display: flex;
+	border-radius: 1px;
+	background: var(--blackLight);
+	box-shadow: 2px 10px 20px var(--borderColor);
+}
+
+.ico-btn.downloading {
+	width:7rem !important;
+	font-family: "Open Sans", sans-serif !important;
+	font-size: 70%;
+	font-weight: 600;
+	top: 0px !important;
+	background: var(--sidebarCol);
+	color: var(--accentCol);
+	display: inherit;
+	height: 99% !important;
+} 
+
+.ico-btn.ico-btn.download-cancel {
+	display: inherit; 
+}
+
+.ico-btn.download-cancel:before {
+	content: "";
+}
+
 .rdr-aside-content {
 	display: flex;
 	width: 100%;
@@ -1403,6 +1434,10 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	display: none;
 }
 
+.Tooltippy.Error {
+	border: 1px solid rgb(230, 60, 60)
+}
+
 .Tooltippy .Tooltippy-key {
 	display: inline-block;
 	border: 1px solid rgba(255,255,255,0.2);
@@ -1679,7 +1714,7 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 }
 
 .SettingUnit.compact .ToggleButton:before {
-	content: "";
+	content: "";
 	display: inline-block;
 	font-family: Guya;
 	font-size: 1.7em;
