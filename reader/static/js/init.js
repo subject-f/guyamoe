@@ -3499,7 +3499,7 @@ function DownloadManager() {
 	function initiateDownload(url) {
 		let elem = window.document.createElement('a');
 		elem.href = url;
-		elem.download = "chapter.zip";        
+		elem.download = Reader.SCP.chapter + ".zip";        
 		document.body.appendChild(elem);
 		elem.click();        
 		document.body.removeChild(elem);
