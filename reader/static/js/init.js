@@ -1669,55 +1669,14 @@ function UI_Reader(o) {
 	this._.share_button.onmousedown = e => this.copyShortLink(e);
 	this._.search.onclick = e => Loda.display('search');
 	this._.jump.onclick = e => Loda.display('jump');
-	this._.download_chapter.onclick = () => this.downloadChapter();
+	this._.download_chapter.onclick = () => DownloadManagerObj.downloadChapter();
+	this._.download_cancel.onclick = () => DownloadManagerObj.cancelDownload();
 	this._.random_chapter_button.addEventListener('mousedown', e => {
 		e.preventDefault();
 		e.stopPropagation();
 		this.initChapter(this.SCP.chapter, 2);
 		return false;
 	}, false)
-
-	this.chapterDownloadURL = "";
-	this.downloadChapter = async function() {
-		if(this.chapterDownloadURL) {
-			URL.revokeObjectURL(this.chapterDownloadURL)
-		}
-		this._.download_chapter.style.display = "none";
-		this._.downloading_chapter.textContent = "0%"
-		this._.downloading_chapter.style.display = "block";
-		let mimeMap = {
-			'image/gif': '.gif',
-			'image/jpeg': '.jpg',
-			'image/png': '.png'
-		}
-		await Reader.fetchChapter(Reader.SCP.chapter)
-		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
-		try {
-			let zip = new JSZip();
-			for(let i = 0; i < chapURLArray.length; i++) {
-				url = chapURLArray[i];
-				let imgBlob = await (await fetch(url)).blob();
-				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
-				this._.downloading_chapter.textContent = Math.round((i+1)/chapURLArray.length * 98) + "%"
-			}
-			let zipBlob = await zip.generateAsync({type:"blob"});
-			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
-			initiateDownload(this.chapterDownloadURL);
-		} catch (err) {
-			throw "Error in generating zip " + err;
-		} finally {
-			this._.downloading_chapter.style.display = "none";
-			this._.download_chapter.style.display = "block";
-		}
-		function initiateDownload(url) {
-			let elem = window.document.createElement('a');
-			elem.href = url;
-			elem.download = "chapter.zip";        
-			document.body.appendChild(elem);
-			elem.click();        
-			document.body.removeChild(elem);
-		}
-	}
 
 	Tooltippy
 		.attach(this._.chap_prev, 'Previous chapter [[]')
@@ -3489,6 +3448,64 @@ function thirdPartySeriesHandler(url, chapter, group) {
 	}
 }
 
+function DownloadManager() {
+	this.chapterDownloadURL = "";
+	continueDownload = false;
+	this.downloadChapter = async function() {
+		if(this.chapterDownloadURL) {
+			URL.revokeObjectURL(this.chapterDownloadURL)
+		}
+		Reader._.download_chapter.classList.add("hidden");
+		Reader._.downloading_chapter.textContent = "0%";
+		Reader._.download_wrapper.classList.remove("hidden");
+		let mimeMap = {
+			'image/gif': '.gif',
+			'image/jpeg': '.jpg',
+			'image/png': '.png'
+		}
+		await Reader.fetchChapter(Reader.SCP.chapter)
+		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
+		continueDownload = true;
+		try {
+			let zip = new JSZip();
+			for(let i = 0; i < chapURLArray.length; i++) {
+				if(!continueDownload) return;
+				url = chapURLArray[i];
+				let imgBlob = await (await fetch(url)).blob();
+				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+				Reader._.downloading_chapter.textContent = Math.round((i+1)/chapURLArray.length * 98) + "%"
+			}
+			let zipBlob = await zip.generateAsync({type:"blob"});
+			if(!continueDownload) return;
+			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
+			initiateDownload(this.chapterDownloadURL);
+		} catch (err) {
+			throw "Error in generating zip " + err;
+		} finally {
+			wrapUp()
+		}
+	}
+
+	function wrapUp() {
+		Reader._.download_wrapper.classList.add("hidden");
+		Reader._.download_chapter.classList.remove("hidden");
+		continueDownload = false;
+	}
+
+	this.cancelDownload = function() {
+		continueDownload = false;
+		wrapUp();
+	}
+
+	function initiateDownload(url) {
+		let elem = window.document.createElement('a');
+		elem.href = url;
+		elem.download = "chapter.zip";        
+		document.body.appendChild(elem);
+		elem.click();        
+		document.body.removeChild(elem);
+	}
+}
 
 function UI_About(o) {
 	o=be(o);
@@ -3552,6 +3569,7 @@ Loda = new UI_LodaManager({
 	node: document.querySelector('.LodaManager'),
 });
 ThemeManager = new themeHandler();
+DownloadManagerObj = new DownloadManager()
 
 Loda.library.settings.createCategory('About', new UI_About());
 

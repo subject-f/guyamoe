@@ -282,12 +282,30 @@ aside header > .guya {
 	content: "\e938";
 }
 
+.download-wrapper {
+	display: flex;
+	border-radius: 1px;
+	background: var(--blackLight);
+	box-shadow: 2px 10px 20px var(--borderColor);
+}
+
 .ico-btn.downloading {
 	font-family: "Open Sans", sans-serif !important;
 	font-size: 70%;
 	top: 0px !important;
-	color: var(--accentCol) 
+	background: var(--sidebarCol);
+	color: var(--accentCol);
+	display: inherit;
+	height: 99% !important;
 } 
+
+.ico-btn.ico-btn.download-cancel {
+	display: inherit; 
+}
+
+.ico-btn.download-cancel:before {
+	content: "";
+}
 
 .rdr-aside-content {
 	display: flex;
