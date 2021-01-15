@@ -290,8 +290,10 @@ aside header > .guya {
 }
 
 .ico-btn.downloading {
+	width:7rem !important;
 	font-family: "Open Sans", sans-serif !important;
 	font-size: 70%;
+	font-weight: 600;
 	top: 0px !important;
 	background: var(--sidebarCol);
 	color: var(--accentCol);

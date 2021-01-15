@@ -3456,7 +3456,7 @@ function DownloadManager() {
 			URL.revokeObjectURL(this.chapterDownloadURL)
 		}
 		Reader._.download_chapter.classList.add("hidden");
-		Reader._.downloading_chapter.textContent = "0%";
+		Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : 0%`;
 		Reader._.download_wrapper.classList.remove("hidden");
 		let mimeMap = {
 			'image/gif': '.gif',
@@ -3473,7 +3473,7 @@ function DownloadManager() {
 				url = chapURLArray[i];
 				let imgBlob = await (await fetch(url)).blob();
 				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
-				Reader._.downloading_chapter.textContent = Math.round((i+1)/chapURLArray.length * 98) + "%"
+				Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round((i+1)/chapURLArray.length*98)}%`
 			}
 			let zipBlob = await zip.generateAsync({type:"blob"});
 			if(!continueDownload) return;
@@ -3493,7 +3493,6 @@ function DownloadManager() {
 	}
 
 	this.cancelDownload = function() {
-		continueDownload = false;
 		wrapUp();
 	}
 
