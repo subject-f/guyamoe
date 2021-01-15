@@ -1434,6 +1434,10 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	display: none;
 }
 
+.Tooltippy.Error {
+	border: 1px solid rgb(230, 60, 60)
+}
+
 .Tooltippy .Tooltippy-key {
 	display: inline-block;
 	border: 1px solid rgba(255,255,255,0.2);

@@ -1058,6 +1058,7 @@ function UI_Tooltippy(o) {
 		element._ttOffset = offset;
 		return this;
 	}
+
 }
 
 function UI_Reader(o) {
@@ -1705,7 +1706,6 @@ function UI_Reader(o) {
 		// .attach(this._.fit_height_limit, 'Natural image size that does not exceed max height.')
 		// .attach(this._.zoom_level_plus, 'Increase zoom level')
 		// .attach(this._.zoom_level_minus, 'Decrease zoom level')
-
 
 	this.S.mapIn({
 		seriesUpdated: this.updateData,
@@ -3480,7 +3480,7 @@ function DownloadManager() {
 			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
 			initiateDownload(this.chapterDownloadURL);
 		} catch (err) {
-			throw "Error in generating zip " + err;
+			TooltippyError.set("An error occured while downloading.")
 		} finally {
 			wrapUp()
 		}
@@ -3556,9 +3556,16 @@ alg.createBin();
 
 API = new ReaderAPI();
 Settings = new SettingsHandler();
+
 Tooltippy = new UI_Tooltippy({
 	node: document.querySelector('.Tooltippy'),
 });
+
+TooltippyError = new UI_Tooltippy({
+	node: document.querySelector('.Tooltippy.Error'),
+	kind: 'Error'
+})
+
 Reader = new UI_Reader({
 	node: document.getElementById('rdr-main'),
 });
