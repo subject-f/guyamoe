@@ -282,15 +282,19 @@ aside header > .guya {
 	content: "\e938";
 }
 
+.download-anchor {
+	width: 0.1px;
+	position: relative;
+}
+
 .download-wrapper {
 	display: flex;
 	border-radius: 1px;
 	background: var(--blackLight);
 	box-shadow: 2px 10px 20px var(--borderColor);
-	position: absolute;
-	left: 0;
 	height: 2rem;
-	margin-left: 1rem;
+	position: absolute;
+	right: 0;
 }
 
 .ico-btn.downloading {
@@ -303,6 +307,7 @@ aside header > .guya {
 	color: var(--accentCol);
 	display: inherit;
 	height: 99% !important;
+
 } 
 
 .ico-btn.ico-btn.download-cancel {

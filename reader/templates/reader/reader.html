@@ -61,9 +61,11 @@
               data-tip="Previous volume"></button>
             <div class="flex-spacer" data-bind='message'></div>
             <button data-bind="download_chapter" class="ico-btn download"></button>
-            <div class="download-wrapper hidden" data-bind="download_wrapper">
-              <button data-bind="downloading_chapter" class="ico-btn downloading" disabled></button>
-              <button data-bind="download_cancel" class="ico-btn download-cancel"></button>
+            <div class="download-anchor">
+              <div class="download-wrapper hidden" data-bind="download_wrapper">
+                <button data-bind="downloading_chapter" class="ico-btn downloading" disabled></button>
+                <button data-bind="download_cancel" class="ico-btn download-cancel"></button>
+              </div>
             </div>
             <a data-bind='share_button' data-tip="Short link to current page"
               class="rdr-share ico-btn "></a>
