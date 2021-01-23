@@ -2,6 +2,7 @@ import json
 import re
 from datetime import datetime
 
+from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import re_path
 
@@ -66,9 +67,7 @@ class Hitomi(ProxySource):
 
     @staticmethod
     def wrap_image_url(url):
-        return (
-            f"https://img-referrer-tunnel.herokuapp.com/{url}?host=https://hitomi.la/"
-        )
+        return f"{settings.IMAGE_PROXY_URL}/{url}"
 
     def ht_api_common(self, meta_id):
         ht_series_api = f"https://ltn.hitomi.la/galleries/{meta_id}.js"

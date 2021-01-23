@@ -3484,9 +3484,10 @@ function DownloadManager() {
 		continueDownload = true;
 		try {
 			let zip = new JSZip();
+			let useProxy = await shouldUseProxy(chapURLArray[0]);
 			for(let i = 0; i < chapURLArray.length; i++) {
 				if(!continueDownload) return;
-				url = chapURLArray[i];
+				let url = (useProxy) ? `${IMAGE_PROXY_URL}/${chapURLArray[i]}` : chapURLArray[i];
 				let imgBlob = await (await fetch(url)).blob();
 				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
 				Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round((i+1)/chapURLArray.length*98)}%`
@@ -3499,6 +3500,17 @@ function DownloadManager() {
 			TooltippyError.set("An error occured while downloading.")
 		} finally {
 			wrapUp()
+		}
+	}
+
+	async function shouldUseProxy(testUrl) {
+		// We don't know the actual error so we'll play it
+		// safe and assume this error is due to CORS
+		try {
+			await fetch(testUrl);
+			return false;
+		} catch (err) {
+			return true;
 		}
 	}
 

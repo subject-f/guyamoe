@@ -156,3 +156,5 @@ MAIL_DISCORD_WEBHOOK_TOKEN = os.environ.get("MAIL_DISCORD_WEBHOOK_TOKEN", "")
 BRANDING_NAME = "Guya.moe"
 BRANDING_DESCRIPTION = "A place to read the entirety of the Kaguya-sama: Love is War manga. No ads. No bad reader. All guya."
 BRANDING_IMAGE_URL = "https://i.imgur.com/jBhT5LV.png"
+
+IMAGE_PROXY_URL = "https://proxy.f-ck.me"

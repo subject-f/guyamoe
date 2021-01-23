@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from django.conf import settings
 from django.http.response import Http404
 from django.shortcuts import redirect
 from django.urls import re_path
@@ -57,9 +58,7 @@ class Toonily(ProxySource):
 
     @staticmethod
     def wrap_image_url(url):
-        return (
-            f"https://img-referrer-tunnel.herokuapp.com/{url}?host=https://toonily.com/"
-        )
+        return f"{settings.IMAGE_PROXY_URL}/{url}"
 
     @api_cache(prefix="toonily_series_common_dt", time=600)
     def ty_api_common(self, meta_id):

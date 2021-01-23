@@ -201,6 +201,7 @@ def reader(request, series_slug, chapter, page=None):
         if data and chapter in data:
             data[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
             data[chapter]["api_path"] = f"/api/series/"
+            data[chapter]["image_proxy_url"] = settings.IMAGE_PROXY_URL
             data[chapter]["version_query"] = settings.STATIC_VERSION
             data[chapter]["first_party"] = True
             data[chapter]["indexed"] = data["indexed"]
