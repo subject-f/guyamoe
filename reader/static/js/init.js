@@ -3477,20 +3477,28 @@ function DownloadManager() {
 		let mimeMap = {
 			'image/gif': '.gif',
 			'image/jpeg': '.jpg',
-			'image/png': '.png'
+			'image/png': '.png',
+			'image/webp': '.webp',
 		}
 		await Reader.fetchChapter(Reader.SCP.chapter)
 		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
 		continueDownload = true;
 		try {
 			let zip = new JSZip();
-			for(let i = 0; i < chapURLArray.length; i++) {
-				if(!continueDownload) return;
-				url = chapURLArray[i];
-				let imgBlob = await (await fetch(url)).blob();
-				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
-				Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round((i+1)/chapURLArray.length*98)}%`
-			}
+			let useProxy = await shouldUseProxy(chapURLArray[0]);
+			let progress = 0;
+			await Promise.all(chapURLArray.map((url, i) => {
+				return (async () => {
+					if (!continueDownload) return;
+					url = (useProxy) ? `${IMAGE_PROXY_URL}/${url}` : url;
+					let imgBlob = await (await fetch(url)).blob();
+					zip.file((i + 1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+					progress++;
+					Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
+				})();
+			}));
+			if (!continueDownload) return;
+
 			let zipBlob = await zip.generateAsync({type:"blob"});
 			if(!continueDownload) return;
 			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
@@ -3499,6 +3507,17 @@ function DownloadManager() {
 			TooltippyError.set("An error occured while downloading.")
 		} finally {
 			wrapUp()
+		}
+	}
+
+	async function shouldUseProxy(testUrl) {
+		// We don't know the actual error so we'll play it
+		// safe and assume this error is due to CORS
+		try {
+			await fetch(testUrl);
+			return false;
+		} catch (err) {
+			return true;
 		}
 	}
 

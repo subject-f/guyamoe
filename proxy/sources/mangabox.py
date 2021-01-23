@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 
 from bs4 import BeautifulSoup
+from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import re_path
 
@@ -43,7 +44,7 @@ class MangaBox(ProxySource):
 
     @staticmethod
     def wrap_image_url(url):
-        return f"https://img-referrer-tunnel.herokuapp.com/{url}?host=mangakakalot.com"
+        return f"{settings.IMAGE_PROXY_URL}/{url}"
 
     @staticmethod
     def normalize_slug(denormal):
