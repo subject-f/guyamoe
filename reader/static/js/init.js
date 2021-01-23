@@ -3477,7 +3477,8 @@ function DownloadManager() {
 		let mimeMap = {
 			'image/gif': '.gif',
 			'image/jpeg': '.jpg',
-			'image/png': '.png'
+			'image/png': '.png',
+                      'image/webp': '.webp',
 		}
 		await Reader.fetchChapter(Reader.SCP.chapter)
 		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
