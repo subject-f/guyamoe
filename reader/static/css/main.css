@@ -287,6 +287,10 @@ aside header > .guya {
 	border-radius: 1px;
 	background: var(--blackLight);
 	box-shadow: 2px 10px 20px var(--borderColor);
+	position: absolute;
+	left: 0;
+	height: 2rem;
+	margin-left: 1rem;
 }
 
 .ico-btn.downloading {
