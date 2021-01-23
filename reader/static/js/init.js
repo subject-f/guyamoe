@@ -3478,7 +3478,7 @@ function DownloadManager() {
 			'image/gif': '.gif',
 			'image/jpeg': '.jpg',
 			'image/png': '.png',
-                      'image/webp': '.webp',
+			'image/webp': '.webp',
 		}
 		await Reader.fetchChapter(Reader.SCP.chapter)
 		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
@@ -3486,13 +3486,19 @@ function DownloadManager() {
 		try {
 			let zip = new JSZip();
 			let useProxy = await shouldUseProxy(chapURLArray[0]);
-			for(let i = 0; i < chapURLArray.length; i++) {
-				if(!continueDownload) return;
-				let url = (useProxy) ? `${IMAGE_PROXY_URL}/${chapURLArray[i]}` : chapURLArray[i];
-				let imgBlob = await (await fetch(url)).blob();
-				zip.file((i+1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
-				Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round((i+1)/chapURLArray.length*98)}%`
-			}
+			let progress = 0;
+			await Promise.all(chapURLArray.map((url, i) => {
+				return (async () => {
+					if (!continueDownload) return;
+					url = (useProxy) ? `${IMAGE_PROXY_URL}/${url}` : url;
+					let imgBlob = await (await fetch(url)).blob();
+					zip.file((i + 1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
+					progress++;
+					Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
+				})();
+			}));
+			if (!continueDownload) return;
+
 			let zipBlob = await zip.generateAsync({type:"blob"});
 			if(!continueDownload) return;
 			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
