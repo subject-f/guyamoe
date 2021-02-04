@@ -26,7 +26,11 @@
   {% if page_title %}
   <title>{{ page_title }} :: {{ brand.name }}</title>
   {% else %}
-  <title>{{ brand.name }}</title>
+	{% if template == "home" %}
+	  <title>Read the Kaguya-sama manga series :: {{ brand.name }}</title>
+	{% else %}
+  	  <title>{{ brand.name }}</title>
+	{% endif %}
   {% endif %}
   <meta name="twitter:description" content="{% firstof page_description brand.description %}" />
   <meta property="og:description" content="{% firstof page_description brand.description %}" />
