@@ -1,4 +1,3 @@
-from .sources.toonily import Toonily
 from .sources.foolslide import FoolSlide
 from .sources.imgur import Imgur
 from .sources.mangabox import MangaBox
@@ -16,6 +15,5 @@ sources = [
     Imgur(),
     MangaBox(),
     Hitomi(),
-    Toonily(),
     Gist(),
 ]
