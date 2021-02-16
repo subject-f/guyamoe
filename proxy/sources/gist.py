@@ -1,43 +1,36 @@
 import json
-from datetime import datetime
 
-from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import re_path
 
 from ..source import ProxySource
-from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
-from ..source.helpers import api_cache, get_wrapper
+from ..source.data import SeriesAPI, SeriesPage
+from ..source.helpers import api_cache, get_wrapper, encode, decode
 
 
-class Pastebin(ProxySource):
+class Gist(ProxySource):
     def get_chapter_api_prefix(self):
         return ""
 
     def get_series_api_prefix(self):
-        return "pastebin"
+        return "gist"
 
     def get_reader_prefix(self):
-        return "pastebin"
+        return "gist"
 
     def shortcut_instantiator(self):
-        def handler(request, pastebin_hash):
+        def handler(request, gist_hash):
             return redirect(
-                f"reader-{self.get_reader_prefix()}-series-page", pastebin_hash
+                f"reader-{self.get_reader_prefix()}-series-page", encode(gist_hash)
             )
 
         return [
-            re_path(r"^(?:pb|paste|p|pastebin)/(?P<pastebin_hash>[\d\w]+)/$", handler),
+            re_path(r"^(?:gist|gh)/(?P<gist_hash>[\d\w/]+)/$", handler),
         ]
 
-    @staticmethod
-    def get_chapter_url(raw_url):
-        # Hardcoded, this is meh
-        pass
-
-    @api_cache(prefix="pastebin_common_dt", time=60)
-    def pastebin_common(self, meta_id):
-        resp = get_wrapper(f"https://pastebin.com/raw/{meta_id}")
+    @api_cache(prefix="gist_common_dt", time=3600)
+    def gist_common(self, meta_id):
+        resp = get_wrapper(f"https://gist.githubusercontent.com/{decode(meta_id)}/raw")
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
             title = api_data.get("title", "")
@@ -100,9 +93,9 @@ class Pastebin(ProxySource):
         else:
             return None
 
-    @api_cache(prefix="pastebin_dt", time=3600 * 6)
+    @api_cache(prefix="gist_dt", time=3600)
     def series_api_handler(self, meta_id):
-        data = self.pastebin_common(meta_id)
+        data = self.gist_common(meta_id)
         if data:
             return SeriesAPI(
                 slug=data["slug"],
@@ -120,9 +113,9 @@ class Pastebin(ProxySource):
     def chapter_api_handler(self, meta_id):
         pass
 
-    @api_cache(prefix="pastebin_page_dt", time=3600 * 6)
+    @api_cache(prefix="gist_page_dt", time=3600)
     def series_page_handler(self, meta_id):
-        data = self.pastebin_common(meta_id)
+        data = self.gist_common(meta_id)
         if data:
             return SeriesPage(
                 series=data["title"],
@@ -134,7 +127,7 @@ class Pastebin(ProxySource):
                 synopsis=data["description"],
                 author=data["artist"],
                 chapter_list=data["chapter_list"],
-                original_url=f"https://pastebin.com/{data['slug']}",
+                original_url=f"https://gist.github.com/{decode(meta_id)}",
             )
         else:
             return None

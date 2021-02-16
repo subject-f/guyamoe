@@ -4,9 +4,9 @@ from .sources.imgur import Imgur
 from .sources.mangabox import MangaBox
 from .sources.mangadex import MangaDex
 from .sources.nhentai import NHentai
-from .sources.pastebin import Pastebin
 from .sources.readmanhwa import ReadManhwa
 from .sources.hitomi import Hitomi
+from .sources.gist import Gist
 
 sources = [
     MangaDex(),
@@ -15,7 +15,7 @@ sources = [
     ReadManhwa(),
     Imgur(),
     MangaBox(),
-    Pastebin(),
     Hitomi(),
     Toonily(),
+    Gist(),
 ]
