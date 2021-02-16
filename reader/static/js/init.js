@@ -990,6 +990,14 @@ function SettingsHandler(){
 		hidden: true,
 		global: false
 	})
+	.newSetting({
+		addr: "adv.parallelDownloads",
+		prettyName: "Number of parallel image downloads",
+		options: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+		default: 5,
+		type: SETTING_VALUE,
+		hidden: false,
+	});
 	this.deserialize();
 	this.sendInit();
 }
@@ -3481,30 +3489,43 @@ function DownloadManager() {
 			'image/webp': '.webp',
 		}
 		await Reader.fetchChapter(Reader.SCP.chapter)
-		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)]
+		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)];
+		if (await shouldUseProxy(chapURLArray[0])) {
+			chapURLArray = chapURLArray.map((url) => `${IMAGE_PROXY_URL}/${url}`);
+		}
 		continueDownload = true;
 		try {
+			let parallelDownloads = Settings.get("adv.parallelDownloads");
 			let zip = new JSZip();
-			let useProxy = await shouldUseProxy(chapURLArray[0]);
 			let progress = 0;
-			await Promise.all(chapURLArray.map((url, i) => {
-				return (async () => {
-					if (!continueDownload) return;
-					url = (useProxy) ? `${IMAGE_PROXY_URL}/${url}` : url;
-					let imgBlob = await (await fetch(url)).blob();
-					zip.file((i + 1) + mimeMap[imgBlob.type], imgBlob, {binary: true});
-					progress++;
-					Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
-				})();
-			}));
-			if (!continueDownload) return;
+			for (let i = 0; i < chapURLArray.length; i += parallelDownloads) {
+				if (!continueDownload) return;
+				let imageBlobs = await Promise.all(
+					chapURLArray
+					.slice(i, i + parallelDownloads)
+					.map((url, subIndex) => {
+						return (async () => {
+							let contents = await downloadHandler(url);
+							progress++;
+							Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
+							return {
+								contents,
+								"fileIndex": i + subIndex + 1,
+							};
+						})();
+					})
+				);
+				imageBlobs.forEach((data) => {
+					zip.file(data.fileIndex + mimeMap[data.contents.type], data.contents, { binary: true });
+				});
+			}
 
 			let zipBlob = await zip.generateAsync({type:"blob"});
 			if(!continueDownload) return;
 			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
 			initiateDownload(this.chapterDownloadURL);
 		} catch (err) {
-			TooltippyError.set("An error occured while downloading.")
+			TooltippyError.set("An error occured while downloading: " + err.message);
 		} finally {
 			wrapUp()
 		}
@@ -3519,6 +3540,18 @@ function DownloadManager() {
 		} catch (err) {
 			return true;
 		}
+	}
+
+	async function downloadHandler(url) {
+		const TRIES = 3;
+		for (let attempt = 1; attempt <= TRIES; attempt++) {
+			try {
+				return (await fetch(url)).blob();
+			} catch (e) {
+				await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+			}
+		}
+		throw new Error(`Failed to download after exhausting all ${TRIES} tries.`);
 	}
 
 	function wrapUp() {
