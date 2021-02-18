@@ -27,14 +27,17 @@
   <title>{{ page_title }} :: {{ brand.name }}</title>
   {% else %}
 	{% if template == "home" %}
-	  <title>Read the Kaguya-sama manga series :: {{ brand.name }}</title>
+	  <title>{{ home_brand.name }}</title>
+	  <meta name="twitter:description" content="{{ home_brand.description }}" />
+      <meta property="og:description" content="{{ home_brand.description }}" />
+      <meta name="description" content="{{ home_brand.description }}">
 	{% else %}
   	  <title>{{ brand.name }}</title>
+	  <meta name="twitter:description" content="{% firstof page_description brand.description %}" />
+      <meta property="og:description" content="{% firstof page_description brand.description %}" />
+      <meta name="description" content="{% firstof page_description brand.description %}">
 	{% endif %}
   {% endif %}
-  <meta name="twitter:description" content="{% firstof page_description brand.description %}" />
-  <meta property="og:description" content="{% firstof page_description brand.description %}" />
-  <meta name="description" content="{% firstof page_description brand.description %}">
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="{% firstof page_title brand.name %}" />

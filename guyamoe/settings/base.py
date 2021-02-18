@@ -87,6 +87,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "guyamoe.context_processors.branding",
+                "guyamoe.context_processors.home_branding",
                 "guyamoe.context_processors.urls",
             ],
         },
@@ -156,5 +157,9 @@ MAIL_DISCORD_WEBHOOK_TOKEN = os.environ.get("MAIL_DISCORD_WEBHOOK_TOKEN", "")
 BRANDING_NAME = "Guya.moe"
 BRANDING_DESCRIPTION = "A place to read the entirety of the Kaguya-sama: Love is War manga. No ads. No bad reader. All guya."
 BRANDING_IMAGE_URL = "https://i.imgur.com/jBhT5LV.png"
+
+HOME_BRANDING_NAME = "Read the Kaguya-sama manga series :: Guya.moe"
+HOME_BRANDING_DESCRIPTION = "Read the Kaguya-sama: Love is War / Kaguya Wants to Be Confessed To manga and spin-off series. No ads. No bad reader. All guya."
+HOME_BRANDING_IMAGE_URL = "https://i.imgur.com/jBhT5LV.png"
 
 IMAGE_PROXY_URL = "https://proxy.f-ck.me"
