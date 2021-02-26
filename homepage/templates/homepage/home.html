@@ -134,10 +134,10 @@
 
 {% block body %}
 <main role="main">
-	<div class="splash-notice">
+<!-- 	<div class="splash-notice">
 		<a href="mailto:k@guya.moe" style="text-decoration:underline;font-size: 0.8em;">Send us your feedback and ideas :)</a>
-	</div>
-	<div class="manga-card bigg" style="background-image: url(/static/img/bg_box_blur_smol.png);">
+	</div> -->
+	<div class="manga-card bigg">
 		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
 			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Kaguya-sama: Love is War">
   			<img src="{{ main_cover }}" class="" alt="Kaguya-sama: Love is War">
@@ -179,7 +179,7 @@
 				document.getElementById('chapter_listing').classList.toggle('vis');
 				event.currentTarget.classList.toggle('vis');
 				toggleHash(event);
-			"><span>List of chapters</span></div>
+			"><span>List of Kaguya-sama chapters</span></div>
 		</span>
 		<table id="chapter_listing" class="chapter-listing hidden">
 		</table>
@@ -191,7 +191,7 @@
 		</picture>
 		<article>
 			<h2>We Want to Talk About Kaguya <span class="tag">Spin-off</span></h2>
-			<p>A comedic tale of two delusional girls who have absolutely no idea what goes on in the Student Council room!</p>
+			<p>A comedic tale of two delusional girls who have absolutely no idea what goes on in the Student Council room! This manga provides context to a lot of stuff happening behind the scenes of the main story in Shuchiin.</p>
 		</article>
 	</a>
 	<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To-Official-Doujin/" class="manga-card smol" style="background-image: url({{ doujin_cover_blur }})">
@@ -213,16 +213,60 @@
 			<p>A light novel side story about the paranormal Legend of the Seven Mysteries of Shuchiin that the Student Council suddenly gets drawn into.</p>
 		</article>
 	</a>
-	<a href="//kaguya-archive.tumblr.com/" target="_blank" class="manga-card smol" style="background-image: url({% static 'img/fanmade_media_blur.png' %})">
+	<a href="/read/manga/Oshi-no-Ko" target="_blank" class="manga-card smol" style="background-image: url({% static 'onk-blur.jpg' %})">
 		<picture>
-  			<img src="{% static 'img/fanmade_media.png' %}" class="" alt="Fanmade Media">
+  			<img src="{% static 'onk.jpg' %}" class="" alt="Fanmade Media">
 		</picture>
 		<article>
-			<h2>Fanmade Media</h2>
-			<p>The archive website that contains translations and links to most of the fanmade media that is being produced on our Discord or elsewhere.</p>
+			<h2>Oshi no Ko <span class="tag">Recommended</span></h2></h2>
+			<p>Oshi no Ko is a manga about the hardships of idol life, unfolding after Hoshino Ai, the star idol, meets a grim fate. The manga is drawn by Mengo Yokoyari and story is by Akasaka Aka, the author of Kaguya-sama.</p>
 		</article>
 	</a>
-</main>
+	<article class="spiel">
+		<h1>This is the best place to read Kaguya online.</h1>
+		<h3><i>And here are the reasons why.</i></h3>
+		<div class="card-container">
+			<div class="bullet-card">
+				<i class="bullet">•</i>
+				<div class="div">
+					<h2>No ads</h2>
+					<p>We have absolutely no ads - the whole website is made by the fans for the fans. Compared to the rest of "read Kaguya" websites, we don't seek profit.</p>
+				</div>
+			</div>
+			<div class="bullet-card">
+				<i class="bullet">•</i>
+				<div class="div">
+					<h2>Reader built from scratch</h2>
+					<p>This site runs Cubari - a modern manga reader developed for Kaguya with features you haven't seen anywhere else.</p>
+				</div>
+			</div>
+			<div class="bullet-card">
+				<i class="bullet">•</i>
+				<div class="div">
+					<h2>Full-text search</h2>
+					<p>We have indexed the entire manga. Open any manga chapter and press Ctrl+F to search for any words anywhere within the manga.</p>
+				</div>
+			</div>
+			<div class="bullet-card">
+				<i class="bullet">•</i>
+				<div class="div">
+					<h2>We ensure quality</h2>
+					<p>We pick the best English chapter scanlation available and only host translations that make sense.</p>
+				</div>
+			</div>
+		</div>
+		<section>
+			<h2>Is this the official site for Kaguya-sama?</h2>
+			<p>No, this entire site is fan-made and chapters we publish are fan-translated. Official printed release is done by Viz Media.</p>
+			<h2>Why did you make this?</h2>
+			<p>At some point, the team that scanlated Kaguya (Jaimini's Box) took their chapters away from Mangadex, leaving holes in the translation. In addition to that, the other releases that were posted on Mangadex were of inferior quality compared to what Jaimini's Box had on their site - and at the same time, Jaimini's box didn't have the earlier chapters which were not a part of their translation.</p>
+			<p>Therefore, we consolidated Kaguya-sama and its spinoffs under this website and made a useful reader. We had usability in mind, so we did a few innovative things like full-text search because we like the manga a lot and want it to be accessible.</p>
+			<h2>There is an official translation by Viz. Why host unofficial translations?</h2>
+			<p><b>First</b>, Viz manga volumes are yet to catch up to the weekly release; there is also no simultaneous release for Kaguya on MangaPlus.</p>
+			<p><b>Second</b>, by making the site as perfect as possible we direct a lot of traffic away from websites that earn money with shady ads by taking fan releases and hosting it on their websites with no regard for quality or the fans - their only aim is views and ad revenue.</p>
+			<p><b>Third</b>, despite providing all the chapters for free, we make sure to direct our readers to official sources so they can support the author and the official translators. We believe that online, actual fans are more likely to buy the official volumes if their interest in the series is supported by fan translations every week - that way official and non-official can coexist and be beneficial both to the publisher and the Kaguya manga readers.
+		</section>
+	</article>
 </main>
 <footer class="container-fluid footer mt-auto">
 	<div class="row justify-content-between small" style="background-color:#2a2a2a;">
