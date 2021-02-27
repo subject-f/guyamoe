@@ -581,6 +581,7 @@ main a {
 	font-size: 0.8em;
 	margin: 0.75em 0 0 12px;
 	user-select: none;
+	color: white !important;
 }
 
 .manga-link img {
@@ -1367,6 +1368,7 @@ main a {
 	}
 	.manga-card.bigg picture img {
 		height: 11em;
+		width: auto;
 		border-bottom-right-radius: 0.5em;
 	}
 	.manga-card.bigg .manga-links {
@@ -1408,6 +1410,20 @@ main a {
 	}
 	.page-series .side-cover {
 		display: none;
+	}
+
+
+	.spiel .img-aside {
+		float: none;
+		max-height: 80vh;
+		max-width: unset !important;
+		margin: 0 auto;
+		display: block;
+		margin-bottom: 1rem;
+	}
+
+	.spiel .bullet-card {
+		max-width: 90%;
 	}
 }
 
