@@ -1042,6 +1042,9 @@ main a {
 	display: block;
 	padding: 0 2rem;
 }
+.spiel a {
+	color: #e33f3f;
+}
 
 .spiel section h2 {
 	margin-top: 4rem;
@@ -1055,6 +1058,14 @@ main a {
 	
 	margin-top: 0.4em;
 	margin-bottom: 0.4em;
+}
+
+.spiel .img-aside {
+	float: right;
+	max-width: 30%;
+	margin-left: 1rem;
+	border-radius: 4px;
+	box-shadow: 0px 4px 5px black;
 }
 
 
