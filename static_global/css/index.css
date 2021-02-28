@@ -1416,7 +1416,7 @@ main a {
 	.spiel .img-aside {
 		float: none;
 		max-height: 80vh;
-		max-width: unset !important;
+		max-width: 100% !important;
 		margin: 0 auto;
 		display: block;
 		margin-bottom: 1rem;
