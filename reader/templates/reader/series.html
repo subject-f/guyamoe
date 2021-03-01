@@ -1,11 +1,11 @@
 {% extends "layout.html" %} {% load static %}
 {% block meta %}
-<title>Read {{ series }} :: {{ brand.name }}</title>
+<title>Read {{ series }} | {{ brand.name }}</title>
 <meta name="twitter:description" content="Read {{ series }} manga series by {{ author }}" />
 <meta property="og:description" content="Read {{ series }} manga series by {{ author }}" />
 <meta name="description" content="Read {{ series }} manga series by {{ author }}.{{ alt_titles_str|safe }}" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Read {{ series }} :: {{ brand.name }}" />
+<meta name="twitter:title" content="Read {{ series }} | {{ brand.name }}" />
 <meta name="twitter:image" content="{{ brand.image_url }}" />
 <meta property="og:image" content="{{ brand.image_url }}" />
 <meta name="author" content="{{ author }}" />

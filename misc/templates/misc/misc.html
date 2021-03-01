@@ -2,7 +2,7 @@
 {% load page_tags %}
 {% load static %}
 {% block meta %}
-<title>{{ page_title }} :: {{ brand.name }}</title>
+<title>{{ page_title }} | {{ brand.name }}</title>
 <meta name="twitter:description" content="{{ page_description | convert_to_markdown | striptags }}" />
 <meta property="og:description" content="{{ page_description | convert_to_markdown | striptags }}" />
 <meta name="description" content="{{ page_description | convert_to_markdown | striptags }}">
