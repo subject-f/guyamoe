@@ -948,7 +948,7 @@ function SettingsHandler(){
 	})
 	.newSetting({
 		addr: 'bhv.clickTurnPage',
-		prettyName: `Turn page by ${IS_MOBILE ? 'tapping' : 'clicking'}`,
+		prettyName: `Turn pages by ${IS_MOBILE ? 'tapping' : 'clicking'}`,
 		strings: {
 			true: 'Turn page',
 			false: 'Disabled',
@@ -959,6 +959,26 @@ function SettingsHandler(){
 		},
 		default: true,
 		compact: true,
+		type: SETTING_BOOLEAN,
+	})
+	.newSetting({
+		addr: 'bhv.swipeGestures',
+		prettyName: `Enable swipe gestures`,
+		strings: {
+			true: 'Swipe enabled',
+			false: 'Swipe disabled',
+		},
+		help: {
+			true: `Allow using finger drag to turn the pages smoothly.`,
+			false: `Finger drag will do nothing. Tap on the pages or use your keyboard to advance pages.`,
+		},
+		default: true,
+		compact: true,
+		postUpdate: (state) => {
+			if(typeof Reader !== "undefined") {
+				Reader.imageView.setTouchHandlers(state);
+			}
+		},
 		type: SETTING_BOOLEAN,
 	})
 	.newSetting({
@@ -1550,7 +1570,12 @@ function UI_Reader(o) {
 		if(!silent) {
 			this.imageView.drawImages(this.current.chapters[this.SCP.chapter].images[this.SCP.group], this.current.chapters[this.SCP.chapter].wides[this.SCP.group]);
 			this.imageView.selectPage(this.SCP.page);
-			this.imageView.setTouchHandlers(Settings.get('lyt.direction') != 'ttb');
+			if(Settings.get('bhv.swipeGestures') && Settings.get('lyt.direction') != 'ttb'){
+				this.imageView.setTouchHandlers(true);
+			}else{
+				this.imageView.setTouchHandlers(false);
+			}
+
 		}
 	}	
 
@@ -2620,11 +2645,13 @@ function URLChanger(o) {
 				window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
 				break;
 			case 'jump':
+				title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
 				if(Math.abs(this.page - SCP.page) > 2 || SCP.chapter != this.chapter) {
-					title = `${SCP.chapter} - ${SCP.chapterName}, Page ${SCP.page + 1} - ${Reader.current.title} | ${this.hostname}`
 					window.history.pushState({chapter: SCP.chapter, page: SCP.page}, title, pathName);
-					document.title = title;
+				}else{
+					window.history.replaceState(null, title, pathName);
 				}
+				document.title = title;
 				break;
 			case 'all':
 				if(this.page != SCP.page || SCP.chapter != this.chapter) {
