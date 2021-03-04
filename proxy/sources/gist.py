@@ -1,11 +1,45 @@
 import json
+from datetime import datetime
+import random
 
 from django.shortcuts import redirect
 from django.urls import re_path
 
 from ..source import ProxySource
 from ..source.data import SeriesAPI, SeriesPage
-from ..source.helpers import api_cache, get_wrapper, encode, decode
+from ..source.helpers import api_cache, get_wrapper
+
+"""
+Expected format of the raw gists should be:
+{
+    "title": "<required, str>",
+    "description": "<required, str>",
+    "artist": "<optional, str>",
+    "author": "<optional, str>",
+    "cover": "<optional, str>",
+    "chapters": {
+        "1": {
+            "title": "<required, str>",
+            "volume": "<optional, str>",
+            "groups": {
+                "<group name>": "<proxy url>",
+                OR
+                "<group name>": [
+                    "<url to page 1>",
+                    "<url to page 2>",
+                    ...
+                ]
+            },
+            "last_updated": "<optional, unix timestamp>",
+        },
+        "2": {
+            ...
+        },
+        ...
+    }
+}
+Make sure you pass in the shortened key from git.io.
+"""
 
 
 class Gist(ProxySource):
@@ -20,21 +54,42 @@ class Gist(ProxySource):
 
     def shortcut_instantiator(self):
         def handler(request, gist_hash):
-            return redirect(
-                f"reader-{self.get_reader_prefix()}-series-page", encode(gist_hash)
-            )
+            # While git.io allows vanity URLs with special characters, chances are
+            # they won't parse properly by a regular browser. So we don't deal with it
+            return redirect(f"reader-{self.get_reader_prefix()}-series-page", gist_hash)
 
         return [
             re_path(r"^(?:gist|gh)/(?P<gist_hash>[\d\w/]+)/$", handler),
         ]
 
-    @api_cache(prefix="gist_common_dt", time=3600)
+    @staticmethod
+    def date_parser(timestamp):
+        timestamp = int(timestamp)
+        date = datetime.utcfromtimestamp(timestamp)
+        return [
+            date.year,
+            date.month - 1,
+            date.day,
+            date.hour,
+            date.minute,
+            date.second,
+        ]
+
+    @api_cache(prefix="gist_common_dt", time=300)
     def gist_common(self, meta_id):
-        resp = get_wrapper(f"https://gist.githubusercontent.com/{decode(meta_id)}/raw")
-        if resp.status_code == 200:
+        resp = get_wrapper(f"https://git.io/{meta_id}", allow_redirects=False)
+        if resp.status_code != 302 or not resp.headers["location"]:
+            return None
+        resp = get_wrapper(f"{resp.headers['location']}?{random.random()}")
+        if resp.status_code == 200 and resp.headers["content-type"].startswith(
+            "text/plain"
+        ):
             api_data = json.loads(resp.text)
-            title = api_data.get("title", "")
-            description = api_data.get("description", "")
+            title = api_data.get("title")
+            description = api_data.get("description")
+            if not title or not description:
+                return None
+
             artist = api_data.get("artist", "")
             author = api_data.get("author", "")
             cover = api_data.get("cover", "")
@@ -55,6 +110,7 @@ class Gist(ProxySource):
                         groups_map[group]: metadata
                         for group, metadata in data["groups"].items()
                     },
+                    "last_updated": data.get("last_updated", None),
                 }
                 for ch, data in api_data["chapters"].items()
             }
@@ -68,13 +124,18 @@ class Gist(ProxySource):
                     "Multiple Groups"
                     if len(ch[1]["groups"]) > 1
                     else groups_dict[list(ch[1]["groups"].keys())[0]],
-                    "No date.",
+                    "No date."
+                    if not ch[1]["last_updated"]
+                    else self.date_parser(ch[1]["last_updated"]),
                     ch[1]["volume"],
                 ]
                 for ch in sorted(
                     chapter_dict.items(), key=lambda m: float(m[0]), reverse=True
                 )
             ]
+
+            for md in chapter_dict.values():
+                del md["last_updated"]
 
             return {
                 "slug": meta_id,
@@ -93,7 +154,7 @@ class Gist(ProxySource):
         else:
             return None
 
-    @api_cache(prefix="gist_dt", time=3600)
+    @api_cache(prefix="gist_dt", time=300)
     def series_api_handler(self, meta_id):
         data = self.gist_common(meta_id)
         if data:
@@ -113,7 +174,7 @@ class Gist(ProxySource):
     def chapter_api_handler(self, meta_id):
         pass
 
-    @api_cache(prefix="gist_page_dt", time=3600)
+    @api_cache(prefix="gist_page_dt", time=300)
     def series_page_handler(self, meta_id):
         data = self.gist_common(meta_id)
         if data:
@@ -127,7 +188,7 @@ class Gist(ProxySource):
                 synopsis=data["description"],
                 author=data["artist"],
                 chapter_list=data["chapter_list"],
-                original_url=f"https://gist.github.com/{decode(meta_id)}",
+                original_url=f"https://git.io/{meta_id}",
             )
         else:
             return None
