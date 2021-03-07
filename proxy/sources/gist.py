@@ -43,12 +43,6 @@ Make sure you pass in the shortened key from git.io.
 
 
 class Gist(ProxySource):
-    def get_chapter_api_prefix(self):
-        return ""
-
-    def get_series_api_prefix(self):
-        return "gist"
-
     def get_reader_prefix(self):
         return "gist"
 

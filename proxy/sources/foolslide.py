@@ -20,12 +20,6 @@ from ..source.helpers import (
 
 
 class FoolSlide(ProxySource):
-    def get_chapter_api_prefix(self):
-        return "fs_chapter"
-
-    def get_series_api_prefix(self):
-        return "fs_series"
-
     def get_reader_prefix(self):
         return "foolslide"
 

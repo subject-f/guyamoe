@@ -11,12 +11,6 @@ from ..source.helpers import api_cache, get_wrapper
 
 
 class MangaDex(ProxySource):
-    def get_chapter_api_prefix(self):
-        return "md_chapter"
-
-    def get_series_api_prefix(self):
-        return "md_series"
-
     def get_reader_prefix(self):
         return "mangadex"
 

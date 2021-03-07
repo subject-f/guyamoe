@@ -13,16 +13,6 @@ from .helpers import *
 
 
 class ProxySource(metaclass=abc.ABCMeta):
-    # /proxy/api/:chapter_api_prefix/payload
-    @abc.abstractmethod
-    def get_chapter_api_prefix(self) -> str:
-        raise NotImplementedError
-
-    # /proxy/api/:series_api_prefix/payload
-    @abc.abstractmethod
-    def get_series_api_prefix(self) -> str:
-        raise NotImplementedError
-
     # /proxy/:reader_prefix/slug
     @abc.abstractmethod
     def get_reader_prefix(self) -> str:
@@ -45,7 +35,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     def wrap_chapter_meta(self, meta_id):
-        return f"/proxy/api/{self.get_chapter_api_prefix()}/{meta_id}/"
+        return f"/proxy/api/{self.get_reader_prefix()}/chapter/{meta_id}/"
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def reader_view(self, request, meta_id, chapter, page=None):
@@ -56,7 +46,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                 if chapter.replace("-", ".") in data["chapters"]:
                     data["version_query"] = settings.STATIC_VERSION
                     data["relative_url"] = f"proxy/{self.get_reader_prefix()}/{meta_id}"
-                    data["api_path"] = f"/proxy/api/{self.get_series_api_prefix()}/"
+                    data["api_path"] = f"/proxy/api/{self.get_reader_prefix()}/series/"
                     data["image_proxy_url"] = settings.IMAGE_PROXY_URL
                     data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
                     data["chapter_number"] = chapter.replace("-", ".")
@@ -100,26 +90,19 @@ class ProxySource(metaclass=abc.ABCMeta):
             return HttpResponse(status=500)
 
     def register_api_routes(self):
-        series_prefix = self.get_series_api_prefix()
-        chapter_prefix = self.get_chapter_api_prefix()
-        routes = []
-        if series_prefix:
-            routes.append(
-                path(
-                    f"{series_prefix}/<str:meta_id>/",
-                    self.series_api_view,
-                    name=f"api-{self.get_reader_prefix()}-series-data",
-                )
+        """Routes will be under /proxy/api/<route>"""
+        return [
+            path(
+                f"{self.get_reader_prefix()}/series/<str:meta_id>/",
+                self.series_api_view,
+                name=f"api-{self.get_reader_prefix()}-series-data",
+            ),
+            path(
+                f"{self.get_reader_prefix()}/chapter/<str:meta_id>/",
+                self.chapter_api_view,
+                name=f"api-{self.get_reader_prefix()}-chapter-data",
             )
-        if chapter_prefix:
-            routes.append(
-                path(
-                    f"{chapter_prefix}/<str:meta_id>/",
-                    self.chapter_api_view,
-                    name=f"api-{self.get_reader_prefix()}-chapter-data",
-                )
-            )
-        return routes
+        ]
 
     def register_shortcut_routes(self):
         return self.shortcut_instantiator()

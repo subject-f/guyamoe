@@ -12,12 +12,6 @@ from ..source.helpers import api_cache, get_wrapper, decode, encode
 
 
 class ReadManhwa(ProxySource):
-    def get_chapter_api_prefix(self):
-        return "readmanhwa_chapter"
-
-    def get_series_api_prefix(self):
-        return "readmanhwa_series"
-
     def get_reader_prefix(self):
         return "readmanhwa"
 

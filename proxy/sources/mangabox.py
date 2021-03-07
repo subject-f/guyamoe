@@ -13,12 +13,6 @@ from ..source.helpers import api_cache, decode, encode, get_wrapper
 
 
 class MangaBox(ProxySource):
-    def get_chapter_api_prefix(self):
-        return "mb_chapter"
-
-    def get_series_api_prefix(self):
-        return "mb_series"
-
     def get_reader_prefix(self):
         return "mangabox"
 
