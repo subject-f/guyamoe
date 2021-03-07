@@ -8,7 +8,7 @@ from django.urls import re_path
 
 from ..source import ProxySource
 from ..source.data import ChapterAPI, SeriesAPI, SeriesPage
-from ..source.helpers import api_cache, get_wrapper, naive_decode, naive_encode
+from ..source.helpers import api_cache, get_wrapper, decode, encode
 
 
 class ReadManhwa(ProxySource):
@@ -27,7 +27,7 @@ class ReadManhwa(ProxySource):
                 data = self.series_api_handler(series_slug)
                 if data:
                     data = data.objectify()
-                    search_str = naive_encode(f"{series_slug}/{chapter_slug}")
+                    search_str = encode(f"{series_slug}/{chapter_slug}")
                     chapter = [
                         ch
                         for ch in data["chapters"]
@@ -121,7 +121,7 @@ class ReadManhwa(ProxySource):
                             "title": data["name"],
                             "groups": {
                                 "1": self.wrap_chapter_meta(
-                                    naive_encode(f"{meta_id}/{data['slug']}")
+                                    encode(f"{meta_id}/{data['slug']}")
                                 )
                             },
                         }
@@ -141,13 +141,13 @@ class ReadManhwa(ProxySource):
     @api_cache(prefix="readmanhwa_chapter_dt", time=3600)
     def chapter_api_handler(self, meta_id):
         resp = get_wrapper(
-            f"https://readmanhwa.com/api/comics/{naive_decode(meta_id)}/images",
+            f"https://readmanhwa.com/api/comics/{decode(meta_id)}/images",
             headers={"X-NSFW": "true"},
             params={"nsfw": "true"},
         )
         if resp.status_code == 200:
             api_data = json.loads(resp.text)
-            series, chapter = naive_decode(meta_id).split("/")
+            series, chapter = decode(meta_id).split("/")
             return ChapterAPI(
                 pages=[page["source_url"] for page in api_data["images"]],
                 series=series,
