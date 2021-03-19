@@ -537,7 +537,7 @@ var reading_button = null;
 					{% if original_url %}
 					<a href="{{ original_url }}">View Original</a>
 					{% endif %}
-					{{ synopsis|linebreaks }}
+					{{ synopsis|safe|linebreaks }}
 				</article>
 				<div class="btn-group" role="group">
 					{% if "detailed" in available_features %}

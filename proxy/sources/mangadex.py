@@ -1,4 +1,5 @@
 from datetime import datetime
+import html
 
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -59,6 +60,38 @@ class MangaDex(ProxySource):
                 series_chapter,
             ),
         ]
+
+    def process_description(self, desc):
+        # While I'm pretty sure MD escapes the descriptions for us, we'll unescape it
+        # so we can re-process any special characters, then escape again using Django's own filter.
+        # .... just in case.
+        resescaped = super().process_description(html.unescape(desc))
+
+        # MD supported BBCode: https://mangadex.org/thread/3
+        # Of the ones supported, we'll only parse the text transforms and strip the rest
+        allowed_tags = {
+            "b",
+            "i",
+            "u",
+            "s",
+            "h",
+            "sub",
+            "sup",
+            "code",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+        }
+
+        for tag in allowed_tags:
+            resescaped = resescaped.replace(f"[{tag}]", f"<{tag}>").replace(
+                f"[/{tag}]", f"</{tag}>"
+            )
+
+        # We'll ignore stripping the rest since context might be lost if we strip unsupported tags
+
+        return resescaped
 
     def handle_oneshot_chapters(self, resp):
         """This expects a chapter API response object."""

@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import path, re_path
 from django.views.decorators.cache import cache_control
+from django.utils.html import escape
 
 from .data import *
 from .helpers import *
@@ -37,6 +38,9 @@ class ProxySource(metaclass=abc.ABCMeta):
     def wrap_chapter_meta(self, meta_id):
         return f"/proxy/api/{self.get_reader_prefix()}/chapter/{meta_id}/"
 
+    def process_description(self, desc):
+        return escape(desc)
+
     @cache_control(public=True, max_age=60, s_maxage=60)
     def reader_view(self, request, meta_id, chapter, page=None):
         if page:
@@ -62,6 +66,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         data = self.series_page_handler(meta_id)
         if data:
             data = data.objectify()
+            data["synopsis"] = self.process_description(data["synopsis"])
             data["version_query"] = settings.STATIC_VERSION
             data["relative_url"] = f"proxy/{self.get_reader_prefix()}/{meta_id}"
             data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
@@ -74,6 +79,7 @@ class ProxySource(metaclass=abc.ABCMeta):
         data = self.series_api_handler(meta_id)
         if data:
             data = data.objectify()
+            data["description"] = self.process_description(data["description"])
             return HttpResponse(json.dumps(data), content_type="application/json")
         else:
             return HttpResponse(status=500)
@@ -101,7 +107,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                 f"{self.get_reader_prefix()}/chapter/<str:meta_id>/",
                 self.chapter_api_view,
                 name=f"api-{self.get_reader_prefix()}-chapter-data",
-            )
+            ),
         ]
 
     def register_shortcut_routes(self):
