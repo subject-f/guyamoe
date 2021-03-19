@@ -28,16 +28,21 @@ class MangaDex(BaseScraper):
             self.initialized = False
 
     def get_source_chapters_list(self, series_id: int):
-        md_series_api = f"https://mangadex.org/api/?id={series_id}&type=manga"
+        md_series_api = (
+            f"https://api.mangadex.org/v2/manga/{series_id}?include=chapters"
+        )
         chapter_dict = {}
         resp = requests.get(md_series_api)
         if resp.status_code == 200:
-            data = resp.text
-            api_data = json.loads(data)
-            for md_chapter_id in api_data["chapter"]:
-                chapter_metadata = api_data["chapter"][md_chapter_id]
-                if chapter_metadata["lang_code"] == "gb":
+            api_data = resp.json()["data"]
+            groups = {group["id"]: group["name"] for group in api_data["groups"]}
+            for chapter_metadata in api_data["chapters"]:
+                md_chapter_id = chapter_metadata["id"]
+                if chapter_metadata["language"] == "gb":
                     chapter_number = float(chapter_metadata["chapter"])
+                    chapter_metadata["group_name"] = groups[
+                        chapter_metadata["groups"][0]
+                    ]
                     if chapter_number not in chapter_dict:
                         chapter_dict[chapter_number] = [
                             (md_chapter_id, chapter_metadata)
@@ -49,12 +54,9 @@ class MangaDex(BaseScraper):
         return chapter_dict
 
     def get_source_chapter_data(self, md_chapter_id: int):
-        resp = requests.get(
-            f"https://mangadex.org/api/?id={md_chapter_id}&type=chapter"
-        )
+        resp = requests.get(f"https://api.mangadex.org/v2/chapter/{md_chapter_id}")
         if resp.status_code == 200:
-            data = resp.text
-            api_data = json.loads(data)
+            api_data = resp.json()["data"]
             domain = (
                 api_data["server"]
                 if not api_data["server"].startswith("/")
@@ -63,8 +65,7 @@ class MangaDex(BaseScraper):
             return {
                 "hash": api_data["hash"],
                 "pages": [
-                    f"{domain}{api_data['hash']}/{page}"
-                    for page in api_data["page_array"]
+                    f"{domain}{api_data['hash']}/{page}" for page in api_data["pages"]
                 ],
             }
         return None
