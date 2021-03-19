@@ -1,10 +1,10 @@
-aiohttp==3.6.0
-discord.py==1.3.1
-Django==3.0.7
+aiohttp==3.7.4
+discord.py==1.6.0
+Django==3.1.6
 django-extensions==2.1.9
 django-ratelimit==2.0.0
 Markdown==3.1.1
-Pillow==7.1.0
+Pillow==8.1.1
 psycopg2==2.8.4
 python-memcached==1.59
 requests==2.22.0
