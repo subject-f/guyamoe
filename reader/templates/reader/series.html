@@ -184,7 +184,7 @@ var reading_button = null;
 		this.draw = () => {
 			let slug = "{{ slug }}";
 			let source = "{{ reader_modifier }}".split("/")[1];
-			this.chL = chapterList.map(ch => ch[0]).sort((a,b) => b - a);;
+			this.chL = chapterList.map(ch => ch[1]).sort((a,b) => b - a);
 			globalHistoryHandler.getReadChapters(slug, source)
 				.then(this.handleReads)
 				.catch(err => {
