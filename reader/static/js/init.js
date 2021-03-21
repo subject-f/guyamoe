@@ -3479,15 +3479,25 @@ function thirdPartySeriesHandler(url, chapter, group) {
 		chapter.loaded[group] = false;
 		chapter.pageRequest[group] = async () => {
 			let images = chapter.images[group];
+			let wides = chapter.wides[group];
+			let descriptions = chapter.descriptions[group];
 			try {
 				// Each group/chapter pair has a unique ID, returned by API
 				let pages = await fetch(`${chapter.groups[group]}`)
 								.then(r => r.json());
-				pages.forEach(p => {
+				pages.forEach((p, i) => {
 					if (typeof p === 'string' || p instanceof String) {
 						images.push(p);
+						if (p.includes(WIDE_FLAG)) {
+							wides.push(i);
+						}
 					} else {
+						descriptions[group].push(p.description);
 						images.push(p.src);
+						if (p.src.includes(WIDE_FLAG)) {
+							wides.push(i);
+						}
+
 					}
 				});
 				return pages.length;
