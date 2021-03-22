@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 
 from django.conf import settings
@@ -17,7 +18,10 @@ class Imgur(ProxySource):
     def shortcut_instantiator(self):
         def handler(request, album_hash):
             return redirect(
-                f"reader-{self.get_reader_prefix()}-chapter-page", album_hash, "1", "1",
+                f"reader-{self.get_reader_prefix()}-chapter-page",
+                album_hash,
+                "1",
+                "1",
             )
 
         return [
@@ -32,90 +36,45 @@ class Imgur(ProxySource):
             else metadata["link"]
         )
 
-    @api_cache(prefix="imgur_series_dt", time=3600 * 6)
-    def series_api_handler(self, meta_id):
+    def imgur_api_common(self, meta_id):
+        """Backup handler using the API. It consumes the API key so be wary."""
         resp = get_wrapper(
             f"https://api.imgur.com/3/album/{meta_id}",
             headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
         )
         if resp.status_code == 200:
-            api_data = json.loads(resp.text)
-            title = api_data["data"]["title"] or ""
-            description = api_data["data"]["description"] or ""
-            author = api_data["data"]["account_id"] or ""
-            artist = ""
-            groups = {"1": "imgur"}
-            cover = api_data["data"]["images"][0]["link"]
-            chapters = {
-                "1": {
-                    "volume": "1",
-                    "title": title,
-                    "groups": {
-                        "1": [
-                            {
-                                "description": obj["description"] or "",
-                                "src": self.image_url_handler(obj),
-                            }
-                            for obj in api_data["data"]["images"]
-                        ]
-                    },
-                }
-            }
-            return SeriesAPI(
-                slug=meta_id,
-                title=title,
-                description=description,
-                author=author,
-                artist=artist,
-                groups=groups,
-                cover=cover,
-                chapters=chapters,
-            )
-        else:
-            return None
-
-    @api_cache(prefix="imgur_pages_dt", time=3600 * 6)
-    def chapter_api_handler(self, meta_id):
-        resp = get_wrapper(
-            f"https://api.imgur.com/3/album/{meta_id}",
-            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
-        )
-        if resp.status_code == 200:
-            api_data = json.loads(resp.text)
-            pages = [self.image_url_handler(obj) for obj in api_data["data"]["images"]]
-            return ChapterAPI(pages=pages, series=meta_id, chapter=meta_id,)
-        else:
-            return None
-
-    @api_cache(prefix="imgur_series_page_dt", time=3600 * 6)
-    def series_page_handler(self, meta_id):
-        resp = get_wrapper(
-            f"https://api.imgur.com/3/album/{meta_id}",
-            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENT_ID}"},
-        )
-        if resp.status_code == 200:
-            api_data = json.loads(resp.text)
-            title = api_data["data"]["title"] or ""
-            description = api_data["data"]["description"] or ""
-            author = api_data["data"]["account_id"] or ""
-            cover = api_data["data"]["images"][0]["link"]
-            date = datetime.utcfromtimestamp(api_data["data"]["datetime"])
-            return SeriesPage(
-                series=title,
-                alt_titles=[],
-                alt_titles_str=None,
-                slug=meta_id,
-                cover_vol_url=cover,
-                metadata=[],
-                synopsis=description,
-                author=author,
-                chapter_list=[
+            api_data = resp.json()["data"]
+            date = datetime.utcfromtimestamp(api_data["datetime"])
+            return {
+                "slug": meta_id,
+                "title": api_data["title"] or "Untitled",
+                "description": api_data["description"] or "No description.",
+                "author": api_data["account_id"] or "Unknown",
+                "artist": api_data["account_id"] or "Unknown",
+                "cover": api_data["images"][0]["link"],
+                "groups": {"1": "Imgur"},
+                "chapter_dict": {
+                    "1": {
+                        "volume": "1",
+                        "title": api_data["title"] or "No title.",
+                        "groups": {
+                            "1": [
+                                {
+                                    "description": obj["description"] or "",
+                                    "src": self.image_url_handler(obj),
+                                }
+                                for obj in api_data["images"]
+                            ]
+                        },
+                    }
+                },
+                "chapter_list": [
                     [
                         "1",
                         "1",
-                        title,
+                        api_data["title"] or "Untitled",
                         "1",
-                        author or "imgur",
+                        api_data["account_id"] or "No group",
                         [
                             date.year,
                             date.month - 1,
@@ -125,9 +84,126 @@ class Imgur(ProxySource):
                             date.second,
                         ],
                         "1",
-                    ]
+                    ],
                 ],
-                original_url=api_data["data"]["link"],
-            )
+                "pages_list": [
+                    self.image_url_handler(obj) for obj in api_data["images"]
+                ],
+                "original_url": api_data["link"],
+            }
         else:
             return None
+
+    def imgur_embed_common(self, meta_id):
+        resp = get_wrapper(f"https://imgur.com/a/{meta_id}/embed")
+        if resp.status_code == 200:
+            data = re.search(
+                r"(?:album[\s]+?: )([\s\S]+)(?:,[\s]+?images[\s]+?:)", resp.text
+            )
+            api_data = json.loads(data.group(1))
+            try:
+                date = datetime.strptime(api_data["datetime"], "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                date = datetime.now()
+            images = api_data["album_images"]["images"]
+            for image in images:
+                image["link"] = f"https://i.imgur.com/{image['hash']}{image['ext']}"
+            return {
+                "slug": meta_id,
+                "title": api_data["title"] or "Untitled",
+                "description": api_data["description"] or "No description.",
+                "author": "Unknown",
+                "artist": "Unknown",
+                "cover": images[0]["link"],
+                "groups": {"1": "Imgur"},
+                "chapter_dict": {
+                    "1": {
+                        "volume": "1",
+                        "title": api_data["title"] or "No title.",
+                        "groups": {
+                            "1": [
+                                {
+                                    "description": obj["description"] or "",
+                                    "src": self.image_url_handler(obj),
+                                }
+                                for obj in images
+                            ]
+                        },
+                    }
+                },
+                "chapter_list": [
+                    [
+                        "1",
+                        "1",
+                        api_data["title"] or "Untitled",
+                        "1",
+                        "No group",
+                        [
+                            date.year,
+                            date.month - 1,
+                            date.day,
+                            date.hour,
+                            date.minute,
+                            date.second,
+                        ],
+                        "1",
+                    ],
+                ],
+                "pages_list": [self.image_url_handler(obj) for obj in images],
+                "original_url": f"https://imgur.com/a/{api_data['id']}",
+            }
+        else:
+            return None
+
+    @api_cache(prefix="imgur_api_dt", time=300)
+    def imgur_common(self, meta_id):
+        return self.imgur_embed_common(meta_id)
+
+    @api_cache(prefix="imgur_series_dt", time=300)
+    def series_api_handler(self, meta_id):
+        data = self.imgur_common(meta_id)
+        return (
+            SeriesAPI(
+                slug=data["slug"],
+                title=data["title"],
+                description=data["description"],
+                author=data["author"],
+                artist=data["artist"],
+                groups=data["groups"],
+                cover=data["cover"],
+                chapters=data["chapter_dict"],
+            )
+            if data
+            else None
+        )
+
+    @api_cache(prefix="imgur_pages_dt", time=300)
+    def chapter_api_handler(self, meta_id):
+        data = self.imgur_common(meta_id)
+        return (
+            ChapterAPI(
+                pages=data["pages_list"], series=data["slug"], chapter=data["slug"]
+            )
+            if data
+            else None
+        )
+
+    @api_cache(prefix="imgur_series_page_dt", time=300)
+    def series_page_handler(self, meta_id):
+        data = self.imgur_common(meta_id)
+        return (
+            SeriesPage(
+                series=data["title"],
+                alt_titles=[],
+                alt_titles_str=None,
+                slug=data["slug"],
+                cover_vol_url=data["cover"],
+                metadata=[],
+                synopsis=data["description"],
+                author=data["author"],
+                chapter_list=data["chapter_list"],
+                original_url=data["original_url"],
+            )
+            if data
+            else None
+        )
