@@ -1,5 +1,6 @@
 import json
 import re
+import random
 from datetime import datetime
 
 from django.conf import settings
@@ -95,7 +96,9 @@ class Imgur(ProxySource):
             return None
 
     def imgur_embed_common(self, meta_id):
-        resp = get_wrapper(f"https://imgur.com/a/{meta_id}/embed")
+        resp = get_wrapper(
+            f"https://imgur.com/a/{meta_id}/embed?cache_buster={random.random()}"
+        )
         if resp.status_code == 200:
             data = re.search(
                 r"(?:album[\s]+?: )([\s\S]+)(?:,[\s]+?images[\s]+?:)", resp.text
