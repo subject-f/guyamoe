@@ -13,6 +13,10 @@ from django.utils.html import escape
 from .data import *
 from .helpers import *
 
+def proxy_redirect(request):
+    if request.path.endswith("/"):
+        request.path = request.path[:-1]
+    return HttpResponseRedirect(f"https://cubari.moe{request.path}/#redirect")
 
 class ProxySource(metaclass=abc.ABCMeta):
     # /proxy/:reader_prefix/slug
@@ -44,7 +48,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def reader_view(self, request, meta_id, chapter, page=None):
-        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
+        return proxy_redirect(request)
         if page:
             data = self.series_api_handler(meta_id)
             if data:
@@ -65,7 +69,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def series_view(self, request, meta_id):
-        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
+        return proxy_redirect(request)
         data = self.series_page_handler(meta_id)
         if data:
             data = data.objectify()
@@ -79,7 +83,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def series_api_view(self, request, meta_id):
-        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
+        return proxy_redirect(request)
         data = self.series_api_handler(meta_id)
         if data:
             data = data.objectify()
@@ -90,7 +94,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def chapter_api_view(self, request, meta_id):
-        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
+        return proxy_redirect(request)
         data = self.chapter_api_handler(meta_id)
 
         if data:
