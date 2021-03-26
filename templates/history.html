@@ -210,10 +210,9 @@
       let existingSeries = allCurrentSeries.find((e) => e.slug === slug && e.source === source.replace(" ", "_"));
 
       allCurrentSeries = allCurrentSeries.filter(e => !e.pinned);
-      let cap = allCurrentSeries.length + ((existingSeries) ? 0 : 1);
 
       // Be mindful of the cap regardless of the state of the tree
-      while (cap > MAX_VALUES) {
+      while ((allCurrentSeries.length + ((existingSeries) ? 0 : 1)) > MAX_VALUES) {
         let last = allCurrentSeries.pop();
         await remoteStorage[RS_PATH].removeSeries(last.slug, last.source);
       }
