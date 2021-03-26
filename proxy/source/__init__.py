@@ -4,6 +4,7 @@ from typing import List
 
 from django.conf import settings
 from django.http import HttpResponse
+from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import path, re_path
 from django.views.decorators.cache import cache_control
@@ -43,6 +44,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def reader_view(self, request, meta_id, chapter, page=None):
+        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
         if page:
             data = self.series_api_handler(meta_id)
             if data:
@@ -63,6 +65,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def series_view(self, request, meta_id):
+        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
         data = self.series_page_handler(meta_id)
         if data:
             data = data.objectify()
@@ -76,6 +79,7 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def series_api_view(self, request, meta_id):
+        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
         data = self.series_api_handler(meta_id)
         if data:
             data = data.objectify()
@@ -86,7 +90,9 @@ class ProxySource(metaclass=abc.ABCMeta):
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def chapter_api_view(self, request, meta_id):
+        return HttpResponseRedirect(f"https://cubari.moe{request.path}")
         data = self.chapter_api_handler(meta_id)
+
         if data:
             data = data.objectify()
             return HttpResponse(
