@@ -1,0 +1,65 @@
+{% load static %}
+<style>
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700&display=swap');
+</style>
+<style>
+		body {
+				background: #000000;
+		display: flex;
+		align-items: center;
+		align-content: center;
+		font-family: 'Open Sans', sans-serif;
+		font-weight: 200;
+		}
+	content {
+		color: white;
+		padding: 0 6rem 0 4rem;
+	}
+	content > p:first-child {
+		font-size: 2rem;
+		margin-bottom: 0.4rem;
+	}
+	content > p:nth-child(2) {
+		font-size: 3rem;
+		margin: 0rem 0 1rem 0;
+	}
+	content > p:nth-child(3) {
+		font-size: 4rem;
+		font-weight: 100;
+		padding: 0;
+		margin-bottom: 0;
+		margin-top: 1rem;
+	}
+	content > p:nth-child(4) {
+		margin-top: 0rem;
+		font-size: 1.4rem;
+		font-style: italic;
+	}
+	a {
+		display: block;
+		color: red;
+		margin-top: 1rem;
+	}
+	img {
+		max-height: 80vh;
+	}
+</style>
+<html>
+	<head>
+		<title>500 | {{ brand.name }}</title>
+		<meta name="twitter:description" content="{{ brand.description }}" />
+		<meta property="og:description" content="{{ brand.description }}">
+		<meta name="description" content="{{ brand.description }}">
+
+	</head>
+	<body>
+			<img src="{% static 'img/thonk.png' %}" />
+			<content>
+				<p>uwu we had a fucky wucky, the upstream source had a big oops
+				<p>try again later
+				<p>500
+				<p>SERVER ERROR
+				<a href="/">Return to main page</a>
+			</content>
+	</body>
+</html>

@@ -61,7 +61,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                     data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
                     data["chapter_number"] = chapter.replace("-", ".")
                     return render(request, "reader/reader.html", data)
-            return HttpResponse(status=500)
+            return render(request, "homepage/thonk_500.html", status=500)
         else:
             return redirect(
                 f"reader-{self.get_reader_prefix()}-chapter-page", meta_id, chapter, "1"
@@ -79,7 +79,7 @@ class ProxySource(metaclass=abc.ABCMeta):
             data["reader_modifier"] = f"proxy/{self.get_reader_prefix()}"
             return render(request, "reader/series.html", data)
         else:
-            return HttpResponse(status=500)
+            return render(request, "homepage/thonk_500.html", status=500)
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def series_api_view(self, request, meta_id):
@@ -90,7 +90,7 @@ class ProxySource(metaclass=abc.ABCMeta):
             data["description"] = self.process_description(data["description"])
             return HttpResponse(json.dumps(data), content_type="application/json")
         else:
-            return HttpResponse(status=500)
+            return render(request, "homepage/thonk_500.html", status=500)
 
     @cache_control(public=True, max_age=60, s_maxage=60)
     def chapter_api_view(self, request, meta_id):
@@ -103,7 +103,7 @@ class ProxySource(metaclass=abc.ABCMeta):
                 json.dumps(data["pages"]), content_type="application/json"
             )
         else:
-            return HttpResponse(status=500)
+            return render(request, "homepage/thonk_500.html", status=500)
 
     def register_api_routes(self):
         """Routes will be under /proxy/api/<route>"""
