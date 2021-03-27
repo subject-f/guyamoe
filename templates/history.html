@@ -6,15 +6,16 @@
   // remoteStorage backend that'll be our plugged in module
   // This should be abstracted from what actually handles updates,
   // since this'll give us the ability to pull this out in the future
+  const RS_PATH = "guya";
+
   const remoteStorage = (() => {
-    const RS_PATH = "guya";
     // Define the schema for our history
-    const Guya = {name: RS_PATH, builder: (private) => {
+    const Model = {name: RS_PATH, builder: (private) => {
       const SERIES_META = "series";
       const REPLACEMENT_STR = "{SOURCE_SLUG_REPLACEMENT}";
       const SERIES_META_PATH_BASE = "series/";
       const SERIES_META_PATH = `${SERIES_META_PATH_BASE}${REPLACEMENT_STR}`;
-  
+
       private.declareType(SERIES_META, {
         type: "object",
         properties: {
@@ -47,18 +48,18 @@
         },
         required: ["slug", "source", "url", "title", "timestamp", "chapters", "pinned"]
       });
-  
+
       let firstPartyValidator = (source) => {
         return (source === "manga" || source === "series" || source === "default");
       };
-  
+
       let pathBuilder = (path, slug, source) => {
         if (!source) source = "default";
         if (firstPartyValidator(source)) source = "default";
         source = source.replace(" ", "_");
         return path.replace(REPLACEMENT_STR, `${source}-${slug}`);
       };
-  
+
       let seriesBuilder = (slug, coverUrl, source, url, title, pinned, chapters) => {
         source = source.replace(" ", "_");
         if (firstPartyValidator(source)) {
@@ -76,7 +77,7 @@
           pinned: (pinned === undefined) ? false : pinned
         };
       };
-  
+
       return {
         exports: {
           firstPartyHandler: (source) => {
@@ -121,16 +122,23 @@
             return private.remove(pathBuilder(SERIES_META_PATH, slug, source));
           },
           getAllSeries: () => {
-            // Note for the future: getAll gives you the objects within, while 
-            // getListing gives you just a list of files; thus, this gives you the 
+            // Note for the future: getAll gives you the objects within, while
+            // getListing gives you just a list of files; thus, this gives you the
             // metadata within
-            return private.getAll(SERIES_META_PATH_BASE);
+            if (private.storage.connected) {
+              // maxAge cache in millis
+              return private.getAll(SERIES_META_PATH_BASE, 30000);
+            } else {
+              // Promise resolves immediately if no storage is connected
+              // https://remotestoragejs.readthedocs.io/en/v1.2.3/js-api/base-client.html#caching-logic-for-read-operations
+              return private.getAll(SERIES_META_PATH_BASE);
+            }
           }
         }
       }
     }};
 
-    let remoteStorage = new RemoteStorage({modules: [Guya]});
+    let remoteStorage = new RemoteStorage({cache: true, modules: [Model]});
 
     remoteStorage.access.claim(RS_PATH, "rw");
     remoteStorage.caching.enable(`/${RS_PATH}/`);
@@ -143,6 +151,7 @@
   // and abstracted from the rest of the code
   const globalHistoryHandler = (() => {
     const STORAGE_KEY = "proxyHistory";
+    const SORT_KEY = "timestamp";
     const MAX_VALUES = 20;
 
     // Helper to return an array of objects from a nested object, sorted by key
@@ -153,6 +162,24 @@
       }
       sortable.sort((f, s) => s[key] - f[key]);
       return sortable;
+    };
+
+    const sync = async () => {
+      // Sync operation ensures the local cache doesn't have any dangling objects.
+      // We'll sort for the timestamp key since that's what we use everywhere else
+      let allSeries = await remoteStorage[RS_PATH].getAllSeries();
+      for (const [key, value] of Object.entries(allSeries)) {
+        try {
+          if (!value[SORT_KEY]) {
+            let separatorIndex = key.indexOf("-");
+            let slug = key.slice(0, separatorIndex);
+            let series = key.slice(separatorIndex + 1);
+            await remoteStorage[RS_PATH].removeSeries(slug, series);
+          }
+        } catch (e) {
+          console.error("[Global History] Sync error, continuing.");
+        }
+      }
     };
 
     const enabled = () => {
@@ -167,7 +194,7 @@
       }
       localStorage.setItem(STORAGE_KEY, true);
     };
-    
+
     const disable = () => {
       let settings = localStorage.getItem("settings");
       localStorage.clear();
@@ -177,33 +204,38 @@
     };
 
     const pushSeries = async (slug, coverUrl, source, url, title) => {
-      source = remoteStorage.guya.firstPartyHandler(source);
-      let allCurrentSeries = sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp");
+      await sync();
+      source = remoteStorage[RS_PATH].firstPartyHandler(source);
+      let allCurrentSeries = sortObjectByKey(await remoteStorage[RS_PATH].getAllSeries() || {}, SORT_KEY);
       let existingSeries = allCurrentSeries.find((e) => e.slug === slug && e.source === source.replace(" ", "_"));
+
+      allCurrentSeries = allCurrentSeries.filter(e => !e.pinned);
+
+      // Be mindful of the cap regardless of the state of the tree
+      while ((allCurrentSeries.length + ((existingSeries) ? 0 : 1)) > MAX_VALUES) {
+        let last = allCurrentSeries.pop();
+        await remoteStorage[RS_PATH].removeSeries(last.slug, last.source);
+      }
 
       if (existingSeries) {
         // Effectively this updates the timestamp of the series, pushing it to the top
-        return remoteStorage.guya.editSeries(slug, coverUrl, source, url, title, existingSeries.pinned, existingSeries.chapters);
+        return remoteStorage[RS_PATH].editSeries(slug, coverUrl, source, url, title, existingSeries.pinned, existingSeries.chapters);
       } else {
-        allCurrentSeries = allCurrentSeries.filter(e => !e.pinned);
-        if (allCurrentSeries.length + 1 > MAX_VALUES) {
-          let last = allCurrentSeries.pop();
-          await remoteStorage.guya.removeSeries(last.slug, last.source);
-        }
-        return remoteStorage.guya.addSeries(slug, coverUrl, source, url, title, undefined, undefined);
+        return remoteStorage[RS_PATH].addSeries(slug, coverUrl, source, url, title, undefined, undefined);
       }
     };
 
     const removeSeries = async (slug, source) => {
-      return remoteStorage.guya.removeSeries(slug, source);
+      await sync();
+      return remoteStorage[RS_PATH].removeSeries(slug, source);
     };
 
     const addChapters = async (slug, source, chapters) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
         chapters = [...new Set([...chapters, ...existingSeries.chapters])];
-        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+        return remoteStorage[RS_PATH].editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
       } else {
         console.error("[Global History] addChapters - Series didn't exist.");
       }
@@ -214,28 +246,28 @@
     };
 
     const removeChapter = async (slug, source, chapter) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
         chapters = existingSeries.chapters.filter(e => e !== chapter);
-        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
+        return remoteStorage[RS_PATH].editSeries(slug, undefined, source, undefined, undefined, undefined, chapters);
       } else {
         console.error("[Global History] removeChapter - Series didn't exist.");
       }
     };
 
     const removeAllChapters = async (slug, source) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
-        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, undefined, []);
+        return remoteStorage[RS_PATH].editSeries(slug, undefined, source, undefined, undefined, undefined, []);
       } else {
         console.error("[Global History] removeAllChapters - series didn't exist.");
       }
     };
 
     const getReadChapters = async (slug, source) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
         return existingSeries.chapters;
@@ -245,31 +277,33 @@
     };
 
     const pinSeries = async (slug, source) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
-        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, true, undefined);
+        return remoteStorage[RS_PATH].editSeries(slug, undefined, source, undefined, undefined, true, undefined);
       } else {
         console.error("[Global History] pinSeries - series didn't exist.");
       }
     };
 
     const unpinSeries = async (slug, source) => {
-      let existingSeries = await remoteStorage.guya.getSeries(slug, source);
+      let existingSeries = await remoteStorage[RS_PATH].getSeries(slug, source);
 
       if (existingSeries) {
-        return remoteStorage.guya.editSeries(slug, undefined, source, undefined, undefined, false, undefined);
+        return remoteStorage[RS_PATH].editSeries(slug, undefined, source, undefined, undefined, false, undefined);
       } else {
         console.error("[Global History] unpinSeries - series didn't exist.");
       }
     };
 
     const getAllPinnedSeries = async () => {
-      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => e.pinned);
+      await sync();
+      return sortObjectByKey(await remoteStorage[RS_PATH].getAllSeries() || {}, SORT_KEY).filter(e => e.pinned);
     };
 
     const getAllUnpinnedSeries = async () => {
-      return sortObjectByKey(await remoteStorage.guya.getAllSeries() || {}, "timestamp").filter(e => !e.pinned);
+      await sync();
+      return sortObjectByKey(await remoteStorage[RS_PATH].getAllSeries() || {}, SORT_KEY).filter(e => !e.pinned);
     };
 
     return {
