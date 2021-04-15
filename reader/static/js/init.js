@@ -2456,7 +2456,7 @@ function UI_ReaderNoticeWrapper(o) {
 			else
 			return item;
 		});
-		if(t < 0) return 'Should be soon!';
+		if(t < 1000*60*60) return 'Should be soon!';
 		return times.join(' ');
 	}
 	let release;
