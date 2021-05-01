@@ -21,6 +21,7 @@ Expected format of the raw gists should be:
         "1": {
             "title": "<required, str>",
             "volume": "<optional, str>",
+            "chapter": "<optional, str>",
             "groups": {
                 "<group name>": "<proxy url>",
                 OR
@@ -99,6 +100,7 @@ class Gist(ProxySource):
             chapter_dict = {
                 ch: {
                     "volume": data.get("volume", "Uncategorized"),
+                    "chapter": data.get("chapter", ch),
                     "title": data.get("title", ""),
                     "groups": {
                         groups_map[group]: metadata
@@ -128,9 +130,7 @@ class Gist(ProxySource):
                 )
             ]
 
-            for md in chapter_dict.values():
-                del md["last_updated"]
-
+    
             return {
                 "slug": meta_id,
                 "title": title,
