@@ -51,7 +51,7 @@ def delete_volume_folder(sender, instance, **kwargs):
     if instance.volume_cover:
         clear_pages_cache()
         folder_path = os.path.join(
-            settings.settings.MEDIA_ROOT,
+            settings.MEDIA_ROOT,
             "manga",
             instance.series.slug,
             "volume_covers",
