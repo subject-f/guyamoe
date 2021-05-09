@@ -14,8 +14,13 @@
     content="Read chapter {{ chapter_number }} of {{ series_name }} | {{ brand.name }}">
   <meta name="twitter:description"
     content="Read chapter {{ chapter_number }} of {{ series_name }} | {{ brand.name }}">
+  {% if embed_image %}
+	<meta name="twitter:image" content="{{ embed_image }}" />
+	<meta property="og:image" content="{{ embed_image }}">
+  {% else %}
+  <meta name="twitter:image" content="{{ brand.image_url }}" />
   <meta property="og:image" content="{{ brand.image_url }}">
-  <meta name="twitter:image" content="{{ brand.image_url }}">
+  {% endif %}
   <meta name="author" content="{{ author_name }}">
   {% else %}
   <meta property="og:description"

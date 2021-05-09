@@ -30,6 +30,10 @@ class Group(models.Model):
         return self.name
 
 
+def embed_image_path(instance, filename):
+    return os.path.join("manga", instance.slug, "static", str(filename))
+
+
 class Series(models.Model):
     name = models.CharField(max_length=200, db_index=True)
     slug = models.SlugField(unique=True, max_length=200)
@@ -61,12 +65,32 @@ class Series(models.Model):
         max_length=2, choices=SCRAPING_SOURCES, default=MANGADEX
     )
     scraping_identifiers = models.TextField(blank=True, null=True)
+    use_latest_vol_cover_for_embed = models.BooleanField(default=False)
+    embed_image = models.ImageField(upload_to=embed_image_path, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
         return f"/read/manga/{self.slug}/"
+
+    def get_latest_volume_cover_path(self):
+        vols = Volume.objects.filter(series=self).order_by("-volume_number")
+        for vol in vols:
+            if vol.volume_cover:
+                cover_vol_url = f"/media/{vol.volume_cover}"
+                return cover_vol_url, cover_vol_url.rsplit(".", 1)[0] + ".webp"
+        else:
+            return "", ""
+
+    def get_embed_image_path(self):
+        if self.use_latest_vol_cover_for_embed:
+            embed_image, _ = self.get_latest_volume_cover_path()
+            return embed_image
+        elif self.embed_image:
+            return f"/media/{self.embed_image}"
+        else:
+            return ""
 
     class Meta:
         ordering = ("name",)
