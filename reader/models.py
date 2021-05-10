@@ -138,6 +138,10 @@ class Chapter(models.Model):
     version = models.PositiveSmallIntegerField(blank=True, null=True, default=None)
     preferred_sort = models.CharField(max_length=200, blank=True, null=True)
     scraper_hash = models.CharField(max_length=32, blank=True)
+    reprocess_metadata = models.BooleanField(
+        default=False,
+        help_text="Check this and save to recreate/reprocess other chapter data (preview versions of the chapter and chapter index). This field will automatically uncheck on save. Chapter reindexing will be kicked off in the background.",
+    )
 
     def clean_chapter_number(self):
         return (
@@ -189,7 +193,7 @@ class Chapter(models.Model):
 
 
 class ChapterIndex(models.Model):
-    word = models.CharField(max_length=48, db_index=True)
+    word = models.CharField(max_length=128, db_index=True)
     chapter_and_pages = models.TextField()
     series = models.ForeignKey(Series, on_delete=models.CASCADE)
 

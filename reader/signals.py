@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import os
 import shutil
 from datetime import datetime, timedelta, timezone
@@ -8,7 +9,11 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from PIL import Image, ImageFilter
 
-from api.api import clear_pages_cache, delete_chapter_pages_if_exists
+from api.api import (
+    clear_pages_cache,
+    delete_chapter_pages_if_exists,
+    chapter_post_process,
+)
 from reader.models import Chapter, HitCount, Series, Volume
 
 
@@ -62,6 +67,10 @@ def delete_volume_folder(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Chapter)
 def pre_save_chapter(sender, instance, **kwargs):
+    if instance.reprocess_metadata:
+        instance.reprocess_metadata = False
+        instance.save()
+        chapter_post_process(instance, is_update=False)
     if instance.series and instance.series.next_release_page:
         highest_chapter_number = Chapter.objects.filter(series=instance.series).latest(
             "chapter_number"
