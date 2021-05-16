@@ -171,10 +171,11 @@
       for (const [key, value] of Object.entries(allSeries)) {
         try {
           if (!value[SORT_KEY]) {
+            // We don't use split here since the slug can potentially include "-"
             let separatorIndex = key.indexOf("-");
-            let slug = key.slice(0, separatorIndex);
-            let series = key.slice(separatorIndex + 1);
-            await remoteStorage[RS_PATH].removeSeries(slug, series);
+            let slug = key.slice(separatorIndex + 1);
+            let source = key.slice(0, separatorIndex);
+            await remoteStorage[RS_PATH].removeSeries(slug, source);
           }
         } catch (e) {
           console.error("[Global History] Sync error, continuing.");
