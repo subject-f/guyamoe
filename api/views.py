@@ -24,6 +24,7 @@ from .api import (
     get_chapter_preferred_sort,
     series_data_cache,
     zip_chapter,
+    set_cors_headers,
 )
 
 
@@ -270,19 +271,21 @@ def black_hole_mail(request):
         else:
             user_sent_count += 1
             if user_sent_count > 4:
-                return HttpResponse(
+                response = HttpResponse(
                     json.dumps({"error": "Error: sending mail too frequently."}),
                     content_type="application/json",
                 )
+                return set_cors_headers(response)
             else:
                 cache.set(f"mail_user_ip_{user_ip}", user_sent_count, 30)
         if len(text) > 2000:
-            return HttpResponse(
+            response = HttpResponse(
                 json.dumps(
                     {"error": "Error: message too long. can only send 2000 characters."}
                 ),
                 content_type="application/json",
             )
+            return set_cors_headers(response)
         try:
             webhook = Webhook.partial(
                 settings.MAIL_DISCORD_WEBHOOK_ID,
@@ -305,7 +308,8 @@ def black_hole_mail(request):
             feedback_file = str(int(datetime.utcnow().timestamp()))
             with open(os.path.join(feedback_folder, f"{feedback_file}.txt"), "w") as f:
                 f.write(text)
-        return HttpResponse(
+        response = HttpResponse(
             json.dumps({"success": "Mail successfully crossed the event horizon"}),
             content_type="application/json",
         )
+        return set_cors_headers(response)

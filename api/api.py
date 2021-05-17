@@ -383,3 +383,8 @@ def zip_chapter(chapter: Chapter):
     with open(os.path.join(chapter_dir, zip_filename), "rb") as fh:
         zip_file = fh.read()
     return zip_file, zip_filename, fname
+
+
+def set_cors_headers(response):
+    response["Access-Control-Allow-Origin"] = "*"
+    return response
