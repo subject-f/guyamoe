@@ -22,6 +22,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "o kawaii koto")
 
 CANONICAL_ROOT_DOMAIN = "localhost:8000"
 
+SITE_URL = f"https://{CANONICAL_ROOT_DOMAIN}"
+
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost"]

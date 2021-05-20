@@ -7,8 +7,8 @@
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="Read {{ series }} | {{ brand.name }}" />
 {% if embed_image %}
-<meta name="twitter:image" content="{{ request.get_host }}{{ embed_image }}" />
-<meta property="og:image" content="{{ request.get_host }}{{ embed_image }}">
+<meta name="twitter:image" content="{{ embed_image }}" />
+<meta property="og:image" content="{{ embed_image }}">
 {% else %}
 <meta name="twitter:image" content="{{ brand.image_url }}" />
 <meta property="og:image" content="{{ brand.image_url }}">

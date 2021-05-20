@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timezone
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -86,9 +87,9 @@ class Series(models.Model):
     def get_embed_image_path(self):
         if self.use_latest_vol_cover_for_embed:
             embed_image, _ = self.get_latest_volume_cover_path()
-            return embed_image
+            return f"{settings.SITE_URL}{embed_image}"
         elif self.embed_image:
-            return f"/media/{self.embed_image}"
+            return f"{settings.SITE_URL}/media/{self.embed_image}"
         else:
             return ""
 
