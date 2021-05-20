@@ -54,7 +54,7 @@ def hit_count(request):
 
 
 @cache_control(public=True, max_age=60, s_maxage=60)
-def series_page_data(series_slug):
+def series_page_data(request, series_slug):
     series_page_dt = cache.get(f"series_page_dt_{series_slug}")
     if not series_page_dt:
         series = get_object_or_404(Series, slug=series_slug)
@@ -143,7 +143,7 @@ def series_page_data(series_slug):
                 "download",
             ],
             "reader_modifier": "read/manga",
-            "embed_image": series.get_embed_image_path(),
+            "embed_image": request.build_absolute_uri(series.get_embed_image_path()),
         }
         cache.set(f"series_page_dt_{series_slug}", series_page_dt, 3600 * 12)
     return series_page_dt
@@ -152,7 +152,7 @@ def series_page_data(series_slug):
 @cache_control(public=True, max_age=60, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
-    data = series_page_data(series_slug)
+    data = series_page_data(request, series_slug)
     data["version_query"] = settings.STATIC_VERSION
     return render(request, "reader/series.html", data)
 
@@ -161,13 +161,13 @@ def series_info(request, series_slug):
 @cache_control(public=True, max_age=60, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
 def series_info_admin(request, series_slug):
-    data = series_page_data(series_slug)
+    data = series_page_data(request, series_slug)
     data["version_query"] = settings.STATIC_VERSION
     data["available_features"].append("admin")
     return render(request, "reader/series.html", data)
 
 
-def get_all_metadata(series_slug):
+def get_all_metadata(request, series_slug):
     series_metadata = cache.get(f"series_metadata_{series_slug}")
     if not series_metadata:
         series = Series.objects.filter(slug=series_slug).first()
@@ -176,7 +176,9 @@ def get_all_metadata(series_slug):
         chapters = Chapter.objects.filter(series=series).select_related("series")
         series_metadata = {}
         series_metadata["indexed"] = series.indexed
-        series_metadata["embed_image"] = series.get_embed_image_path()
+        series_metadata["embed_image"] = request.build_absolute_uri(
+            series.get_embed_image_path()
+        )
         for chapter in chapters:
             series_metadata[chapter.slug_chapter_number()] = {
                 "series_name": chapter.series.name,
@@ -193,7 +195,7 @@ def get_all_metadata(series_slug):
 @decorator_from_middleware(OnlineNowMiddleware)
 def reader(request, series_slug, chapter, page=None):
     if page:
-        data = get_all_metadata(series_slug)
+        data = get_all_metadata(request, series_slug)
         if data and chapter in data:
             data[chapter]["relative_url"] = f"read/manga/{series_slug}/{chapter}/1"
             data[chapter]["api_path"] = f"/api/series/"
