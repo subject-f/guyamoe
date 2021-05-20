@@ -52,7 +52,7 @@ def home(request):
                     f"/media/{filename}_blur.{ext}",
                 ]
                 break
-    data = series_page_data("Kaguya-Wants-To-Be-Confessed-To")
+    data = series_page_data(request, "Kaguya-Wants-To-Be-Confessed-To")
     return render(
         request,
         "homepage/home.html",
