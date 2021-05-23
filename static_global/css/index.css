@@ -903,6 +903,12 @@ main a {
 	text-indent: 0px;
 	line-height: 1.5;
 }
+.chapter-listing .s1.adapted .chapter-name span {
+	border-color: #778899;
+}
+.chapter-listing .ova.adapted .chapter-name span {
+	border-color: #f08080;
+}
 
 .chapter-listing .chapter-date {
 	white-space: nowrap;
