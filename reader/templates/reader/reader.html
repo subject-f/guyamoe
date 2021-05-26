@@ -32,7 +32,7 @@
   {% endif %}
   <meta property="og:url" content="{{ absolute_url }}">
   <meta name="viewport" content="width=device-width">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+  <link rel="stylesheet" href="{% static 'external/css/pickr.nano@1-8-1.css' %}{{ version_query }}"/>
   <link rel="canonical" href="{{ absolute_url }}" />
   <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}{{ version_query }}">
   <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
@@ -160,8 +160,8 @@
 
   </div>
 </body>
-<script type="text/javascript" src="{%static 'external_scripts/jszip@3-1-5.min.js'%}{{ version_query }}"></script>
-<script type="text/javascript" src="{%static 'external_scripts/pickr@1-8-1.min.js'%}{{ version_query }}"></script>
+<script type="text/javascript" src="{%static 'external/js/jszip@3-1-5.min.js'%}{{ version_query }}"></script>
+<script type="text/javascript" src="{%static 'external/js/pickr@1-8-1.min.js'%}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/ResizeSensor.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 <script type="text/javascript" src="{% static 'js/UI2.js' %}{{ version_query }}"></script>
