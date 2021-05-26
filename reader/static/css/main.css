@@ -3247,3 +3247,118 @@ body, button, button:before {
 }
 
 /*Dropdown style end*/
+.discord-box {
+	background-color: rgba(0, 0, 0, 0.12);
+	border-radius: 4px;
+	padding: 16px;
+	width: 432px;
+	box-sizing: border-box;
+	display: flex;
+	font-size: 16px;
+	text-align: left;
+	cursor: default;
+	margin: 0.7rem 0 0;
+}
+
+.discord-icon {
+	background-image: url("https://cdn.discordapp.com/icons/329966811057618944/0304dca093476f4e36ee7c3284a30753.webp?size=128");
+	background-color: #36393f;
+	width: 50px;
+	height: 50px;
+	border-radius: 15px;
+	position: relative;
+	background-clip: padding-box;
+	background-position: 50%;
+	background-size: 100% 100%;
+	margin-right: 16px;
+	flex: 0 0 auto;
+}
+
+.discord-flex {
+	display: flex;
+	flex-direction: column;
+	min-width: 1px;
+	flex: 1 1 auto;
+	justify-content: center;
+	align-items: stretch;
+}
+
+.discord-box a {
+	text-rendering: optimizeLegibility;
+	outline: 0;
+	margin: 0;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-sizing: border-box;
+	background: none;
+	border: none;
+	border-radius: 3px;
+	font-size: 14px;
+	font-weight: 500;
+	padding: 2px 16px;
+	user-select: none;
+	transition: background-color .17s ease, color .17s ease;
+	width: auto;
+	line-height: 20px;
+	align-self: center;
+	margin-left: 10px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	flex: 0 0 auto;
+	cursor: pointer;
+	color: #fff;
+	background-color: #3ba55c;
+	height: 40px;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+.discord-box h3 {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	margin-bottom: 3px;
+	font-weight: bold;
+}
+
+.discord-box strong {
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+}
+
+.discord-box .status {
+	color: #b9bbbe;
+	line-height: 16px;
+	font-weight: inherit;
+	font-family: inherit;
+	font-size: 100%;
+	-webkit-box-flex: 0;
+	flex: 0 0 auto;
+	display: block;
+	margin-right: 4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: #b9bbbe;
+}
+
+.discord-box .status.online {
+	background-color: #3ba55c;
+}
+
+.discord-box strong span {
+	font-weight: 600;
+	line-height: 16px;
+	vertical-align: baseline;
+	outline: 0;
+	flex: 0 1 auto;
+	margin-right: 8px;
+	color: #b9bbbe;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
