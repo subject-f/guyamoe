@@ -133,15 +133,16 @@ def random_chars():
     return "".join(random.choices("0123456789abcdefghijklmnopqrstuvwxyz", k=8))
 
 
-def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_id):
-    group_id = str(group_id)
-    shutil.rmtree(os.path.join(folder_path, group_id), ignore_errors=True)
-    shutil.rmtree(os.path.join(folder_path, f"{group_id}_shrunk"), ignore_errors=True)
+def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_folder):
+    group_id = str(group_folder)
+    shutil.rmtree(os.path.join(folder_path, group_folder), ignore_errors=True)
+    shutil.rmtree(os.path.join(folder_path, f"{group_folder}_shrunk"), ignore_errors=True)
     shutil.rmtree(
-        os.path.join(folder_path, f"{group_id}_shrunk_blur"), ignore_errors=True
+        os.path.join(folder_path, f"{group_folder}_shrunk_blur"), ignore_errors=True
     )
-    if os.path.exists(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip")):
-        os.remove(os.path.join(folder_path, f"{str(clean_chapter_number)}.zip"))
+    if os.path.exists(os.path.join(folder_path, f"{group_folder}_{slug_chapter_number}.zip")):
+        os.remove(os.path.join(folder_path, f"{group_folder}_{slug_chapter_number}.zip"))
+
 
 
 def create_chapter_obj(
