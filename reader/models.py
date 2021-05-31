@@ -116,16 +116,6 @@ class Series(models.Model):
         verbose_name_plural = "series"
 
 
-def path_file_name(instance, filename):
-    return os.path.join(
-        "manga",
-        instance.series.slug,
-        "volume_covers",
-        str(instance.volume_number),
-        filename,
-    )
-
-
 class Volume(models.Model):
     volume_number = models.PositiveIntegerField(blank=False, null=False, db_index=True)
     series = models.ForeignKey(
