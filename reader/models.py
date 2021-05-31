@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from random import randint
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -33,6 +34,23 @@ class Group(models.Model):
 
 def embed_image_path(instance, filename):
     return os.path.join("manga", instance.slug, "static", str(filename))
+
+
+def new_volume_folder(instance):
+    return os.path.join(
+        "manga",
+        instance.series.slug,
+        "volume_covers",
+        str(instance.volume_number),
+    )
+
+def new_volume_path_file_name(instance, filename):
+    _, ext = os.path.splitext(filename)
+    new_filename = str(randint(10000, 99999)) + ext
+    return os.path.join(
+        new_volume_folder(instance),
+        new_filename,
+    )
 
 
 class Series(models.Model):
@@ -95,6 +113,7 @@ class Series(models.Model):
 
     class Meta:
         ordering = ("name",)
+        verbose_name_plural = "series"
 
 
 def path_file_name(instance, filename):
@@ -112,7 +131,7 @@ class Volume(models.Model):
     series = models.ForeignKey(
         Series, blank=False, null=False, on_delete=models.CASCADE
     )
-    volume_cover = models.ImageField(blank=True, upload_to=path_file_name)
+    volume_cover = models.ImageField(blank=True, upload_to=new_volume_path_file_name)
 
     class Meta:
         unique_together = (

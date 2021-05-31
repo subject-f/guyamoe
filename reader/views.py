@@ -53,7 +53,6 @@ def hit_count(request):
     return HttpResponse(json.dumps({}), content_type="application/json")
 
 
-@cache_control(public=True, max_age=60, s_maxage=60)
 def series_page_data(request, series_slug):
     series_page_dt = cache.get(f"series_page_dt_{series_slug}")
     if not series_page_dt:
