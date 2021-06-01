@@ -138,10 +138,9 @@
 		<a href="mailto:k@guya.moe" style="text-decoration:underline;font-size: 0.8em;">Send us your feedback and ideas :)</a>
 	</div> -->
 	<div class="manga-card bigg">
-		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><picture>
-			<source type="image/webp" srcset="{{ main_cover_webp }}" class="" alt="Kaguya-sama: Love is War">
-  			<img src="{{ main_cover }}" class="" alt="Kaguya-sama: Love is War">
-		</picture></a>
+		<a class="picture" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/">
+			<picture id="mainSeriesCover"></picture>
+		</a>
 		<article>
 			<a href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/"><h1>Kaguya-sama: Love is War</h1></a>
 			<h2>Kaguya-sama Wants to Be Confessed To: The Geniuses' War of Love and Brains</h2>
@@ -184,10 +183,8 @@
 		<table id="chapter_listing" class="chapter-listing hidden">
 		</table>
 	</div>
-	<a href="/read/manga/We-Want-To-Talk-About-Kaguya/" class="manga-card smol" style="background-image: url({{ 4koma_cover_blur }})">
-		<picture>
-			<source type="image/webp" srcset="{{ 4koma_cover_webp }}" class="" alt="We Want to Talk About Kaguya">
-  			<img src="{{ 4koma_cover }}" class="" alt="We Want to Talk About Kaguya">
+	<a id="fourKomaCard" href="/read/manga/We-Want-To-Talk-About-Kaguya/" class="manga-card smol">
+		<picture id="fourKomaCover">
 		</picture>
 		<article>
 			<h2>We Want to Talk About Kaguya <span class="tag">Spin-off</span></h2>
@@ -277,8 +274,6 @@
 <script>
 	let quoteNumb = Math.floor(Math.random() * 9) + 1;
 	document.getElementById("quote-block").innerHTML = `<a target="_blank" href="//discord.gg/4WPqwSY"><img id="quote" class="img-fluid mx-auto d-block" src="{% static 'img/' %}quote${quoteNumb}.png" style="max-height: 70px"></a>`;
-
-	let msd = {{ main_series_data|safe }};
 	let hash = false;
 
 	function toggleHash(e) {
@@ -291,101 +286,122 @@
 		hash = !hash;
 	}
 
-	var chapterList = doT.template(`
-		<tbody>
-		<tr class="chapter-row header">
-			<th class="chapter-n"></th>
-			<th class="chapter-name">
-				<span id="season-selector">
-					<a class="manga-link season selected" onmousedown="toggleAdaptedSeasons(this, {})">All</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {adapted: true})">Adapted</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: '1', showAnimeOrder: true})">S1</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: '2', showAnimeOrder: true})">S2</a>
-					<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 'OVA', showAnimeOrder: true})">OVA</a>
-				</span>
-				<span id="anime-order" class="hidden">
-					<a class="manga-link season" onmousedown="toggleAnimeOrderSort(this)">Anime Order</a>
-				</span>
-			</th>
-			<th class="chapter-date" onmousedown="if (!chapter_listing.classList.contains('anime-order-sorted')) {event.target.classList.toggle('desc'); chapter_listing.orderDate()}">Date</th>
-		</tr>
-		</tbody>
-		<tbody>
-		((~it :value:index))
-		<tr class="chapter-row
-			((? window.adapted.has(value[1]) )) adapted((?))
-			((? +value[1] in s2_anime_map )) s2((?))
-			((? +value[1] in s1_anime_map )) s1((?))
-			((? +value[1] in ova_anime_map )) ova((?))"
+	// Get proper volume covers
+	fetch('/api/get_volume_cover/Kaguya-Wants-To-Be-Confessed-To/1/').then(req => req.json()).then(cover => {
+		document.getElementById("mainSeriesCover").innerHTML = `
+			<source type="image/webp" srcset="${cover[2]}" class="" alt="Kaguya-sama: Love is War">
+			<img src="${cover[1]}" class="" alt="Kaguya-sama: Love is War">
+		`
+	})
+	fetch('/api/get_volume_covers/We-Want-To-Talk-About-Kaguya/').then(req => req.json()).then(covers => {
+		const latest_cover = covers["covers"][covers["covers"].length - 1];
+		document.getElementById("fourKomaCover").innerHTML = `
+			<source type="image/webp" srcset="${latest_cover[2]}" class="" alt="We Want to Talk About Kaguya">
+			<img src="${latest_cover[1]}" class="" alt="We Want to Talk About Kaguya">
+		`
+		document.getElementById("fourKomaCard").style.backgroundImage = `url(${latest_cover[3]})`
+	})
 
-			((? +value[1] in s2_anime_map )) season="2"
-				((? 0 in s2_anime_map[+value[1]] )) episode="((=s2_anime_map[+value[1]][0]))"((?))
-				((? 1 in s2_anime_map[+value[1]] )) part="((=s2_anime_map[+value[1]][1]))"((?))
-			((?))
-			((? +value[1] in s1_anime_map )) season="1"
-				((? 0 in s1_anime_map[+value[1]] )) episode="((=s1_anime_map[+value[1]][0]))"((?))
-				((? 1 in s1_anime_map[+value[1]] )) part="((=s1_anime_map[+value[1]][1]))"((?))
-			((?))
-			((? +value[1] in ova_anime_map )) season="OVA"
-				((? 0 in ova_anime_map[+value[1]] )) episode="((=ova_anime_map[+value[1]][0]))"((?))
-				((? 1 in ova_anime_map[+value[1]] )) part="((=ova_anime_map[+value[1]][1]))"((?))
-			((?))
-			chapter="((=value[1]))"
-		>
-			<td class="chapter-n">((=value[1]))</td>
-			<td class="chapter-name"><a target="_blank" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[3]))/1">((=value[2]))</a>((? window.adapted.has(value[1]) ))<span data-anime="((=getAnimeString(value[1]) ))">((=getAnimeString(value[1], true) ))</span>((?))</td>
-			<td class="chapter-date">((= value[5][0] ))-((= zpad(1+value[5][1]) ))-((= zpad(value[5][2]) ))</td>
-		</tr>
-		((~))
-		<tbody>
-		`)
+	// Get main series chapters and build list with adaptation details
+	let msdPromise = fetch('/api/series_page_data/Kaguya-Wants-To-Be-Confessed-To/');
+	msdPromise.then(req => req.json())
+	.then(msd => {
+		var chapterList = doT.template(`
+			<tbody>
+			<tr class="chapter-row header">
+				<th class="chapter-n"></th>
+				<th class="chapter-name">
+					<span id="season-selector">
+						<a class="manga-link season selected" onmousedown="toggleAdaptedSeasons(this, {})">All</a>
+						<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {adapted: true})">Adapted</a>
+						<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {notAdapted: true})">Not Adapted</a>
+						<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: '1', showAnimeOrder: true})">S1</a>
+						<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: '2', showAnimeOrder: true})">S2</a>
+						<a class="manga-link season" onmousedown="toggleAdaptedSeasons(this, {season: 'OVA', showAnimeOrder: true})">OVA</a>
+					</span>
+					<span id="anime-order" class="hidden">
+						<a class="manga-link season" onmousedown="toggleAnimeOrderSort(this)">Anime Order</a>
+					</span>
+				</th>
+				<th class="chapter-date" onmousedown="if (!chapter_listing.classList.contains('anime-order-sorted')) {event.target.classList.toggle('desc'); chapter_listing.orderDate()}">Date</th>
+			</tr>
+			</tbody>
+			<tbody>
+			((~it :value:index))
+			<tr class="chapter-row
+				((? window.adapted.has(value[1]) )) adapted((?))
+				((? +value[1] in s2_anime_map )) s2((?))
+				((? +value[1] in s1_anime_map )) s1((?))
+				((? +value[1] in ova_anime_map )) ova((?))"
 
-var chaps_asc = msd.chapter_list.reverse();
+				((? +value[1] in s2_anime_map )) season="2"
+					((? 0 in s2_anime_map[+value[1]] )) episode="((=s2_anime_map[+value[1]][0]))"((?))
+					((? 1 in s2_anime_map[+value[1]] )) part="((=s2_anime_map[+value[1]][1]))"((?))
+				((?))
+				((? +value[1] in s1_anime_map )) season="1"
+					((? 0 in s1_anime_map[+value[1]] )) episode="((=s1_anime_map[+value[1]][0]))"((?))
+					((? 1 in s1_anime_map[+value[1]] )) part="((=s1_anime_map[+value[1]][1]))"((?))
+				((?))
+				((? +value[1] in ova_anime_map )) season="OVA"
+					((? 0 in ova_anime_map[+value[1]] )) episode="((=ova_anime_map[+value[1]][0]))"((?))
+					((? 1 in ova_anime_map[+value[1]] )) part="((=ova_anime_map[+value[1]][1]))"((?))
+				((?))
+				chapter="((=value[1]))"
+			>
+				<td class="chapter-n">((=value[1]))</td>
+				<td class="chapter-name"><a target="_blank" href="/read/manga/Kaguya-Wants-To-Be-Confessed-To/((=value[3]))/1">((=value[2]))</a>((? window.adapted.has(value[1]) ))<span data-anime="((=getAnimeString(value[1]) ))">((=getAnimeString(value[1], true) ))</span>((?))</td>
+				<td class="chapter-date">((= value[5][0] ))-((= zpad(1+value[5][1]) ))-((= zpad(value[5][2]) ))</td>
+			</tr>
+			((~))
+			<tbody>
+			`)
 
-	// Map goes from {chapter: [episode (1-indexed), part (0-indexed)]}
-	s1_anime_map = {1:[1,0],5:[1,2],6:[2,2],7:[2,1],8:[3,1],9:[3,2],11:[2,0],12:[1,1],14:[3,0],16:[5,0],17:[4,0],18:[4,1],19:[4,2],20:[4,3],21:[5,2],23:[5,1],24:[6,0],25:[6,2],26:[7,0],27:[7,2],28:[6,1],29:[7,1],31:[8,1],33:[9,0],34:[9,1],35:[9,2],37:[10,0],38:[10,1],39:[8,0],40:[10,2],41:[11,2],42:[11,0],43:[11,1],44:[12,0],45:[12,1],46:[12,2],55:[8,2]}
-	s2_anime_map = {30:[1,0],36:[5,2],48:[1,1],51:[1,3],52:[2,0],53:[2,1],54:[2,2],56:[3,0],57:[1,2],58:[4,0],59:[3,1],60:[3,2],61:[4,1],63:[5,0],64:[5,1],65:[4,2],66:[5,3],67:[6,0],68:[6,1],69:[6,2],70:[7,0],71:[7,1],72:[8,0],73:[7,2],74:[7,3],78:[8,1],79:[8,2],80:[9,0],81:[9,1],82:[9,2],83:[10,0],84:[10,1],85:[10,2],86:[10,3],88:[11,0],89:[11,1],90:[11,2],100:[12,0],101:[12,1],91:[12,2]};
-	ova_anime_map = {64.5:[1,0],83.5:[1,1],96:[1,2]};
-	adapted = new Set([...Object.keys(s1_anime_map), ...Object.keys(s2_anime_map), ...Object.keys(ova_anime_map)]);
-	chapter_listing.innerHTML = chapterList(chaps_asc);
+		var chaps_asc = msd.chapter_list.reverse();
 
-	chapter_listing.orderDate = function () {
-		let elements = [...this.children[1].children];
-		let sortFunc = (this.querySelector("th.chapter-date").classList.contains("desc")) ?
-		(f, s) => Number(s.getAttribute("chapter")) - Number(f.getAttribute("chapter")):
-		(f, s) => Number(f.getAttribute("chapter")) - Number(s.getAttribute("chapter"));
-		elements.sort(sortFunc);
-		elements.forEach(e => this.children[1].appendChild(e));
-	};
+		// Map goes from {chapter: [episode (1-indexed), part (0-indexed)]}
+		s1_anime_map = {1:[1,0],5:[1,2],6:[2,2],7:[2,1],8:[3,1],9:[3,2],11:[2,0],12:[1,1],14:[3,0],16:[5,0],17:[4,0],18:[4,1],19:[4,2],20:[4,3],21:[5,2],23:[5,1],24:[6,0],25:[6,2],26:[7,0],27:[7,2],28:[6,1],29:[7,1],31:[8,1],33:[9,0],34:[9,1],35:[9,2],37:[10,0],38:[10,1],39:[8,0],40:[10,2],41:[11,2],42:[11,0],43:[11,1],44:[12,0],45:[12,1],46:[12,2],55:[8,2]}
+		s2_anime_map = {30:[1,0],36:[5,2],48:[1,1],51:[1,3],52:[2,0],53:[2,1],54:[2,2],56:[3,0],57:[1,2],58:[4,0],59:[3,1],60:[3,2],61:[4,1],63:[5,0],64:[5,1],65:[4,2],66:[5,3],67:[6,0],68:[6,1],69:[6,2],70:[7,0],71:[7,1],72:[8,0],73:[7,2],74:[7,3],78:[8,1],79:[8,2],80:[9,0],81:[9,1],82:[9,2],83:[10,0],84:[10,1],85:[10,2],86:[10,3],88:[11,0],89:[11,1],90:[11,2],100:[12,0],101:[12,1],91:[12,2]};
+		ova_anime_map = {64.5:[1,0],83.5:[1,1],96:[1,2]};
+		adapted = new Set([...Object.keys(s1_anime_map), ...Object.keys(s2_anime_map), ...Object.keys(ova_anime_map)]);
+		chapter_listing.innerHTML = chapterList(chaps_asc);
 
-	chapter_listing.orderSeason = function () {
-		let seasons = [];
-		let unsorted = [];
-		this.children[1].children.forEach((e) => {
-			if (e.hasAttribute("season") && e.hasAttribute("episode")) {
-				if (!seasons[e.getAttribute("season")]) {
-					seasons[e.getAttribute("season")] = [];
-				}
-				if (!seasons[e.getAttribute("season")][e.getAttribute("episode")]) {
-					seasons[e.getAttribute("season")][e.getAttribute("episode")] = [];
-				}
-				seasons[e.getAttribute("season")][e.getAttribute("episode")][e.getAttribute("part")] = e;
-			} else {
-				unsorted.push(e);
-			}
-		});
-		let expander = (e) => {
-			if (e) {
-				if (Array.isArray(e)) {
-					e.forEach((e) => expander(e));
-				} else {
-					this.children[1].appendChild(e);
-				}
-			}
+		chapter_listing.orderDate = function () {
+			let elements = [...this.children[1].children];
+			let sortFunc = (this.querySelector("th.chapter-date").classList.contains("desc")) ?
+			(f, s) => Number(s.getAttribute("chapter")) - Number(f.getAttribute("chapter")):
+			(f, s) => Number(f.getAttribute("chapter")) - Number(s.getAttribute("chapter"));
+			elements.sort(sortFunc);
+			elements.forEach(e => this.children[1].appendChild(e));
 		};
-		[...seasons, ...unsorted].forEach(e => expander(e));
-	};
+
+		chapter_listing.orderSeason = function () {
+			let seasons = [];
+			let unsorted = [];
+			this.children[1].children.forEach((e) => {
+				if (e.hasAttribute("season") && e.hasAttribute("episode")) {
+					if (!seasons[e.getAttribute("season")]) {
+						seasons[e.getAttribute("season")] = [];
+					}
+					if (!seasons[e.getAttribute("season")][e.getAttribute("episode")]) {
+						seasons[e.getAttribute("season")][e.getAttribute("episode")] = [];
+					}
+					seasons[e.getAttribute("season")][e.getAttribute("episode")][e.getAttribute("part")] = e;
+				} else {
+					unsorted.push(e);
+				}
+			});
+			let expander = (e) => {
+				if (e) {
+					if (Array.isArray(e)) {
+						e.forEach((e) => expander(e));
+					} else {
+						this.children[1].appendChild(e);
+					}
+				}
+			};
+			[...seasons, ...unsorted].forEach(e => expander(e));
+		};
+	});
 
 	function getAnimeString(num, displayString = false) {
 		let map, season;

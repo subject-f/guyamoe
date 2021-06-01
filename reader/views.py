@@ -150,6 +150,14 @@ def series_page_data(request, series_slug):
 
 @cache_control(public=True, max_age=60, s_maxage=60)
 @decorator_from_middleware(OnlineNowMiddleware)
+def series_page_data_req(request, series_slug):
+    data = series_page_data(request, series_slug)
+    data["version_query"] = settings.STATIC_VERSION
+    return HttpResponse(json.dumps(data), content_type="application/json")
+
+
+@cache_control(public=True, max_age=60, s_maxage=60)
+@decorator_from_middleware(OnlineNowMiddleware)
 def series_info(request, series_slug):
     data = series_page_data(request, series_slug)
     data["version_query"] = settings.STATIC_VERSION

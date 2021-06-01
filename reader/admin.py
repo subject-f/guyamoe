@@ -20,7 +20,7 @@ class HitCountAdmin(admin.ModelAdmin):
         if isinstance(obj.content, Series):
             return obj.content.name
         if isinstance(obj.content, Chapter):
-            return obj.content.title
+            return obj.content.series.name
         else:
             return obj
 
@@ -41,6 +41,7 @@ admin.site.register(Group, GroupAdmin)
 
 class SeriesAdmin(admin.ModelAdmin):
     form = SeriesForm
+    readonly_fields = ("slug",)
     list_display = ("name",)
 
 

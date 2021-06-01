@@ -8,6 +8,11 @@ urlpatterns = [
         views.get_series_data,
         name="api-series_data",
     ),
+    re_path(
+        r"^series_page_data/(?P<series_slug>[\w-]+)/$",
+        views.get_series_page_data_req,
+        name="api-series-page-data",
+    ),
     re_path(r"^get_all_series/", views.get_all_series, name="api-get-all-series"),
     re_path(
         r"^get_groups/(?P<series_slug>[\w-]+)/", views.get_groups, name="api-groups"
@@ -28,6 +33,11 @@ urlpatterns = [
         r"^get_volume_covers/(?P<series_slug>[\w-]+)/",
         views.get_volume_covers,
         name="api-get-volume-covers",
+    ),
+    re_path(
+        r"^get_volume_cover/(?P<series_slug>[\w-]+)/(?P<volume_number>[\d-]{1,9})/$",
+        views.get_volume_cover,
+        name="api-get-volume-cover",
     ),
     re_path(
         r"^search_index/(?P<series_slug>[\w-]+)/",

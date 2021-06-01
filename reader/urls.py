@@ -15,6 +15,11 @@ urlpatterns = [
         r"^series/(?P<series_slug>[\w-]+)/$", views.series_info, name="reader-series"
     ),
     re_path(
+        r"^series_page_data/(?P<series_slug>[\w-]+)/$",
+        views.series_page_data_req,
+        name="reader-series-page-data-req",
+    ),
+    re_path(
         r"^manga/(?P<series_slug>[\w-]+)/admin$",
         views.series_info_admin,
         name="reader-manga-admin",

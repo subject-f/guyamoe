@@ -1,5 +1,6 @@
 from django.conf import settings
 
+
 def branding(request):
     return {
         "brand": {
@@ -9,6 +10,7 @@ def branding(request):
         }
     }
 
+
 def home_branding(request):
     return {
         "home_brand": {
@@ -17,6 +19,7 @@ def home_branding(request):
             "image_url": settings.HOME_BRANDING_IMAGE_URL,
         }
     }
+
 
 def urls(request):
     return {
