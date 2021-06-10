@@ -8,7 +8,7 @@ from django.db.models.signals import post_delete, post_save, pre_save, post_init
 from django.dispatch import receiver
 from PIL import Image, ImageFilter
 
-from api.api import clear_pages_cache, delete_chapter_pages_if_exists
+from api.api import clear_pages_cache, chapter_post_process, delete_chapter_pages_if_exists
 from reader.models import Chapter, HitCount, Series, Volume, new_volume_folder
 
 
