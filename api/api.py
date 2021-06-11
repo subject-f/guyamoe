@@ -140,8 +140,8 @@ def delete_chapter_pages_if_exists(folder_path, clean_chapter_number, group_fold
     shutil.rmtree(
         os.path.join(folder_path, f"{group_folder}_shrunk_blur"), ignore_errors=True
     )
-    if os.path.exists(os.path.join(folder_path, f"{group_folder}_{slug_chapter_number}.zip")):
-        os.remove(os.path.join(folder_path, f"{group_folder}_{slug_chapter_number}.zip"))
+    if os.path.exists(os.path.join(folder_path, f"{group_folder}_{clean_chapter_number}.zip")):
+        os.remove(os.path.join(folder_path, f"{group_folder}_{clean_chapter_number}.zip"))
 
 
 
