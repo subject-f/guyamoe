@@ -3511,13 +3511,16 @@ function thirdPartySeriesHandler(url, chapter, group) {
 
 function DownloadManager() {
 	this.chapterDownloadURL = "";
-	continueDownload = false;
+	let latestRef;
 	this.downloadChapter = async function() {
+		// Shenanigans to allow download cancellation
+		let localRef = latestRef = Reader.SCP.chapter;
 		if(this.chapterDownloadURL) {
 			URL.revokeObjectURL(this.chapterDownloadURL)
 		}
+		let chapter = localRef;
 		Reader._.download_chapter.classList.add("hidden");
-		Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : 0%`;
+		Reader._.downloading_chapter.textContent = `Ch.${chapter} : 0%`;
 		Reader._.download_wrapper.classList.remove("hidden");
 		let mimeMap = {
 			'image/gif': '.gif',
@@ -3525,46 +3528,50 @@ function DownloadManager() {
 			'image/png': '.png',
 			'image/webp': '.webp',
 		}
-		await Reader.fetchChapter(Reader.SCP.chapter)
-		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(Reader.SCP.chapter)];
+		await Reader.fetchChapter(chapter)
+		let chapURLArray = Reader.SCP.chapterObject.images[Reader.getGroup(chapter)];
 		if (await shouldUseProxy(chapURLArray[0])) {
 			chapURLArray = chapURLArray.map((url) => `${IMAGE_PROXY_URL}/${url}`);
 		}
-		continueDownload = true;
+
 		try {
 			let parallelDownloads = Settings.get("adv.parallelDownloads");
 			let zip = new JSZip();
 			let progress = 0;
 			for (let i = 0; i < chapURLArray.length; i += parallelDownloads) {
-				if (!continueDownload) return;
 				let imageBlobs = await Promise.all(
 					chapURLArray
 					.slice(i, i + parallelDownloads)
 					.map((url, subIndex) => {
 						return (async () => {
 							let contents = await downloadHandler(url);
+							if (latestRef !== localRef) throw { name: "changedRef" };
 							progress++;
-							Reader._.downloading_chapter.textContent = `Ch.${Reader.SCP.chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
+							Reader._.downloading_chapter.textContent = `Ch.${chapter} : ${Math.round(progress / chapURLArray.length * 98)}%`;
 							return {
 								contents,
-								"fileIndex": i + subIndex + 1,
+								"fileIndex": String(i + subIndex + 1).padStart(String(chapURLArray.length).length, "0"),
 							};
 						})();
 					})
 				);
+
 				imageBlobs.forEach((data) => {
 					zip.file(data.fileIndex + mimeMap[data.contents.type], data.contents, { binary: true });
 				});
 			}
 
 			let zipBlob = await zip.generateAsync({type:"blob"});
-			if(!continueDownload) return;
+
 			this.chapterDownloadURL = URL.createObjectURL(zipBlob);
-			initiateDownload(this.chapterDownloadURL);
+			if (latestRef === localRef) initiateDownload(this.chapterDownloadURL, filename = chapter + ".zip");
+
 		} catch (err) {
-			TooltippyError.set("An error occured while downloading: " + err.message);
+			if (err.name !== "changedRef") {
+				TooltippyError.set("An error occured while downloading: " + err.message);
+			}
 		} finally {
-			wrapUp()
+			wrapUp(ref = localRef)
 		}
 	}
 
@@ -3591,20 +3598,22 @@ function DownloadManager() {
 		throw new Error(`Failed to download after exhausting all ${TRIES} tries.`);
 	}
 
-	function wrapUp() {
+	function wrapUp(ref) {
+		if (ref === latestRef) {
 		Reader._.download_wrapper.classList.add("hidden");
 		Reader._.download_chapter.classList.remove("hidden");
-		continueDownload = false;
+		latestRef = null;
+		}
 	}
 
 	this.cancelDownload = function() {
-		wrapUp();
+		wrapUp(ref = latestRef);
 	}
 
-	function initiateDownload(url) {
+	function initiateDownload(url, filename) {
 		let elem = window.document.createElement('a');
 		elem.href = url;
-		elem.download = Reader.SCP.chapter + ".zip";        
+		elem.download = filename;        
 		document.body.appendChild(elem);
 		elem.click();        
 		document.body.removeChild(elem);
