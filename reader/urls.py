@@ -12,6 +12,11 @@ urlpatterns = [
         r"^manga/(?P<series_slug>[\w-]+)/$", views.series_info, name="reader-manga"
     ),
     re_path(
+        r"^manga/(?P<url_str>[\w-]+)/(?P<series_slug>[\w-]+)/$",
+        views.series_info_canonical,
+        name="reader-manga-canonical",
+    ),
+    re_path(
         r"^series/(?P<series_slug>[\w-]+)/$", views.series_info, name="reader-series"
     ),
     re_path(

@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import F
 from django.http import HttpResponse
+from django.http.response import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import decorator_from_middleware
 from django.views.decorators.cache import cache_control
@@ -133,6 +134,7 @@ def series_page_data(request, series_slug):
             "chapter_list": chapter_list,
             "volume_list": sorted(volume_list, key=lambda m: m[0], reverse=True),
             "root_domain": settings.CANONICAL_ROOT_DOMAIN,
+            "canonical_url": f"https://{settings.CANONICAL_ROOT_DOMAIN}{series.get_absolute_url()}",
             "relative_url": f"read/manga/{series.slug}/",
             "available_features": [
                 "detailed",
@@ -154,6 +156,16 @@ def series_info(request, series_slug):
     data = series_page_data(request, series_slug)
     data["version_query"] = settings.STATIC_VERSION
     return render(request, "reader/series.html", data)
+
+
+@cache_control(public=True, max_age=60, s_maxage=60)
+@decorator_from_middleware(OnlineNowMiddleware)
+def series_info_canonical(request, url_str, series_slug):
+    series = get_object_or_404(Series, slug=series_slug)
+    if series.canonical_series_url_filler != url_str:
+        raise Http404()
+    else:
+        return series_info(request, series_slug)
 
 
 @staff_member_required

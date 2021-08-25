@@ -38,19 +38,14 @@ def embed_image_path(instance, filename):
 
 def new_volume_folder(instance):
     return os.path.join(
-        "manga",
-        instance.series.slug,
-        "volume_covers",
-        str(instance.volume_number),
+        "manga", instance.series.slug, "volume_covers", str(instance.volume_number),
     )
+
 
 def new_volume_path_file_name(instance, filename):
     _, ext = os.path.splitext(filename)
     new_filename = str(randint(10000, 99999)) + ext
-    return os.path.join(
-        new_volume_folder(instance),
-        new_filename,
-    )
+    return os.path.join(new_volume_folder(instance), new_filename,)
 
 
 class Series(models.Model):
@@ -86,12 +81,21 @@ class Series(models.Model):
     scraping_identifiers = models.TextField(blank=True, null=True)
     use_latest_vol_cover_for_embed = models.BooleanField(default=False)
     embed_image = models.ImageField(upload_to=embed_image_path, blank=True, null=True)
+    canonical_series_url_filler = models.CharField(
+        max_length=24,
+        blank=True,
+        null=True,
+        help_text="Adds this text to the canonical url of the series' series page. Useful to avoid blacklists of... many varieties.",
+    )
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        return f"/read/manga/{self.slug}/"
+        if self.canonical_series_url_filler:
+            return f"/read/manga/{self.canonical_series_url_filler}/{self.slug}/"
+        else:
+            return f"/read/manga/{self.slug}/"
 
     def get_latest_volume_cover_path(self):
         vols = Volume.objects.filter(series=self).order_by("-volume_number")

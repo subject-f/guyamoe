@@ -10,7 +10,11 @@
 	<script src="{% static 'js/jquery.min.js' %}"></script>
 	<script src="{% static 'js/alg_lib.js' %}{{ version_query }}"></script>
 	<script defer src="{% static 'js/bootstrap.min.js' %}"></script>
+	{% if canonical_url %}
+	<link rel="canonical" href="{{ canonical_url }}" />
+	{% else %}
 	<link rel="canonical" href="{{ absolute_url }}" />
+	{% endif %}
 	<link rel="manifest" href="{% static 'manifest.json' %}{{ version_query }}">
 	<link rel="shortcut icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" defer />
 	<link rel="icon" sizes="128x128" type="image/png" href="{% static 'logo_small.png' %}{{ version_query }}" />
