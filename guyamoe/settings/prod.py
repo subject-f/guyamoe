@@ -3,7 +3,7 @@ import os
 from .base import *
 
 
-CANONICAL_ROOT_DOMAIN = "read.guya.moe"
+CANONICAL_ROOT_DOMAIN = "www.guya.moe"
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -39,7 +39,7 @@ ALLOWED_HOSTS = [
     "localhost",
 ]
 
-CANONICAL_SITE_NAME = "read.guya.moe"
+CANONICAL_SITE_NAME = "www.guya.moe"
 
 LOGGING = {
     "version": 1,
