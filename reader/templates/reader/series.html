@@ -253,7 +253,7 @@ var reading_button = null;
 					this.$.querySelector('.manga-link-text').innerHTML = 'Read the latest chapter ›';
 					break;
 			}
-			this.$.href = `${(window.location + '').replace('v1/','')}1/1/`
+			this.$.href = `${(window.location + '').replace('v1/','')}${chapter.replace('.','-')}/1/`
 		}
 
 		this.$ = document.createElement('div');
