@@ -593,7 +593,7 @@ main a {
 }
 
 .manga-link.season {
-	padding: 0.4em 1em;
+	padding: 0.4em 0.8em 0.4em 1em;
 	margin-top: 5px; /* For mobile */
 	cursor: default;
 }
