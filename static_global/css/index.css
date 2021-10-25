@@ -897,6 +897,9 @@ main a {
 	text-indent: 0;
 	line-height: 1.5;
 }
+.chapter-listing .s3.adapted .chapter-name span {
+	border-color: #be75e9d8;
+}
 .chapter-listing .s2.adapted .chapter-name span {
 	color: #ddd;
 	border-color: #6bb5f7;
