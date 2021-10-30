@@ -463,10 +463,20 @@ main a {
 	background-size: 1500px;
 	background-position: 50% 10%;
 }
-.manga-card.bigg picture img { 
-	height: 30em;
-	width: 20.4em;
+
+.manga-card.bigg picture img,
+.manga-card.bigg > .picture {
+    height:30em;
+    width:20.4em;
 }
+
+@media (max-width: 768px) {
+    .manga-card.bigg .picture {
+        width: 7.5em;
+        height: 11em;
+    }
+}
+
 .manga-card {
 	min-height: 9em;
 }
@@ -493,19 +503,6 @@ main a {
 .manga-card > * {
 	z-index: 2;
 	position: relative;
-}
-
-.manga-card.bigg picture img,
-.manga-card.bigg > .picture {
-    height:30em;
-    width:20.4em;
-}
-
-@media (max-width: 768px) {
-    .manga-card.bigg .picture {
-        width: 7.5em;
-        height: 11em;
-    }
 }
 
 .manga-card > a.picture,
