@@ -335,6 +335,32 @@ var reading_button = null;
 		});
 	}
 
+	const SPOILER_ENABLED_KEY = "series_spoiler";
+	const CHAPTER_LIST_SELECTOR = "chapters";
+	const SPOILER_CLASSNAME = "spoiler";
+	const SPOILERS_CHECKBOX_ID = "spoilers-checkbox";
+	const CHECKED_CLASSNAME = "is-read";
+
+	function initSpoilers() {
+		let spoiler = JSON.parse(localStorage.getItem(SPOILER_ENABLED_KEY));
+		if (spoiler === null) {
+			spoiler = false;
+			localStorage.setItem(SPOILER_ENABLED_KEY, spoiler);
+		}
+		if (spoiler) {
+			document.getElementById(CHAPTER_LIST_SELECTOR).classList.add(SPOILER_CLASSNAME);
+			document.getElementById(SPOILERS_CHECKBOX_ID).classList.add(CHECKED_CLASSNAME);
+		}
+	}
+
+	function toggleSpoilers(target) {
+		const currentSetting = JSON.parse(localStorage.getItem(SPOILER_ENABLED_KEY));
+		localStorage.setItem(SPOILER_ENABLED_KEY, !currentSetting);
+		const action = currentSetting ? "remove" : "add";
+		document.getElementById(CHAPTER_LIST_SELECTOR).classList[action](SPOILER_CLASSNAME);
+		target.classList[action](CHECKED_CLASSNAME);
+	}
+
 	let semaphore = ((callback) => {
 		let historyReady = false;
 		let windowLoaded = false;
@@ -365,6 +391,7 @@ var reading_button = null;
 		listMode("detailed");
 		prettifyLastUpdatedTable();
 		initSearchHandler();
+		initSpoilers();
 		semaphore.loaded();
 	});
 
@@ -400,6 +427,14 @@ var reading_button = null;
 	body {
 		background: none !important;
 		background-color: none !important;
+	}
+
+	.table.spoiler .spoiler-free-title {
+		display: none;
+	}
+
+	.table:not(.spoiler) .spoiler-title {
+		display: none;
 	}
 </style>
 <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -547,6 +582,8 @@ var reading_button = null;
 					<a href="{{ original_url }}">View Original</a>
 					{% endif %}
 					{{ synopsis|safe|linebreaks }}
+					<br>
+					<div id="spoilers-checkbox" onclick="toggleSpoilers(this)"><span class="read-icon" /> show titles (may contain spoilers)</div>
 				</article>
 				<div class="btn-group" role="group">
 					{% if "detailed" in available_features %}
@@ -625,12 +662,17 @@ var reading_button = null;
 								<td scope="row" class="chapter-title">
 									<a href="/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1/">
 										{% if chapter_list_value %}
-										{{ chapter_list_value }}
+										<span class="spoiler-free-title">
+										Chapter {{ chapter_list_value }}
+										</span>
 										{% endif %}
+										<span class="spoiler-title">
 										{% if chapter_list_value and title %}
+										{{ chapter_list_value }}
 										 -
 										{% endif %}
 										{{ title }}
+										</span>
 									</a>
 								</td>
 								<td scope="row">{{ group }}</td>
