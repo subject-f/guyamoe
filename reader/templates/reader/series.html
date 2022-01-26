@@ -583,7 +583,7 @@ var reading_button = null;
 					{% endif %}
 					{{ synopsis|safe|linebreaks }}
 					<br>
-					<div id="spoilers-checkbox" onclick="toggleSpoilers(this)"><span class="read-icon" /> show titles (may contain spoilers)</div>
+					<div id="spoilers-checkbox"><span onclick="toggleSpoilers(this)"><span class="read-icon" /> show titles (may contain spoilers)</span></div>
 				</article>
 				<div class="btn-group" role="group">
 					{% if "detailed" in available_features %}
@@ -661,14 +661,17 @@ var reading_button = null;
 								<td scope="row" class="read-icon" onclick="updateRead('{{ chapter }}')"></td>
 								<td scope="row" class="chapter-title">
 									<a href="/{{ reader_modifier }}/{{ slug }}/{{ ch_slug }}/1/">
-										{% if chapter_list_value %}
 										<span class="spoiler-free-title">
-										Chapter {{ chapter_list_value }}
-										</span>
-										{% endif %}
-										<span class="spoiler-title">
-										{% if chapter_list_value and title %}
+										Chapter
+										{% if chapter_list_value %}
 										{{ chapter_list_value }}
+										{% endif %}
+										</span>
+										<span class="spoiler-title">
+										{% if chapter_list_value %}
+										{{ chapter_list_value }}
+										{% endif %}
+										{% if chapter_list_value and title %}
 										 -
 										{% endif %}
 										{{ title }}
