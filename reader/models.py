@@ -219,3 +219,12 @@ class ChapterIndex(models.Model):
             "word",
             "series",
         )
+
+def path_file_name(instance, filename):
+    return os.path.join(
+        "manga",
+        instance.series.slug,
+        "volume_covers",
+        str(instance.volume_number),
+        filename,
+    )
