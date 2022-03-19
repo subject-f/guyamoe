@@ -27,11 +27,16 @@ def all_chapter_data_etag(request):
 def chapter_data_etag(request, series_slug):
     etag = cache.get(f"{series_slug}_chapter_data_etag")
     if not etag:
+        series = Series.objects.filter(slug=series_slug).first()
+        if not series:
+            raise Http404("Series not found.")
         obj = (
-            Chapter.objects.filter(series=Series.objects.get(slug=series_slug))
+            Chapter.objects.filter(series=series)
             .order_by("-uploaded_on")
             .first()
         )
+        if not obj:
+            raise Http404("Chapter not found.")
         etag = str(obj.updated_on or obj.uploaded_on)
         cache.set(f"{series_slug}_chapter_data_etag", etag, 600)
     return etag
