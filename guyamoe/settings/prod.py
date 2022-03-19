@@ -3,7 +3,7 @@ import os
 from .base import *
 
 
-CANONICAL_ROOT_DOMAIN = "baka.guya.moe"
+CANONICAL_ROOT_DOMAIN = "manga.guya.moe"
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
