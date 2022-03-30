@@ -46,4 +46,5 @@ urlpatterns = [
     ),
     re_path(r"clear_cache/", views.clear_cache, name="api-clear-cache"),
     re_path(r"^black_hole_mail/", views.black_hole_mail, name="api-black-hole-mail"),
+    path("guyacha/", views.get_guyacha_stats, name="api-guyacha"),
 ]

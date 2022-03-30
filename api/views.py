@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
+from api.guyacha import get_gacha_stats
 
 from reader.models import Chapter, ChapterIndex, Group, Series, Volume
 from reader.views import series_page_data
@@ -346,3 +347,10 @@ def black_hole_mail(request):
             content_type="application/json",
         )
         return set_cors_headers(response)
+
+
+@cache_control(public=True, max_age=0, s_maxage=0)
+def get_guyacha_stats(request):
+    return set_cors_headers(
+        HttpResponse(json.dumps(get_gacha_stats()), content_type="application/json")
+    )

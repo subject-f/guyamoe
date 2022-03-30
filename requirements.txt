@@ -9,3 +9,4 @@ psycopg2==2.8.4
 python-memcached==1.59
 requests==2.22.0
 beautifulsoup4==4.8.2
+sqlalchemy==1.4.32
