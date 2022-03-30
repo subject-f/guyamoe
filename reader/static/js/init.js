@@ -1700,13 +1700,14 @@ function UI_Reader(o) {
 				// We'll fetch here (but cache the result) because I think it's cool to show the
 				// loading icon. Gives it a "wow!" feel rather than preloading owner info
 
-				// TODO deal with preferred sort to only show on preferred chapter
-
 				if (!(OWNERSHIP_KEY in this.SCP)) {
 					this.SCP[OWNERSHIP_KEY] = {};
 				}
 
-				const url = location.origin + this.SCP.chapterObject.images[this.SCP.group][page];
+				// So that staging or the subdomains pegs the default origin.
+				const urlOverride = "https://guya.moe";
+
+				const url = urlOverride + this.SCP.chapterObject.images[this.SCP.group][page];
 				const currentChapter = this.SCP.chapter;
 				const currentSeries = this.SCP.series;
 
