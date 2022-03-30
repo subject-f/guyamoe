@@ -116,6 +116,21 @@
           <div data-bind="image_description">
           </div>
         </section>
+        <section class="rdr-ownership hidden" data-bind="ownership_section">
+          <div class="owner-card-wrapper loading" data-bind="ownership_card">
+            <div class="owner-card">
+              <div class="owner-img-wrapper">
+                <img class="owner-img" data-bind="ownership_img" />
+                <div class="owner-img-placeholder"></div>
+              </div>
+              <div class="owner-text">
+                <div class="owner-name" data-bind="ownership_name">&#8203</div>
+                <div class="owner-subtitle" data-bind="ownership_subtitle">&#8203</div>
+                <div class="owner-help" data-bind="ownership_help">What's this (?)</div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </aside>
     <div class="rdr-page-selector vis" data-bind="page_selector">

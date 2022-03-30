@@ -427,6 +427,7 @@ function SettingsHandler(){
 		thm: new SettingsCategory('Themes', false),
 		adv: new SettingsCategory('Advanced', false),
 		misc: new SettingsCategory('Miscellaneous', true),
+		own: new SettingsCategory("Ownership", false),
 	};
 	this.all = {};
 
@@ -1017,6 +1018,30 @@ function SettingsHandler(){
 		default: 5,
 		type: SETTING_VALUE,
 		hidden: false,
+	})
+	.newSetting({
+		addr: "own.tooltipDeadSetting",
+		prettyName: "What's this?",
+		html: `<div class="UI About" tabindex="-1"><div>
+		<hr>
+		<p>Did you ever want to own a piece of this manga? Now you can!</p>
+		<p>Join our Discord to learn more.</p>
+		<a href="https://discord.gg/4WPqwSY" target="_blank">Discord</a>
+		<hr>
+		<p class="in-case-it-wasnt-obvious">In case this wasn't obvious, please enjoy our April Fool's joke. :)</p>
+	</div></content></div>`,
+	type: SETTING_MULTI
+	})
+	.newSetting({
+		addr: "own.enableOwnershipDisplay",
+		prettyName: "Page ownership",
+		default: true,
+		strings: {
+			true: "Show",
+			false: "Hide"
+		},
+		compact: false,
+		type: SETTING_BOOLEAN,
 	});
 	this.deserialize();
 	this.sendInit();
@@ -1622,12 +1647,107 @@ function UI_Reader(o) {
 			.forEach((img, i) => this._.preload_entity.children[i].src = img.url);
 	}
 
+	this.urlSafeBase64Encode = (str) => {
+		return btoa(str).replace(/\+/g, "-").replace(/\//g, "_")
+	}
+
+	this.urlSafeBase64Decode = (str) => {
+		return atob(str.replace(/\-/g, "+").replace(/\_/g, "/"));
+	}
+
+	this.githubCacheBuster = () => {
+		let mapping = {
+			"0": "^0",
+			"1": "~0"
+		}
+		return Math.random()
+			.toString(2)
+			.split(".")[1]
+			.split("")
+			.map(e => mapping[e])
+			.join("");
+	}
+
+	const OWNERSHIP_KEY = "ownershipMetadata";
+	const USER_KEY = "user_name";
+	const USER_PIC_KEY = "user_pic_url";
+	const GC_COST_KEY = "gc_cost";
+
+	const SUBTITLE_KEY = "subtitle";
+	const SERIES_KEY_MAP = {
+		"Kaguya-Wants-To-Be-Confessed-To": "m",
+		"We-Want-To-Talk-About-Kaguya": "4k",
+	};
+
+	const setOwnershipInformation = (url) => {
+		if (url in this.SCP[OWNERSHIP_KEY]) {
+			this._.ownership_name.textContent = this.SCP[OWNERSHIP_KEY][url][USER_KEY];
+			this._.ownership_img.src = this.SCP[OWNERSHIP_KEY][url][USER_PIC_KEY];
+			this._.ownership_subtitle.textContent = this.SCP[OWNERSHIP_KEY][url][SUBTITLE_KEY];
+			this._.ownership_card.classList.remove("loading");
+		} else {
+			this._.ownership_card.classList.add("hidden");
+		}
+	}
+
 	this.eventRouter = function(event){
 		({
 			'nextPage': () => this.nextPage(),
 			'prevPage': () => this.prevPage(),
 			'newPageIndex': (page) => {
 				this._.image_description.textContent = this.current.chapters[this.SCP.chapter].descriptions[this.SCP.group][page];
+
+				// We'll fetch here (but cache the result) because I think it's cool to show the
+				// loading icon. Gives it a "wow!" feel rather than preloading owner info
+
+				// TODO deal with preferred sort to only show on preferred chapter
+
+				if (!(OWNERSHIP_KEY in this.SCP)) {
+					this.SCP[OWNERSHIP_KEY] = {};
+				}
+
+				const url = location.origin + this.SCP.chapterObject.images[this.SCP.group][page];
+				const currentChapter = this.SCP.chapter;
+				const currentSeries = this.SCP.series;
+
+				if (!(currentSeries in SERIES_KEY_MAP) || this.getGroup(undefined, true) !== this.SCP.group) {
+					this._.ownership_card.classList.add("hidden");
+					return;
+				} else {
+					this._.ownership_card.classList.add("loading");
+					this._.ownership_card.classList.remove("hidden");
+				}
+
+				if (url in this.SCP[OWNERSHIP_KEY]) {
+					setOwnershipInformation(url);
+				} else {
+					const user = "subject-f";
+					const repo = "test-beacon-chain";
+					const cacheBuster = this.githubCacheBuster();
+					let reqUrl = `https://raw.githubusercontent.com/${user}/${repo}/nfgt-${this.urlSafeBase64Encode(url)}${cacheBuster}/metadata.json`;
+
+					fetch(reqUrl).then(e => e.json()).then(e => {
+						const metadata = e.metadata;
+						this.SCP[OWNERSHIP_KEY][url] = {
+							[USER_KEY]: this.urlSafeBase64Decode(metadata[USER_KEY]),
+							[USER_PIC_KEY]: this.urlSafeBase64Decode(metadata[USER_PIC_KEY]),
+							[SUBTITLE_KEY]: `${SERIES_KEY_MAP[currentSeries]}-${currentChapter}-${page + 1} — ${metadata[GC_COST_KEY]} coins`,
+						}
+						if (page === this.SCP.page) {
+							setOwnershipInformation(url);
+						}
+					}).catch(() => {
+						// Catches if we get a 404 and we can't JSONify the response
+						this.SCP[OWNERSHIP_KEY][url] = {
+							[USER_KEY]: "No owner",
+							[USER_PIC_KEY]: "https://cdn.discordapp.com/embed/avatars/0.png",
+							[SUBTITLE_KEY]: `${SERIES_KEY_MAP[currentSeries]}-${currentChapter}-${page + 1}`,
+						}
+						if (page === this.SCP.page) {
+							setOwnershipInformation(url);
+						}
+					});
+				}
 			}
 		})[event.type](event.data)
 	}
@@ -1657,6 +1777,7 @@ function UI_Reader(o) {
 			'thm.accentCol' : o => ThemeManager.themeUpdated(),
 			'thm.textCol' : o => ThemeManager.themeUpdated(),
 			'misc.groupPreference': o => {},
+			'own.enableOwnershipDisplay': o => this._.ownership_section.classList[o ? "remove" : "add"]("hidden")
 		};
 		if(settings[o.setting]) settings[o.setting](o.value);
 	}
@@ -1703,6 +1824,7 @@ function UI_Reader(o) {
 	this._.vol_prev.onmousedown = e => this.prevVolume();
 	this._.vol_next.onmousedown = e => this.nextVolume();
 	this._.settings_button.onmousedown = e => Loda.display('settings');
+	this._.ownership_help.onmousedown = e => Loda.display('settings', (loda) => loda.tabs.select(5));
 	new UI_MultiStateButton({node: this._.preload_button, setting: 'bhv.preload'}).S.biLink(Settings);
 	new UI_MultiStateButton({node: this._.layout_button, setting: 'lyt.direction'}).S.biLink(Settings);
 	new UI_MultiStateButton({node: this._.fit_button, setting: 'lyt.fit'}).S.biLink(Settings);
@@ -2819,7 +2941,7 @@ function UI_LodaManager(o) {
 
 	this.scrollTop = 0;
 
-	this.display = function(loda) {
+	this.display = function(loda, callback = null) {
 		this.open = true;
 		this.$.classList.remove('hidden');
 		this.$.innerHTML = '';
@@ -2832,6 +2954,10 @@ function UI_LodaManager(o) {
 		else
 			setTimeout(() => this.library[loda].focus(), 100);
 		this.currentLoda = loda;
+
+		if (callback) {
+			callback(this.library[loda]);
+		}
 	}
 
 	this.close = function() {

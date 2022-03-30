@@ -628,8 +628,155 @@ aside header > .guya {
 	color: var(--icoCol);
  }
 
+.pulse {
+	-webkit-animation: pulse 3s infinite ease-in-out;
+	-o-animation: pulse 3s infinite ease-in-out;
+	-ms-animation: pulse 3s infinite ease-in-out;
+	-moz-animation: pulse 3s infinite ease-in-out;
+	animation: pulse 3s infinite ease-in-out;
+}
+
+@-webkit-keyframes pulse {
+	0% { opacity: 0.3; }
+	50% { opacity: 0.6; }
+	100% { opacity: 0.3; }
+}
+
+@keyframes pulse {
+	0% { opacity: 0.3; }
+	50% { opacity: 0.6; }
+	100% { opacity: 0.3; }
+}
+
+.rdr-ownership {
+	--ownershipHeight: 100px;
+	--cardPadding: 15px;
+	--imageRightPadding: 12px;
+	--placeholderColor: var(--sidebarColFocus);
+	--placeholderTransition: opacity 0.25s, color 0.25s;
+}
+
+.rdr-ownership {
+	height: var(--ownershipHeight);
+}
+
+.rdr-ownership .loading {
+	-webkit-animation: pulse 2s infinite ease-in-out;
+	-o-animation: pulse 2s infinite ease-in-out;
+	-ms-animation: pulse 2s infinite ease-in-out;
+	-moz-animation: pulse 2s infinite ease-in-out;
+	animation: pulse 2s infinite ease-in-out;
+}
+
+.rdr-ownership .owner-card-wrapper {
+	box-sizing: border-box;
+	padding: var(--cardPadding);
+	height: var(--ownershipHeight);
+	width: 100%;
+	display: flex;
+	text-align: left;
+	align-items: stretch;
+	justify-content: center;
+}
+
+.rdr-ownership .owner-card {
+	height: 100%;
+	width: 100%;
+	display: flex;
+}
+
+.rdr-ownership .owner-img-wrapper {
+	width: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	height: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	border-radius: 100%;
+}
+
+.rdr-ownership .loading .owner-img {
+	opacity: 0;
+}
+
+.rdr-ownership .owner-img {
+	width: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	height: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	border-radius: 100%;
+	opacity: 1;
+	transition: var(--placeholderTransition);
+	position: absolute;
+}
+
+.rdr-ownership .owner-img-placeholder {
+	background-color: var(--placeholderColor);
+	width: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	height: calc(var(--ownershipHeight) - 2 * var(--cardPadding));
+	border-radius: 100%;
+}
+
+.rdr-ownership .owner-text {
+	width: 100%;
+	padding-left: var(--imageRightPadding);
+	padding-top: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.1);
+	overflow: hidden;
+}
+
+.rdr-ownership .loading .owner-name {
+	color: rgba(0, 0, 0, 0);
+	width: 80%;
+	background-color: var(--sidebarColFocus);
+	border-radius: 4px;
+}
+
+.rdr-ownership .owner-name {
+	color: var(--textCol);
+	opacity: 0.8;
+	transition: var(--placeholderTransition);
+	font-weight: bold;
+	font-size: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.28);
+	line-height: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.30);
+}
+
+.rdr-ownership .loading .owner-subtitle {
+	color: rgba(0, 0, 0, 0);
+	width: 65%;
+	background-color: var(--sidebarColFocus);
+	border-radius: 4px;
+}
+
+.rdr-ownership .owner-subtitle {
+	color: var(--textCol);
+	opacity: 0.6;
+	transition: var(--placeholderTransition);
+	font-size: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.18);
+	line-height: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.20);
+	margin-top: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.04);
+}
+
+.rdr-ownership .loading .owner-help {
+	display: none;
+}
+
+.rdr-ownership .owner-help {
+	opacity: 0.4;
+	color: var(--textCol);
+	font-style: italic;
+	font-weight: lighter;
+	cursor: pointer;
+	font-size: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.15);
+	line-height: calc((var(--ownershipHeight) - 2 * var(--cardPadding)) * 0.35);
+}
+
+.rdr-ownership .owner-help:hover {
+	transition: opacity 0.5s;
+	opacity: 1;
+}
+
+.in-case-it-wasnt-obvious {
+	opacity: 0.5;
+	font-style: italic;
+	font-size: 12px !important;
+}
+
 .rdr-description div {
-	margin: 2em 0.8em 2em 0.8em;
+	/* margin: 2em 0.8em 2em 0.8em; */
 	line-height: 1.8;
 	white-space: pre-wrap;
 	font-size: 0.7em;
@@ -2676,6 +2823,9 @@ _:-webkit-full-screen:not(:root:root), .fit-height_limit .rdr-image-wrap .Reader
 	}
 	.IconTab[data-name="Advanced"] .ico-btn:before {
 		content: "\e935"
+	}
+	.IconTab[data-name="Ownership"] .ico-btn:before {
+		content: "\e931"
 	}
 	.IconTab[data-name="About"] .ico-btn:before {
 		content: "\e903"
