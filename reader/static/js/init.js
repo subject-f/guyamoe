@@ -1723,7 +1723,7 @@ function UI_Reader(o) {
 					setOwnershipInformation(url);
 				} else {
 					const user = "subject-f";
-					const repo = "test-beacon-chain";
+					const repo = "beacon-chain";
 					const cacheBuster = this.githubCacheBuster();
 					let reqUrl = `https://raw.githubusercontent.com/${user}/${repo}/nfgt-${this.urlSafeBase64Encode(url)}${cacheBuster}/metadata.json`;
 
