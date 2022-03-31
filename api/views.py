@@ -1,3 +1,4 @@
+from decimal import Decimal
 import hashlib
 import json
 import os
@@ -348,9 +349,13 @@ def black_hole_mail(request):
         )
         return set_cors_headers(response)
 
+def default(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError("Object of type '%s' is not JSON serializable" % type(obj).__name__)
 
 @cache_control(public=True, max_age=0, s_maxage=0)
 def get_guyacha_stats(request):
     return set_cors_headers(
-        HttpResponse(json.dumps(get_gacha_stats()), content_type="application/json")
+        HttpResponse(json.dumps(get_gacha_stats(), default=default), content_type="application/json")
     )
