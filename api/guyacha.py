@@ -19,9 +19,9 @@ def get_gacha_stats():
     sess = sessionmaker(bind=engine)
 
     with sess() as session:
-        item_types = session.execute("""
-            select distinct(item_type) from item_table
-        """).fetchall()
+        # item_types = session.execute("""
+        #     select distinct(item_type) from item_table
+        # """).fetchall()
 
         stats = session.execute(
             """
@@ -56,6 +56,7 @@ def get_gacha_stats():
         ).fetchall()
 
         item_counts = {}
+        item_types = ["cards", "gc", "nft", "punish", "genshin", "nitro"]
 
         # blank values
         for item_type in item_types:
