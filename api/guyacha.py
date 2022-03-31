@@ -19,6 +19,10 @@ def get_gacha_stats():
     sess = sessionmaker(bind=engine)
 
     with sess() as session:
+        item_types = session.execute("""
+            select distinct(item_type) from item_table
+        """).fetchall()
+
         stats = session.execute(
             """
             select sum(user_inventory_table.quantity) as total_rolls, count(*), item_table.item_type, item_table.rarity, item_table.max_drops
@@ -51,8 +55,14 @@ def get_gacha_stats():
             """
         ).fetchall()
 
-        item_counts = defaultdict(list)
+        item_counts = {}
+
+        # blank values
+        for item_type in item_types:
+            item_counts[item_type] = [{}]
         for total_rolls, unique_users, item_type, rarity, remaining_drops in stats:
+            if item_counts[item_type] and item_counts[item_type][0] == {}:
+                item_counts[item_type].pop(0)
             item_counts[item_type].append(
                 {
                     "rarity": rarity,
