@@ -1026,7 +1026,7 @@ function SettingsHandler(){
 		<hr>
 		<p>Did you ever want to own a piece of this manga? Now you can!</p>
 		<p>Join our Discord to learn more.</p>
-		<a href="https://discord.gg/4WPqwSY" target="_blank">Discord</a>
+		<div class="discord-box" style="width: 417px; transform: scale(0.9);"><div role="button" class="discord-icon" style="background-image: url(https://media.discordapp.net/attachments/438421000636334080/903403180988190750/a5b6bf23bbf1afb65d628552797fdddf.png)"></div><div style="flex: 1 1 auto;" class="discord-flex"><h3 class=""><span class="">Kaguya-sama: Love is War</span></h3><strong class=""><i class="status online"></i><span class="">21,487 Online</span><i class="status"></i><span class="">74,532 Members</span></strong></div><a type="button" href="https://discord.gg/k79uWgARKV">Join</a></div>
 		<hr>
 		<p class="in-case-it-wasnt-obvious">In case this wasn't obvious, please enjoy our April Fool's joke. :)</p>
 	</div></content></div>`,
@@ -1741,7 +1741,7 @@ function UI_Reader(o) {
 						// Catches if we get a 404 and we can't JSONify the response
 						this.SCP[OWNERSHIP_KEY][url] = {
 							[USER_KEY]: "No owner",
-							[USER_PIC_KEY]: "https://cdn.discordapp.com/embed/avatars/0.png",
+							[USER_PIC_KEY]: "https://cdn.discordapp.com/attachments/438421000636334080/958947727658594334/0.png",
 							[SUBTITLE_KEY]: `${SERIES_KEY_MAP[currentSeries]}-${currentChapter}-${page + 1}`,
 						}
 						if (page === this.SCP.page) {
