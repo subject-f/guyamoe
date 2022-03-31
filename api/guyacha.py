@@ -25,7 +25,7 @@ def get_gacha_stats():
             from user_inventory_table
                 join item_table
                     on user_inventory_table.item_id=item_table.item_id
-            group by item_table.item_type, item_table.rarity
+            group by item_table.item_type, item_table.rarity, item_table.max_drops
             order by item_table.item_type, item_table.rarity desc
         """
         ).fetchall()
@@ -37,7 +37,7 @@ def get_gacha_stats():
                 join discord_user_table
                     on transaction_log_table.user_id=discord_user_table.user_id
             where transaction_log_table.transaction_type='gacha'
-            group by transaction_log_table.user_id
+            group by transaction_log_table.user_id, discord_user_table.user_name, discord_user_table.user_pfp
             order by total_money desc
             """
         ).fetchall()
