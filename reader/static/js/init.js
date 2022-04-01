@@ -1677,6 +1677,8 @@ function UI_Reader(o) {
 	const SERIES_KEY_MAP = {
 		"Kaguya-Wants-To-Be-Confessed-To": "m",
 		"We-Want-To-Talk-About-Kaguya": "4k",
+		"Kaguya-Wants-To-Be-Confessed-To-Official-Doujin": "do",
+		"Oshi-no-Ko": "onk",
 	};
 
 	const setOwnershipInformation = (url) => {
