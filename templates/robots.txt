@@ -6,4 +6,4 @@ Disallow: /proxy/*
 Disallow: /api/download_chapter/*
 Disallow: /api/upload_new_chapter/*
 
-Sitemap: https://baka.guya.moe/sitemap.xml
+Sitemap: https://manga.guya.moe/sitemap.xml
