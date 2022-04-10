@@ -353,12 +353,12 @@ var reading_button = null;
 		}
 	}
 
-	function toggleSpoilers(target) {
+	function toggleSpoilers() {
 		const currentSetting = JSON.parse(localStorage.getItem(SPOILER_ENABLED_KEY));
 		localStorage.setItem(SPOILER_ENABLED_KEY, !currentSetting);
 		const action = currentSetting ? "remove" : "add";
 		document.getElementById(CHAPTER_LIST_SELECTOR).classList[action](SPOILER_CLASSNAME);
-		target.classList[action](CHECKED_CLASSNAME);
+		document.getElementById(SPOILERS_CHECKBOX_ID).classList[action](CHECKED_CLASSNAME);
 	}
 
 	let semaphore = ((callback) => {
@@ -583,7 +583,7 @@ var reading_button = null;
 					{% endif %}
 					{{ synopsis|safe|linebreaks }}
 					<br>
-					<div id="spoilers-checkbox"><span onclick="toggleSpoilers(this)"><span class="read-icon" /> show titles (may contain spoilers)</span></div>
+					<div><span id="spoilers-checkbox" onclick="toggleSpoilers()"><span class="read-icon" /> show titles (may contain spoilers)</span></div>
 				</article>
 				<div class="btn-group" role="group">
 					{% if "detailed" in available_features %}
