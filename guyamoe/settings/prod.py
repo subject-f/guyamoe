@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     "www.kuu.guya.moe",
     "read.guya.moe",
     "manga.guya.moe",
+    "guya.cubari.moe",
     "localhost",
 ]
 
