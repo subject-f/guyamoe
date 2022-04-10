@@ -115,7 +115,7 @@ function ReaderAPI(o) {
 	}
 
 	this.requestSeries = function(slug) {
-		this.seriesRequest = fetch(getCubariCorsProxyUrl(location.origin + this.seriesUrl + slug + '/'))
+		this.seriesRequest = fetch(this.seriesUrl + slug + '/')
 			.then(response => response.json())
 			.then(seriesData => {
 				seriesData = this.infuseSeriesData(seriesData);
@@ -3413,32 +3413,10 @@ function UI_SettingDisplay(o) {
 
 const WIDE_FLAG = "_w.";
 
-function urlSafeBase64Encode(str) {
-	return btoa(str).replace(/\+/g, "-").replace(/\//g, "_")
-}
-
-function urlSafeBase64Decode(str) {
-	return atob(str.replace(/\-/g, "+").replace(/\_/g, "/"));
-}
-
-const CUBARI_PROXY_BASE_URL = "https://services.f-ck.me";
-
-function getCubariCorsProxyUrl(rawUrl) {
-	return `${CUBARI_PROXY_BASE_URL}/v1/cors/${urlSafeBase64Encode(rawUrl)}`;
-}
-
-function getCubariImageProxyUrl(rawUrl) {
-	return `${CUBARI_PROXY_BASE_URL}/v1/image/${urlSafeBase64Encode(rawUrl)}`;
-}
-
 function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 	for (let i = 0; i < chapter.groups[group].length; i++) {
-		// TODO we've added these utilities here in order to reduce the origin traffic
-		// as our CDN is encountering issues. This should be removed for local dev or
-		// when our CDN is back, and should not be treated as a long-term solution.
 		chapter.images[group].push(
-			getCubariImageProxyUrl(
-				location.origin + mediaURL
+			mediaURL
 				+ slug 
 				+ '/chapters/' 
 				+ chapter.folder 
@@ -3446,11 +3424,9 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 				+ group 
 				+ '/' 
 				+ chapter.groups[group][i]
-			)
-		);
+		)
 		chapter.blurs[group].push(
-			getCubariImageProxyUrl(
-				location.origin + mediaURL
+			mediaURL
 				+ slug 
 				+ '/chapters/' 
 				+ chapter.folder 
@@ -3459,11 +3435,9 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 				+ group+"_shrunk_blur" 
 				+ '/' 
 				+ chapter.groups[group][i]
-			)
-		);
+		)
 		chapter.previews[group].push(
-			getCubariImageProxyUrl(
-				location.origin + mediaURL
+			mediaURL
 				+ slug 
 				+ '/chapters/' 
 				+ chapter.folder 
@@ -3472,8 +3446,7 @@ function firstPartySeriesHandler(mediaURL, chapter, group, slug) {
 				+ group+"_shrunk" 
 				+ '/' 
 				+ chapter.groups[group][i]
-			)
-		);
+		)
 		if (chapter.groups[group][i].includes(WIDE_FLAG)) {
 			chapter.wides[group].push(i);
 		}
