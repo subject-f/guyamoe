@@ -3,7 +3,7 @@ import os
 from .base import *
 
 
-CANONICAL_ROOT_DOMAIN = "manga.guya.moe"
+CANONICAL_ROOT_DOMAIN = "aka.guya.moe"
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     "www.kuu.guya.moe",
     "read.guya.moe",
     "manga.guya.moe",
+    "aka.guya.moe",
     "guya.cubari.moe",
     "localhost",
 ]
