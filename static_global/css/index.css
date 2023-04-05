@@ -922,6 +922,9 @@ main a {
 .chapter-listing .ova.adapted .chapter-name span {
 	border-color: #f08080;
 }
+.chapter-listing .movie.adapted .chapter-name span {
+	border-color: #caffbf;
+}
 
 .chapter-listing .chapter-date {
 	white-space: nowrap;
