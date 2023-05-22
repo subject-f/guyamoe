@@ -7,5 +7,5 @@ Markdown==3.1.1
 Pillow==8.1.1
 psycopg2==2.8.4
 python-memcached==1.59
-requests==2.22.0
+requests==2.31.0
 beautifulsoup4==4.8.2
